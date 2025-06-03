@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type interview_appointment struct {
+type InterviewAppointment struct {
 	gorm.Model
 	AppointmentDate time.Time `json:"appointment_date"`
 	Status          string    `json:"status"`
