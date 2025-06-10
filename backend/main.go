@@ -1,13 +1,18 @@
 package main
 
 import (
-	
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
+	"co-op-match.com/co-op-match/controller/role"
+	"co-op-match.com/co-op-match/controller/users"
 	"co-op-match.com/co-op-match/middlewares"
 )
+
+const PORT = "8000"
 
 func main() {
 	// เปิดการเชื่อมต่อฐานข้อมูล
@@ -21,23 +26,27 @@ func main() {
 
 	// เพิ่ม CORS Middleware
 	r.Use(CORSMiddleware())
-
+	// Auth Route
+	r.POST("/sign-up", users.SignUp)
+	r.POST("/sign-in", users.SignIn)
 
 	// Group routes (ตัวอย่าง)
-	router := r.Group("")
+	router := r.Group("/")
 	{
 		router.Use(middlewares.Authorizes())
 
-		    studentGroup := r.Group("/students")
-    {
-        studentGroup.GET("/:id", controller.GetStudentByID)
-    }
+		studentGroup := r.Group("/students")
+		{
+			studentGroup.GET("/:id", controller.GetStudentByID)
+		}
 	}
-
-	// รันเซิร์ฟเวอร์ที่พอร์ต 8080
-	r.Run(":8080")
+	r.GET("/roles", role.GetAll)
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
+	})
+	// Run the server
+	r.Run("localhost:" + PORT)
 }
-
 
 func CORSMiddleware() gin.HandlerFunc {
 

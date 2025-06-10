@@ -27,7 +27,7 @@ func ConnectionDB() {
 func SetupDatabase() {
 	// Migrate เฉพาะ Entity ที่ระบุ
 	db.AutoMigrate(
-&entity.Role{},
+		&entity.Role{},
 		&entity.Permission{},
 		&entity.RolePermission{},
 		&entity.User{},
@@ -66,17 +66,16 @@ func SetupDatabase() {
 		&entity.ProfileImage{},
 	)
 
-
 	createSeedData(db)
 }
 
 func createSeedData(db *gorm.DB) {
 	// สร้าง Role
-    roles := []entity.Role{
-	{RoleName: "Admin"},
-	{RoleName: "Company"},
-	{RoleName: "Student"},
-	{RoleName: "AcademicStaff"},
+	roles := []entity.Role{
+		{RoleName: "Admin"},
+		{RoleName: "Company"},
+		{RoleName: "Student"},
+		{RoleName: "AcademicStaff"},
 	}
 
 	for _, role := range roles {
@@ -91,9 +90,14 @@ func createSeedData(db *gorm.DB) {
 	db.Create(&genders)
 
 	// ผู้ใช้ (User)
-	user1 := entity.User{Email: "staff1@example.com", Password: "password123"}
-	user2 := entity.User{Email: "admin1@example.com", Password: "adminpass"}
-	user3 := entity.User{Email: "company@example.com", Password: "companypass"}
+	hashedPassword1, _ := HashPassword("password123")
+	hashedPassword2, _ := HashPassword("adminpass")
+	hashedPassword3, _ := HashPassword("companypass")
+
+	user1 := entity.User{Email: "staff1@example.com", Password: hashedPassword1, RoleID: 4}
+	user2 := entity.User{Email: "admin1@example.com", Password: hashedPassword2, RoleID: 1}
+	user3 := entity.User{Email: "company@example.com", Password: hashedPassword3, RoleID: 2}
+
 	db.Create(&user1)
 	db.Create(&user2)
 	db.Create(&user3)

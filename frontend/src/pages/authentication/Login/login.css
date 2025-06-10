@@ -1,0 +1,230 @@
+/* =========================
+   RESET
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   PAGE LAYOUT
+========================= */
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #e7e1e1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.signin-container {
+  width: 100%;
+  max-width: 950px;
+  height: 600px;
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* =========================
+   LEFT SIDE (IMAGE)
+========================= */
+.signin-left {
+  background-image: url('../../../assets//logo.png'); /* เปลี่ยน path ให้ถูก */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* =========================
+   RIGHT SIDE (FORM)
+========================= */
+/* Wrapper for title and social icons */
+.signin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.signin-right {
+  padding: 40px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fafafa;
+}
+
+/* Title */
+.signin-title {
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: #333;
+
+}
+
+/* =========================
+   SOCIAL ICONS
+========================= */
+.signin-social-icons {
+  display: flex;
+  gap: 15px;
+  align-self: flex-start;
+
+}
+
+.social-btn {
+  width: 45px !important;
+  height: 45px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: #f5f5f5 !important;
+  color: #666 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center ;
+  transition: all 0.3s ease ;
+}
+
+.social-btn:hover {
+  background: #e0e0e0 !important;
+  transform: translateY(-2px) !important;
+}
+
+/* =========================
+   FORM
+========================= */
+.signin-form {
+  width: 100%;
+}
+
+.signin-form .ant-form-item {
+  margin-bottom: 25px;
+}
+
+
+.signin-form .ant-form-item-label > label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #666 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* =========================
+   SIGN IN BUTTON
+========================= */
+
+
+.signin-button {
+  width: 100% !important;
+  height: 50px !important;
+  background: linear-gradient(135deg, #d4a574, #c9965f) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+}
+
+.signin-button:hover {
+  background: linear-gradient(135deg, #c9965f, #b8854e) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(212, 165, 116, 0.3) !important;
+}
+
+/* =========================
+   OPTIONS ROW
+========================= */
+.signin-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.signin-options .ant-checkbox-wrapper {
+  color: #666;
+  font-size: 14px;
+}
+
+.signin-options a {
+  color: #999 !important;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.signin-options a:hover {
+  color: #d4a574 !important;
+}
+
+/* =========================
+   SIGN UP LINK
+========================= */
+.signup-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.signup-link .ant-typography {
+  color: #666 !important;
+  font-size: 14px !important;
+}
+
+.signup-link a {
+  color: #d4a574 !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+.signup-link a:hover {
+  color: #c9965f !important;
+  text-decoration: underline !important;
+}
+
+/* =========================
+   RESPONSIVE DESIGN
+========================= */
+@media (max-width: 768px) {
+  .signin-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 200px 1fr;
+    height: auto;
+    max-width: 400px;
+  }
+
+  .signin-right {
+    padding: 40px 30px;
+  }
+
+  .signin-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+}
