@@ -33,7 +33,7 @@ type Student struct {
 	Education            []Education            `gorm:"foreignKey:StudentID"`
 	StudentSkill         []StudentSkill         `gorm:"foreignKey:StudentID"`
 	StudentInterest      []StudentInterest      `gorm:"foreignKey:StudentID"`
-	ApplicationDetails    []ApplicationDetails    `gorm:"foreignKey:StudentID"`
+	ApplicationDetails   []ApplicationDetails   `gorm:"foreignKey:StudentID"`
 	InterviewAppointment []InterviewAppointment `gorm:"foreignKey:StudentID"`
 	Reviews              []Review               `gorm:"foreignKey:StudentID"`
 	JobMatches           []JobMatch             `gorm:"foreignKey:StudentID"`
