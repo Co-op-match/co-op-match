@@ -15,9 +15,9 @@ type Admin struct {
 	UserID uint
 	User   User `gorm:"foreignKey:UserID"`
 
-	Permission     []Permission     `gorm:"foreignKey:AdminID"`
-	InternshipPost []InternshipPost `gorm:"foreignKey:AdminID"`
-	Company        []Company        `gorm:"foreignKey:AdminID"`
-	AcademicStaff  []AcademicStaff  `gorm:"foreignKey:AdminID"`
-	Student        []Student        `gorm:"foreignKey:AdminID"`
+	Permission    []Permission    `gorm:"foreignKey:AdminID"`
+	IntershipPost []IntershipPost `gorm:"foreignKey:AdminID"`
+	Company       []Company       `gorm:"foreignKey:AdminID"`
+	AcademicStaff []AcademicStaff `gorm:"foreignKey:AdminID"`
+	Student       []Student       `gorm:"foreignKey:AdminID"`
 }
