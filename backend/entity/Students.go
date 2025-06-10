@@ -8,6 +8,7 @@ import (
 
 type Student struct {
 	gorm.Model
+
 	FirstName   string    `json:"first_name"`
 	LastName    string    `json:"last_name"`
 	Birthday    time.Time `json:"birthday"`
@@ -15,25 +16,25 @@ type Student struct {
 	Religion    string    `json:"religion"`
 	PhoneNumber string    `json:"phone_number"`
 	Height      float64   `json:"height"`
-	Wight       float64   `json:"wight"`
+	Weight      float64   `json:"weight"`
 
-	GenderID uint
-	Gender   Gender `gorm:"foreignKey:GenderID"`
+	GenderID uint   `json:"gender_id"`
+	Gender   Gender `gorm:"foreignKey:GenderID" `
 
-	UserID uint
+	UserID uint `json:"user_id"`
 	User   User `gorm:"foreignKey:UserID"`
 
-	AddressID uint
+	AddressID uint    `json:"address_id"`
 	Address   Address `gorm:"foreignKey:AddressID"`
 
-	AdminID uint
+	AdminID uint  `json:"admin_id"`
 	Admin   Admin `gorm:"foreignKey:AdminID"`
 
-	Educations            []Education            `gorm:"foreignKey:StudentID"`
-	StudentSkills         []StudentSkill         `gorm:"foreignKey:StudentID"`
-	StudentInterests      []StudentInterest      `gorm:"foreignKey:StudentID"`
-	ApplicationDetails    []ApplicationDetail    `gorm:"foreignKey:StudentID"`
-	InterviewAppointments []InterviewAppointment `gorm:"foreignKey:StudentID"`
-	Reviews               []Review               `gorm:"foreignKey:StudentID"`
-	JobMatches            []JobMatch             `gorm:"foreignKey:StudentID"`
+	Education            []Education            `gorm:"foreignKey:StudentID"`
+	StudentSkill         []StudentSkill         `gorm:"foreignKey:StudentID"`
+	StudentInterest      []StudentInterest      `gorm:"foreignKey:StudentID"`
+	ApplicationDetails    []ApplicationDetails    `gorm:"foreignKey:StudentID"`
+	InterviewAppointment []InterviewAppointment `gorm:"foreignKey:StudentID"`
+	Reviews              []Review               `gorm:"foreignKey:StudentID"`
+	JobMatches           []JobMatch             `gorm:"foreignKey:StudentID"`
 }

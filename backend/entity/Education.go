@@ -14,6 +14,6 @@ type Education struct {
 	EducationLevel string  `json:"education_level"`
 	Grade          float64 `json:"grade"`
 
-	StudentID uint
+	StudentID uint `json:"student_id"`
 	Student   Student `gorm:"foreignKey:StudentID"`
 }

@@ -14,16 +14,16 @@ type AcademicStaff struct {
 	University      string `json:"university"`
 	Verify          bool   `json:"verify"`
 
-	UserID    uint 
+	UserID    uint  `json:"user_id"`
 	User      User   `gorm:"foreignKey:UserID"`
 	
-	AddressID uint    
+	AddressID uint    `json:"address_id"`
 	Address   Address `gorm:"foreignKey:AddressID"`
 	
-	AdminID   uint    
+	AdminID   uint    `json:"admin_id"`
 	Admin     Admin   `gorm:"foreignKey:AdminID"`
 	
-	GenderID  uint   
+	GenderID  uint   `json:"gender_id"`
 	Gender    Gender `gorm:"foreignKey:GenderID"`
 
 	Contacts []Contact `gorm:"foreignKey:AcademicStaffID"`
