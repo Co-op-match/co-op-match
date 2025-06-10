@@ -15,7 +15,7 @@ type IntershipPost struct {
 	MinGpa          string    `json:"min_gpa"`
 	CreatedAt       time.Time `json:"created_at"`
 
-	CompanyID uint    // FK to Company
+	CompanyID uint
 	Company   Company `gorm:"foreignKey:CompanyID"`
 
 	JobTypeID uint
@@ -33,8 +33,11 @@ type IntershipPost struct {
 	StatusPostID uint
 	StatusPost   StatusPost `gorm:"foreignKey:StatusPostID"`
 
+	AdminID   uint
+	Admin     Admin   `gorm:"foreignKey:AdminID"`
 	BenefitID uint    `json:"benefit_id"`
 	Benefit   Benefit `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	Applications []Application `gorm:"foreignKey:IntershipPostID"` // one-to-many
+
 }

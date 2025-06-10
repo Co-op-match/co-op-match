@@ -12,7 +12,7 @@ type Admin struct {
 	LastName  string    `json:"last_name"`
 	Birthday  time.Time `json:"birthday"`
 
-	UserID uint
+	UserID uint `json:"user_id"`
 	User   User `gorm:"foreignKey:UserID"`
 
 	Permission    []Permission    `gorm:"foreignKey:AdminID"`

@@ -10,5 +10,5 @@ type Permission struct {
 	Description string `json:"description"`
 	AdminID     uint   `json:"admin_id"`
 	Admin       Admin  `gorm:"foreignKey:AdminID"`
-	  
+
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"co-op-match.com/co-op-match/entity"
 	"gorm.io/driver/sqlite"
@@ -71,20 +72,107 @@ func SetupDatabase() {
 
 func createSeedData(db *gorm.DB) {
 	// สร้าง Role
-	roles := []entity.Role{
-		{RoleName: "Admin"},
-		{RoleName: "Company"},
-		{RoleName: "Student"},
-		{RoleName: "AcademicStaff"},
+    roles := []entity.Role{
+	{RoleName: "Admin"},
+	{RoleName: "Company"},
+	{RoleName: "Student"},
+	{RoleName: "AcademicStaff"},
 	}
-	db.Create(&roles)
+
+	for _, role := range roles {
+		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})
+	}
 
 	// สร้าง Gender
 	genders := []entity.Gender{
 		{Name: "Male"},
 		{Name: "Female"},
-		{Name: "Other"},
 	}
 	db.Create(&genders)
 
+	// ผู้ใช้ (User)
+	user1 := entity.User{Email: "staff1@example.com", Password: "password123"}
+	user2 := entity.User{Email: "admin1@example.com", Password: "adminpass"}
+	user3 := entity.User{Email: "company@example.com", Password: "companypass"}
+	db.Create(&user1)
+	db.Create(&user2)
+	db.Create(&user3)
+
+	// ที่อยู่ (Address)
+	address := entity.Address{
+		HouseNumber: "123",
+		Village:     "หมู่บ้าน ABC",
+		Street:      "ถนนหลัก",
+		SubStreet:   "",
+		Subdistrict: "ตำบลทดสอบ",
+		District:    "อำเภอเมือง",
+		Province:    "กรุงเทพมหานคร",
+	}
+
+	db.Create(&address)
+	address2 := entity.Address{
+		HouseNumber: "123",
+		Village:     "หมู่บ้าน ABC",
+		Street:      "ถนนหลัก",
+		SubStreet:   "",
+		Subdistrict: "ตำบลทดสอบ",
+		District:    "อำเภอเมือง",
+		Province:    "กรุงเทพมหานคร",
+	}
+	db.Create(&address2)
+	// แอดมิน (Admin)
+	admin := entity.Admin{
+		FirstName: "สมชาย",
+		LastName:  "แอดมิน",
+		Birthday:  time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC),
+		UserID:    2,
+	}
+	db.Create(&admin)
+
+	// Seed Permission
+	permissions := []entity.Permission{
+		{Name: "Read", Description: "Read-only access", AdminID: admin.ID},
+		{Name: "Write", Description: "Write access", AdminID: admin.ID},
+		{Name: "Delete", Description: "Delete access", AdminID: admin.ID},
+	}
+
+	for _, p := range permissions {
+		db.FirstOrCreate(&p, entity.Permission{Name: p.Name})
+	}
+	// บุคลากรทางวิชาการ (AcademicStaff)
+	staff := entity.AcademicStaff{
+		AcademicPosition: "อาจารย์",
+		Age:              40,
+		Faculty:          "วิศวกรรมศาสตร์",
+		Department:       "วิศวกรรมคอมพิวเตอร์",
+		University:       "มหาวิทยาลัยตัวอย่าง",
+		Verify:           true,
+		UserID:           1,
+		AddressID:        1,
+		AdminID:          1,
+		GenderID:         1,
+	}
+	db.Create(&staff)
+	// Student
+	student := entity.Student{
+		FirstName:   "สมชาย",
+		LastName:    "ใจดี",
+		Birthday:    time.Date(2002, time.January, 1, 0, 0, 0, 0, time.UTC),
+		Nationality: "ไทย",
+		Religion:    "พุทธ",
+		PhoneNumber: "0987654321",
+		Height:      175.0,
+		Weight:      65.0,
+		GenderID:    1,
+		UserID:      3,
+		AddressID:   2,
+		AdminID:     1,
+	}
+	db.Create(&student)
+	// สิทธิประโยชน์ (Benefit)
+	benefit := entity.Benefit{
+		Benefit:     "ค่าตอบแทน",
+		BenefitName: "มีเบี้ยเลี้ยง",
+	}
+	db.Create(&benefit)
 }

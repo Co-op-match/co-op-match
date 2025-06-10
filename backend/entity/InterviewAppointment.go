@@ -13,7 +13,7 @@ type InterviewAppointment struct {
 	Mode            string    `json:"mode"`
 	Details         string    `json:"details"`
 
-	CompanyID uint
+	CompanyID uint    
 	Company   Company `gorm:"foreignKey:CompanyID"`
 
 	StudentID uint
