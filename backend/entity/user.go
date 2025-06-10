@@ -12,7 +12,6 @@ type User struct {
 	ConfirmPassword string `gorm:"-"`
 	RoleID          uint
 	Role            Role
-	Approved        bool
 
 	Student       []Student       `gorm:"foreignKey:UserID"`
 	AcademicStaff []AcademicStaff `gorm:"foreignKey:UserID"`
