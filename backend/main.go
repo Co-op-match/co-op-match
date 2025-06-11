@@ -37,7 +37,18 @@ func main() {
 
 		studentGroup := r.Group("/students")
 		{
+			studentGroup.GET("", controller.GetAllStudents)
 			studentGroup.GET("/:id", controller.GetStudentByID)
+		}
+
+		chatGroup := r.Group("/chat")
+		{
+			chatGroup.POST("/room", controller.CreateChatRoom)
+		}
+
+		companyGroup := r.Group("/company")
+		{
+			companyGroup.POST("", controller.GetAllCompany)
 		}
 	}
 	r.GET("/roles", role.GetAll)

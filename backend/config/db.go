@@ -77,7 +77,6 @@ func createSeedData(db *gorm.DB) {
 		{RoleName: "Student"},
 		{RoleName: "AcademicStaff"},
 	}
-
 	for _, role := range roles {
 		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})
 	}
@@ -87,43 +86,45 @@ func createSeedData(db *gorm.DB) {
 		{Name: "Male"},
 		{Name: "Female"},
 	}
-	db.Create(&genders)
+	for _, gender := range genders {
+		db.FirstOrCreate(&gender, entity.Gender{Name: gender.Name})
+	}
 
 	// ผู้ใช้ (User)
-	hashedPassword1, _ := HashPassword("password123")
-	hashedPassword2, _ := HashPassword("adminpass")
-	hashedPassword3, _ := HashPassword("companypass")
-
-	user1 := entity.User{Email: "staff1@example.com", Password: hashedPassword1, RoleID: 4}
-	user2 := entity.User{Email: "admin1@example.com", Password: hashedPassword2, RoleID: 1}
-	user3 := entity.User{Email: "company@example.com", Password: hashedPassword3, RoleID: 2}
-
-	db.Create(&user1)
-	db.Create(&user2)
-	db.Create(&user3)
+	users := []entity.User{
+		{Email: "staff1@example.com", Password: "password123"},
+		{Email: "admin1@example.com", Password: "adminpass"},
+		{Email: "company@example.com", Password: "companypass"},
+	}
+	for _, user := range users {
+		db.FirstOrCreate(&user, entity.User{Email: user.Email})
+	}
 
 	// ที่อยู่ (Address)
-	address := entity.Address{
-		HouseNumber: "123",
-		Village:     "หมู่บ้าน ABC",
-		Street:      "ถนนหลัก",
-		SubStreet:   "",
-		Subdistrict: "ตำบลทดสอบ",
-		District:    "อำเภอเมือง",
-		Province:    "กรุงเทพมหานคร",
+	addresses := []entity.Address{
+		{
+			HouseNumber: "123",
+			Village:     "หมู่บ้าน ABC",
+			Street:      "ถนนหลัก",
+			SubStreet:   "",
+			Subdistrict: "ตำบลทดสอบ",
+			District:    "อำเภอเมือง",
+			Province:    "กรุงเทพมหานคร",
+		},
+		{
+			HouseNumber: "123",
+			Village:     "หมู่บ้าน ABC",
+			Street:      "ถนนหลัก",
+			SubStreet:   "",
+			Subdistrict: "ตำบลทดสอบ",
+			District:    "อำเภอเมือง",
+			Province:    "กรุงเทพมหานคร",
+		},
+	}
+	for _, addr := range addresses {
+		db.FirstOrCreate(&addr, entity.Address{HouseNumber: addr.HouseNumber, Village: addr.Village, District: addr.District})
 	}
 
-	db.Create(&address)
-	address2 := entity.Address{
-		HouseNumber: "123",
-		Village:     "หมู่บ้าน ABC",
-		Street:      "ถนนหลัก",
-		SubStreet:   "",
-		Subdistrict: "ตำบลทดสอบ",
-		District:    "อำเภอเมือง",
-		Province:    "กรุงเทพมหานคร",
-	}
-	db.Create(&address2)
 	// แอดมิน (Admin)
 	admin := entity.Admin{
 		FirstName: "สมชาย",
@@ -131,7 +132,7 @@ func createSeedData(db *gorm.DB) {
 		Birthday:  time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC),
 		UserID:    2,
 	}
-	db.Create(&admin)
+	db.FirstOrCreate(&admin, entity.Admin{UserID: admin.UserID})
 
 	// Seed Permission
 	permissions := []entity.Permission{
@@ -139,10 +140,10 @@ func createSeedData(db *gorm.DB) {
 		{Name: "Write", Description: "Write access", AdminID: admin.ID},
 		{Name: "Delete", Description: "Delete access", AdminID: admin.ID},
 	}
-
 	for _, p := range permissions {
 		db.FirstOrCreate(&p, entity.Permission{Name: p.Name})
 	}
+
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staff := entity.AcademicStaff{
 		AcademicPosition: "อาจารย์",
@@ -156,7 +157,8 @@ func createSeedData(db *gorm.DB) {
 		AdminID:          1,
 		GenderID:         1,
 	}
-	db.Create(&staff)
+	db.FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
+
 	// Student
 	student := entity.Student{
 		FirstName:   "สมชาย",
@@ -172,11 +174,12 @@ func createSeedData(db *gorm.DB) {
 		AddressID:   2,
 		AdminID:     1,
 	}
-	db.Create(&student)
+	db.FirstOrCreate(&student, entity.Student{UserID: student.UserID})
+
 	// สิทธิประโยชน์ (Benefit)
 	benefit := entity.Benefit{
 		Benefit:     "ค่าตอบแทน",
 		BenefitName: "มีเบี้ยเลี้ยง",
 	}
-	db.Create(&benefit)
+	db.FirstOrCreate(&benefit, entity.Benefit{BenefitName: benefit.BenefitName})
 }
