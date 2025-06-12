@@ -29,8 +29,24 @@ async function CreateUser(data: UsersInterface) {
     .then((res) => res)
     .catch((e) => e.response);
 }
+
+async function GetStudentById(data: UsersInterface) {
+  const id = data.ID;  // ดึง id ออกมา
+  return await axios
+    .get(`${apiUrl}/students/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetStudentByUserId(user_id: any) {
+  return await axios
+    .get(`${apiUrl}/students/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 export {
   SignIn,
   GetRole,
   CreateUser,
+  GetStudentById,
+  GetStudentByUserId
 };
