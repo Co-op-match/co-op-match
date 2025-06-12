@@ -39,6 +39,7 @@ func main() {
 		{
 			studentGroup.GET("", controller.GetAllStudents)
 			studentGroup.GET("/:id", controller.GetStudentByID)
+			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
 		}
 
 		chatGroup := r.Group("/chat")

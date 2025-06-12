@@ -27,7 +27,7 @@ func ConnectionDB() {
 func SetupDatabase() {
 	// Migrate เฉพาะ Entity ที่ระบุ
 	db.AutoMigrate(
-		&entity.Role{},
+&entity.Role{},
 		&entity.Permission{},
 		&entity.RolePermission{},
 		&entity.User{},
@@ -66,6 +66,7 @@ func SetupDatabase() {
 		&entity.ProfileImage{},
 	)
 
+
 	createSeedData(db)
 }
 
@@ -91,13 +92,19 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// ผู้ใช้ (User)
-	users := []entity.User{
-		{Email: "staff1@example.com", Password: "password123"},
-		{Email: "admin1@example.com", Password: "adminpass"},
-		{Email: "company@example.com", Password: "companypass"},
+	hashedPassword, _ := HashPassword("123456")
+
+
+	//User
+	User := []entity.User{
+		{Email: "a@example.com", Password: hashedPassword,RoleID: 1,IsActive: true },
+		{Email: "c@example.com", Password: hashedPassword,RoleID: 2,IsActive: true },
+		{Email: "s@example.com", Password: hashedPassword,RoleID: 3,IsActive: true },
+		{Email: "tn@example.com", Password: hashedPassword,RoleID: 4,IsActive: true },
+
 	}
-	for _, user := range users {
-		db.FirstOrCreate(&user, entity.User{Email: user.Email})
+	for _, pkg := range User {
+		db.FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
 	}
 
 	// ที่อยู่ (Address)
@@ -107,30 +114,56 @@ func createSeedData(db *gorm.DB) {
 			Village:     "หมู่บ้าน ABC",
 			Street:      "ถนนหลัก",
 			SubStreet:   "",
-			Subdistrict: "ตำบลทดสอบ",
+			Subdistrict: "ตำบลทดสอบ 1",
 			District:    "อำเภอเมือง",
 			Province:    "กรุงเทพมหานคร",
 		},
 		{
-			HouseNumber: "123",
-			Village:     "หมู่บ้าน ABC",
-			Street:      "ถนนหลัก",
+			HouseNumber: "456",
+			Village:     "หมู่บ้าน XYZ",
+			Street:      "ถนนรอง",
 			SubStreet:   "",
-			Subdistrict: "ตำบลทดสอบ",
-			District:    "อำเภอเมือง",
+			Subdistrict: "ตำบลทดสอบ 2",
+			District:    "อำเภอบางนา",
+			Province:    "กรุงเทพมหานคร",
+		},
+		{
+			HouseNumber: "789",
+			Village:     "หมู่บ้าน QWE",
+			Street:      "ถนนใหญ่",
+			SubStreet:   "",
+			Subdistrict: "ตำบลทดสอบ 3",
+			District:    "อำเภอพระโขนง",
+			Province:    "กรุงเทพมหานคร",
+		},
+		{
+			HouseNumber: "101",
+			Village:     "หมู่บ้าน ASD",
+			Street:      "ถนนซอย",
+			SubStreet:   "",
+			Subdistrict: "ตำบลทดสอบ 4",
+			District:    "อำเภอลาดกระบัง",
 			Province:    "กรุงเทพมหานคร",
 		},
 	}
+
 	for _, addr := range addresses {
-		db.FirstOrCreate(&addr, entity.Address{HouseNumber: addr.HouseNumber, Village: addr.Village, District: addr.District})
+		db.FirstOrCreate(&addr, entity.Address{
+			HouseNumber: addr.HouseNumber, 
+			Village: addr.Village, 
+			District: addr.District, 
+			Subdistrict: addr.Subdistrict, 
+			Province: addr.Province,
+		})
 	}
+
 
 	// แอดมิน (Admin)
 	admin := entity.Admin{
 		FirstName: "สมชาย",
 		LastName:  "แอดมิน",
 		Birthday:  time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC),
-		UserID:    2,
+		UserID:    1,
 	}
 	db.FirstOrCreate(&admin, entity.Admin{UserID: admin.UserID})
 
@@ -152,7 +185,7 @@ func createSeedData(db *gorm.DB) {
 		Department:       "วิศวกรรมคอมพิวเตอร์",
 		University:       "มหาวิทยาลัยตัวอย่าง",
 		Verify:           true,
-		UserID:           1,
+		UserID:           4,
 		AddressID:        1,
 		AdminID:          1,
 		GenderID:         1,

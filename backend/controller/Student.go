@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
@@ -56,4 +57,37 @@ func GetStudentByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, student)
+}
+
+func GetStudentByUserID(c *gin.Context) {
+    id := c.Param("user_id")
+
+     UserID, err := strconv.ParseUint(id, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+        return
+    }
+
+    var student entity.Student
+
+    if err := config.DB().
+        Preload("User").
+        Preload("Admin").
+        Preload("Education").
+        Preload("Gender").
+        Preload("Address").
+        Preload("StudentSkill").
+        Preload("StudentInterest").
+        Where("user_id = ?", UserID).
+        First(&student).Error; err != nil {
+
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Student not found"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        }
+        return
+    }
+
+    c.JSON(http.StatusOK, student)
 }
