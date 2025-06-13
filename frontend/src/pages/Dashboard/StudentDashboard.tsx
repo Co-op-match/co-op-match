@@ -15,13 +15,20 @@ const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const StudentDashboard: React.FC = () => {
-  const navigate = useNavigate(); // ใช้งาน navigate
-
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // หรือ studentID แล้วแต่ที่คุณใช้
-    localStorage.removeItem('studentID');
-    navigate('/sign-in'); // กลับไปหน้า login
-  };
+  const navigate = useNavigate(); // ใช้งาน hook
+  
+    const handleLogout = () => {
+      // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
+      localStorage.removeItem("token");
+      localStorage.removeItem("token_type");
+      localStorage.removeItem("id");
+      localStorage.removeItem("isLogin");
+      localStorage.removeItem("role");
+      localStorage.removeItem("roleId");
+  
+      // redirect กลับไปหน้า login
+      navigate("/sign-in");
+    };
 
   // รายการงานทั้งหมด
   const jobData = [

@@ -24,6 +24,8 @@ const RegisterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [messageApi, contextHolder] = message.useMessage();
   const [roleData, setRoleData] = useState<LocationState>({});
+  const [loading, setLoading] = useState(false);
+
 
   // รับ role จากหลายแหล่ง (state, URL params, localStorage)
   useEffect(() => {
@@ -136,7 +138,9 @@ const RegisterPage: React.FC = () => {
     console.log('Payload JSON:', JSON.stringify(payload, null, 2));
 
     try {
+      setLoading(true);
       let res = await CreateUser(payload);
+      setLoading(false);
       console.log('Response:', res);
 
       if (res.status === 201) {
@@ -297,6 +301,7 @@ const RegisterPage: React.FC = () => {
                   type="primary"
                   htmlType="submit"
                   className="signin-button"
+                  loading={loading}     
                 >
                   Register as {roleData.role}
                 </Button>

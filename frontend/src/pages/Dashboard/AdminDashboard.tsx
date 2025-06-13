@@ -6,18 +6,25 @@ import {
   Input,
   Button,
 } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const AdminDashboard: React.FC = () => {
-  const handleLogout = () => {
-    // เคลียร์ token หรือ localStorage ตามที่คุณใช้
-    localStorage.removeItem('token');
-    localStorage.removeItem('id');
+  const navigate = useNavigate(); // ใช้งาน hook
 
-    // เปลี่ยนหน้า (redirect ไปหน้า login)
-    window.location.href = '/sign-in';
+  const handleLogout = () => {
+    // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
+    localStorage.removeItem("token");
+    localStorage.removeItem("token_type");
+    localStorage.removeItem("id");
+    localStorage.removeItem("isLogin");
+    localStorage.removeItem("role");
+    localStorage.removeItem("roleId");
+
+    // redirect กลับไปหน้า login
+    navigate("/sign-in");
   };
 
   return (
