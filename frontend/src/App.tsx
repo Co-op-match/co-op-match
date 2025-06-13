@@ -7,6 +7,7 @@ import CompanyDashboard from "./pages/Dashboard/CompanyDashboard";
 import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
 import StudentProfile from "./pages/Profile/Student";
+import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
 
 function App() {
   return (
@@ -14,15 +15,52 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/sign-in" replace />} />
 
+        {/* Public Routes */}
         <Route path="/sign-in" element={<LoginForm />} />
         <Route path="/sign-up" element={<RegisterPage />} />
         <Route path="/role-select" element={<RoleSelectionPage />} />
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/student/profile" element={<StudentProfile />} />        
-        <Route path="/company/dashboard" element={<CompanyDashboard />} />
-        <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
+        {/* Protected Routes */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={[3]}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute allowedRoles={[3]}>
+              <StudentProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={[2]}>
+              <CompanyDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/lecturer/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={[4]}>
+              <LecturerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

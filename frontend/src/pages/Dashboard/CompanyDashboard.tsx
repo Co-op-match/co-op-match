@@ -7,16 +7,25 @@ import {
   Table,
   Tag,
 } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const CompanyDashboard: React.FC = () => {
+  const navigate = useNavigate(); // ใช้งาน hook
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('id');
-    window.location.href = '/sign-in';
+    // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
+    localStorage.removeItem("token");
+    localStorage.removeItem("token_type");
+    localStorage.removeItem("id");
+    localStorage.removeItem("isLogin");
+    localStorage.removeItem("role");
+    localStorage.removeItem("roleId");
+
+    // redirect กลับไปหน้า login
+    navigate("/sign-in");
   };
 
   const jobPostings = [
