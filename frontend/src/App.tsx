@@ -8,6 +8,7 @@ import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
 import StudentProfile from "./pages/Profile/Student";
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
+import SearchJobs from "./pages/SearchJob/SearchJobs";
 
 function App() {
   return (
@@ -26,6 +27,13 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[3]}>
               <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />  <Route
+          path="/student/search"
+          element={
+            <ProtectedRoute allowedRoles={[3]}>
+              <SearchJobs />
             </ProtectedRoute>
           }
         />
