@@ -9,7 +9,6 @@ import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
 import StudentProfile from "./pages/Profile/Student";
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
 import SearchJobs from "./pages/SearchJob/SearchJobs";
-import AdminProfileAnalysis from "./pages/admin/ProfileAnalysis";
 import AdminSidebar from "./components/admin_sidebar";
 import ProfileAnalysis from "./pages/admin/ProfileAnalysis";
 
