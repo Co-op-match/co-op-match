@@ -1,0 +1,41 @@
+.custom-menu .ant-menu {
+  background-color: #fef7ff; /* สีพื้นหลังเมนู */
+}
+
+.custom-menu .ant-menu-item,
+.custom-menu.fade-out .ant-menu-submenu-title {
+  color: #000000; /* สีตัวอักษรเมนู */
+}
+.custom-menu.fade-in .ant-menu-item,
+.custom-menu.fade-in .ant-menu-submenu-title {
+  opacity: 0; /* โปร่งใส */
+  transform: translateX(-20px); /* เลื่อนออกซ้ายเล็กน้อย */
+  animation: fadeInSlide 0.3s forwards;
+}
+.custom-menu.fade-out .ant-menu-item,
+.custom-menu.fade-out .ant-menu-submenu-title {
+  opacity: 0;
+  transform: translateX(-20); /* เลื่อนออกไปทางซ้าย */
+  animation: fadeOutSlide 10s forwards;
+}
+@keyframes fadeInSlide {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes fadeOutSlide {
+  to {
+    opacity: 1; /* จางหาย */
+    transform: translateX(20);
+  }
+}
+
+.custom-menu .ant-menu-item-selected {
+  background-color: #bae7ff !important; /* สีเมื่อเลือกเมนู */
+  color: #1890ff !important;
+}
+
+.custom-icon {
+  font-size: 20px !important;
+}

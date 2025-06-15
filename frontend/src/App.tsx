@@ -8,6 +8,9 @@ import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
 import StudentProfile from "./pages/Profile/Student";
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
+import AdminProfileAnalysis from "./pages/admin/ProfileAnalysis";
+import AdminSidebar from "./components/admin_sidebar";
+import ProfileAnalysis from "./pages/admin/ProfileAnalysis";
 
 function App() {
   return (
@@ -53,14 +56,29 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={[1]}>
               <AdminDashboard />
             </ProtectedRoute>
           }
-        />
+        /> */}
+
+        {/* Admin Layout + Protected Nested Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <AdminSidebar />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="analysis" element={<ProfileAnalysis />} />
+        </Route>
+
+        {/* <Route path="/admin/analysis" element={<ProtectedRoute allowedRoles={[1]}><AdminProfileAnalysis /></ProtectedRoute>}/> */}
       </Routes>
     </BrowserRouter>
   );
