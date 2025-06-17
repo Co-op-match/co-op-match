@@ -5,6 +5,7 @@ import {
   UserOutlined,
   BellOutlined,
   SettingOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -17,15 +18,19 @@ const CoopMatchHeader: React.FC = () => {
 
   // แปลง path เป็น key เช่น /student/profile → "profile"
   const currentPage = (() => {
+    if (location.pathname.includes('dashboard')) return 'dashboard';
     if (location.pathname.includes('search')) return 'search';
     if (location.pathname.includes('profile')) return 'profile';
     if (location.pathname.includes('notifications')) return 'notifications';
     if (location.pathname.includes('settings')) return 'settings';
-    return 'search'; // fallback
+    return 'dashboard'; // fallback
   })();
 
   const handleMenuClick = ({ key }: { key: string }) => {
     switch (key) {
+      case 'dashboard':
+        navigate('/student/dashboard');
+        break;
       case 'search':
         navigate('/student/search');
         break;
@@ -42,6 +47,7 @@ const CoopMatchHeader: React.FC = () => {
   };
 
   const menuItems = [
+    { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
     { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
@@ -74,7 +80,7 @@ const CoopMatchHeader: React.FC = () => {
         style={{
           border: 'none',
           backgroundColor: 'transparent',
-          minWidth: 400,
+          minWidth: 541,
         }}
       />
     </Header>
