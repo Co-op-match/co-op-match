@@ -10,7 +10,7 @@ import {
   Input,
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
-
+import CoopMatchHeader from '../Component/CoopMatchHeader';
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
@@ -87,7 +87,8 @@ const StudentDashboard: React.FC = () => {
   );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh',background: '#f5f5f5' }}>
+      <CoopMatchHeader  />
       <Layout>
         <Header
           style={{
