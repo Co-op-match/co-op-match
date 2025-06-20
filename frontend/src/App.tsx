@@ -9,6 +9,7 @@ import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
 import StudentProfile from "./pages/Profile/Student";
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
 import SearchJobs from "./pages/SearchJob/SearchJobs";
+import AdminAnalysis from "./pages/Analysis/AdminAnalysis"
 
 function App() {
   return (
@@ -66,6 +67,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[1]}>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/analysis"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <AdminAnalysis />
             </ProtectedRoute>
           }
         />
