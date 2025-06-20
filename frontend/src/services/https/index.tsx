@@ -43,6 +43,28 @@ async function GetStudentByUserId(user_id: any) {
     .then((res) => res)
     .catch((e) => e.response);
 }
+//=======================================Admin============================================
+export async function GetAdminById(id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllAdmin() {
+  return await axios
+    .get(`${apiUrl}/admin/all`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
+}
 export {
   SignIn,
   GetRole,
