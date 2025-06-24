@@ -12,6 +12,7 @@ import {
   Row,
   Col,
   Button,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -20,10 +21,17 @@ import {
   DollarOutlined,
 } from '@ant-design/icons';
 import CoopMatchHeader from '../Component/CoopMatchHeader';
+import type { ProvinceInterface } from '../../interfaces/Province';
+import type { BenefitInterface } from '../../interfaces/Benefit';
+import type { JobTypeInterface } from '../../interfaces/JobType';
+import type { StipendInterface } from '../../interfaces/Stipend';
+import type { WorkDayInterface } from '../../interfaces/WorkDay';
+import type { WorkModeInterface } from '../../interfaces/WorkMode';
 
+import { GetProvince, GetBenefit,GetJobtype,GetStipends,GetWorkDay,GetWorkMode } from '../../services/https';
+import { useNavigate } from 'react-router-dom';
 const { Header, Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
 
 // Job Interface
 interface Job {
@@ -87,6 +95,8 @@ const mockJobs: Job[] = [
 ];
 
 const SearchJobs: React.FC = () => {
+  const navigate = useNavigate();
+  const [messageApi, contextHolder] = message.useMessage();
   const [jobs] = useState<Job[]>(mockJobs);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(mockJobs);
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,7 +105,44 @@ const SearchJobs: React.FC = () => {
   const [selectedDuration, setSelectedDuration] = useState<string>('');
   const [selectedWorkType, setSelectedWorkType] = useState<string>('');
 
+  const [province, setGetProvince] = useState<ProvinceInterface[]>([]);
+  const [jobType, setGetJobType] = useState<JobTypeInterface[]>([]);
+  const [stipend, setGetStipends] = useState<StipendInterface[]>([]);
+  const [workDay, setGetWorkDays] = useState<WorkDayInterface[]>([]);
+  const [workMode, setGetWorkModes] = useState<WorkModeInterface[]>([]);
+  const [benefit, setGetBenefits] = useState<BenefitInterface[]>([]);
+
+
+  // Fetch Initial Data
+  const fetchInitialData = async () => {
+    try {
+      const [provinceRes, benefitRes, jobtypeRes, stipendRes, workdayRes, workmodeRes] = await Promise.all([
+        GetProvince(),
+        GetBenefit(),
+        GetJobtype(),
+        GetStipends(),
+        GetWorkDay(),
+        GetWorkMode(),
+      ]);
+
+      if (provinceRes.status === 200) setGetProvince(provinceRes.data);
+      if (benefitRes.status === 200) setGetBenefits(benefitRes.data);
+      if (jobtypeRes.status === 200) setGetJobType(jobtypeRes.data);
+      if (stipendRes.status === 200) setGetStipends(stipendRes.data);
+      if (workdayRes.status === 200) setGetWorkDays(workdayRes.data);
+      if (workmodeRes.status === 200) setGetWorkModes(workmodeRes.data);
+
+    } catch (error) {
+      messageApi.open({
+        type: "error",
+        content: "Error fetching initial data",
+      });
+      setTimeout(() => navigate("/"), 2000);
+    }
+  };
+
   useEffect(() => {
+    fetchInitialData();
     let filtered = jobs;
 
     if (searchTerm) {
@@ -133,89 +180,99 @@ const SearchJobs: React.FC = () => {
       <Layout>
         <Sider width={300} style={{ background: '#fff', padding: '24px' }}>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <div>
+            <div style={{ marginTop: 10 }}>
               <Text strong>หมวดหมู่งาน</Text>
               <Select
                 placeholder="เลือกหมวดหมู่งาน"
                 style={{ width: '100%', marginTop: 8 }}
                 allowClear
               >
-                <Option value="it">เทคโนโลยีสารสนเทศ</Option>
-                <Option value="marketing">การตลาด</Option>
-                <Option value="design">ออกแบบ</Option>
-                <Option value="finance">การเงิน</Option>
+                {jobType.map((item) => (
+                    <Select.Option value={item?.ID} key={item?.ID}>
+                      {item?.job_type}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
 
-            <div>
+            <div style={{ marginTop: 10 }}>
               <Text strong>จังหวัด</Text>
               <Select
-                placeholder="เลือก จังหวัด"
+                placeholder="เช่น กรุงเทพมหานคร"
                 style={{ width: '100%', marginTop: 8 }}
-                value={selectedProvince}
-                onChange={setSelectedProvince}
                 allowClear
               >
-                <Option value="กรุงเทพ">กรุงเทพมหานคร</Option>
-                <Option value="เชียงใหม่">เชียงใหม่</Option>
-                <Option value="ขอนแก่น">ขอนแก่น</Option>
-                <Option value="ภูเก็ต">ภูเก็ต</Option>
+                {province.map((item) => (
+                    <Select.Option value={item?.ID} key={item?.ID}>
+                      {item?.province}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
 
-            <div>
+            <div style={{ marginTop: 10 }}>
               <Text strong>สถานที่ปฏิบัติงาน</Text>
               <Select
                 placeholder="เลือกประเภทงาน"
                 style={{ width: '100%', marginTop: 8 }}
-                value={selectedJobType}
-                onChange={setSelectedJobType}
+                defaultValue={1}
                 allowClear
               >
-                <Option value="fulltime">งานประจำ</Option>
-                <Option value="parttime">งานพาร์ทไทม์</Option>
-                <Option value="internship">ฝึกงาน</Option>
+                {workMode.map((item) => (
+                    <Select.Option value={item?.ID} key={item?.ID}>
+                      {item?.work_mode}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
 
-            <div>
-              <Text strong>ระยะเวลาการทำงาน</Text>
+            <div style={{ marginTop: 10 }}>
+              <Text strong>จำนวนวันฝึกงาน</Text>
               <Select
                 placeholder="กำหนด"
                 style={{ width: '100%', marginTop: 8 }}
-                value={selectedDuration}
-                onChange={setSelectedDuration}
+                defaultValue={1}
                 allowClear
               >
-                <Option value="1-3">1-3 เดือน</Option>
-                <Option value="3-6">3-6 เดือน</Option>
-                <Option value="6-12">6-12 เดือน</Option>
-                <Option value="12+">มากกว่า 12 เดือน</Option>
+                {workDay.map((item) => (
+                    <Select.Option value={item?.ID} key={item?.ID}>
+                      {item?.work_day}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
 
-            <div>
-              <Text strong>รูปแบบการทำงาน</Text>
+            <div style={{ marginTop: 10 }}>
+              <Text strong>เงินเดือน/เบี้ยเลี้ยง</Text>
               <Select
                 placeholder="กำหนด"
                 style={{ width: '100%', marginTop: 8 }}
-                value={selectedWorkType}
-                onChange={setSelectedWorkType}
+                defaultValue={1}
                 allowClear
               >
-                <Option value="WFH">Work from Home</Option>
-                <Option value="OFFICE">ที่สำนักงาน</Option>
-                <Option value="HYBRID">แบบผสม</Option>
+                {stipend.map((item) => (
+                    <Select.Option value={item?.ID} key={item?.ID}>
+                      {item?.stipend}
+                    </Select.Option>
+                  ))}
               </Select>
             </div>
-
-            <div>
+            
+            <div style={{ marginTop: 10 }}>
               <Text strong>สวัสดิการ</Text>
               <div style={{ marginTop: 8 }}>
-                <Checkbox>ค่าเดินทาง</Checkbox><br />
-                <Checkbox>อาหาร</Checkbox><br />
-                <Checkbox>ค่าใช้จ่ายอื่น</Checkbox><br />
-                <Checkbox>ที่พัก</Checkbox>
+                <Checkbox.Group 
+                  style={{ 
+                    display: 'flex',
+                    flexDirection: 'column'  // จัดเรียงในแนวตั้ง
+                  }}
+                >
+                  {benefit.map((item) => (
+                    <div key={item.ID} style={{ marginBottom: 8 }}>
+                      <Checkbox value={item.ID}>{item.benefit_name}</Checkbox>
+                    </div>
+                  ))}
+                </Checkbox.Group>
               </div>
             </div>
           </Space>

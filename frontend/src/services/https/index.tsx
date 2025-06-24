@@ -65,10 +65,53 @@ export async function GetAllAdmin() {
       return e.response;
     });
 }
+//=============================== SearchJobs ==============================//
+async function GetProvince() {
+  return await axios
+    .get(`${apiUrl}/provinces`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetJobtype() {
+  return await axios
+    .get(`${apiUrl}/jobtypes`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetStipends() {
+  return await axios
+    .get(`${apiUrl}/stipends`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetWorkDay() {
+  return await axios
+    .get(`${apiUrl}/workdays`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetWorkMode() {
+  return await axios
+    .get(`${apiUrl}/workmodes`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetBenefit() {
+  return await axios
+    .get(`${apiUrl}/benefits`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 export {
   SignIn,
   GetRole,
   CreateUser,
   GetStudentById,
-  GetStudentByUserId
+  GetStudentByUserId,
+  GetProvince,
+  GetJobtype,
+  GetStipends,
+  GetWorkDay,
+  GetWorkMode,
+  GetBenefit,
 };
