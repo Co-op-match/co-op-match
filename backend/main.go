@@ -57,6 +57,12 @@ func main() {
 		{
 			companyGroup.POST("", controller.GetAllCompany)
 		}
+		adminGroup := r.Group("/admin")
+		{
+			adminGroup.GET("/all", controller.GetAllAdmin)
+			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
+			adminGroup.GET("/:id", controller.GetAdminByID)
+		}
 	}
 	r.GET("/roles", role.GetAll)
 	r.GET("/", func(c *gin.Context) {

@@ -27,11 +27,12 @@ func ConnectionDB() {
 func SetupDatabase() {
 	// Migrate เฉพาะ Entity ที่ระบุ
 	db.AutoMigrate(
-&entity.Role{},
+		&entity.Role{},
 		&entity.Permission{},
 		&entity.RolePermission{},
 		&entity.User{},
 		&entity.Gender{},
+		&entity.Provinces{},
 		&entity.Address{},
 		&entity.Admin{},
 		&entity.Student{},
@@ -68,7 +69,6 @@ func SetupDatabase() {
 		&entity.Company{},
 	)
 
-
 	createSeedData(db)
 }
 
@@ -96,13 +96,13 @@ func createSeedData(db *gorm.DB) {
 	// ผู้ใช้ (User)
 	hashedPassword, _ := HashPassword("123456")
 
-
 	//User
 	User := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword,RoleID: 1,IsActive: true },
 		{Email: "c@example.com", Password: hashedPassword,RoleID: 2,IsActive: true },
 		{Email: "Jetsadaphon31852@gmail.com", Password: hashedPassword,RoleID: 3,IsActive: true },
 		{Email: "tn@example.com", Password: hashedPassword,RoleID: 4,IsActive: true },
+
 
 	}
 	for _, pkg := range User {
@@ -216,14 +216,13 @@ func createSeedData(db *gorm.DB) {
 
 	for _, addr := range addresses {
 		db.FirstOrCreate(&addr, entity.Address{
-			HouseNumber: addr.HouseNumber, 
-			Village: addr.Village, 
-			District: addr.District, 
-			Subdistrict: addr.Subdistrict, 
-			Province: addr.Province,
+			HouseNumber: addr.HouseNumber,
+			Village:     addr.Village,
+			District:    addr.District,
+			Subdistrict: addr.Subdistrict,
+			Province:    addr.Province,
 		})
 	}
-
 
 	// แอดมิน (Admin)
 	admin := entity.Admin{
@@ -335,10 +334,34 @@ if err != nil {
 	// handle error
 }
 	// สิทธิประโยชน์ (Benefit)
-	benefit := entity.Benefit{
-		Benefit:     "ค่าตอบแทน",
-		BenefitName: "มีเบี้ยเลี้ยง",
+	benefits := []entity.Benefit{
+		{Benefit: "travel", BenefitName: "ค่าเดินทาง"},
+		{Benefit: "food", BenefitName: "อาหาร"},
+		{Benefit: "overtime", BenefitName: "ค่าล่วงเวลา"},
+		{Benefit: "accommodation", BenefitName: "ที่พัก"},
 	}
+	for _, b := range benefits {
+		db.FirstOrCreate(&b, entity.Benefit{Benefit: b.Benefit})
+	}
+
+	// สถานที่ปฏิบัติงาน (WorkMode)
+	workModes := []entity.WorkMode{
+		{WorkMode: "ทั้งหมด"},
+		{WorkMode: "On-site"},
+		{WorkMode: "Hybrid"},
+		{WorkMode: "Work From Home"},
+	}
+	for _, wm := range workModes {
+		db.FirstOrCreate(&wm, entity.WorkMode{WorkMode: wm.WorkMode})
+	}
+	// จำนวนวันฝึกงาน
+	workDays := []entity.WorkDay{
+		{WorkDay: "ทั้งหมด"},
+		{WorkDay: "5 วัน/สัปดาห์"},
+		{WorkDay: "6 วัน/สัปดาห์"},
+		{WorkDay: "บริษัทกำหนดเอง"},
+	}
+
 	db.FirstOrCreate(&benefit, entity.Benefit{BenefitName: benefit.BenefitName})
 
 		// Seed Status Posts
@@ -492,6 +515,47 @@ if err != nil {
 	}
 	for _, nt := range notificationTypes {
 		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
+	}
+
+
+=======
+	for _, wd := range workDays {
+		db.FirstOrCreate(&wd, entity.WorkDay{WorkDay: wd.WorkDay})
+	}
+	// เบี้ยเลี้ยง
+	stipends := []entity.Stipend{
+		{Stipend: "ทั้งหมด"},
+		{Stipend: "ไม่กำหนด"},
+		{Stipend: "ตามความสามารถนักศึกษา"},
+		{Stipend: "500"},
+		{Stipend: "1000"},
+	}
+	for _, s := range stipends {
+		db.FirstOrCreate(&s, entity.Stipend{Stipend: s.Stipend})
+	}
+
+	//----------------Provinces-------------//
+	provinces := []string{
+		"Amnat Charoen", "Ang Thong", "Bangkok", "Bueng Kan", "Buriram",
+		"Chachoengsao", "Chainat", "Chaiyaphum", "Chanthaburi", "Chiang Mai",
+		"Chiang Rai", "Chonburi", "Chumphon", "Kalasin", "Kamphaeng Phet",
+		"Kanchanaburi", "Khon Kaen", "Krabi", "Lampang", "Lamphun",
+		"Loei", "Lopburi", "Mae Hong Son", "Maha Sarakham", "Mukdahan",
+		"Nakhon Nayok", "Nakhon Pathom", "Nakhon Phanom", "Nakhon Ratchasima", "Nakhon Sawan",
+		"Nakhon Si Thammarat", "Nan", "Narathiwat", "Nong Bua Lamphu", "Nong Khai",
+		"Nonthaburi", "Pathum Thani", "Pattani", "Phang Nga", "Phatthalung",
+		"Phayao", "Phetchabun", "Phetchaburi", "Phichit", "Phitsanulok",
+		"Phra Nakhon Si Ayutthaya", "Phrae", "Phuket", "Prachinburi", "Prachuap Khiri Khan",
+		"Ranong", "Ratchaburi", "Rayong", "Roi Et", "Sa Kaeo",
+		"Sakon Nakhon", "Samut Prakan", "Samut Sakhon", "Samut Songkhram", "Saraburi",
+		"Satun", "Sing Buri", "Sisaket", "Songkhla", "Sukhothai",
+		"Suphan Buri", "Surin", "Surat Thani", "Tak", "Trang",
+		"Trat", "Ubon Ratchathani", "Udon Thani", "Uttaradit", "Uthai Thani",
+		"Yala", "Yasothon",
+	}
+
+	for _, provinceName := range provinces {
+		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
 	}
 
 
