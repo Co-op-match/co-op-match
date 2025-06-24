@@ -35,19 +35,25 @@ func main() {
 	{
 		router.Use(middlewares.Authorizes())
 
-		studentGroup := r.Group("/students")
+		studentGroup := router.Group("/students")
 		{
 			studentGroup.GET("", controller.GetAllStudents)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
 		}
 
-		chatGroup := r.Group("/chat")
+		chatGroup := router.Group("/chat")
 		{
 			chatGroup.POST("/room", controller.CreateChatRoom)
 		}
+		notificationGroup := router.Group("/notification")
+		{
+			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail) // <-- ครอบคลุมทั้งสร้าง notification + ส่ง email ในตัว
+			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
+			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
+		}
 
-		companyGroup := r.Group("/company")
+		companyGroup := router.Group("/company")
 		{
 			companyGroup.POST("", controller.GetAllCompany)
 		}
