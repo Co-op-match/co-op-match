@@ -47,12 +47,9 @@ func SetupDatabase() {
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
-		&entity.Benefit{},
-		&entity.WorkMode{},
 		&entity.WorkMode{},
 		&entity.JobType{},
 		&entity.JobType{},
-		&entity.Stipend{},
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
@@ -66,7 +63,6 @@ func SetupDatabase() {
 		&entity.Notification{},
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
-		&entity.Company{},
 	)
 
 	createSeedData(db)
@@ -132,10 +128,14 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Job Types
 	jobTypes := []entity.JobType{
-		{JobType: "Software Developer"},
-		{JobType: "Data Analyst"},
-		{JobType: "UX/UI Designer"},
-		{JobType: "Marketing Intern"},
+		{JobType: "เทคโนโลยีสารสนเทศ/คอมพิวเตอร์"},
+		{JobType: "บัญชี/การเงิน"},
+		{JobType: "การตลาด/ธุรกิจ/การจัดการ"},
+		{JobType: "นิเทศศาสตร์/ออกแบบ/กราฟิก"},
+		{JobType: "วิศวกรรม"},
+		{JobType: "ครุศาสตร์/การศึกษา"},
+		{JobType: "ศิลปศาสตร์/ภาษา/แปล"},
+		{JobType: "สาธารณสุข/พยาบาล/เภสัช"},
 	}
 	for _, pkg := range jobTypes {
 		db.FirstOrCreate(&pkg, entity.JobType{JobType: pkg.JobType})
@@ -143,6 +143,7 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Modes
 	workModes := []entity.WorkMode{
+		{WorkMode: "ทั้งหมด"},
 		{WorkMode: "On-site"},
 		{WorkMode: "Remote"},
 		{WorkMode: "Hybrid"},
@@ -153,22 +154,47 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Days
 	workDays := []entity.WorkDay{
-		{WorkDay: "Monday-Friday"},
-		{WorkDay: "Flexible"},
-		{WorkDay: "Weekends"},
+		{WorkDay: "ทั้งหมด"},
+		{WorkDay: "จันทร์ - ศุกร์"},
+		{WorkDay: "จันทร์ - เสาร์"},
+		{WorkDay: "บริษัทกำหนดเอง"},
 	}
 	for _, pkg := range workDays {
 		db.FirstOrCreate(&pkg, entity.WorkDay{WorkDay: pkg.WorkDay})
 	}
 
 	stipends := []entity.Stipend{
-		{Stipend: "Unpaid"},
-		{Stipend: "5,000-10,000 THB"},
-		{Stipend: "10,000-15,000 THB"},
+		{Stipend: "ทั้งหมด"},
+		{Stipend: "ไม่กำหนด"},
+		{Stipend: "ตามความสามารถนักศึกษา"},
+		{Stipend: "5,000 - 10,000 THB"},
+		{Stipend: "10,000 - 15,000 THB"},
 		{Stipend: "15,000+ THB"},
 	}
 	for _, pkg := range stipends {
 		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
+	}
+	//----------------Provinces-------------//
+	provinces := []string{
+		"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+		"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
+		"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
+		"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
+		"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
+		"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
+		"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
+		"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
+		"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
+		"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
+		"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
+		"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
+		"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
+		"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
+		"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
+		"บึงกาฬ", "ยะลา", "ยโสธร",
+	}
+	for _, provinceName := range provinces {
+		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
 	}
 
 	// ที่อยู่ (Address)
