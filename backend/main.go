@@ -31,17 +31,17 @@ func main() {
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
 
+	r.GET("/roles", role.GetAll)
+	r.GET("/provinces", searchjob.GetAllProvinces)
+	r.GET("/jobtypes", searchjob.GetAllJobTypes)
+	r.GET("/stipends", searchjob.GetAllStipends)
+	r.GET("/workdays", searchjob.GetAllWorkDays)
+	r.GET("/workmodes", searchjob.GetAllWorkModes)
+	r.GET("/benefits", searchjob.GetAllBenefits)
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{
 		router.Use(middlewares.Authorizes())
-		router.GET("/roles", role.GetAll)
-		router.GET("/provinces", searchjob.GetAllProvinces)
-		router.GET("/jobtypes", searchjob.GetAllJobTypes)
-		router.GET("/stipends", searchjob.GetAllStipends)
-		router.GET("/workdays", searchjob.GetAllWorkDays)
-		router.GET("/workmodes", searchjob.GetAllWorkModes)
-		router.GET("/benefits", searchjob.GetAllBenefits)
 
 		studentGroup := router.Group("/students")
 		{
