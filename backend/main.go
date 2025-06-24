@@ -8,6 +8,7 @@ import (
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
 	"co-op-match.com/co-op-match/controller/role"
+	"co-op-match.com/co-op-match/controller/searchjob"
 	"co-op-match.com/co-op-match/controller/users"
 	"co-op-match.com/co-op-match/middlewares"
 )
@@ -34,6 +35,13 @@ func main() {
 	router := r.Group("/")
 	{
 		router.Use(middlewares.Authorizes())
+		router.GET("/roles", role.GetAll)
+		router.GET("/provinces", searchjob.GetAllProvinces)
+		router.GET("/jobtypes", searchjob.GetAllJobTypes)
+		router.GET("/stipends", searchjob.GetAllStipends)
+		router.GET("/workdays", searchjob.GetAllWorkDays)
+		router.GET("/workmodes", searchjob.GetAllWorkModes)
+		router.GET("/benefits", searchjob.GetAllBenefits)
 
 		studentGroup := r.Group("/students")
 		{
@@ -58,7 +66,6 @@ func main() {
 			adminGroup.GET("/:id", controller.GetAdminByID)
 		}
 	}
-	r.GET("/roles", role.GetAll)
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
 	})

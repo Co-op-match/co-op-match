@@ -47,12 +47,8 @@ func SetupDatabase() {
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
-		&entity.Benefit{},
-		&entity.WorkMode{},
 		&entity.WorkMode{},
 		&entity.JobType{},
-		&entity.JobType{},
-		&entity.Stipend{},
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
@@ -206,6 +202,21 @@ func createSeedData(db *gorm.DB) {
 	}
 	db.FirstOrCreate(&student, entity.Student{UserID: student.UserID})
 
+	// หมวดหมู่งาน (jobtype)
+	jobTypes := []entity.JobType{
+		{JobType: "เทคโนโลยีสารสนเทศ/คอมพิวเตอร์"},
+		{JobType: "บัญชี/การเงิน"},
+		{JobType: "การตลาด/ธุรกิจ/การจัดการ"},
+		{JobType: "นิเทศศาสตร์/ออกแบบ/กราฟิก"},
+		{JobType: "วิศวกรรม"},
+		{JobType: "ครุศาสตร์/การศึกษา"},
+		{JobType: "ศิลปศาสตร์/ภาษา/แปล"},
+		{JobType: "สาธารณสุข/พยาบาล/เภสัช"},
+	}
+	for _, jt := range jobTypes {
+		db.FirstOrCreate(&jt, entity.JobType{JobType: jt.JobType})
+	}
+
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
 		{Benefit: "travel", BenefitName: "ค่าเดินทาง"},
@@ -251,24 +262,23 @@ func createSeedData(db *gorm.DB) {
 
 	//----------------Provinces-------------//
 	provinces := []string{
-		"Amnat Charoen", "Ang Thong", "Bangkok", "Bueng Kan", "Buriram",
-		"Chachoengsao", "Chainat", "Chaiyaphum", "Chanthaburi", "Chiang Mai",
-		"Chiang Rai", "Chonburi", "Chumphon", "Kalasin", "Kamphaeng Phet",
-		"Kanchanaburi", "Khon Kaen", "Krabi", "Lampang", "Lamphun",
-		"Loei", "Lopburi", "Mae Hong Son", "Maha Sarakham", "Mukdahan",
-		"Nakhon Nayok", "Nakhon Pathom", "Nakhon Phanom", "Nakhon Ratchasima", "Nakhon Sawan",
-		"Nakhon Si Thammarat", "Nan", "Narathiwat", "Nong Bua Lamphu", "Nong Khai",
-		"Nonthaburi", "Pathum Thani", "Pattani", "Phang Nga", "Phatthalung",
-		"Phayao", "Phetchabun", "Phetchaburi", "Phichit", "Phitsanulok",
-		"Phra Nakhon Si Ayutthaya", "Phrae", "Phuket", "Prachinburi", "Prachuap Khiri Khan",
-		"Ranong", "Ratchaburi", "Rayong", "Roi Et", "Sa Kaeo",
-		"Sakon Nakhon", "Samut Prakan", "Samut Sakhon", "Samut Songkhram", "Saraburi",
-		"Satun", "Sing Buri", "Sisaket", "Songkhla", "Sukhothai",
-		"Suphan Buri", "Surin", "Surat Thani", "Tak", "Trang",
-		"Trat", "Ubon Ratchathani", "Udon Thani", "Uttaradit", "Uthai Thani",
-		"Yala", "Yasothon",
+		"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+		"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
+		"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
+		"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
+		"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
+		"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
+		"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
+		"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
+		"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
+		"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
+		"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
+		"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
+		"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
+		"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
+		"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
+		"บึงกาฬ", "ยะลา", "ยโสธร",
 	}
-
 	for _, provinceName := range provinces {
 		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
 	}
