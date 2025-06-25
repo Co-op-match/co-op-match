@@ -52,7 +52,8 @@ function LoginForm() {
       localStorage.setItem("token_type", res.data.token_type);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("id", res.data.id);
-      localStorage.setItem("role", res.data.roleId);
+      localStorage.setItem("role", res.data.role);
+      localStorage.setItem("roleId", res.data.roleId); 
 
       setTimeout(() => {
         const roleId = res.data.roleId;
