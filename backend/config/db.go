@@ -47,12 +47,9 @@ func SetupDatabase() {
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
-		&entity.Benefit{},
-		&entity.WorkMode{},
 		&entity.WorkMode{},
 		&entity.JobType{},
 		&entity.JobType{},
-		&entity.Stipend{},
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
@@ -65,6 +62,7 @@ func SetupDatabase() {
 		&entity.NotificationsType{},
 		&entity.Notification{},
 		&entity.ProfileImage{},
+		&entity.InterviewAppointment{},
 	)
 
 	createSeedData(db)
@@ -98,11 +96,105 @@ func createSeedData(db *gorm.DB) {
 	User := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		{Email: "s@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "Jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 	}
 	for _, pkg := range User {
 		db.FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
+	}
+
+	// Seed Profile Images
+	profileImages := []entity.ProfileImage{
+		{
+			ImageURL: "https://example.com/profiles/user1.jpg",
+			UserID:   1,
+		},
+		{
+			ImageURL: "https://example.com/profiles/user2.jpg",
+			UserID:   2,
+		},
+		{
+			ImageURL: "https://example.com/profiles/user3.jpg",
+			UserID:   3,
+		},
+		{
+			ImageURL: "https://example.com/profiles/user4.jpg",
+			UserID:   4,
+		},
+	}
+	for _, pkg := range profileImages {
+		db.FirstOrCreate(&pkg, entity.ProfileImage{UserID: pkg.UserID})
+	}
+
+	// Seed Job Types
+	jobTypes := []entity.JobType{
+		{JobType: "เทคโนโลยีสารสนเทศ/คอมพิวเตอร์"},
+		{JobType: "บัญชี/การเงิน"},
+		{JobType: "การตลาด/ธุรกิจ/การจัดการ"},
+		{JobType: "นิเทศศาสตร์/ออกแบบ/กราฟิก"},
+		{JobType: "วิศวกรรม"},
+		{JobType: "ครุศาสตร์/การศึกษา"},
+		{JobType: "ศิลปศาสตร์/ภาษา/แปล"},
+		{JobType: "สาธารณสุข/พยาบาล/เภสัช"},
+	}
+	for _, pkg := range jobTypes {
+		db.FirstOrCreate(&pkg, entity.JobType{JobType: pkg.JobType})
+	}
+
+	// Seed Work Modes
+	workModes := []entity.WorkMode{
+		{WorkMode: "ทั้งหมด"},
+		{WorkMode: "On-site"},
+		{WorkMode: "Remote"},
+		{WorkMode: "Hybrid"},
+	}
+	for _, pkg := range workModes {
+		db.FirstOrCreate(&pkg, entity.WorkMode{WorkMode: pkg.WorkMode})
+	}
+
+	// Seed Work Days
+	workDays := []entity.WorkDay{
+		{WorkDay: "ทั้งหมด"},
+		{WorkDay: "จันทร์ - ศุกร์"},
+		{WorkDay: "จันทร์ - เสาร์"},
+		{WorkDay: "บริษัทกำหนดเอง"},
+	}
+	for _, pkg := range workDays {
+		db.FirstOrCreate(&pkg, entity.WorkDay{WorkDay: pkg.WorkDay})
+	}
+
+	stipends := []entity.Stipend{
+		{Stipend: "ทั้งหมด"},
+		{Stipend: "ไม่กำหนด"},
+		{Stipend: "ตามความสามารถนักศึกษา"},
+		{Stipend: "5,000 - 10,000 THB"},
+		{Stipend: "10,000 - 15,000 THB"},
+		{Stipend: "15,000+ THB"},
+	}
+	for _, pkg := range stipends {
+		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
+	}
+	//----------------Provinces-------------//
+	provinces := []string{
+		"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+		"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
+		"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
+		"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
+		"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
+		"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
+		"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
+		"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
+		"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
+		"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
+		"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
+		"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
+		"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
+		"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
+		"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
+		"บึงกาฬ", "ยะลา", "ยโสธร",
+	}
+	for _, provinceName := range provinces {
+		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
 	}
 
 	// ที่อยู่ (Address)
@@ -111,37 +203,41 @@ func createSeedData(db *gorm.DB) {
 			HouseNumber: "123",
 			Village:     "หมู่บ้าน ABC",
 			Street:      "ถนนหลัก",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 1",
 			District:    "อำเภอเมือง",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 		{
 			HouseNumber: "456",
 			Village:     "หมู่บ้าน XYZ",
 			Street:      "ถนนรอง",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 2",
 			District:    "อำเภอบางนา",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 		{
 			HouseNumber: "789",
 			Village:     "หมู่บ้าน QWE",
 			Street:      "ถนนใหญ่",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 3",
 			District:    "อำเภอพระโขนง",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 		{
 			HouseNumber: "101",
 			Village:     "หมู่บ้าน ASD",
 			Street:      "ถนนซอย",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 4",
 			District:    "อำเภอลาดกระบัง",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 	}
 
@@ -189,23 +285,86 @@ func createSeedData(db *gorm.DB) {
 	}
 	db.FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
 
-	// Student
-	student := entity.Student{
-		FirstName:   "สมชาย",
-		LastName:    "ใจดี",
-		Birthday:    time.Date(2002, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Nationality: "ไทย",
-		Religion:    "พุทธ",
-		PhoneNumber: "0987654321",
-		Height:      175.0,
-		Weight:      65.0,
-		GenderID:    1,
-		UserID:      3,
-		AddressID:   2,
-		AdminID:     1,
+	students := []entity.Student{
+		{
+			FirstName:   "สมชาย",
+			LastName:    "ใจดี",
+			Birthday:    time.Date(2002, time.January, 1, 0, 0, 0, 0, time.UTC),
+			Age: 21,
+			Nationality: "ไทย",
+			Religion:    "พุทธ",
+			PhoneNumber: "0987654321",
+			Height:      175.0,
+			Weight:      65.0,
+			GenderID:    1,
+			UserID:      3,
+			AddressID:   2,
+			AdminID:     1,
+		},
+		{
+			FirstName:   "อรพินมา",
+			LastName:    "ใจเย็น",
+			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
+			Nationality: "ไทย",
+			Age: 21,
+			Religion:    "พุทธ",
+			PhoneNumber: "0912345678",
+			Height:      160.0,
+			Weight:      50.0,
+			GenderID:    2,
+			UserID:      3,
+			AddressID:   3,
+			AdminID:     1,
+		},
+		{
+			FirstName:   "อรพินนะ",
+			LastName:    "ใจเย็น",
+			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
+			Age: 21,
+			Nationality: "ไทย",
+			Religion:    "พุทธ",
+			PhoneNumber: "0912345678",
+			Height:      160.0,
+			Weight:      50.0,
+			GenderID:    2,
+			UserID:      3,
+			AddressID:   3,
+			AdminID:     1,
+		},
+		{
+			FirstName:   "ใจร้อน",
+			LastName:    "ใจเย็น",
+			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
+			Age: 21,
+			Nationality: "ไทย",
+			Religion:    "พุทธ",
+			PhoneNumber: "0912345678",
+			Height:      160.0,
+			Weight:      50.0,
+			GenderID:    2,
+			UserID:      3,
+			AddressID:   3,
+			AdminID:     1,
+		},
 	}
-	db.FirstOrCreate(&student, entity.Student{UserID: student.UserID})
+	for _, s := range students {
+		db.FirstOrCreate(&s, entity.Student{FirstName: s.FirstName})
+	}
 
+	company := &entity.Company{
+		CompanyName: "Example Co., Ltd.",
+		Logo:        "logo.png",
+		Verify:      false,
+		UserID:      2,
+		AddressID:   1,
+	}
+
+
+	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
+	err := db.Where("company_name = ?", company.CompanyName).FirstOrCreate(company).Error
+	if err != nil {
+		// handle error
+	}
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
 		{Benefit: "travel", BenefitName: "ค่าเดินทาง"},
@@ -217,60 +376,157 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&b, entity.Benefit{Benefit: b.Benefit})
 	}
 
-	// สถานที่ปฏิบัติงาน (WorkMode)
-	workModes := []entity.WorkMode{
-		{WorkMode: "ทั้งหมด"},
-		{WorkMode: "On-site"},
-		{WorkMode: "Hybrid"},
-		{WorkMode: "Work From Home"},
+	// Seed Status Posts
+	statusPosts := []entity.StatusPost{
+		{StatusPost: "Open"},
+		{StatusPost: "Closed"},
+		{StatusPost: "Pending Approval"},
 	}
-	for _, wm := range workModes {
-		db.FirstOrCreate(&wm, entity.WorkMode{WorkMode: wm.WorkMode})
+	for _, pkg := range statusPosts {
+		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
-	// จำนวนวันฝึกงาน
-	workDays := []entity.WorkDay{
-		{WorkDay: "ทั้งหมด"},
-		{WorkDay: "5 วัน/สัปดาห์"},
-		{WorkDay: "6 วัน/สัปดาห์"},
-		{WorkDay: "บริษัทกำหนดเอง"},
+	IntershipPost := []entity.IntershipPost{
+		{
+			PostName:        "Software Development Intern",
+			PostDescription: "Join our team as a software development intern",
+			Qualifications:  "Computer Science student, knowledge of Python/Java",
+			Quantity:        2,
+			MinGpa:          "3.0",
+			CreatedAt:       time.Now(),
+			CompanyID:       1,
+			StatusPostID:    1,
+			AdminID:         1,
+			WorkModeID:      1,
+			BenefitID:       1,
+			WorkDayID:       1,
+			StipendID:       2,
+		},
+		{
+			PostName:        "Data Science Intern",
+			PostDescription: "Opportunity to work with real-world datasets",
+			Qualifications:  "Statistics/Data Science background, Python/R skills",
+			Quantity:        1,
+			MinGpa:          "3.2",
+			CreatedAt:       time.Now(),
+			CompanyID:       1,
+			StatusPostID:    1,
+			AdminID:         1,
+			WorkModeID:      2,
+			BenefitID:       3,
+			WorkDayID:       2,
+			StipendID:       3,
+		},
 	}
-	for _, wd := range workDays {
-		db.FirstOrCreate(&wd, entity.WorkDay{WorkDay: wd.WorkDay})
-	}
-	// เบี้ยเลี้ยง
-	stipends := []entity.Stipend{
-		{Stipend: "ทั้งหมด"},
-		{Stipend: "ไม่กำหนด"},
-		{Stipend: "ตามความสามารถนักศึกษา"},
-		{Stipend: "500"},
-		{Stipend: "1000"},
-	}
-	for _, s := range stipends {
-		db.FirstOrCreate(&s, entity.Stipend{Stipend: s.Stipend})
-	}
-
-	//----------------Provinces-------------//
-	provinces := []string{
-		"Amnat Charoen", "Ang Thong", "Bangkok", "Bueng Kan", "Buriram",
-		"Chachoengsao", "Chainat", "Chaiyaphum", "Chanthaburi", "Chiang Mai",
-		"Chiang Rai", "Chonburi", "Chumphon", "Kalasin", "Kamphaeng Phet",
-		"Kanchanaburi", "Khon Kaen", "Krabi", "Lampang", "Lamphun",
-		"Loei", "Lopburi", "Mae Hong Son", "Maha Sarakham", "Mukdahan",
-		"Nakhon Nayok", "Nakhon Pathom", "Nakhon Phanom", "Nakhon Ratchasima", "Nakhon Sawan",
-		"Nakhon Si Thammarat", "Nan", "Narathiwat", "Nong Bua Lamphu", "Nong Khai",
-		"Nonthaburi", "Pathum Thani", "Pattani", "Phang Nga", "Phatthalung",
-		"Phayao", "Phetchabun", "Phetchaburi", "Phichit", "Phitsanulok",
-		"Phra Nakhon Si Ayutthaya", "Phrae", "Phuket", "Prachinburi", "Prachuap Khiri Khan",
-		"Ranong", "Ratchaburi", "Rayong", "Roi Et", "Sa Kaeo",
-		"Sakon Nakhon", "Samut Prakan", "Samut Sakhon", "Samut Songkhram", "Saraburi",
-		"Satun", "Sing Buri", "Sisaket", "Songkhla", "Sukhothai",
-		"Suphan Buri", "Surin", "Surat Thani", "Tak", "Trang",
-		"Trat", "Ubon Ratchathani", "Udon Thani", "Uttaradit", "Uthai Thani",
-		"Yala", "Yasothon",
+	for _, pkg := range IntershipPost {
+		db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
 	}
 
-	for _, provinceName := range provinces {
-		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
+	// Seed Skills
+	skills := []entity.Skill{
+		{SkillName: "Python"},
+		{SkillName: "Java"},
+		{SkillName: "JavaScript"},
+		{SkillName: "SQL"},
+		{SkillName: "Data Analysis"},
+	}
+	for _, pkg := range skills {
+		db.FirstOrCreate(&pkg, entity.Skill{SkillName: pkg.SkillName})
+	}
+
+	// Seed Interests
+	interests := []entity.Interest{
+		{InterestName: "Web Development"},
+		{InterestName: "Mobile Development"},
+		{InterestName: "Data Science"},
+		{InterestName: "AI/ML"},
+	}
+	for _, pkg := range interests {
+		db.FirstOrCreate(&pkg, entity.Interest{InterestName: pkg.InterestName})
+	}
+	// Seed Student Skills
+	studentSkills := []entity.StudentSkill{
+		{SkillID: 1, StudentID: 1}, // Python
+		{SkillID: 2, StudentID: 1}, // Java
+		{SkillID: 4, StudentID: 1}, // SQL
+	}
+	for _, pkg := range studentSkills {
+		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
+	}
+
+	companyRequiredSkills := []entity.CompanyRequiredSkill{
+		{SkillID: 1, IntershipPostID: 1}, // Python for Software Dev
+		{SkillID: 2, IntershipPostID: 1}, // Java for Software Dev
+		{SkillID: 1, IntershipPostID: 2}, // Python for Data Science
+		{SkillID: 5, IntershipPostID: 2}, // Data Analysis for Data Science
+	}
+
+	for _, pkg := range companyRequiredSkills {
+		db.FirstOrCreate(&pkg, entity.CompanyRequiredSkill{
+			SkillID:         pkg.SkillID,
+			IntershipPostID: pkg.IntershipPostID,
+		})
+	}
+	// Seed Educational Background
+	education := entity.Education{
+		University:     "Chulalongkorn University",
+		Faculty:        "Engineering",
+		Major:          "Computer Engineering", 
+		Year:           3,
+		EducationLevel: "Bachelor's Degree",
+		Grade:          3.5,
+		StudentID:      1,
+	}
+
+	// FirstOrCreate (เช็คซ้ำกันตาม StudentID, Major, Year)
+	db.FirstOrCreate(&education, entity.Education{
+		StudentID: education.StudentID,
+		Major:     education.Major,
+		Year:      education.Year,
+	})
+	interviewAppointments := []entity.InterviewAppointment{
+		{
+			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
+			Mode:            "ออนไลน์",
+			Details:         "ลิงก์ Zoom จะส่งให้ทางอีเมล",
+			Status:          "นัดแล้ว",
+			StudentID:       1,
+			CompanyID:       1,
+		},
+		{
+			AppointmentDate: time.Now().Add(-3 * 24 * time.Hour),
+			Mode:            "ออนไซต์",
+			Details:         "คุณผ่านการสัมภาษณ์เรียบร้อยแล้ว",
+			Status:          "ผ่าน",
+			StudentID:       2,
+			CompanyID:       2,
+		},
+		{
+			AppointmentDate: time.Now().Add(-4 * 24 * time.Hour),
+			Mode:            "ออนไลน์",
+			Details:         "ขอบคุณที่เข้าร่วมสัมภาษณ์",
+			Status:          "ไม่ผ่าน",
+			StudentID:       3,
+			CompanyID:       1,
+		},
+	}
+
+	for _, appointment := range interviewAppointments {
+		db.FirstOrCreate(&appointment, entity.InterviewAppointment{
+			StudentID:       appointment.StudentID,
+			CompanyID:       appointment.CompanyID,
+			AppointmentDate: appointment.AppointmentDate,
+		})
+	}
+
+	// Seed Notification Types
+
+	notificationTypes := []entity.NotificationsType{
+		{Name: "interview", Label: "คุณมีนัดสัมภาษณ์กับบริษัท {{.company}} เวลา {{.time}}"},
+		{Name: "match", Label: "คุณได้รับการแมทช์กับ {{.partner}}"},
+		{Name: "chat", Label: "คุณได้รับข้อความใหม่จาก {{.sender}}"},
+	}
+	for _, nt := range notificationTypes {
+		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
 	}
 
 }

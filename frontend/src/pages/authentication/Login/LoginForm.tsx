@@ -53,7 +53,7 @@ function LoginForm() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("id", res.data.id);
       localStorage.setItem("role", res.data.role);
-      localStorage.setItem("roleId", res.data.roleId); // เก็บ roleId
+      localStorage.setItem("roleId", res.data.roleId); 
 
       setTimeout(() => {
         const roleId = res.data.roleId;
