@@ -203,37 +203,41 @@ func createSeedData(db *gorm.DB) {
 			HouseNumber: "123",
 			Village:     "หมู่บ้าน ABC",
 			Street:      "ถนนหลัก",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 1",
 			District:    "อำเภอเมือง",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 		{
 			HouseNumber: "456",
 			Village:     "หมู่บ้าน XYZ",
 			Street:      "ถนนรอง",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 2",
 			District:    "อำเภอบางนา",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 		{
 			HouseNumber: "789",
 			Village:     "หมู่บ้าน QWE",
 			Street:      "ถนนใหญ่",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 3",
 			District:    "อำเภอพระโขนง",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 		{
 			HouseNumber: "101",
 			Village:     "หมู่บ้าน ASD",
 			Street:      "ถนนซอย",
-			SubStreet:   "",
+			SubStreet:   "ซอยรอง",
 			Subdistrict: "ตำบลทดสอบ 4",
 			District:    "อำเภอลาดกระบัง",
 			Province:    "กรุงเทพมหานคร",
+			Postcode: "12345",
 		},
 	}
 
@@ -286,6 +290,7 @@ func createSeedData(db *gorm.DB) {
 			FirstName:   "สมชาย",
 			LastName:    "ใจดี",
 			Birthday:    time.Date(2002, time.January, 1, 0, 0, 0, 0, time.UTC),
+			Age: 21,
 			Nationality: "ไทย",
 			Religion:    "พุทธ",
 			PhoneNumber: "0987654321",
@@ -301,6 +306,7 @@ func createSeedData(db *gorm.DB) {
 			LastName:    "ใจเย็น",
 			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
 			Nationality: "ไทย",
+			Age: 21,
 			Religion:    "พุทธ",
 			PhoneNumber: "0912345678",
 			Height:      160.0,
@@ -314,6 +320,7 @@ func createSeedData(db *gorm.DB) {
 			FirstName:   "อรพินนะ",
 			LastName:    "ใจเย็น",
 			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
+			Age: 21,
 			Nationality: "ไทย",
 			Religion:    "พุทธ",
 			PhoneNumber: "0912345678",
@@ -328,6 +335,7 @@ func createSeedData(db *gorm.DB) {
 			FirstName:   "ใจร้อน",
 			LastName:    "ใจเย็น",
 			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
+			Age: 21,
 			Nationality: "ไทย",
 			Religion:    "พุทธ",
 			PhoneNumber: "0912345678",
@@ -350,6 +358,7 @@ func createSeedData(db *gorm.DB) {
 		UserID:      2,
 		AddressID:   1,
 	}
+
 
 	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
 	err := db.Where("company_name = ?", company.CompanyName).FirstOrCreate(company).Error
@@ -461,7 +470,7 @@ func createSeedData(db *gorm.DB) {
 	education := entity.Education{
 		University:     "Chulalongkorn University",
 		Faculty:        "Engineering",
-		Major:          1, // Assuming this is an enum or reference
+		Major:          "Computer Engineering", 
 		Year:           3,
 		EducationLevel: "Bachelor's Degree",
 		Grade:          3.5,

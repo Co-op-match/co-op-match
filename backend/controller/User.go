@@ -33,13 +33,8 @@ func GetUserByID(c *gin.Context) {
 	var user []entity.User
 
 	if err := config.DB().
-		Preload("User").
-		Preload("Admin").
-		Preload("Education").
-		Preload("Gender").
-		Preload("Address").
-		Preload("StudentSkill").
-		Preload("StudentInterest").
+		Preload("ProfileImage").
+		Preload("Role").
 		First(&user, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})

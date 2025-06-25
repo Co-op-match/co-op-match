@@ -9,7 +9,7 @@ type Education struct {
 	gorm.Model
 	University     string  `json:"university"`
 	Faculty        string  `json:"faculty"`
-	Major          int     `json:"major"`
+	Major          string   `json:"major"`
 	Year           int     `json:"year"`
 	EducationLevel string  `json:"education_level"`
 	Grade          float64 `json:"grade"`

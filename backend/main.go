@@ -50,6 +50,11 @@ func main() {
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
 		}
 
+		UserGroup := router.Group("/user")
+		{
+			UserGroup.GET("/:id", controller.GetUserByID)
+		}
+
 		chatGroup := router.Group("/chat")
 		{
 			chatGroup.POST("/room", controller.CreateChatRoom)
