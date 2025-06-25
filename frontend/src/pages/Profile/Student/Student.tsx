@@ -13,7 +13,7 @@ import { UserOutlined } from "@ant-design/icons";
 import { GetStudentByUserId } from "../../../services/https";
 import type { StudentInterface } from "../../../interfaces/Student";
 import "./StudentProfile.css";
-import AppHeader from "../../component/header/Header";
+import CoopMatchHeader from '../../component/CoopMatchHeader';
 
 const { Content } = Layout;
 
@@ -191,7 +191,7 @@ const StudentProfile: React.FC = () => {
 
   return (
     <Layout>
-      <AppHeader />
+      <CoopMatchHeader />
       <Layout className="student-layout">
         <Content>
           <ProfileCard student={student} />
