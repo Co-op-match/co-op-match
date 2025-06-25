@@ -15,23 +15,23 @@ const roleDetailsMap: Record<string, {
 }> = {
   Student: {
     title: 'สมัครเป็นนักศึกษา',
-    titleEn: 'register as a Student',
-    description: 'สำหรับนักศึกษาที่ต้องการหาสถานที่ฝึกงาน',
-    icon: <UserOutlined style={{ fontSize: 48, color: '#8B5CF6' }} />,
+    titleEn: 'Student Registration',
+    description: 'Student co-op opportunities',
+    icon: <UserOutlined style={{ fontSize: 48, color: '#1677ff' }} />,
     signupPath: '/sign-up',
   },
   Company: {
     title: 'สมัครในนามบริษัท',
-    titleEn: 'register as a Company',
-    description: 'สำหรับบริษัทที่ต้องการนักศึกษาฝึกงาน',
-    icon: <TeamOutlined style={{ fontSize: 48, color: '#8B5CF6' }} />,
+    titleEn: 'Company Registration',
+    description: 'Find student interns',
+    icon: <TeamOutlined style={{ fontSize: 48, color: '#1677ff' }} />,
     signupPath: '/sign-up',
   },
   AcademicStaff: {
     title: 'สมัครในนามอาจารย์',
-    titleEn: 'register as a AcademicStaff',
-    description: 'ตรวจสอบการสมัครงานของนักศึกษา',
-    icon: <ReadOutlined style={{ fontSize: 48, color: '#8B5CF6' }} />,
+    titleEn: 'Academic Staff Registration',
+    description: 'Monitor student internships',
+    icon: <ReadOutlined style={{ fontSize: 48, color: '#1677ff' }} />,
     signupPath: '/sign-up',
   },
 };
@@ -73,7 +73,7 @@ const RoleSelectionPage: React.FC = () => {
     <div 
      style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #001d66 0%, #002c8c 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -94,7 +94,7 @@ const RoleSelectionPage: React.FC = () => {
             สมัครใช้งานในระบบสหกิจศึกษา
           </Title>
           <Text style={{ fontSize: 16, color: '#6b7280' }}>
-            Please choose your registration type:
+            Please select your registration type:
           </Text>
         </div>
 
@@ -145,8 +145,8 @@ const RoleSelectionPage: React.FC = () => {
                       marginTop: 24,
                       height: 48,
                       borderRadius: 8,
-                      background: '#8B5CF6',
-                      borderColor: '#8B5CF6',
+                      background: '#1677ff',
+                      borderColor: '#1677ff',
                       fontSize: 16,
                       fontWeight: 500,
                     }}
@@ -163,10 +163,10 @@ const RoleSelectionPage: React.FC = () => {
 
       <style>{`
         .role-button:hover {
-          background: #7C3AED !important;
-          border-color: #7C3AED !important;
+          background: #0958d9 !important;
+          border-color: #0958d9 !important;
           transform: translateY(-2px);
-          box-shadow: 0 8px 16px rgba(139, 92, 246, 0.3);
+          box-shadow: 0 8px 16px rgba(35, 83, 186, 0.3);
         }
 
         .ant-card-hoverable:hover {

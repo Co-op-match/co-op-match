@@ -10,19 +10,25 @@ import {
   Input,
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
-import AppHeader from '../component/header/Header';
-
+import CoopMatchHeader from '../Component/CoopMatchHeader';
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const StudentDashboard: React.FC = () => {
-  const navigate = useNavigate(); // ใช้งาน navigate
-
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // หรือ studentID แล้วแต่ที่คุณใช้
-    localStorage.removeItem('studentID');
-    navigate('/sign-in'); // กลับไปหน้า login
-  };
+  const navigate = useNavigate(); // ใช้งาน hook
+  
+    const handleLogout = () => {
+      // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
+      localStorage.removeItem("token");
+      localStorage.removeItem("token_type");
+      localStorage.removeItem("id");
+      localStorage.removeItem("isLogin");
+      localStorage.removeItem("role");
+      localStorage.removeItem("roleId");
+  
+      // redirect กลับไปหน้า login
+      navigate("/sign-in");
+    };
 
   // รายการงานทั้งหมด
   const jobData = [
@@ -81,9 +87,25 @@ const StudentDashboard: React.FC = () => {
   );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh',background: '#f5f5f5' }}>
+      <CoopMatchHeader  />
       <Layout>
-        <AppHeader />
+        <Header
+          style={{
+            background: '#fff',
+            padding: '16px 24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Title level={3} style={{ margin: 0 }}>
+            Student Dashboard
+          </Title>
+          <Button type="primary" danger onClick={handleLogout}>
+            ออกจากระบบ
+          </Button>
+        </Header>
         <Content style={{ margin: '16px' }}>
           {/* 🔍 ช่องค้นหางาน */}
           <Input.Search

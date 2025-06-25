@@ -14,26 +14,20 @@ import {
   TeamOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 
 const LecturerDashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   const menuItems = [
     { key: '1', icon: <DashboardOutlined />, label: 'แดชบอร์ด' },
     { key: '2', icon: <TeamOutlined />, label: 'นักศึกษาฝึกงาน' },
     { key: '3', icon: <FileDoneOutlined />, label: 'อนุมัติการฝึกงาน' },
     { key: '4', icon: <LogoutOutlined />, label: 'ออกจากระบบ' },
   ];
-
-  const handleMenuClick = (item: any) => {
-    if (item.key === '4') {
-      // Logout logic
-      localStorage.removeItem('token');
-      localStorage.removeItem('id');
-      window.location.href = '/sign-in';
-    }
-  };
 
   const studentInternships = [
     {
@@ -96,6 +90,21 @@ const LecturerDashboard: React.FC = () => {
     },
   ];
 
+  const handleMenuClick = (item: any) => {
+    if (item.key === '4') {
+      // Logout
+      localStorage.removeItem('token');
+      localStorage.removeItem('token_type');
+      localStorage.removeItem('id');
+      localStorage.removeItem('isLogin');
+      localStorage.removeItem('role');
+      localStorage.removeItem('roleId');
+      navigate('/sign-in');
+    }
+
+    // คุณสามารถเพิ่ม navigation หรือโหลดข้อมูลของแต่ละเมนูได้ที่นี่
+  };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider>
@@ -118,10 +127,12 @@ const LecturerDashboard: React.FC = () => {
           onClick={handleMenuClick}
         />
       </Sider>
+
       <Layout>
         <Header style={{ background: '#fff', padding: 16 }}>
           <Title level={3}>แดชบอร์ดอาจารย์</Title>
         </Header>
+
         <Content style={{ margin: '16px' }}>
           <Card title="นักศึกษาที่กำลังฝึกงาน">
             <Table

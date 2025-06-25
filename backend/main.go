@@ -8,6 +8,7 @@ import (
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
 	"co-op-match.com/co-op-match/controller/role"
+	"co-op-match.com/co-op-match/controller/searchjob"
 	"co-op-match.com/co-op-match/controller/users"
 	"co-op-match.com/co-op-match/middlewares"
 )
@@ -30,6 +31,13 @@ func main() {
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
 
+	r.GET("/roles", role.GetAll)
+	r.GET("/provinces", searchjob.GetAllProvinces)
+	r.GET("/jobtypes", searchjob.GetAllJobTypes)
+	r.GET("/stipends", searchjob.GetAllStipends)
+	r.GET("/workdays", searchjob.GetAllWorkDays)
+	r.GET("/workmodes", searchjob.GetAllWorkModes)
+	r.GET("/benefits", searchjob.GetAllBenefits)
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{
@@ -62,8 +70,13 @@ func main() {
 		{
 			companyGroup.POST("", controller.GetAllCompany)
 		}
+		adminGroup := r.Group("/admin")
+		{
+			adminGroup.GET("/all", controller.GetAllAdmin)
+			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
+			adminGroup.GET("/:id", controller.GetAdminByID)
+		}
 	}
-	r.GET("/roles", role.GetAll)
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
 	})

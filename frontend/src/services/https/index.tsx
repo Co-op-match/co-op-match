@@ -48,9 +48,71 @@ async function GetStudentByUserId(user_id: number): Promise<StudentInterface> {
   }
 }
 
+
 async function GetUserById(user_id: number): Promise<UserInterface> {
   const res = await axios.get<UserInterface>(`${apiUrl}/user/${user_id}`, requestOptions);
   return res.data;
+}
+
+
+//=======================================Admin============================================
+export async function GetAdminById(id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllAdmin() {
+  return await axios
+    .get(`${apiUrl}/admin/all`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
+}
+//=============================== SearchJobs ==============================//
+async function GetProvince() {
+  return await axios
+    .get(`${apiUrl}/provinces`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetJobtype() {
+  return await axios
+    .get(`${apiUrl}/jobtypes`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetStipends() {
+  return await axios
+    .get(`${apiUrl}/stipends`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetWorkDay() {
+  return await axios
+    .get(`${apiUrl}/workdays`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetWorkMode() {
+  return await axios
+    .get(`${apiUrl}/workmodes`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetBenefit() {
+  return await axios
+    .get(`${apiUrl}/benefits`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
 }
 
 export {
@@ -59,5 +121,11 @@ export {
   CreateUser,
   GetStudentById,
   GetStudentByUserId,
-  GetUserById
+  GetUserById,
+  GetProvince,
+  GetJobtype,
+  GetStipends,
+  GetWorkDay,
+  GetWorkMode,
+  GetBenefit,
 };
