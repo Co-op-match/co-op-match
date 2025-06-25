@@ -10,6 +10,7 @@ import {
   Input,
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
+import AppHeader from '../component/header/Header';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -82,22 +83,7 @@ const StudentDashboard: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Layout>
-        <Header
-          style={{
-            background: '#fff',
-            padding: '16px 24px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Title level={3} style={{ margin: 0 }}>
-            Student Dashboard
-          </Title>
-          <Button type="primary" danger onClick={handleLogout}>
-            ออกจากระบบ
-          </Button>
-        </Header>
+        <AppHeader />
         <Content style={{ margin: '16px' }}>
           {/* 🔍 ช่องค้นหางาน */}
           <Input.Search

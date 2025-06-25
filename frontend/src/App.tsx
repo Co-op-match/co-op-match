@@ -6,7 +6,7 @@ import StudentDashboard from "./pages/Dashboard/StudentDashboard";
 import CompanyDashboard from "./pages/Dashboard/CompanyDashboard";
 import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
-import StudentProfile from "./pages/Profile/Student";
+import StudentProfile from "./pages/Profile/Student/Student";
 
 function App() {
   return (

@@ -13,6 +13,7 @@ type Address struct {
 	Subdistrict string `json:"subdistrict"`
 	District    string `json:"district"`
 	Province    string `json:"province"`
+	Postcode   string `json:"post_code"`
 
 	Student       []Student       `gorm:"foreignKey:AddressID"`
 	AcademicStaff []AcademicStaff `gorm:"foreignKey:AddressID"`

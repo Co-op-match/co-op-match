@@ -6,6 +6,7 @@ import {
   Input,
   Button,
 } from 'antd';
+import AppHeader from '../component/header/Header';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -23,19 +24,7 @@ const AdminDashboard: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Layout>
-        <Header style={{
-          background: '#fff',
-          padding: '0 16px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Title level={3} style={{ margin: 0 }}>Admin Dashboard</Title>
-          <Button type="primary" danger onClick={handleLogout}>
-            Logout
-          </Button>
-        </Header>
-
+      <AppHeader />
         <Content style={{ margin: '16px' }}>
           {/* 🔍 ช่องค้นหางาน */}
           <Input.Search
