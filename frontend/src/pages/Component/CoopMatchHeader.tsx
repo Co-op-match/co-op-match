@@ -8,9 +8,9 @@ import {
   HomeOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Logo from "../../assets/Co-op match-Photoroom.png";
 
 const { Header } = Layout;
-const { Title } = Typography;
 
 const CoopMatchHeader: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +46,10 @@ const CoopMatchHeader: React.FC = () => {
     }
   };
 
+  const handleLogoClick = () => {
+  navigate("/student/dashboard");
+};
+
   const menuItems = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
@@ -68,9 +72,16 @@ const CoopMatchHeader: React.FC = () => {
         zIndex: 1000,
       }}
     >
-      <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-        CoopMatch
-      </Title>
+<div
+  onClick={handleLogoClick}
+  style={{
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+  }}
+>
+  <img src={Logo} alt="Logo" style={{ height: 40 }} />
+</div>
 
       <Menu
         mode="horizontal"
