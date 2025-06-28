@@ -114,7 +114,7 @@ func createSeedData(db *gorm.DB) {
 			UserID:   2,
 		},
 		{
-			ImageURL: "https://example.com/profiles/user3.jpg",
+			ImageURL: "https://img2.pic.in.th/pic/Co-op-match-Photoroom.png",
 			UserID:   3,
 		},
 		{
