@@ -70,6 +70,7 @@ func GetStudentByUserID(c *gin.Context) {
 
 	if err := config.DB().
 		Preload("User").
+		Preload("User.ProfileImage").
 		Preload("Admin").
 		Preload("Education").
 		Preload("Gender").
@@ -86,4 +87,69 @@ func GetStudentByUserID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, student)
+}
+
+func CreateStudent(c *gin.Context) {
+	var student entity.Student
+
+	// Bind JSON body -> struct
+	if err := c.ShouldBindJSON(&student); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Save to DB
+	if err := config.DB().Create(&student).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create student"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
+		"message": "Student created successfully",
+		"data":    student,
+	})
+}
+
+func UpdateStudent(c *gin.Context) {
+	id := c.Param("id")
+
+	var student entity.Student
+	if err := config.DB().First(&student, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Student not found"})
+		return
+	}
+
+	var input entity.Student
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// อัปเดตฟิลด์ต่าง ๆ
+	student.FirstName = input.FirstName
+	student.LastName = input.LastName
+	student.Birthday = input.Birthday
+	student.Age = input.Age
+	student.Nationality = input.Nationality
+	student.Religion = input.Religion
+	student.PhoneNumber = input.PhoneNumber
+	student.Height = input.Height
+	student.Weight = input.Weight
+
+	student.GenderID = input.GenderID
+	student.UserID = input.UserID
+	student.AddressID = input.AddressID
+	student.AdminID = input.AdminID
+
+	if err := config.DB().Save(&student).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update student"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Student updated successfully",
+		"data":    student,
+	})
 }
