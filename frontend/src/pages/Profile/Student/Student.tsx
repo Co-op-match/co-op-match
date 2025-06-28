@@ -9,11 +9,12 @@ import {
   Badge,
   Divider,
 } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { EditOutlined, UserOutlined } from "@ant-design/icons";
 import { GetStudentByUserId } from "../../../services/https";
 import type { StudentInterface } from "../../../interfaces/Student";
 import "./StudentProfile.css";
 import CoopMatchHeader from '../../component/CoopMatchHeader';
+import dayjs from "dayjs";
 
 const { Content } = Layout;
 
@@ -28,21 +29,20 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
       <div className="student-profile-container">
         {/* ซ้าย */}
         <div className="student-profile-left">
-          <div className="student-avatar-container">
-            <Avatar size={120} icon={<UserOutlined />} />
-            <div className="student-avatar-edit-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="16"
-                viewBox="0 0 24 24"
-                width="16"
-                fill="#fff"
-              >
-                <path d="M0 0h24v24H0z" fill="none" />
-                <path d="M3 17.25V21h3.75l11.06-11.06-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.34a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
-              </svg>
-            </div>
+        <div className="student-avatar-container">
+          <Avatar
+            src={
+              student?.User?.ProfileImage?.[0]?.image_url
+                ? `http://localhost:8000${student?.User?.ProfileImage[0].image_url}`
+                : undefined
+            }
+            size={120}
+            icon={!student?.User?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+          />
+          <div className="student-avatar-edit-icon">
+            <EditOutlined />
           </div>
+        </div>
           <p className="student-name">
             {student?.first_name} {student?.last_name}
           </p>
@@ -60,7 +60,7 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
               {student?.Gender?.name || "-"}
             </Descriptions.Item>
             <Descriptions.Item label="วันเกิด">
-              {student?.birthday || "-"}
+              {student?.birthday ? dayjs(student.birthday).format("DD/MM/YYYY") : "-"}
             </Descriptions.Item>
             <Descriptions.Item label="เบอร์">
               {student?.phone_number || "-"}
