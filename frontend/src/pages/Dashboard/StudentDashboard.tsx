@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Layout,
   Card,
@@ -11,21 +11,17 @@ import {
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
 import CoopMatchHeader from '../component/CoopMatchHeader';
+import { UserContext } from '../../components/UserContext'; 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate(); // ใช้งาน hook
+  const { logout } = useContext(UserContext);
   
     const handleLogout = () => {
       // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
-      localStorage.removeItem("token");
-      localStorage.removeItem("token_type");
-      localStorage.removeItem("id");
-      localStorage.removeItem("isLogin");
-      localStorage.removeItem("role");
-      localStorage.removeItem("roleId");
-  
+      logout();
       // redirect กลับไปหน้า login
       navigate("/sign-in");
     };

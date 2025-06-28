@@ -1,10 +1,10 @@
 export interface EducationInterface {
-  id: number;
-  university: string;
-  faculty: string;
-  major: number;
-  year: number;
-  education_level: string;
-  grade: number;
-  student_id: number;
+    user_id: number;
+    university: any;
+    faculty: any;
+    major: any;
+    education_level: any;
+    year: any;
+    grade: any;
 }
+
