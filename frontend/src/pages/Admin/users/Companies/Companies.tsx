@@ -23,7 +23,7 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
-import "./Companies.css";
+import "../users.css"
 
 const initialData = [
   {
@@ -153,7 +153,7 @@ const Companies: React.FC = () => {
       ),
     },
     {
-      title: "สถานะ",
+      title: "การจัดการ",
       key: "action",
       render: (_: any, record: any) => (
         <Space>
@@ -198,7 +198,7 @@ const Companies: React.FC = () => {
       <Layout style={{ margin: "2rem" }}>
         <Row>
           <Col span={20}>
-            <Title level={3}>บริษัท</Title>
+            <Title level={3}>บริษัท (Companies)</Title>
           </Col>
           <Col span={4}>
             <Flex align="center" gap={16} justify="end">

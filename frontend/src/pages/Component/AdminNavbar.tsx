@@ -28,20 +28,34 @@ const AdminHeader: React.FC = () => {
 
   // แปลง path เป็น key เช่น /student/profile → "profile"
   const currentPage = (() => {
-    if (location.pathname.includes("dashboard")) return "dashboard";
+    if (location.pathname.includes('dashboard')) return 'dashboard';
+    if (location.pathname.includes('search')) return 'search';
+    if (location.pathname.includes('profile')) return 'profile';
+    if (location.pathname.includes('notifications')) return 'notifications';
+    if (location.pathname.includes('settings')) return 'settings';
     if (location.pathname.includes("students")) return "students";
     if (location.pathname.includes("companies")) return "companies";
     if (location.pathname.includes("lecturers")) return "lecturers";
     if (location.pathname.includes("admins")) return "admins";
-    if (location.pathname.includes("notifications")) return "notifications";
-    if (location.pathname.includes("settings")) return "settings";
     return "dashboard"; // fallback
   })();
 
   const handleMenuClick = ({ key }: { key: string }) => {
     switch (key) {
-      case "dashboard":
-        navigate("/admin/dashboard");
+      case 'dashboard':
+        navigate('/student/dashboard');
+        break;
+      case 'search':
+        navigate('/student/search');
+        break;
+      case 'profile':
+        navigate('/student/profile');
+        break;
+      case 'notifications':
+        navigate('/student/notifications');
+        break;
+      case 'settings':
+        navigate('/student/settings');
         break;
       case "students":
         navigate("/admin/students");
@@ -54,12 +68,6 @@ const AdminHeader: React.FC = () => {
         break;
       case "admins":
         navigate("/admin/admins");
-        break;
-      case "notifications":
-        navigate("/admin/notifications");
-        break;
-      case "settings":
-        navigate("/admin/settings");
         break;
     }
   };
@@ -78,7 +86,7 @@ const AdminHeader: React.FC = () => {
       key: "lecturers",
     },
     {
-      label: "แอดมิน",
+      label: "ผู้ดูแลระบบ",
       key: "admins",
     },
   ];

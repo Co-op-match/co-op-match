@@ -14,7 +14,7 @@ import CompaniesInAdmin from "./pages/Admin/users/Companies/Companies";
 import SubCompanyInAdmin from "./pages/Admin/users/Companies/SubCompany";
 import StudentsInAdmin from "./pages/Admin/users/Students/Students";
 import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
-
+import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 
 function App() {
   return (
@@ -108,6 +108,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/admin/admins"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <AdminsInAdmin />
+            </ProtectedRoute>
+          }
+        />
+        
       </Routes>
     </BrowserRouter>
   );
