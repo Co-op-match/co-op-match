@@ -1,5 +1,13 @@
-import React from 'react';
-import { Layout, Typography, Menu, Dropdown, Button, type MenuProps, Space } from 'antd';
+import React from "react";
+import {
+  Layout,
+  Typography,
+  Menu,
+  Dropdown,
+  Button,
+  type MenuProps,
+  Space,
+} from "antd";
 import {
   SearchOutlined,
   UserOutlined,
@@ -7,8 +15,9 @@ import {
   SettingOutlined,
   HomeOutlined,
   TeamOutlined,
-} from '@ant-design/icons';
-import { useLocation, useNavigate } from 'react-router-dom';
+} from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
+import Logo from "../../assets/Co-op match-Photoroom.png";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -19,100 +28,108 @@ const AdminHeader: React.FC = () => {
 
   // แปลง path เป็น key เช่น /student/profile → "profile"
   const currentPage = (() => {
-    if (location.pathname.includes('dashboard')) return 'dashboard';
-    if (location.pathname.includes('students')) return 'students';
-    if (location.pathname.includes('companies')) return 'companies';
-    if (location.pathname.includes('lecturers')) return 'lecturers';
-    if (location.pathname.includes('admins')) return 'admins';
-    if (location.pathname.includes('notifications')) return 'notifications';
-    if (location.pathname.includes('settings')) return 'settings';
-    return 'dashboard'; // fallback
+    if (location.pathname.includes("dashboard")) return "dashboard";
+    if (location.pathname.includes("students")) return "students";
+    if (location.pathname.includes("companies")) return "companies";
+    if (location.pathname.includes("lecturers")) return "lecturers";
+    if (location.pathname.includes("admins")) return "admins";
+    if (location.pathname.includes("notifications")) return "notifications";
+    if (location.pathname.includes("settings")) return "settings";
+    return "dashboard"; // fallback
   })();
 
   const handleMenuClick = ({ key }: { key: string }) => {
     switch (key) {
-      case 'dashboard':
-        navigate('/admin/dashboard');
+      case "dashboard":
+        navigate("/admin/dashboard");
         break;
-      case 'students':
-        navigate('/admin/students');
+      case "students":
+        navigate("/admin/students");
         break;
-      case 'companies':
-        navigate('/admin/companies');
+      case "companies":
+        navigate("/admin/companies");
         break;
-      case 'lecturers':
-        navigate('/admin/lecturers');
+      case "lecturers":
+        navigate("/admin/lecturers");
         break;
-      case 'admins':
-        navigate('/admin/admins');
+      case "admins":
+        navigate("/admin/admins");
         break;
-      case 'notifications':
-        navigate('/admin/notifications');
+      case "notifications":
+        navigate("/admin/notifications");
         break;
-      case 'settings':
-        navigate('/admin/settings');
+      case "settings":
+        navigate("/admin/settings");
         break;
     }
   };
 
-    const items: MenuProps['items'] = [
+  const items: MenuProps["items"] = [
     {
-        label: 'นักศึกษา',
-        key: 'students',
+      label: "นักศึกษา",
+      key: "students",
     },
     {
-        label: 'บริษัท',
-        key: 'companies',
+      label: "บริษัท",
+      key: "companies",
     },
     {
-        label: 'อาจารย์',
-        key: 'lecturers',
+      label: "อาจารย์",
+      key: "lecturers",
     },
     {
-        label: 'แอดมิน',
-        key: 'admins',
+      label: "แอดมิน",
+      key: "admins",
     },
   ];
 
-  const menuProps = {
-  items,
-  onClick: handleMenuClick,
+  const handleLogoClick = () => {
+    navigate("/student/dashboard");
   };
-  
+
+  const menuProps = {
+    items,
+    onClick: handleMenuClick,
+  };
+
   const menuItems = [
-    { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
+    { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
     {
-      key: 'users',
+      key: "users",
       label: (
-        <Dropdown menu={menuProps} trigger={['hover']}>
+        <Dropdown menu={menuProps} trigger={["hover"]}>
           <Space>
             <TeamOutlined />
-            <span style={{ cursor: 'pointer' }}>ผู้ใช้ทั้งหมด</span>
+            <span style={{ cursor: "pointer" }}>ผู้ใช้ทั้งหมด</span>
           </Space>
         </Dropdown>
       ),
     },
-    { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
-    { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
+    { key: "notifications", icon: <BellOutlined />, label: "การแจ้งเตือน" },
+    { key: "settings", icon: <SettingOutlined />, label: "ตั้งค่า" },
   ];
-  
+
   return (
     <Header
       style={{
-        background: '#fff',
-        padding: '0 24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
+        background: "#fff",
+        padding: "0 24px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
       }}
     >
-      <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-        CoopMatch
-      </Title>
+      <div
+        onClick={handleLogoClick}
+        style={{
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <img src={Logo} alt="Logo" style={{ height: 40 }} />
+      </div>
 
       <Menu
         mode="horizontal"
@@ -120,9 +137,10 @@ const AdminHeader: React.FC = () => {
         items={menuItems}
         onClick={handleMenuClick}
         style={{
-          border: 'none',
-          backgroundColor: 'transparent',
-          minWidth: 541,
+          border: "none",
+          backgroundColor: "transparent",
+          justifyContent: "end",
+          width: "100vw"
         }}
       />
     </Header>

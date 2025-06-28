@@ -1,0 +1,84 @@
+.backgroundTabChooseVerify {
+  background: #fff;
+  border-radius: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.2rem 1.5rem;
+  border: 0.5px solid #e3e3e3;
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  transition: transform 0.3s ease;
+}
+
+.tabChooseVerify {
+  width: 10vw;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 0.3rem 1.2rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.65);
+  transition: all 0.3s ease;
+}
+
+.tabChooseVerify.active {
+  background: #afd5f4;
+  color: #000000;
+  font-weight: bold;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); /* เงา */
+}
+
+.searchInput {
+  width: 20vw;
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 0.4rem 1rem;
+  border: 0.5px solid #e3e3e3;
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  transition: transform 0.3s ease;
+}
+
+.searchInput2 {
+  width: 30vw;
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 0.4rem 1rem;
+  border: 0.5px solid #e3e3e3;
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  transition: transform 0.3s ease;
+}
+
+.custom-table .ant-table-container {
+  background-color: #afd5f4 !important;
+  border: 1px solid #afd5f4;
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  transition: transform 0.3s ease;
+}
+
+.custom-table .ant-table-tbody > tr > td {
+  background-color: #e7edf3 !important;
+}
+
+.custom-table .ant-table-thead > tr > th {
+  background-color: #afd5f4 !important;
+}
+
+.fade-in-card:hover {
+  transform: translateY(-4px); /* ยกการ์ดขึ้นเล็กน้อยตอน hover */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -10,7 +10,10 @@ import StudentProfile from "./pages/Profile/Student/Student";
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
 import SearchJobs from "./pages/SearchJob/SearchJobs";
 //import SelectUsersAdmin from "./pages/Admin/users/SelectUsers";
-import CompaniesAdmin from "./pages/Admin/users/Companies";
+import CompaniesInAdmin from "./pages/Admin/users/Companies/Companies";
+import SubCompanyInAdmin from "./pages/Admin/users/Companies/SubCompany";
+import StudentsInAdmin from "./pages/Admin/users/Students/Students";
+import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
 
 
 function App() {
@@ -64,6 +67,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/*-------------------------   Admin   -------------------------*/}
         <Route
           path="/admin/dashboard"
           element={
@@ -76,7 +80,31 @@ function App() {
           path="/admin/companies"
           element={
             <ProtectedRoute allowedRoles={[1]}>
-              <CompaniesAdmin />
+              <CompaniesInAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/:id"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <SubCompanyInAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <StudentsInAdmin />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/admin/lecturers"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <LecturersInAdmin />
             </ProtectedRoute>
           }
         />
