@@ -11,7 +11,6 @@ type AcademicStaff struct {
 	Faculty         string `json:"faculty"`
 	Department      string `json:"department"`
 	University      string `json:"university"`
-	Verify          bool   `json:"verify"`
 
 	UserID    uint  `json:"user_id"`
 	User      User   `gorm:"foreignKey:UserID"`

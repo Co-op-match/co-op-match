@@ -43,7 +43,7 @@ func SetupDatabase() {
 		&entity.StudentInterest{},
 		&entity.Company{},
 		&entity.Contact{},
-		&entity.StatusPost{},
+		&entity.Status{},
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
@@ -63,6 +63,7 @@ func SetupDatabase() {
 		&entity.Notification{},
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
+		&entity.Verify{},
 	)
 
 	createSeedData(db)
@@ -277,7 +278,6 @@ func createSeedData(db *gorm.DB) {
 		Faculty:          "วิศวกรรมศาสตร์",
 		Department:       "วิศวกรรมคอมพิวเตอร์",
 		University:       "มหาวิทยาลัยตัวอย่าง",
-		Verify:           true,
 		UserID:           4,
 		AddressID:        1,
 		AdminID:          1,
@@ -354,7 +354,6 @@ func createSeedData(db *gorm.DB) {
 	company := &entity.Company{
 		CompanyName: "Example Co., Ltd.",
 		Logo:        "logo.png",
-		Verify:      false,
 		UserID:      2,
 		AddressID:   1,
 	}
@@ -377,13 +376,19 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// Seed Status Posts
-	statusPosts := []entity.StatusPost{
-		{StatusPost: "Open"},
-		{StatusPost: "Closed"},
-		{StatusPost: "Pending Approval"},
+	Statuses := []entity.Status{
+		{Status: "Open"},
+		{Status: "Closed"},
+		{Status: "Pending Approval"},
+		{Status: "รอรับรอง"},
+		{Status: "รับรอง"},
+		{Status: "ปฏิเสธ"},
+		{Status: "รอดำเนินการ"},
+		{Status: "อนุมัติ"},
+		{Status: "ปฎิเสธ"},
 	}
-	for _, pkg := range statusPosts {
-		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
+	for _, pkg := range Statuses {
+		db.FirstOrCreate(&pkg, entity.Status{Status: pkg.Status})
 	}
 	IntershipPost := []entity.IntershipPost{
 		{
@@ -394,7 +399,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.0",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusPostID:    1,
+			StatusID:    	 1,
 			AdminID:         1,
 			WorkModeID:      1,
 			BenefitID:       1,
@@ -409,7 +414,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.2",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusPostID:    1,
+			StatusID:    	 1,
 			AdminID:         1,
 			WorkModeID:      2,
 			BenefitID:       3,
@@ -529,4 +534,11 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
 	}
 
+	// ยืนยันตัวตนของ อาจารย์ && บริษัท	
+	verify := entity.Verify{
+		VerificationDocument: "https://swr.co.th/wp-content/uploads/2019/02/Screen-Shot-2562-02-09-at-15.11.16.png",
+		StatusID:             4,
+		UserID:               2,
+	}
+	db.FirstOrCreate(&verify, entity.Verify{UserID: verify.UserID})
 }
