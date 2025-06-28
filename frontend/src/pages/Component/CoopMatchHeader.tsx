@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layout, Typography, Menu } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Avatar, Layout, Menu } from 'antd';
 import {
   SearchOutlined,
   UserOutlined,
@@ -9,12 +9,36 @@ import {
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
+import { GetUserById } from '../../services/https';
+import type { UserInterface } from '../../interfaces/User';
 
 const { Header } = Layout;
 
 const CoopMatchHeader: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [user, setUser] = useState<UserInterface | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userIdString = localStorage.getItem("id");
+        if (!userIdString) return;
+
+        const userId = Number(userIdString);
+        if (isNaN(userId)) return;
+
+        const data = await GetUserById(userId);
+        setUser(data);
+         console.log("user",data)
+      } catch (error) {
+        console.error("Failed to fetch user", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
 
   // แปลง path เป็น key เช่น /student/profile → "profile"
   const currentPage = (() => {
@@ -83,17 +107,28 @@ const CoopMatchHeader: React.FC = () => {
   <img src={Logo} alt="Logo" style={{ height: 40 }} />
 </div>
 
-      <Menu
+
+<div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+<Menu
         mode="horizontal"
         selectedKeys={[currentPage]}
         items={menuItems}
         onClick={handleMenuClick}
-        style={{
-          border: 'none',
-          backgroundColor: 'transparent',
-          minWidth: 541,
-        }}
-      />
+    style={{
+      border: 'none',
+      backgroundColor: 'transparent',
+      minWidth: 541,
+    }}
+  />
+  <Avatar
+    src={user?.ProfileImage?.[0]?.image_url
+      ? `http://localhost:8000${user.ProfileImage[0].image_url}`
+      : undefined}
+    icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+    style={{ cursor: "pointer", marginLeft: 16 }}
+  />
+</div>
+
     </Header>
   );
 };

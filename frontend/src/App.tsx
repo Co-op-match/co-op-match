@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate ,Outlet } from "react-router-dom";
 import LoginForm from "./pages/authentication/Login/LoginForm";
 import RegisterPage from "./pages/authentication/Register/RegisterForm";
 import RoleSelectionPage from "./pages/authentication/SelectRole/SelectRoleForm";
@@ -9,68 +9,94 @@ import LecturerDashboard from "./pages/Dashboard/LecturerDashboard";
 import StudentProfile from "./pages/Profile/Student/Student";
 import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่มไฟล์นี้
 import SearchJobs from "./pages/SearchJob/SearchJobs";
+import CheckUser from "./components/CheckUser";
+import { UserProvider } from "./components/UserContext";
+import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
+import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
 
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/sign-in" replace />} />
+      <UserProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/sign-in" replace />} />
+      
+          {/* Public Routes */}
+        <Route element={<UserProvider><Outlet /></UserProvider>}>
+          <Route path="/sign-in" element={<LoginForm />} />
+          <Route path="/sign-up" element={<RegisterPage />} />
+          <Route path="/role-select" element={<RoleSelectionPage />} />
+        </Route>
 
-        {/* Public Routes */}
-        <Route path="/sign-in" element={<LoginForm />} />
-        <Route path="/sign-up" element={<RegisterPage />} />
-        <Route path="/role-select" element={<RoleSelectionPage />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/student/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={[3]}>
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />  <Route
-          path="/student/search"
-          element={
-            <ProtectedRoute allowedRoles={[3]}>
-              <SearchJobs />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/profile"
-          element={
-            <ProtectedRoute allowedRoles={[3]}>
-              <StudentProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={[2]}>
-              <CompanyDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/lecturer/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={[4]}>
-              <LecturerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={[1]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          {/* Protected Routes */}
+          <Route
+            path="/student/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />  <Route
+            path="/student/search"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <SearchJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/profile"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <CheckUser>
+                  <StudentProfile />
+                </CheckUser>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/add-profile"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AddressForm />
+              </ProtectedRoute>
+            }
+          />
+                    <Route
+            path="/student/add-student"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AddStudentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CompanyDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lecturer/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={[4]}>
+                <LecturerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </UserProvider>
     </BrowserRouter>
   );
 }
