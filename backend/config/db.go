@@ -410,6 +410,7 @@ func createSeedData(db *gorm.DB) {
 		{Status: "Open"},
 		{Status: "Closed"},
 		{Status: "Pending Approval"},
+		{Status: "ยังไม่ได้ส่งคำขอ"},
 		{Status: "รอรับรอง"},
 		{Status: "รับรอง"},
 		{Status: "ปฏิเสธ"},
