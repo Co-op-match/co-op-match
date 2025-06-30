@@ -10,7 +10,6 @@ export interface CompanyInterface {
   id?: number;
   company_name?: string;
   logo?: string;
-  verify?: boolean;
 
   user_id?: number;
   user?: UserInterface;
@@ -29,4 +28,8 @@ export interface CompanyInterface {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+
+  // เพิ่ม fields สำหรับ UI:
+  status?: string;
+  verify?: boolean;
 }

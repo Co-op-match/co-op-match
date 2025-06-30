@@ -26,9 +26,15 @@
   right: 0;
   background: #1890ff;
   border-radius: 50%;
-  padding: 6px;
-  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 0 2px white;
 }
+
 
 .student-student-name {
   margin-top: 10px;

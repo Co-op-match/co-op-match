@@ -27,6 +27,7 @@ func main() {
 
 	// เพิ่ม CORS Middleware
 	r.Use(CORSMiddleware())
+	r.Static("/uploads", "./public/uploads")
 	// Auth Route
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
@@ -46,13 +47,46 @@ func main() {
 		studentGroup := router.Group("/students")
 		{
 			studentGroup.GET("", controller.GetAllStudents)
+			studentGroup.POST("", controller.CreateStudent)
+			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
+
+		}
+		addressGroup := router.Group("/address")
+		{
+			addressGroup.GET("/", controller.GetAllAdress)
+			addressGroup.GET("/:user_id", controller.GetAddressByUserID)
+			addressGroup.POST("/:role_id/:user_id", controller.CreateAddressByRoleIDAndUserID)
+			addressGroup.PUT("/:role_id/:user_id", controller.UpdateAddressByRoleIDAndUserID)
+		}
+		studentSkillGroup := router.Group("/skills")
+		{
+			studentSkillGroup.GET("/", controller.GetAllSkill)
+			studentSkillGroup.GET("/:user_id", controller.GetStudentSkillsByUserID)
+			studentSkillGroup.POST("/:user_id", controller.CreateStudentSkillsAndInterestsByUserID)
+			studentSkillGroup.PUT("/:user_id", controller.UpdateStudentSkillsAndInterestsByUserID)
+		}
+		interestGroup := router.Group("/interests")
+		{
+			interestGroup.GET("/", controller.GetAllInterest)
+			interestGroup.GET("/:user_id", controller.GetStudentInterestsByUserID)
+		}
+		eduGroup := router.Group("/education")
+		{
+			eduGroup.GET("/", controller.GetAllEducation)
+			eduGroup.GET("/:user_id", controller.GetEcudutionByUserID)
+			eduGroup.POST("/", controller.CreateEducation)
+			eduGroup.PUT("/:user_id", controller.UpdateEducationByUserID)
 		}
 
-		UserGroup := router.Group("/user")
-		{
-			UserGroup.GET("/:id", controller.GetUserByID)
+		userGroup := router.Group("/user") 
+		{       
+			userGroup.GET("/:id", controller.GetUserByID)
+			userGroup.POST("/image", controller.CreateProfileImage)
+			userGroup.PUT("/image/:id", controller.UpdateProfileImage)
+			userGroup.GET("/gender", controller.GetAllGender)
+			userGroup.GET("/image/:id", controller.GetProfileImageByUserID)
 		}
 
 		chatGroup := router.Group("/chat")

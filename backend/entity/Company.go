@@ -8,7 +8,6 @@ type Company struct {
 	gorm.Model
 	CompanyName string `json:"company_name"`
 	Logo        string `json:"logo"`
-	Verify      bool   `json:"verify"`
 
 	UserID uint `json:"user_id"`
 	User   User `gorm:"foreignKey:UserID"`

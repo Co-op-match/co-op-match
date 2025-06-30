@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Layout,
   Card,
@@ -27,6 +27,8 @@ import Title from "antd/es/typography/Title";
 import "../users.css";
 
 import type { CompanyInterface } from "../../../../interfaces/Company";
+import type { ColumnsType } from "antd/es/table";
+import axios from "axios";
 
 const initialData = [
   {
@@ -56,7 +58,6 @@ const initialCompanyData: CompanyInterface[] = [
     id: 1,
     company_name: "ไฮเทค โซลูชั่นส์ จำกัด",
     logo: "https://static.vecteezy.com/system/resources/thumbnails/023/654/784/small_2x/golden-logo-template-free-png.png",
-    verify: true,
     user_id: 1,
     address_id: 1,
     admin_id: 1,
@@ -70,7 +71,6 @@ const initialCompanyData: CompanyInterface[] = [
     id: 2,
     company_name: "สมาร์ทวิชั่น อินโนเวชั่น จำกัด",
     logo: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.vecteezy.com%2Ffree-png%2Flogo&psig=AOvVaw2hsd0es5eXgAJsuF0WuBlC&ust=1751357533766000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCIjy47_ZmI4DFQAAAAAdAAAAABAu",
-    verify: false,
     user_id: 2,
     address_id: 2,
     admin_id: 2,
@@ -94,6 +94,43 @@ const Companies: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm] = Form.useForm();
 
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/companies") // สมมุติ endpoint
+      .then((res) => {
+        const data = res.data.map((item: any) => ({
+          ...item,
+          status:
+            item.verifications?.[0]?.status?.name === "รับรอง"
+              ? "รับรอง"
+              : "รอรับรอง",
+          verify: item.verifications?.[0]?.status?.name === "รับรอง",
+        }));
+        setCompanyData(data);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  // ฟังก์ชันนี้ใช้เปลี่ยนสถานะบริษัทเป็น 'รับรอง'
+  const finalizeVerification = async () => {
+    try {
+      await axios.put(`http://localhost:8000/verify/${selectedRow?.id}`, {
+        status_id: 1, // 1 = รับรอง
+      });
+
+      setCompanyData((prev) =>
+        prev.map((item) =>
+          item.id === selectedRow?.id
+            ? { ...item, status: "รับรอง", verify: true }
+            : item
+        )
+      );
+      setShowConfirmModal(false);
+    } catch (err) {
+      console.error("Error updating verification:", err);
+    }
+  };
+
   const isPdfFile = (url: string) => {
     return url?.toLowerCase().endsWith(".pdf");
   };
@@ -110,16 +147,6 @@ const Companies: React.FC = () => {
     setShowConfirmModal(true);
   };
 
-  // ฟังก์ชันนี้ใช้เปลี่ยนสถานะบริษัทเป็น 'รับรอง'
-  const finalizeVerification = () => {
-    setCompanyData((prev) =>
-      prev.map((item) =>
-        item.id === selectedRow?.id ? { ...item, status: "รับรอง" } : item
-      )
-    );
-    setShowConfirmModal(false);
-  };
-
   // ใช้เปิด Modal แก้ไขบริษัท โดยเติมข้อมูลเดิมลงในฟอร์ม
   const openEditModal = (record: any) => {
     setSelectedRow(record);
@@ -132,43 +159,31 @@ const Companies: React.FC = () => {
     editForm.validateFields().then((values) => {
       setCompanyData((prev) =>
         prev.map((item) =>
-          item.key === selectedRow.key ? { ...item, ...values } : item
+          item.id === selectedRow?.id ? { ...item, ...values } : item
         )
       );
       setShowEditModal(false);
     });
   };
 
-  const handleDelete = async (cardID: string) => {
-    /*  try {
-      const response = await DeleteParkingCard(cardID);
-      if (response.status === 200) {
-        message.success("Card deleted successfully.");
-        setCards(cards.filter((card) => card.ID !== cardID));
-        setReload(!reload);
-      } else {
-        message.error("Failed to delete card.");
-      }
-    } catch (error) {
-      console.error("Error deleting card:", error);
-      message.error("An error occurred while deleting the card.");
-    } */
-    setSelectedRow((prev) => prev.filter((company) => company.id !== id));
+  const handleDelete = (companyID: number) => {
+    setCompanyData((prev) =>
+      prev.filter((company) => company.id !== companyID)
+    );
   };
 
-  const columns = [
+  const columns: ColumnsType<CompanyInterface /*  & { status?: string } */> = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "วันที่สมัคร", dataIndex: "create_at", key: "create_at" },
+    { title: "วันที่สมัคร", dataIndex: "created_at", key: "created_at" },
     {
       title: "โลโก้",
       key: "logo",
       render: (_: any, record: CompanyInterface) => (
         <Avatar shape="square" size="large" src={record.logo || undefined}>
-          {record.company_name}
+          {record.company_name?.charAt(0)}
         </Avatar>
       ),
     },
-
     {
       title: "บริษัท",
       key: "company",
@@ -225,9 +240,12 @@ const Companies: React.FC = () => {
 
   const getTableData = () => {
     let filtered = companyData;
+
     if (activeTab !== "ทั้งหมด") {
-      filtered = filtered.filter((item) => item.status === activeTab);
+      const isVerified = activeTab === "รับรอง";
+      filtered = filtered.filter((item) => item.verify === isVerified);
     }
+
     if (searchText.trim()) {
       filtered = filtered.filter((item) =>
         [item.id, item.company_name, item.created_at].some((field) =>
@@ -235,7 +253,11 @@ const Companies: React.FC = () => {
         )
       );
     }
-    return filtered;
+
+    return filtered.map((item) => ({
+      ...item,
+      status: item.verify ? "รับรอง" : "รอรับรอง",
+    }));
   };
 
   return (
@@ -384,14 +406,8 @@ const Companies: React.FC = () => {
             >
               <Input />
             </Form.Item>
-            <Form.Item
-              name="create_at"
-              label="วันที่สมัคร"
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-{/*             <Form.Item name="verification_document" label="หนังสือรับรอง">
+            <Form.Item name="created_at" label="วันที่สมัคร"></Form.Item>
+            {/*             <Form.Item name="verification_document" label="หนังสือรับรอง">
               {selectedRow?.verification_document &&
                 (isPdfFile(selectedRow.verification_document) ? (
                   <>
