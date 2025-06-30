@@ -569,12 +569,22 @@ func createSeedData(db *gorm.DB) {
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
 			StatusID:             4,
-			UserID:               3,
+			UserID:               2,
+		},
+		{
+			VerificationDocument: "https://swr.co.th/verify1.png",
+			StatusID:             5,
+			UserID:               6,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify2.png",
 			StatusID:             4,
-			UserID:               8,
+			UserID:               4,
+		},
+		{
+			VerificationDocument: "https://swr.co.th/verify1.png",
+			StatusID:             5,
+			UserID:               14,
 		},
 	}
 	for _, v := range verifies {
