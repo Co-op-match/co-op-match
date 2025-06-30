@@ -7,7 +7,7 @@ import type { ReviewInterface } from "./Review";
 import type { UserInterface } from "./User";
 
 export interface CompanyInterface {
-  id?: number;
+  ID?: number;
   company_name?: string;
   logo?: string;
 
@@ -25,9 +25,8 @@ export interface CompanyInterface {
   interview_appointments?: InterviewAppointmentInterface[];
   reviews?: ReviewInterface[];
 
-  created_at?: string;
-  updated_at?: string;
-  deleted_at?: string | null;
+  CreatedAt?: string;
+  DeletedAt?: string | null;
 
   // เพิ่ม fields สำหรับ UI:
   status?: string;

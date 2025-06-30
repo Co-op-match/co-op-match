@@ -18,6 +18,7 @@ func GetAllCompany(c *gin.Context) {
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
 		Preload("Reviews").
+		Preload("User.Verifications.Status").
 		Find(&company).Error
 
 	if err != nil {

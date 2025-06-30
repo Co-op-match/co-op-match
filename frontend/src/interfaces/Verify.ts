@@ -16,7 +16,6 @@ export interface VerifyInterface {
   admin_id?: number | null;
   admin?: AdminInterface | null;
 
-  created_at?: string;
-  updated_at?: string;
-  deleted_at?: string | null;
+  CreatedAt?: string;
+  DeletedAt?: string | null;
 }

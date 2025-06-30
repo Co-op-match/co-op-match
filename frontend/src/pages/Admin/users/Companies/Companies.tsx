@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
+import dayjs from "dayjs";
 import "../users.css";
 
 import { GetAllCompany, GetAllUser } from "../../../../services/https";
@@ -69,13 +70,13 @@ const Companies: React.FC = () => {
   // ฟังก์ชันนี้ใช้เปลี่ยนสถานะบริษัทเป็น 'รับรอง'
   const finalizeVerification = async () => {
     try {
-      await axios.put(`http://localhost:8000/verify/${selectedRow?.id}`, {
+      await axios.put(`http://localhost:8000/verify/${selectedRow?.ID}`, {
         status_id: 1, // สมมุติว่า 1 คือ "รับรอง"
       });
 
       setCompanyData((prev) =>
         prev?.map((item) =>
-          item.id === selectedRow?.id
+          item.ID === selectedRow?.ID
             ? { ...item, status: "รับรอง", verify: true }
             : item
         )
@@ -116,7 +117,7 @@ const Companies: React.FC = () => {
     editForm.validateFields().then((values) => {
       setCompanyData((prev) =>
         prev.map((item) =>
-          item.id === selectedRow?.id ? { ...item, ...values } : item
+          item.ID === selectedRow?.ID ? { ...item, ...values } : item
         )
       );
       setShowEditModal(false);
@@ -125,13 +126,18 @@ const Companies: React.FC = () => {
 
   const handleDelete = (companyID: number) => {
     setCompanyData((prev) =>
-      prev.filter((company) => company.id !== companyID)
+      prev.filter((company) => company.ID !== companyID)
     );
   };
 
   const columns: ColumnsType<CompanyInterface /*  & { status?: string } */> = [
-    { title: "ID", dataIndex: "id", key: "id" },
-    { title: "วันที่สมัคร", dataIndex: "created_at", key: "created_at" },
+    { title: "ID", dataIndex: "ID", key: "ID" },
+    {
+      title: "วันที่สมัคร",
+      dataIndex: "CreatedAt",
+      key: "CreatedAt",
+      render: (value: string) => dayjs(value).format("DD/MM/YYYY"),
+    },
     {
       title: "โลโก้",
       key: "logo",
@@ -145,7 +151,7 @@ const Companies: React.FC = () => {
       title: "บริษัท",
       key: "company",
       render: (_: any, record: CompanyInterface) => (
-        <a href={`/company/${record.id}`} style={{ color: "#1677ff" }}>
+        <a href={`/company/${record.ID}`} style={{ color: "#1677ff" }}>
           {record.company_name}
         </a>
       ),
@@ -205,7 +211,7 @@ const Companies: React.FC = () => {
 
     if (searchText.trim()) {
       filtered = filtered?.filter((item) =>
-        [item.id, item.company_name, item.created_at].some((field) =>
+        [item.ID, item.company_name, item.created_at].some((field) =>
           String(field).toLowerCase().includes(searchText.toLowerCase())
         )
       );
