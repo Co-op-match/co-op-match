@@ -13,6 +13,7 @@ import {
   Image,
   Form,
   Popconfirm,
+  Avatar,
 } from "antd";
 import {
   SearchOutlined,
@@ -23,7 +24,9 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
-import "../users.css"
+import "../users.css";
+
+import type { CompanyInterface } from "../../../../interfaces/Company";
 
 const initialData = [
   {
@@ -48,11 +51,44 @@ const initialData = [
   },
 ];
 
+const initialCompanyData: CompanyInterface[] = [
+  {
+    id: 1,
+    company_name: "ไฮเทค โซลูชั่นส์ จำกัด",
+    logo: "https://static.vecteezy.com/system/resources/thumbnails/023/654/784/small_2x/golden-logo-template-free-png.png",
+    verify: true,
+    user_id: 1,
+    address_id: 1,
+    admin_id: 1,
+    contact: [],
+    intership_posts: [],
+    interview_appointments: [],
+    reviews: [],
+    created_at: "2025-05-20",
+  },
+  {
+    id: 2,
+    company_name: "สมาร์ทวิชั่น อินโนเวชั่น จำกัด",
+    logo: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.vecteezy.com%2Ffree-png%2Flogo&psig=AOvVaw2hsd0es5eXgAJsuF0WuBlC&ust=1751357533766000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCIjy47_ZmI4DFQAAAAAdAAAAABAu",
+    verify: false,
+    user_id: 2,
+    address_id: 2,
+    admin_id: 2,
+    contact: [],
+    intership_posts: [],
+    interview_appointments: [],
+    reviews: [],
+    created_at: "2025-05-20",
+  },
+];
+
 const Companies: React.FC = () => {
+  const [companyData, setCompanyData] =
+    useState<CompanyInterface[]>(initialCompanyData);
+  const [selectedRow, setSelectedRow] = useState<CompanyInterface | null>(null);
+
   const [activeTab, setActiveTab] = useState("รอรับรอง");
   const [searchText, setSearchText] = useState("");
-  const [data, setData] = useState(initialData);
-  const [selectedRow, setSelectedRow] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -76,9 +112,9 @@ const Companies: React.FC = () => {
 
   // ฟังก์ชันนี้ใช้เปลี่ยนสถานะบริษัทเป็น 'รับรอง'
   const finalizeVerification = () => {
-    setData((prev) =>
+    setCompanyData((prev) =>
       prev.map((item) =>
-        item.key === selectedRow.key ? { ...item, status: "รับรอง" } : item
+        item.id === selectedRow?.id ? { ...item, status: "รับรอง" } : item
       )
     );
     setShowConfirmModal(false);
@@ -94,7 +130,7 @@ const Companies: React.FC = () => {
   // ใช้ validate และบันทึกการแก้ไขข้อมูลบริษัท
   const handleEditSubmit = () => {
     editForm.validateFields().then((values) => {
-      setData((prev) =>
+      setCompanyData((prev) =>
         prev.map((item) =>
           item.key === selectedRow.key ? { ...item, ...values } : item
         )
@@ -103,7 +139,7 @@ const Companies: React.FC = () => {
     });
   };
 
-  const handleDeleteCard = async (cardID: string) => {
+  const handleDelete = async (cardID: string) => {
     /*  try {
       const response = await DeleteParkingCard(cardID);
       if (response.status === 200) {
@@ -117,21 +153,31 @@ const Companies: React.FC = () => {
       console.error("Error deleting card:", error);
       message.error("An error occurred while deleting the card.");
     } */
+    setSelectedRow((prev) => prev.filter((company) => company.id !== id));
   };
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "วันที่สมัคร", dataIndex: "date", key: "date" },
+    { title: "วันที่สมัคร", dataIndex: "create_at", key: "create_at" },
+    {
+      title: "โลโก้",
+      key: "logo",
+      render: (_: any, record: CompanyInterface) => (
+        <Avatar shape="square" size="large" src={record.logo || undefined}>
+          {record.company_name}
+        </Avatar>
+      ),
+    },
+
     {
       title: "บริษัท",
       key: "company",
-      render: (_: any, record: any) => (
+      render: (_: any, record: CompanyInterface) => (
         <a href={`/company/${record.id}`} style={{ color: "#1677ff" }}>
-          {record.company}
+          {record.company_name}
         </a>
       ),
     },
-    { title: "รายละเอียด", dataIndex: "detail", key: "detail" },
     {
       title: "การรับรอง",
       key: "status",
@@ -168,7 +214,7 @@ const Companies: React.FC = () => {
           /> */}
           <Popconfirm
             title="Sure to delete?"
-            onConfirm={() => handleDeleteCard(record.ID || "")}
+            onConfirm={() => handleDelete(record.id)}
           >
             <DeleteOutlined />
           </Popconfirm>
@@ -178,13 +224,13 @@ const Companies: React.FC = () => {
   ];
 
   const getTableData = () => {
-    let filtered = data;
+    let filtered = companyData;
     if (activeTab !== "ทั้งหมด") {
       filtered = filtered.filter((item) => item.status === activeTab);
     }
     if (searchText.trim()) {
       filtered = filtered.filter((item) =>
-        [item.id, item.company, item.detail, item.date].some((field) =>
+        [item.id, item.company_name, item.created_at].some((field) =>
           String(field).toLowerCase().includes(searchText.toLowerCase())
         )
       );
@@ -208,7 +254,7 @@ const Companies: React.FC = () => {
                 style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
               >
                 <div style={{ fontSize: 18, fontWeight: "bolder" }}>
-                  {data.length}
+                  {companyData.length}
                 </div>
               </Card>
             </Flex>
@@ -280,12 +326,10 @@ const Companies: React.FC = () => {
           }
         >
           <p>
-            <strong>บริษัท:</strong> {selectedRow?.company}
+            <strong>บริษัท:</strong> {selectedRow?.company_name}
           </p>
-          <p>
-            <strong>รายละเอียด:</strong> {selectedRow?.detail}
-          </p>
-          {selectedRow?.verification_document &&
+          <p></p>
+          {/*  {selectedRow?.verification_document &&
             (isPdfFile(selectedRow.verification_document) ? (
               <>
                 <embed
@@ -310,7 +354,7 @@ const Companies: React.FC = () => {
                 width="100%"
                 style={{ marginTop: 16, borderRadius: 8 }}
               />
-            ))}
+            ))} */}
         </Modal>
 
         <Modal
@@ -325,36 +369,29 @@ const Companies: React.FC = () => {
         </Modal>
 
         <Modal
+          title="แก้ไขข้อมูลบริษัท"
           open={showEditModal}
-          onCancel={() => setShowEditModal(false)}
           onOk={handleEditSubmit}
+          onCancel={() => setShowEditModal(false)}
           okText="บันทึก"
           cancelText="ยกเลิก"
-          title="แก้ไขข้อมูลบริษัท"
         >
           <Form form={editForm} layout="vertical">
             <Form.Item
-              name="company"
+              name="company_name"
               label="ชื่อบริษัท"
               rules={[{ required: true }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
-              name="detail"
-              label="รายละเอียด"
-              rules={[{ required: true }]}
-            >
-              <Input.TextArea rows={3} />{" "}
-            </Form.Item>
-            <Form.Item
-              name="date"
+              name="create_at"
               label="วันที่สมัคร"
               rules={[{ required: true }]}
             >
               <Input />
             </Form.Item>
-            <Form.Item name="verification_document" label="หนังสือรับรอง">
+{/*             <Form.Item name="verification_document" label="หนังสือรับรอง">
               {selectedRow?.verification_document &&
                 (isPdfFile(selectedRow.verification_document) ? (
                   <>
@@ -381,7 +418,7 @@ const Companies: React.FC = () => {
                     style={{ marginTop: 16, borderRadius: 8 }}
                   />
                 ))}
-            </Form.Item>
+            </Form.Item> */}
           </Form>
         </Modal>
       </Layout>

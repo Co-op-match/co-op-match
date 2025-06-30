@@ -21,7 +21,7 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
-import "../users.css"
+import "../users.css";
 
 const { Content } = Layout;
 
@@ -373,12 +373,12 @@ const AcademicStaff: React.FC = () => {
         </Modal>
 
         <Modal
+          title="ยืนยันการรับรองอีกครั้ง"
           open={showConfirmModal}
-          onCancel={() => setShowConfirmModal(false)}
           onOk={finalizeVerification}
+          onCancel={() => setShowConfirmModal(false)}
           okText="ยืนยัน"
           cancelText="ยกเลิก"
-          title="ยืนยันการรับรองอีกครั้ง"
         >
           <p>คุณแน่ใจหรือไม่ว่าจะรับรองอาจารย์นี้?</p>
         </Modal>
