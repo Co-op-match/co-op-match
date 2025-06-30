@@ -10,7 +10,7 @@ import {
   Input,
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
-import CoopMatchHeader from '../component/CoopMatchHeader';
+import CoopMatchHeader from '../Component/CoopMatchHeader';
 import { UserContext } from '../../components/UserContext'; 
 const { Header, Content } = Layout;
 const { Title } = Typography;

@@ -7,6 +7,7 @@ import {
   Button,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import CoopMatchHeader from '../Component/CoopMatchHeader';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -29,6 +30,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      <CoopMatchHeader />
       <Layout>
         <Header style={{
           background: '#fff',
