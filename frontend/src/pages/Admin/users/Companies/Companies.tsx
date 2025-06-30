@@ -14,6 +14,7 @@ import {
   Form,
   Popconfirm,
   Avatar,
+  message,
 } from "antd";
 import {
   SearchOutlined,
@@ -26,65 +27,14 @@ import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
 import "../users.css";
 
+import { GetAllCompany, GetAllUser } from "../../../../services/https";
+
 import type { CompanyInterface } from "../../../../interfaces/Company";
 import type { ColumnsType } from "antd/es/table";
 import axios from "axios";
 
-const initialData = [
-  {
-    key: 1,
-    id: 1,
-    date: "20/05/2568",
-    company: "ไฮเทค โซลูชั่นส์ จำกัด",
-    detail: "ทำคลิปวิดีโอ...",
-    status: "รับรอง",
-    verification_document:
-      "https://swr.co.th/wp-content/uploads/2019/02/Screen-Shot-2562-02-09-at-15.11.16.png",
-  },
-  {
-    key: 2,
-    id: 2,
-    date: "20/05/2568",
-    company: "สมาร์ทวิชั่น อินโนเวชั่น จำกัด",
-    detail: "ทำคลิปวิดีโอ...",
-    status: "รอรับรอง",
-    verification_document:
-      "https://swr.co.th/wp-content/uploads/2019/02/Screen-Shot-2562-02-09-at-15.11.16.png",
-  },
-];
-
-const initialCompanyData: CompanyInterface[] = [
-  {
-    id: 1,
-    company_name: "ไฮเทค โซลูชั่นส์ จำกัด",
-    logo: "https://static.vecteezy.com/system/resources/thumbnails/023/654/784/small_2x/golden-logo-template-free-png.png",
-    user_id: 1,
-    address_id: 1,
-    admin_id: 1,
-    contact: [],
-    intership_posts: [],
-    interview_appointments: [],
-    reviews: [],
-    created_at: "2025-05-20",
-  },
-  {
-    id: 2,
-    company_name: "สมาร์ทวิชั่น อินโนเวชั่น จำกัด",
-    logo: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.vecteezy.com%2Ffree-png%2Flogo&psig=AOvVaw2hsd0es5eXgAJsuF0WuBlC&ust=1751357533766000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCIjy47_ZmI4DFQAAAAAdAAAAABAu",
-    user_id: 2,
-    address_id: 2,
-    admin_id: 2,
-    contact: [],
-    intership_posts: [],
-    interview_appointments: [],
-    reviews: [],
-    created_at: "2025-05-20",
-  },
-];
-
 const Companies: React.FC = () => {
-  const [companyData, setCompanyData] =
-    useState<CompanyInterface[]>(initialCompanyData);
+  const [companyData, setCompanyData] = useState<CompanyInterface[]>([]);
   const [selectedRow, setSelectedRow] = useState<CompanyInterface | null>(null);
 
   const [activeTab, setActiveTab] = useState("รอรับรอง");
@@ -95,39 +45,46 @@ const Companies: React.FC = () => {
   const [editForm] = Form.useForm();
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/companies") // สมมุติ endpoint
-      .then((res) => {
-        const data = res.data.map((item: any) => ({
+    const fetchCompanies = async () => {
+      const resUser = await GetAllCompany();
+      if (resUser.status === 200) {
+        const companiesWithStatus = resUser.data.map((item: any) => ({
           ...item,
+          // สมมุติว่ามี verifications: Verify[] ที่ดึงมาจาก backend
           status:
             item.verifications?.[0]?.status?.name === "รับรอง"
               ? "รับรอง"
               : "รอรับรอง",
           verify: item.verifications?.[0]?.status?.name === "รับรอง",
         }));
-        setCompanyData(data);
-      })
-      .catch((err) => console.error(err));
+        setCompanyData(companiesWithStatus);
+      } else {
+        message.error("ไม่พบข้อมูลบริษัท กรุณาลองใหม่อีกครั้ง");
+      }
+    };
+
+    fetchCompanies();
   }, []);
 
   // ฟังก์ชันนี้ใช้เปลี่ยนสถานะบริษัทเป็น 'รับรอง'
   const finalizeVerification = async () => {
     try {
       await axios.put(`http://localhost:8000/verify/${selectedRow?.id}`, {
-        status_id: 1, // 1 = รับรอง
+        status_id: 1, // สมมุติว่า 1 คือ "รับรอง"
       });
 
       setCompanyData((prev) =>
-        prev.map((item) =>
+        prev?.map((item) =>
           item.id === selectedRow?.id
             ? { ...item, status: "รับรอง", verify: true }
             : item
         )
       );
       setShowConfirmModal(false);
+      message.success("รับรองบริษัทเรียบร้อยแล้ว");
     } catch (err) {
       console.error("Error updating verification:", err);
+      message.error("เกิดข้อผิดพลาดในการรับรองบริษัท");
     }
   };
 
@@ -243,18 +200,18 @@ const Companies: React.FC = () => {
 
     if (activeTab !== "ทั้งหมด") {
       const isVerified = activeTab === "รับรอง";
-      filtered = filtered.filter((item) => item.verify === isVerified);
+      filtered = filtered?.filter((item) => item.verify === isVerified);
     }
 
     if (searchText.trim()) {
-      filtered = filtered.filter((item) =>
+      filtered = filtered?.filter((item) =>
         [item.id, item.company_name, item.created_at].some((field) =>
           String(field).toLowerCase().includes(searchText.toLowerCase())
         )
       );
     }
 
-    return filtered.map((item) => ({
+    return (filtered || []).map((item) => ({
       ...item,
       status: item.verify ? "รับรอง" : "รอรับรอง",
     }));

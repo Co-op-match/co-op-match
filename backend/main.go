@@ -51,7 +51,7 @@ func main() {
 			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
-
+			studentGroup.GET("users", controller.GetAllUser)
 		}
 		addressGroup := router.Group("/address")
 		{
@@ -102,7 +102,7 @@ func main() {
 
 		companyGroup := router.Group("/company")
 		{
-			companyGroup.POST("", controller.GetAllCompany)
+			companyGroup.GET("", controller.GetAllCompany)
 		}
 		adminGroup := r.Group("/admin")
 		{

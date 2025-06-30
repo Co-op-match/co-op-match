@@ -15,9 +15,9 @@ func GetAllCompany(c *gin.Context) {
 
 	err := config.DB().
 		Preload("Contact").
-		Preload("IntershipPost").
-		Preload("InterviewAppointment").
-		Preload("Review").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Reviews").
 		Find(&company).Error
 
 	if err != nil {

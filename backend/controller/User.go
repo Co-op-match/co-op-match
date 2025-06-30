@@ -20,8 +20,13 @@ func GetAllUser(c *gin.Context) {
 	var users []entity.User
 
 	err := config.DB().
-		Preload("Role").
-		Find(&users).Error
+	Preload("Role").
+	Preload("Student").
+	Preload("AcademicStaff").
+	Preload("Company").
+	Preload("Admin").
+	Preload("Verify").
+	Find(&users).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

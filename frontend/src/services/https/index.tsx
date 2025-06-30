@@ -46,6 +46,16 @@ async function GetUserById(user_id: number): Promise<UserInterface> {
   }
 }
 
+export async function GetAllUser() {
+  return await axios
+    .get(`${apiUrl}/users`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
+}
+
 async function CreateProfileImage(data: FormData) {
   return await axios.post(`${apiUrl}/user/image`, data, {
     ...requestOptions,
@@ -286,6 +296,17 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
     .put(`${apiUrl}/education/${user_id}`, data, requestOptions)
     .then(res => res)
     .catch(e => e.response);
+}
+
+//======================================= Company ============================================
+export async function GetAllCompany() {
+  return await axios
+    .get(`${apiUrl}/company`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
 }
 
 export {
