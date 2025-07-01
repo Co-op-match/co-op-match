@@ -17,93 +17,28 @@ import {
 import {
   SearchOutlined,
   EnvironmentOutlined,
-  CalendarOutlined,
   DollarOutlined,
+  UserOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
-import CoopMatchHeader from '../Component/CoopMatchHeader';
+import CoopMatchHeader from '../component/CoopMatchHeader';
 import type { ProvinceInterface } from '../../interfaces/Province';
 import type { BenefitInterface } from '../../interfaces/Benefit';
 import type { JobTypeInterface } from '../../interfaces/JobType';
 import type { StipendInterface } from '../../interfaces/Stipend';
 import type { WorkDayInterface } from '../../interfaces/WorkDay';
 import type { WorkModeInterface } from '../../interfaces/WorkMode';
-
-import { GetProvince, GetBenefit,GetJobtype,GetStipends,GetWorkDay,GetWorkMode } from '../../services/https';
+import type { IntershipPostInterface } from '../../interfaces/IntershipPost';
+import { GetProvince, GetBenefit,GetJobtype,GetStipends,GetWorkDay,GetWorkMode,GetIntershipPost } from '../../services/https';
 import { useNavigate } from 'react-router-dom';
 const { Header, Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
-// Job Interface
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  workType: 'WFH' | 'OFFICE' | 'HYBRID';
-  duration: string;
-  salary: string;
-  description: string;
-  tags: string[];
-}
-
-// Mock Data
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'IT Support',
-    company: 'บริษัท ABC จำกัด',
-    location: 'กรุงเทพ - พระนคร',
-    workType: 'WFH',
-    duration: '10 สัปดาห์',
-    salary: '500',
-    description: 'รับสมัครนักศึกษาฝึกงานด้าน IT Support',
-    tags: ['IT', 'Support', 'Entry Level']
-  },
-  {
-    id: '2',
-    title: 'Web Developer',
-    company: 'บริษัท XYZ จำกัด',
-    location: 'กรุงเทพ - สาทร',
-    workType: 'OFFICE',
-    duration: '12 สัปดาห์',
-    salary: '600',
-    description: 'พัฒนาเว็บไซต์และแอปพลิเคชัน',
-    tags: ['Programming', 'Web', 'React']
-  },
-  {
-    id: '3',
-    title: 'Digital Marketing',
-    company: 'บริษัท DEF จำกัด',
-    location: 'กรุงเทพ - อโศก',
-    workType: 'HYBRID',
-    duration: '8 สัปดาห์',
-    salary: '450',
-    description: 'วางแผนและดำเนินการตลาดดิจิทัล',
-    tags: ['Marketing', 'Digital', 'Social Media']
-  },
-  {
-    id: '4',
-    title: 'Graphic Designer',
-    company: 'บริษัท GHI จำกัด',
-    location: 'กรุงเทพ - สีลม',
-    workType: 'WFH',
-    duration: '16 สัปดาห์',
-    salary: '550',
-    description: 'ออกแบบกราฟิกและสื่อสิ่งพิมพ์',
-    tags: ['Design', 'Creative', 'Adobe']
-  }
-];
 
 const SearchJobs: React.FC = () => {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
-  const [jobs] = useState<Job[]>(mockJobs);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(mockJobs);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProvince, setSelectedProvince] = useState<string>('');
-  const [selectedJobType, setSelectedJobType] = useState<string>('');
-  const [selectedDuration, setSelectedDuration] = useState<string>('');
-  const [selectedWorkType, setSelectedWorkType] = useState<string>('');
 
   const [province, setGetProvince] = useState<ProvinceInterface[]>([]);
   const [jobType, setGetJobType] = useState<JobTypeInterface[]>([]);
@@ -111,18 +46,19 @@ const SearchJobs: React.FC = () => {
   const [workDay, setGetWorkDays] = useState<WorkDayInterface[]>([]);
   const [workMode, setGetWorkModes] = useState<WorkModeInterface[]>([]);
   const [benefit, setGetBenefits] = useState<BenefitInterface[]>([]);
-
+  const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
 
   // Fetch Initial Data
   const fetchInitialData = async () => {
     try {
-      const [provinceRes, benefitRes, jobtypeRes, stipendRes, workdayRes, workmodeRes] = await Promise.all([
+      const [provinceRes, benefitRes, jobtypeRes, stipendRes, workdayRes, workmodeRes, postRes] = await Promise.all([
         GetProvince(),
         GetBenefit(),
         GetJobtype(),
         GetStipends(),
         GetWorkDay(),
         GetWorkMode(),
+        GetIntershipPost(),
       ]);
 
       if (provinceRes.status === 200) setGetProvince(provinceRes.data);
@@ -131,6 +67,8 @@ const SearchJobs: React.FC = () => {
       if (stipendRes.status === 200) setGetStipends(stipendRes.data);
       if (workdayRes.status === 200) setGetWorkDays(workdayRes.data);
       if (workmodeRes.status === 200) setGetWorkModes(workmodeRes.data);
+      if (postRes.status === 200) setPosts(postRes.data);
+
 
     } catch (error) {
       messageApi.open({
@@ -143,35 +81,10 @@ const SearchJobs: React.FC = () => {
 
   useEffect(() => {
     fetchInitialData();
-    let filtered = jobs;
+    
 
-    if (searchTerm) {
-      filtered = filtered.filter(job =>
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  }, );
 
-    if (selectedProvince) {
-      filtered = filtered.filter(job => job.location.includes(selectedProvince));
-    }
-
-    if (selectedWorkType) {
-      filtered = filtered.filter(job => job.workType === selectedWorkType);
-    }
-
-    setFilteredJobs(filtered);
-  }, [searchTerm, selectedProvince, selectedWorkType, jobs]);
-
-  const getWorkTypeColor = (workType: string) => {
-    switch (workType) {
-      case 'WFH': return 'blue';
-      case 'OFFICE': return 'green';
-      case 'HYBRID': return 'orange';
-      default: return 'default';
-    }
-  };
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
@@ -288,7 +201,7 @@ const SearchJobs: React.FC = () => {
               </Col>
               <Col>
                 <Text style={{ fontSize: '16px' }}>
-                  มีฝึกงาน {filteredJobs.length.toLocaleString()} ตำแหน่ง
+                {/*  มีฝึกงาน {filteredJobs.length.toLocaleString()} ตำแหน่ง*/}
                 </Text>
               </Col>
             </Row>
@@ -303,71 +216,86 @@ const SearchJobs: React.FC = () => {
             />
           </div>
 
-          <Row gutter={[16, 16]}>
-            {filteredJobs.map((job) => (
-              <Col xs={24} sm={12} lg={8} key={job.id}>
-                <Card
-                  hoverable
-                  style={{ height: '100%' }}
-                  cover={
-                    <div style={{
-                      height: 120,
-                      background: '#f0f0f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <Avatar size={64} style={{ backgroundColor: '#1890ff' }}>
-                        {job.company.charAt(0)}
-                      </Avatar>
-                    </div>
-                  }
-                  actions={[
-                    <Button type="primary" key="apply">สมัครงาน</Button>
-                  ]}
-                >
-                  <Card.Meta
-                    title={
-                      <div>
-                        <Text strong style={{ fontSize: '18px' }}>{job.title}</Text><br />
-                        <Tag color={getWorkTypeColor(job.workType)} style={{ marginTop: 4 }}>
-                          {job.workType}
-                        </Tag>
-                      </div>
-                    }
-                    description={
-                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Text>{job.company}</Text>
-                        <Space>
-                          <EnvironmentOutlined />
-                          <Text>{job.location}</Text>
-                        </Space>
-                        <Space>
-                          <CalendarOutlined />
-                          <Text>ระยะเวลา: {job.duration}</Text>
-                        </Space>
-                        <Space>
-                          <DollarOutlined />
-                          <Text>เงินเดือน: {job.salary} บาท</Text>
-                        </Space>
-                        <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
-                          {job.description}
-                        </Paragraph>
-                      </Space>
-                    }
-                  />
-                </Card>
-              </Col>
-            ))}
-          </Row>
+        <Row gutter={[16, 16]}>
+  {posts.map((job) => (
+    <Col xs={24} sm={12} lg={8} key={job.ID}>
+      
+      <Card
+        hoverable
+        style={{ height: '100%' }}
+        cover={
+          <div style={{
+            height: 120,
+            background: 'linear-gradient(to right, #002c8c, #0057d8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+             <img
+        src={job.Company?.logo} // ← ใช้รูปจาก backend ที่ดึงมา
+        alt={job.Company?.company_name}
+        style={{ height: '80px', objectFit: 'contain' }}
+      />
+          </div>
+        }
+        actions={[
+          <Button type="primary">สมัครงาน</Button>
+        ]}
+      >
+        <Card.Meta
+          title={
+             <div>
+              <Text strong style={{ fontSize: '18px' }}>{job.post_name}</Text><br />
+            <Tag
+              color={
+                job.WorkMode?.work_mode === 'Remote' ? '#722ed1'     // ฟ้า
+                : job.WorkMode?.work_mode === 'On-site' ? '#73d13d'  // เขียว
+                : job.WorkMode?.work_mode === 'Hybrid' ? '#ff7875'      // ส้มแดง
+                : job.WorkMode?.work_mode === 'ทั้งหมด' ? '#003eb3'  // ฟ้าเข้ม
+                : '#d9d9d9' // default สีเทาอ่อน
+              }
+              style={{ marginTop: 4, fontWeight: 'bold', color: 'white' }}
+            >
+              {job.WorkMode?.work_mode || 'ไม่ระบุ'}
+            </Tag>
+            </div>
+          }
+          description={
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+               <Space>
+                <EnvironmentOutlined />
+                <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
+              </Space>
+              <Space>
+                <CalendarOutlined />
+                <Text style={{ color: '#434343' }}>วันทำงาน: {job.WorkDay?.work_day}</Text>
+              </Space>
+              <Space>
+                <UserOutlined />
+                <Text style={{ color: '#434343' }}>จำนวนรับสมัคร: {job.quantity} อัตรา</Text>
+              </Space>
+               <Space>
+                <DollarOutlined />
+                <Text style={{ color: '#434343' }}>เบี้ยเลี้ยง: {job.Stipend?.stipend}</Text>
+              </Space>
+              <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
+                {job.post_description}
+              </Paragraph>
+            </Space>
+          }
+        />
+      </Card>
+    </Col>
+  ))}
+</Row>
 
-          {filteredJobs.length === 0 && (
+
+        {/* {filteredJobs.length === 0 && (8*/}
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
               <Text type="secondary" style={{ fontSize: '16px' }}>
                 ไม่พบตำแหน่งงานที่ตรงกับเงื่อนไขการค้นหา
               </Text>
             </div>
-          )}
         </Content>
       </Layout>
     </Layout>

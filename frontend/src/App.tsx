@@ -25,6 +25,7 @@ import CheckUser from "./components/CheckUser";
 import { UserProvider } from "./components/UserContext";
 import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
 import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
+import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
 
 function App() {
   return (
@@ -33,17 +34,15 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/sign-in" replace />} />
           {/* Public Routes */}
-          <Route
-            element={
-              <UserProvider>
-                <Outlet />
-              </UserProvider>
-            }
-          >
-            <Route path="/sign-in" element={<LoginForm />} />
-            <Route path="/sign-up" element={<RegisterPage />} />
-            <Route path="/role-select" element={<RoleSelectionPage />} />
-          </Route>
+        <Route element={<UserProvider><Outlet /></UserProvider>}>
+          <Route path="/sign-in" element={<LoginForm />} />
+          <Route path="/sign-up" element={<RegisterPage />} />
+          <Route path="/role-select" element={<RoleSelectionPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+
+        </Route>
+
           {/* Protected Routes */}
           <Route
             path="/student/dashboard"
