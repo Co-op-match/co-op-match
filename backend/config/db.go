@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"co-op-match.com/co-op-match/entity"
@@ -63,11 +65,12 @@ func SetupDatabase() {
 		&entity.Notification{},
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
-		&entity.StatusVerify{},
 		&entity.Verify{},
 	)
 
 	createSeedData(db)
+	insertEducationFromCSV(db, "./config/data/university_2567.csv")
+
 }
 
 func createSeedData(db *gorm.DB) {
@@ -498,20 +501,29 @@ func createSeedData(db *gorm.DB) {
 		})
 	}
 	// Seed Educational Background
+		EducationLevels := []entity.EducationLevel{
+		{Name: "ปริญญาตรี"},
+		{Name: "ปริญญาโท"},
+		{Name: "ปริญญาเอก"},
+	}
+	for _, pkg := range EducationLevels {
+		db.FirstOrCreate(&pkg, entity.EducationLevel{Name: pkg.Name})
+	}
+	// 4. เพิ่มข้อมูล Education
 	education := entity.Education{
-		University:     "Chulalongkorn University",
-		Faculty:        "Engineering",
-		Major:          "Computer Engineering",
+		UniversityID:   1,
+		FacultyID:      1,
+		ProgramID:      1,
 		Year:           3,
-		EducationLevel: "Bachelor's Degree",
+		EducationLevelID: 1,
 		Grade:          3.5,
 		StudentID:      1,
 	}
 
-	// FirstOrCreate (เช็คซ้ำกันตาม StudentID, Major, Year)
+	// Insert เฉพาะถ้ายังไม่มีข้อมูลซ้ำ
 	db.FirstOrCreate(&education, entity.Education{
 		StudentID: education.StudentID,
-		Major:     education.Major,
+		ProgramID: education.ProgramID,
 		Year:      education.Year,
 	})
 	interviewAppointments := []entity.InterviewAppointment{
@@ -597,4 +609,98 @@ func createSeedData(db *gorm.DB) {
 	for _, v := range verifies {
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
+}
+
+type RawEducationData struct {
+	University string
+	Faculty    string
+	Program    string
+}
+
+func insertEducationFromCSV(db *gorm.DB, filePath string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Println("❌ Failed to open CSV file:", err)
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.FieldsPerRecord = -1
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Println("❌ Failed to read CSV:", err)
+		return
+	}
+
+	if len(records) < 1 {
+		log.Println("⚠️ CSV ไม่มีข้อมูล")
+		return
+	}
+
+	// Header mapping
+	header := records[0]
+	colMap := make(map[string]int)
+	for i, h := range header {
+		colMap[h] = i
+	}
+
+	requiredCols := []string{"UNIV_NAME_TH", "FAC_NAME", "PROGRAM_NAME", "LEV_NAME_ENG"}
+	for _, col := range requiredCols {
+		if _, ok := colMap[col]; !ok {
+			log.Fatalf("❌ Missing required column: %s", col)
+		}
+	}
+
+	// ✅ กรองเฉพาะระดับการศึกษาที่ต้องการ
+	validLevels := map[string]bool{
+		"ป.ตรี": true,
+		"ป.โท":  true,
+		"ป.เอก": true,
+	}
+
+	var rawData []RawEducationData
+	for _, row := range records[1:] {
+		level := row[colMap["LEV_NAME_ENG"]]
+		if !validLevels[level] {
+			continue
+		}
+
+		rawData = append(rawData, RawEducationData{
+			University: row[colMap["UNIV_NAME_TH"]],
+			Faculty:    row[colMap["FAC_NAME"]],
+			Program:    row[colMap["PROGRAM_NAME"]],
+		})
+	}
+
+	// Cache for IDs
+	univMap := make(map[string]uint)
+	facultyMap := make(map[string]uint)
+
+	for _, item := range rawData {
+		// 🔹 University
+		univID, ok := univMap[item.University]
+		if !ok {
+			univ := entity.University{NameTH: item.University}
+			db.FirstOrCreate(&univ, entity.University{NameTH: item.University})
+			univID = univ.ID
+			univMap[item.University] = univID
+		}
+
+		// 🔹 Faculty
+		facultyKey := item.University + "|" + item.Faculty
+		facultyID, ok := facultyMap[facultyKey]
+		if !ok {
+			fac := entity.Faculty{NameTH: item.Faculty, UniversityID: univID}
+			db.FirstOrCreate(&fac, entity.Faculty{NameTH: item.Faculty, UniversityID: univID})
+			facultyID = fac.ID
+			facultyMap[facultyKey] = facultyID
+		}
+
+		// 🔹 Program
+		prog := entity.Program{NameTH: item.Program, FacultyID: facultyID}
+		db.FirstOrCreate(&prog, entity.Program{NameTH: item.Program, FacultyID: facultyID})
+	}
+
+	log.Printf("✅ นำเข้าข้อมูลเฉพาะ ป.ตรี/โท/เอก เรียบร้อย: %d รายการ\n", len(rawData))
 }

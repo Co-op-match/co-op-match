@@ -72,7 +72,9 @@ func GetStudentByUserID(c *gin.Context) {
 		Preload("User").
 		Preload("User.ProfileImage").
 		Preload("Admin").
-		Preload("Education").
+		Preload("Education.University").
+		Preload("Education.Faculty").
+		Preload("Education.Program").
 		Preload("Gender").
 		Preload("Address").
 		Preload("StudentSkill").
@@ -152,4 +154,21 @@ func UpdateStudent(c *gin.Context) {
 		"message": "Student updated successfully",
 		"data":    student,
 	})
+}
+
+// GET /universities
+func GetUniversities(c *gin.Context) {
+	var universities []entity.University
+
+	err := config.DB().
+		Preload("Faculties").
+		Preload("Faculties.Programs").
+		Find(&universities).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถดึงข้อมูลได้"})
+		return
+	}
+
+	c.JSON(http.StatusOK, universities)
 }

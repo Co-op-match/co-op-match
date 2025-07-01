@@ -1,6 +1,7 @@
-import React from 'react';
-import { Form, Input, InputNumber, Row, Col, Select } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, InputNumber, Row, Col, Select } from 'antd';
 import type { FormInstance } from 'antd';
+import { GetAllEducationLevel, GetUniversity } from '../../../../services/https';
 
 export interface StepEducationProps {
   form: FormInstance<any>;
@@ -8,6 +9,71 @@ export interface StepEducationProps {
 }
 
 const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
+  const [universities, setUniversities] = useState<any[]>([]);
+  const [faculties, setFaculties] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [educationLevels, setEducationLevels] = useState<any[]>([]);
+
+  const [selectedUniversity, setSelectedUniversity] = useState<number>();
+  const [selectedFaculty, setSelectedFaculty] = useState<number>();
+  const [selectededucationLevels, setSelectededucationLevels] = useState<number>();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const univData = await GetUniversity();
+        const levelData = await GetAllEducationLevel();
+
+        const univOptions = univData.map((univ: any) => ({
+          label: univ.name_th,
+          value: univ.ID,
+          faculties: univ.Faculties || [],
+        }));
+
+        const levelOptions = levelData.map((level: any) => ({
+          label: level.name,
+          value: Number(level.ID),
+        }));
+        setUniversities(univOptions);
+        setEducationLevels(levelOptions);
+      } catch (err) {
+        console.error("โหลดข้อมูลล้มเหลว:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+
+  const handleUniversityChange = (univId: number) => {
+    setSelectedUniversity(univId);
+    form.setFieldValue("university_id", univId);
+    const selectedUniv = universities.find((u) => u.value === univId);
+    const facOptions = (selectedUniv?.faculties || []).map((f: any) => ({
+      label: f.name_th,
+      value: f.ID,
+      programs: f.Programs || [],
+    }));
+    setFaculties(facOptions);
+    setPrograms([]);
+    setSelectedFaculty(undefined);
+    form.setFieldsValue({ faculty_id: undefined, program_id: undefined });
+  };
+
+  const handleFacultyChange = (facultyId: number) => {
+    setSelectedFaculty(facultyId);
+    form.setFieldValue("faculty_id", facultyId);
+    const selectedFac = faculties.find((f) => f.value === facultyId);
+    const progOptions = (selectedFac?.programs || []).map((p: any) => ({
+      label: p.name_th,
+      value: p.ID,
+    }));
+    setPrograms(progOptions);
+    form.setFieldValue("program_id", undefined);
+  };
+
   return (
     <>
       <div className="form-section-title">ข้อมูลการศึกษา</div>
@@ -15,48 +81,80 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
         <Col span={12}>
           <Form.Item
             label="มหาวิทยาลัย"
-            name="university"
-            rules={[{ required: true, message: 'กรุณากรอกชื่อมหาวิทยาลัย' }]}
+            name="university_id"
+            rules={[{ required: true, message: 'กรุณาเลือกมหาวิทยาลัย' }]}
           >
-            <Input placeholder="ชื่อมหาวิทยาลัย" />
+            <Select
+              showSearch
+              placeholder="เลือกมหาวิทยาลัย"
+              loading={loading}
+              options={universities}
+              onChange={handleUniversityChange}
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Col>
 
         <Col span={12}>
           <Form.Item
             label="คณะ"
-            name="faculty"
-            rules={[{ required: true, message: 'กรุณากรอกชื่อคณะ' }]}
+            name="faculty_id"
+            rules={[{ required: true, message: 'กรุณาเลือกคณะ' }]}
           >
-            <Input placeholder="ชื่อคณะ" />
+            <Select
+              placeholder="เลือกคณะ"
+              options={faculties}
+              disabled={!selectedUniversity}
+              onChange={handleFacultyChange}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Col>
 
         <Col span={12}>
           <Form.Item
             label="สาขา"
-            name="major"
-            rules={[{ required: true, message: 'กรุณากรอกชื่อสาขา' }]}
+            name="program_id"
+            rules={[{ required: true, message: 'กรุณาเลือกสาขา' }]}
           >
-            <Input placeholder="ชื่อสาขา" />
+            <Select
+              placeholder="เลือกสาขา"
+              options={programs}
+              disabled={!selectedFaculty}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Col>
 
         <Col span={12}>
-          <Form.Item
-            label="ระดับการศึกษา"
-            name="education_level"
-            rules={[{ required: true, message: 'กรุณาเลือกระดับการศึกษา' }]}
-          >
-            <Select placeholder="เลือกระดับการศึกษา">
-              <Select.Option value="ปริญญาตรี">ปริญญาตรี</Select.Option>
-              <Select.Option value="ปวส.">ปวส.</Select.Option>
-              <Select.Option value="ปริญญาโท">ปริญญาโท</Select.Option>
-              <Select.Option value="อื่นๆ">อื่นๆ</Select.Option>
-            </Select>
-          </Form.Item>
-        </Col>
-
+        <Form.Item
+          label="ระดับการศึกษา"
+          name="education_level_id"
+          rules={[{ required: true, message: 'กรุณาเลือกระดับการศึกษา' }]}
+        >
+          <Select
+            placeholder="เลือกระดับการศึกษา"
+            options={educationLevels}
+            value={selectededucationLevels} // ✅ เชื่อมตรงนี้
+            onChange={(value: number) => {
+              setSelectededucationLevels(value);
+              form.setFieldValue("education_level_id", value);
+            }}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label as string).toLowerCase().includes(input.toLowerCase())
+            }
+          />
+              </Form.Item>
+            </Col>
         <Col span={12}>
           <Form.Item
             label="ชั้นปี"

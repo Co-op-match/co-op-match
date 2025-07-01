@@ -6,7 +6,6 @@ import type { EducationInterface } from "./Education";
 
 export interface StudentInterface {
   id?: number;
-  student_id?: string;
   first_name?: string;
   last_name?: string;
   age?: number;
