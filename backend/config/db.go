@@ -66,7 +66,6 @@ func SetupDatabase() {
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
 		&entity.Verify{},
-		&entity.StatusPost{},
 		&entity.StatusVerify{},
 	)
 
