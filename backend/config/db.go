@@ -66,6 +66,8 @@ func SetupDatabase() {
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
 		&entity.Verify{},
+		&entity.StatusPost{},
+		&entity.StatusVerify{},
 	)
 
 	createSeedData(db)
@@ -428,7 +430,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.0",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
 			BenefitID:       1,
@@ -443,7 +445,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.2",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
 			BenefitID:       3,
@@ -587,22 +589,22 @@ func createSeedData(db *gorm.DB) {
 	verifies := []entity.Verify{
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             4,
+			StatusVerifyID:       1,
 			UserID:               2,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify2.png",
-			StatusID:             4,
+			StatusVerifyID:       3,
 			UserID:               4,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			StatusVerifyID:       4,
 			UserID:               14,
 		},
 	}
