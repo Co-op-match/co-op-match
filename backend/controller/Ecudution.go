@@ -25,7 +25,22 @@ func GetAllEducation(c *gin.Context) {
 
 	c.JSON(http.StatusOK, educations)
 }
+func GetAllEducationLevel(c *gin.Context) {
+	var educationlevels []entity.EducationLevel
 
+	err := config.DB().
+		Find(&educationlevels).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch educationlevels",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, educationlevels)
+}
 func GetEcudutionByUserID(c *gin.Context) {
 	userID := c.Param("user_id")
 
@@ -39,13 +54,13 @@ func GetEcudutionByUserID(c *gin.Context) {
 }
 
 type EducationPayload struct {
-	UserID         uint    `json:"user_id"`
-	University     string  `json:"university"`
-	Faculty        string  `json:"faculty"`
-	Major          string  `json:"major"`
-	Year           int     `json:"year"`
-	EducationLevel string  `json:"education_level"`
-	Grade          float64 `json:"grade"`
+	UserID           uint    `json:"user_id"`
+	UniversityID     uint    `json:"university_id"`
+	FacultyID        uint    `json:"faculty_id"`
+	ProgramID        uint    `json:"program_id"`
+	Year             int     `json:"year"`
+	EducationLevelID uint    `json:"education_level_id"`
+	Grade            float64 `json:"grade"`
 }
 
 func CreateEducation(c *gin.Context) {
@@ -62,19 +77,19 @@ func CreateEducation(c *gin.Context) {
 		return
 	}
 
-	// สร้าง Education record โดยใส่ StudentID
+	// สร้าง Education record โดยใช้ ID ตรงๆ
 	education := entity.Education{
-		University:     payload.University,
-		Faculty:        payload.Faculty,
-		Major:          payload.Major,
-		Year:           payload.Year,
-		EducationLevel: payload.EducationLevel,
-		Grade:          payload.Grade,
-		StudentID:      student.ID,
+		UniversityID:     payload.UniversityID,
+		FacultyID:        payload.FacultyID,
+		ProgramID:        payload.ProgramID,
+		Year:             payload.Year,
+		EducationLevelID: payload.EducationLevelID,
+		Grade:            payload.Grade,
+		StudentID:        student.ID,
 	}
 
 	if err := config.DB().Create(&education).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกข้อมูลการศึกษาได้"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "บันทึกข้อมูลการศึกษาไม่สำเร็จ"})
 		return
 	}
 
@@ -120,5 +135,3 @@ func UpdateEducationByUserID(c *gin.Context) {
 		"education": education,
 	})
 }
-
-

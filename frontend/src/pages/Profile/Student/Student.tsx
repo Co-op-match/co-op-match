@@ -25,7 +25,7 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
       : undefined;
 
   return (
-    <Card title="Student Profile" bordered style={{ marginBottom: 20 }}>
+    <Card bordered style={{ marginBottom: 20 }}>
       <div className="student-profile-container">
         {/* ซ้าย */}
         <div className="student-profile-left">
@@ -46,8 +46,13 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
           <p className="student-name">
             {student?.first_name} {student?.last_name}
           </p>
-          <p>{firstEducation?.major || "Computer Engineering"}</p>
-          <p>{firstEducation?.university || "Suranaree University Of Technology"}</p>
+        <p className="student-university">
+          {firstEducation?.University?.name_th || "Suranaree University Of Technology"}
+        </p>
+        <p className="student-major">
+          {firstEducation?.Faculty?.name_th|| "Computer Engineering"}
+        </p>
+
         </div>
 
         {/* เส้น Divider แนวตั้ง */}
@@ -89,11 +94,11 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
               {student?.User?.Email || "-"}
             </Descriptions.Item>
             <Descriptions.Item label="คณะ">
-              {firstEducation?.faculty || "-"}
+              {firstEducation?.Program?.name_th || "-"}
             </Descriptions.Item>
-            <Descriptions.Item label="สาขา">{firstEducation?.major || "-"}</Descriptions.Item>
+            <Descriptions.Item label="สาขา">{firstEducation?.Faculty?.name_th || "-"}</Descriptions.Item>
             <Descriptions.Item label="ระดับการศึกษา">
-              {firstEducation?.education_level || "-"}
+              {firstEducation?.EducationLevel.name || "-"}
             </Descriptions.Item>
             <Descriptions.Item label="ชั้นปี">{firstEducation?.year || "-"}</Descriptions.Item>
           </Descriptions>
@@ -194,6 +199,10 @@ const StudentProfile: React.FC = () => {
       <CoopMatchHeader />
       <Layout className="student-layout">
         <Content>
+          <div className="student-profile-title">
+            <span className="student-profile-text">Student Profile</span>
+            <div className="student-profile-line" />
+          </div>
           <ProfileCard student={student} />
           <div className="student-job-calendar-section">
             <div style={{ flex: 1 }}>

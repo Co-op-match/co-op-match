@@ -1,6 +1,6 @@
 .student-layout {
   display: flex;
-  padding: 20px;             /* กำหนดช่องว่างภายใน 20px รอบๆ เนื้อหา */
+  padding: 30px;             /* กำหนดช่องว่างภายใน 20px รอบๆ เนื้อหา */
   background: #E3F2FD;       /* กำหนดสีพื้นหลังเป็นสีฟ้าอ่อน */
   min-height: 100vh;         /* กำหนดความสูงขั้นต่ำเท่ากับความสูงของหน้าจอ */
   min-width: 100vw;        
@@ -13,11 +13,13 @@
 
 .student-profile-left {
   text-align: center;
+  padding: 50px;
 }
 
 .student-avatar-container {
   position: relative;
   display: inline-block;
+  margin-bottom: 20px;
 }
 
 .student-avatar-edit-icon {
@@ -36,9 +38,24 @@
 }
 
 
-.student-student-name {
-  margin-top: 10px;
+.student-name {
+  font-size: 20px;
   font-weight: bold;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+.student-major {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  margin: 0;
+}
+
+.student-university {
+  font-size: 16px;
+  color: #444;
+  margin: 2px 0;
 }
 
 .student-profile-details {
@@ -78,4 +95,27 @@
 
 .student-divider-section {
   margin-top: 10px;
+}
+.student-profile-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.student-profile-text {
+  font-weight: bold;
+  font-size: 24px;
+  white-space: nowrap;
+  margin-right: 12px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.student-profile-line {
+  flex: 1;
+  height: 2px;
+  margin-top: 9px;
+  background-color: rgba(153, 153, 153, 0.6);
+  border-radius: 2px;
 }
