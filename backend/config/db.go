@@ -65,6 +65,10 @@ func SetupDatabase() {
 		&entity.Notification{},
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
+		&entity.University{},
+		&entity.Program{},
+		&entity.Faculty{},
+		&entity.EducationLevel{},
 		&entity.Verify{},
 		&entity.StatusVerify{},
 	)
