@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"co-op-match.com/co-op-match/entity"
@@ -43,7 +45,7 @@ func SetupDatabase() {
 		&entity.StudentInterest{},
 		&entity.Company{},
 		&entity.Contact{},
-		&entity.Status{},
+		&entity.StatusPost{},
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
@@ -63,10 +65,17 @@ func SetupDatabase() {
 		&entity.Notification{},
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
+		&entity.University{},
+		&entity.Program{},
+		&entity.Faculty{},
+		&entity.EducationLevel{},
 		&entity.Verify{},
+		&entity.StatusVerify{},
 	)
 
 	createSeedData(db)
+	insertEducationFromCSV(db, "./config/data/university_2567.csv")
+
 }
 
 func createSeedData(db *gorm.DB) {
@@ -406,21 +415,15 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// Seed Status Posts
-	Statuses := []entity.Status{
-		{Status: "Open"},
-		{Status: "Closed"},
-		{Status: "Pending Approval"},
-		{Status: "ยังไม่ได้ส่งคำขอ"},
-		{Status: "รอรับรอง"},
-		{Status: "รับรอง"},
-		{Status: "ปฏิเสธ"},
-		{Status: "รอดำเนินการ"},
-		{Status: "อนุมัติ"},
-		{Status: "ปฎิเสธ"},
+	StatusPosts := []entity.StatusPost{
+		{StatusPost: "Open"},
+		{StatusPost: "Closed"},
+		{StatusPost: "Pending Approval"},
 	}
-	for _, pkg := range Statuses {
-		db.FirstOrCreate(&pkg, entity.Status{Status: pkg.Status})
+	for _, pkg := range StatusPosts {
+		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
+	
 	IntershipPost := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
@@ -430,7 +433,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.0",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
 			BenefitID:       1,
@@ -445,7 +448,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.2",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
 			BenefitID:       3,
@@ -503,20 +506,29 @@ func createSeedData(db *gorm.DB) {
 		})
 	}
 	// Seed Educational Background
+		EducationLevels := []entity.EducationLevel{
+		{Name: "ปริญญาตรี"},
+		{Name: "ปริญญาโท"},
+		{Name: "ปริญญาเอก"},
+	}
+	for _, pkg := range EducationLevels {
+		db.FirstOrCreate(&pkg, entity.EducationLevel{Name: pkg.Name})
+	}
+	// 4. เพิ่มข้อมูล Education
 	education := entity.Education{
-		University:     "Chulalongkorn University",
-		Faculty:        "Engineering",
-		Major:          "Computer Engineering",
+		UniversityID:   1,
+		FacultyID:      1,
+		ProgramID:      1,
 		Year:           3,
-		EducationLevel: "Bachelor's Degree",
+		EducationLevelID: 1,
 		Grade:          3.5,
 		StudentID:      1,
 	}
 
-	// FirstOrCreate (เช็คซ้ำกันตาม StudentID, Major, Year)
+	// Insert เฉพาะถ้ายังไม่มีข้อมูลซ้ำ
 	db.FirstOrCreate(&education, entity.Education{
 		StudentID: education.StudentID,
-		Major:     education.Major,
+		ProgramID: education.ProgramID,
 		Year:      education.Year,
 	})
 	interviewAppointments := []entity.InterviewAppointment{
@@ -565,30 +577,135 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
 	}
 
+	// Seed Status Posts
+	StatusVerifies := []entity.StatusVerify{
+		{StatusVerify: "ยังไม่ได้ส่งคำขอ"},
+		{StatusVerify: "รอรับรอง"},
+		{StatusVerify: "รับรอง"},
+		{StatusVerify: "ปฏิเสธ"},
+	}
+	for _, pkg := range StatusVerifies {
+		db.FirstOrCreate(&pkg, entity.StatusVerify{StatusVerify: pkg.StatusVerify})
+	}
+
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             4,
+			StatusVerifyID:       1,
 			UserID:               2,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify2.png",
-			StatusID:             4,
+			StatusVerifyID:       3,
 			UserID:               4,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			StatusVerifyID:       4,
 			UserID:               14,
 		},
 	}
 	for _, v := range verifies {
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
+}
+
+type RawEducationData struct {
+	University string
+	Faculty    string
+	Program    string
+}
+
+func insertEducationFromCSV(db *gorm.DB, filePath string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Println("❌ Failed to open CSV file:", err)
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.FieldsPerRecord = -1
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Println("❌ Failed to read CSV:", err)
+		return
+	}
+
+	if len(records) < 1 {
+		log.Println("⚠️ CSV ไม่มีข้อมูล")
+		return
+	}
+
+	// Header mapping
+	header := records[0]
+	colMap := make(map[string]int)
+	for i, h := range header {
+		colMap[h] = i
+	}
+
+	requiredCols := []string{"UNIV_NAME_TH", "FAC_NAME", "PROGRAM_NAME", "LEV_NAME_ENG"}
+	for _, col := range requiredCols {
+		if _, ok := colMap[col]; !ok {
+			log.Fatalf("❌ Missing required column: %s", col)
+		}
+	}
+
+	// ✅ กรองเฉพาะระดับการศึกษาที่ต้องการ
+	validLevels := map[string]bool{
+		"ป.ตรี": true,
+		"ป.โท":  true,
+		"ป.เอก": true,
+	}
+
+	var rawData []RawEducationData
+	for _, row := range records[1:] {
+		level := row[colMap["LEV_NAME_ENG"]]
+		if !validLevels[level] {
+			continue
+		}
+
+		rawData = append(rawData, RawEducationData{
+			University: row[colMap["UNIV_NAME_TH"]],
+			Faculty:    row[colMap["FAC_NAME"]],
+			Program:    row[colMap["PROGRAM_NAME"]],
+		})
+	}
+
+	// Cache for IDs
+	univMap := make(map[string]uint)
+	facultyMap := make(map[string]uint)
+
+	for _, item := range rawData {
+		// 🔹 University
+		univID, ok := univMap[item.University]
+		if !ok {
+			univ := entity.University{NameTH: item.University}
+			db.FirstOrCreate(&univ, entity.University{NameTH: item.University})
+			univID = univ.ID
+			univMap[item.University] = univID
+		}
+
+		// 🔹 Faculty
+		facultyKey := item.University + "|" + item.Faculty
+		facultyID, ok := facultyMap[facultyKey]
+		if !ok {
+			fac := entity.Faculty{NameTH: item.Faculty, UniversityID: univID}
+			db.FirstOrCreate(&fac, entity.Faculty{NameTH: item.Faculty, UniversityID: univID})
+			facultyID = fac.ID
+			facultyMap[facultyKey] = facultyID
+		}
+
+		// 🔹 Program
+		prog := entity.Program{NameTH: item.Program, FacultyID: facultyID}
+		db.FirstOrCreate(&prog, entity.Program{NameTH: item.Program, FacultyID: facultyID})
+	}
+
+	log.Printf("✅ นำเข้าข้อมูลเฉพาะ ป.ตรี/โท/เอก เรียบร้อย: %d รายการ\n", len(rawData))
 }

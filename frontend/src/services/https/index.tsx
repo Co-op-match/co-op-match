@@ -8,6 +8,7 @@ import type { GenderInterface } from "../../interfaces/Gender";
 import type { EducationInterface } from "../../interfaces/Education";
 import type { AddressInterface } from "../../interfaces/Address";
 import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
+import type { EducationInput } from "../../interfaces/EducationInput";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -284,7 +285,7 @@ async function GetEducationByUserId(user_id: number) {
     .catch(e => e.response);
 }
 
-async function CreateEducation(data: EducationInterface) {
+async function CreateEducation(data: EducationInput) {
   return await axios
     .post(`${apiUrl}/education/`, data, requestOptions)
     .then(res => res)
@@ -296,6 +297,24 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
     .put(`${apiUrl}/education/${user_id}`, data, requestOptions)
     .then(res => res)
     .catch(e => e.response);
+}
+ async function GetUniversity() {
+  try {
+    const res = await axios.get(`${apiUrl}/universities`, requestOptions);
+    return res.data; 
+  } catch (error: any) {
+    console.error("Failed to fetch universities:", error);
+    throw error.response?.data || error.message;
+  }
+}
+ async function GetAllEducationLevel() {
+  try {
+    const res = await axios.get(`${apiUrl}/education/levels`, requestOptions);
+    return res.data; 
+  } catch (error: any) {
+    console.error("Failed to fetch EducationLevel:", error);
+    throw error.response?.data || error.message;
+  }
 }
 
 //======================================= Company ============================================
@@ -344,6 +363,9 @@ export {
   GetAllEducation,
   GetEducationByUserId,
   CreateEducation,
-  UpdateEducation
+  UpdateEducation,
+  GetUniversity,
+  GetAllEducationLevel,
+
 
 };

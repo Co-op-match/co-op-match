@@ -23,6 +23,7 @@ import StepAddress from '../StudentFormSteps/StepAddress';
 import StepSkills from '../StudentFormSteps/StepSkills';
 import StepGeneralInfo from '../StudentFormSteps/StepGeneral';
 import './AddStudentForm.css';
+import { useNavigate } from 'react-router-dom';
 
 
 const { Content } = Layout;
@@ -34,6 +35,7 @@ const AddStudentForm: React.FC = () => {
   const [formData, setFormData] = useState<any>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -120,13 +122,14 @@ const onFinish = async () => {
       subdistrict: finalData.subdistrict,
       district: finalData.district,
       province: finalData.province,
-      post_code: finalData.post_code,
+      post_code: String(finalData.post_code),
     };
     const res = await CreateStudent(payload);
     if (!(res.status === 200 || res.status === 201)) {
       throw new Error('สร้างนักศึกษาไม่สำเร็จ');
     }
     const addressRes = await CreateAddress(roleId, userId, addressPayload);
+    console.log(addressRes)
 
     if (!(addressRes.status === 200 || addressRes.status === 201)) {
       throw new Error('สร้างที่อยู่ไม่สำเร็จ');
@@ -149,10 +152,10 @@ const onFinish = async () => {
     // ✅ STEP 4: Education
     const educationPayload = {
       user_id: userId,
-      university: finalData.university,
-      faculty: finalData.faculty,
-      major: finalData.major,
-      education_level: finalData.education_level,
+      university_id: finalData.university_id,
+      faculty_id: finalData.faculty_id,
+      program_id: finalData.program_id,
+      education_level_id: finalData.education_level,
       year: finalData.year,
       grade: finalData.grade,
     };
@@ -177,6 +180,9 @@ const onFinish = async () => {
     setFormData({});
     setImageFile(null);
     setPreviewUrl(null);
+    setTimeout(() => {
+      navigate('/student/profile'); // หรือ path อื่น เช่น /profile
+    });
   } catch (error) {
     console.error(error);
     messageApi.error({
