@@ -18,4 +18,5 @@ type User struct {
 	Company       []Company       `gorm:"foreignKey:UserID"`
 	Admin         []Admin         `gorm:"foreignKey:UserID"`
 	ProfileImage  []ProfileImage  `gorm:"foreignKey:UserID"`
+	Verifications []Verify        `gorm:"foreignKey:UserID"` // one-to-many
 }
