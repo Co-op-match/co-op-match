@@ -45,7 +45,7 @@ func SetupDatabase() {
 		&entity.StudentInterest{},
 		&entity.Company{},
 		&entity.Contact{},
-		&entity.Status{},
+		&entity.StatusPost{},
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
@@ -70,6 +70,7 @@ func SetupDatabase() {
 		&entity.Faculty{},
 		&entity.EducationLevel{},
 		&entity.Verify{},
+		&entity.StatusVerify{},
 	)
 
 	createSeedData(db)
@@ -414,21 +415,15 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// Seed Status Posts
-	Statuses := []entity.Status{
-		{Status: "Open"},
-		{Status: "Closed"},
-		{Status: "Pending Approval"},
-		{Status: "ยังไม่ได้ส่งคำขอ"},
-		{Status: "รอรับรอง"},
-		{Status: "รับรอง"},
-		{Status: "ปฏิเสธ"},
-		{Status: "รอดำเนินการ"},
-		{Status: "อนุมัติ"},
-		{Status: "ปฎิเสธ"},
+	StatusPosts := []entity.StatusPost{
+		{StatusPost: "Open"},
+		{StatusPost: "Closed"},
+		{StatusPost: "Pending Approval"},
 	}
-	for _, pkg := range Statuses {
-		db.FirstOrCreate(&pkg, entity.Status{Status: pkg.Status})
+	for _, pkg := range StatusPosts {
+		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
+	
 	IntershipPost := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
@@ -438,7 +433,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.0",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
 			BenefitID:       1,
@@ -453,7 +448,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.2",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
 			BenefitID:       3,
@@ -582,26 +577,37 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
 	}
 
+	// Seed Status Posts
+	StatusVerifies := []entity.StatusVerify{
+		{StatusVerify: "ยังไม่ได้ส่งคำขอ"},
+		{StatusVerify: "รอรับรอง"},
+		{StatusVerify: "รับรอง"},
+		{StatusVerify: "ปฏิเสธ"},
+	}
+	for _, pkg := range StatusVerifies {
+		db.FirstOrCreate(&pkg, entity.StatusVerify{StatusVerify: pkg.StatusVerify})
+	}
+
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             4,
+			StatusVerifyID:       1,
 			UserID:               2,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify2.png",
-			StatusID:             4,
+			StatusVerifyID:       3,
 			UserID:               4,
 		},
 		{
 			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			StatusVerifyID:       4,
 			UserID:               14,
 		},
 	}
