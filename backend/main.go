@@ -40,6 +40,7 @@ func main() {
 	r.GET("/workdays", searchjob.GetAllWorkDays)
 	r.GET("/workmodes", searchjob.GetAllWorkModes)
 	r.GET("/benefits", searchjob.GetAllBenefits)
+	r.GET("/universities", controller.GetUniversities)
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{
@@ -77,6 +78,7 @@ func main() {
 		eduGroup := router.Group("/education")
 		{
 			eduGroup.GET("/", controller.GetAllEducation)
+			eduGroup.GET("/levels", controller.GetAllEducationLevel)
 			eduGroup.GET("/:user_id", controller.GetEcudutionByUserID)
 			eduGroup.POST("/", controller.CreateEducation)
 			eduGroup.PUT("/:user_id", controller.UpdateEducationByUserID)

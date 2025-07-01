@@ -1,19 +1,25 @@
 package entity
 
-import (
-
-	"gorm.io/gorm"
-)
+import "gorm.io/gorm"
 
 type Education struct {
 	gorm.Model
-	University     string  `json:"university"`
-	Faculty        string  `json:"faculty"`
-	Major          string   `json:"major"`
-	Year           int     `json:"year"`
-	EducationLevel string  `json:"education_level"`
-	Grade          float64 `json:"grade"`
+	
+	Year             int       `json:"year"`
+	Grade            float64   `json:"grade"`
+	
+	UniversityID     uint       `json:"university_id"`
+	University       University `gorm:"foreignKey:UniversityID"`
 
-	StudentID uint `json:"student_id"`
-	Student   Student `gorm:"foreignKey:StudentID"`
+	FacultyID        uint     `json:"faculty_id"`
+	Faculty          Faculty  `gorm:"foreignKey:FacultyID"`
+
+	ProgramID        uint     `json:"program_id"`
+	Program          Program  `gorm:"foreignKey:ProgramID"`
+
+	StudentID        uint     `json:"student_id"`
+	Student          Student  `gorm:"foreignKey:StudentID"`
+
+	EducationLevelID uint           `json:"education_level_id"`
+	EducationLevel   EducationLevel `gorm:"foreignKey:EducationLevelID"`
 }
