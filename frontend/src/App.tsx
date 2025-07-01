@@ -13,6 +13,7 @@ import CheckUser from "./components/CheckUser";
 import { UserProvider } from "./components/UserContext";
 import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
 import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
+import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
 
 
 function App() {
@@ -27,6 +28,9 @@ function App() {
           <Route path="/sign-in" element={<LoginForm />} />
           <Route path="/sign-up" element={<RegisterPage />} />
           <Route path="/role-select" element={<RoleSelectionPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+
         </Route>
 
           {/* Protected Routes */}
