@@ -107,24 +107,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "Jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-
-		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
-
-		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		
-		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "s5@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-
-		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-		{Email: "tn4@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}
 	}
 	for _, pkg := range User {
 		db.FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
@@ -389,17 +372,6 @@ func createSeedData(db *gorm.DB) {
 	for _, s := range students {
 		db.FirstOrCreate(&s, entity.Student{FirstName: s.FirstName})
 	}
-
-	companies := []entity.Company{
-		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 2, AddressID: 1},
-		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 6, AddressID: 1},
-		{CompanyName: "Gamma Innovations Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 7, AddressID: 1},
-		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 1},
-		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 1},
-	}
-	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
-	for _, company := range companies {
-		db.FirstOrCreate(&company,entity.Company{CompanyName: company.CompanyName})
 	}
 
 
@@ -447,13 +419,118 @@ func createSeedData(db *gorm.DB) {
 			Quantity:        1,
 			MinGpa:          "3.2",
 			CreatedAt:       time.Now(),
-			CompanyID:       1,
+			CompanyID:       2,
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
 			BenefitID:       3,
 			WorkDayID:       2,
 			StipendID:       3,
+		},
+		{
+			PostName:        "UI/UX Designer Intern",
+			PostDescription: "Assist in designing intuitive user interfaces and experiences",
+			Qualifications:  "Design student or related field, knowledge of Figma or Adobe XD",
+			Quantity:        1,
+			MinGpa:          "2.75",
+			CreatedAt:       time.Now(),
+			CompanyID:       3,
+			StatusPostID:    1,
+			AdminID:         2,
+			WorkModeID:      2,
+			BenefitID:       2,
+			WorkDayID:       2,
+			StipendID:       1,
+		},
+		{
+			PostName:        "Marketing Intern",
+			PostDescription: "Support digital campaigns and social media content creation",
+			Qualifications:  "Marketing or Business major, good communication skills",
+			Quantity:        3,
+			MinGpa:          "2.5",
+			CreatedAt:       time.Now(),
+			CompanyID:       4,
+			StatusPostID:    1,
+			AdminID:         3,
+			WorkModeID:      3,
+			BenefitID:       3,
+			WorkDayID:       1,
+			StipendID:       3,
+		},
+		{
+			PostName:        "Data Analyst Intern",
+			PostDescription: "Analyze data trends and provide reports using Excel and SQL",
+			Qualifications:  "Math, Statistics, or CS background, strong in Excel",
+			Quantity:        2,
+			MinGpa:          "3.2",
+			CreatedAt:       time.Now(),
+			CompanyID:       1,
+			StatusPostID:    1,
+			AdminID:         4,
+			WorkModeID:      2,
+			BenefitID:       4,
+			WorkDayID:       1,
+			StipendID:       1,
+		},
+		{
+			PostName:        "Content Writer Intern",
+			PostDescription: "Write blogs, articles, and social media content",
+			Qualifications:  "Strong writing skills, fluent in Thai and English",
+			Quantity:        1,
+			MinGpa:          "2.8",
+			CreatedAt:       time.Now(),
+			CompanyID:       2,
+			StatusPostID:    1,
+			AdminID:         5,
+			WorkModeID:      3,
+			BenefitID:       1,
+			WorkDayID:       2,
+			StipendID:       2,
+		},
+		{
+			PostName:        "Network Engineer Intern",
+			PostDescription: "Assist IT department in managing network and servers",
+			Qualifications:  "Knowledge in networking, CCNA is a plus",
+			Quantity:        2,
+			MinGpa:          "3.0",
+			CreatedAt:       time.Now(),
+			CompanyID:       3,
+			StatusPostID:    1,
+			AdminID:         6,
+			WorkModeID:      1,
+			BenefitID:       2,
+			WorkDayID:       1,
+			StipendID:       3,
+		},
+		{
+			PostName:        "Graphic Designer Intern",
+			PostDescription: "Design promotional materials for print and digital media",
+			Qualifications:  "Proficient in Photoshop and Illustrator",
+			Quantity:        1,
+			MinGpa:          "2.7",
+			CreatedAt:       time.Now(),
+			CompanyID:       4,
+			StatusPostID:    1,
+			AdminID:         7,
+			WorkModeID:      2,
+			BenefitID:       3,
+			WorkDayID:       2,
+			StipendID:       1,
+		},
+		{
+			PostName:        "QA Tester Intern",
+			PostDescription: "Test applications and report bugs to development team",
+			Qualifications:  "Attention to detail, basic understanding of software testing",
+			Quantity:        2,
+			MinGpa:          "2.9",
+			CreatedAt:       time.Now(),
+			CompanyID:       4,
+			StatusPostID:    1,
+			AdminID:         8,
+			WorkModeID:      1,
+			BenefitID:       4,
+			WorkDayID:       1,
+			StipendID:       2,
 		},
 	}
 	for _, pkg := range IntershipPost {
@@ -516,9 +593,6 @@ func createSeedData(db *gorm.DB) {
 	}
 	// 4. เพิ่มข้อมูล Education
 	education := entity.Education{
-		UniversityID:   1,
-		FacultyID:      1,
-		ProgramID:      1,
 		Year:           3,
 		EducationLevelID: 1,
 		Grade:          3.5,
