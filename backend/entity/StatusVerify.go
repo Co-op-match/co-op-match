@@ -8,5 +8,5 @@ type StatusVerify struct {
 	gorm.Model
 	StatusVerify string `json:"status_verify"`
 
-	Verifies		[]Verify			`gorm:"foreignKey:StatusID"`
+	Verifies		[]Verify	`gorm:"foreignKey:StatusVerifyID"`
 }
