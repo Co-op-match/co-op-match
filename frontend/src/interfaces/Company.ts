@@ -12,7 +12,7 @@ export interface CompanyInterface {
   logo?: string;
 
   user_id?: number;
-  user?: UserInterface;
+  User?: UserInterface;
 
   address_id?: number;
   address?: AddressInterface;
@@ -27,8 +27,4 @@ export interface CompanyInterface {
 
   CreatedAt?: string;
   DeletedAt?: string | null;
-
-  // เพิ่ม fields สำหรับ UI:
-  status?: string;
-  verify?: boolean;
 }

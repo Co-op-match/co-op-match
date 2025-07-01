@@ -10,34 +10,28 @@ import {
   Flex,
   Table,
   Modal,
-  Image,
+  Avatar,
   Form,
   Popconfirm,
-  Avatar,
   message,
 } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  ExclamationCircleTwoTone,
-  ExclamationCircleFilled,
 } from "@ant-design/icons";
-import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
-import "../users.css";
-
-import { GetAllCompany, GetAllUser } from "../../../../services/https";
-
+import AdminHeader from "../../../Component/AdminNavbar";
+import { GetAllCompany } from "../../../../services/https";
 import type { CompanyInterface } from "../../../../interfaces/Company";
 import type { ColumnsType } from "antd/es/table";
 import axios from "axios";
+import "../users.css";
 
 const Companies: React.FC = () => {
-  const [companyData, setCompanyData] = useState<CompanyInterface[]>([]);
-  const [selectedRow, setSelectedRow] = useState<CompanyInterface | null>(null);
-
+  const [companies, setCompanies] = useState<CompanyInterface[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyInterface | null>(null);
   const [activeTab, setActiveTab] = useState("รอรับรอง");
   const [searchText, setSearchText] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -47,77 +41,69 @@ const Companies: React.FC = () => {
 
   useEffect(() => {
     const fetchCompanies = async () => {
-      const resUser = await GetAllCompany();
-      if (resUser.status === 200) {
-        const companiesWithStatus = resUser.data.map((item: any) => ({
-          ...item,
-          // สมมุติว่ามี verifications: Verify[] ที่ดึงมาจาก backend
-          status:
-            item.verifications?.[0]?.status?.name === "รับรอง"
-              ? "รับรอง"
-              : "รอรับรอง",
-          verify: item.verifications?.[0]?.status?.name === "รับรอง",
-        }));
-        setCompanyData(companiesWithStatus);
-      } else {
-        message.error("ไม่พบข้อมูลบริษัท กรุณาลองใหม่อีกครั้ง");
+      try {
+        const response = await GetAllCompany();
+        if (response.status === 200) {
+          setCompanies(response.data);
+        } else {
+          message.error("ไม่พบข้อมูลบริษัท กรุณาลองใหม่อีกครั้ง");
+        }
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+        message.error("เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท");
       }
     };
 
     fetchCompanies();
   }, []);
 
-  // ฟังก์ชันนี้ใช้เปลี่ยนสถานะบริษัทเป็น 'รับรอง'
-  const finalizeVerification = async () => {
+  const getLatestStatus = (company: CompanyInterface) => {
+    if (!company || !company.User) return "ยังไม่ได้ส่งคำขอ";
+    const verifications = company.User.Verifications || [];
+    const latest = verifications.length ? verifications.sort((a, b) => new Date(b.CreatedAt || '').getTime() - new Date(a.CreatedAt || '').getTime())[0] : null;
+    return latest?.status?.status || "ยังไม่ได้ส่งคำขอ";
+  };
+
+  const handleVerify = async () => {
     try {
-      await axios.put(`http://localhost:8000/verify/${selectedRow?.ID}`, {
-        status_id: 1, // สมมุติว่า 1 คือ "รับรอง"
+      await axios.put(`http://localhost:8000/verify/${selectedCompany?.ID}`, {
+        status_id: 1,
       });
 
-      setCompanyData((prev) =>
-        prev?.map((item) =>
-          item.ID === selectedRow?.ID
-            ? { ...item, status: "รับรอง", verify: true }
-            : item
+      setCompanies((prev) =>
+        prev.map((item) =>
+          item.ID === selectedCompany?.ID ? { ...item } : item
         )
       );
       setShowConfirmModal(false);
       message.success("รับรองบริษัทเรียบร้อยแล้ว");
-    } catch (err) {
-      console.error("Error updating verification:", err);
+    } catch (error) {
+      console.error("Error verifying company:", error);
       message.error("เกิดข้อผิดพลาดในการรับรองบริษัท");
     }
   };
 
-  const isPdfFile = (url: string) => {
-    return url?.toLowerCase().endsWith(".pdf");
-  };
-
-  // ใช้เปิด Modal เพื่อแสดงรายละเอียดของบริษัทที่เลือก
-  const openDetailModal = (record: any) => {
-    setSelectedRow(record);
-    setShowDetailModal(true);
-  };
-
-  // ใช้ปิด modal รายละเอียดและเปิด modal ยืนยันการรับรอง
-  const confirmVerification = () => {
+  const handleConfirmFromDetailModal = () => {
     setShowDetailModal(false);
     setShowConfirmModal(true);
   };
 
-  // ใช้เปิด Modal แก้ไขบริษัท โดยเติมข้อมูลเดิมลงในฟอร์ม
-  const openEditModal = (record: any) => {
-    setSelectedRow(record);
+  const openDetailModal = (record: CompanyInterface) => {
+    setSelectedCompany(record);
+    setShowDetailModal(true);
+  };
+
+  const openEditModal = (record: CompanyInterface) => {
+    setSelectedCompany(record);
     editForm.setFieldsValue(record);
     setShowEditModal(true);
   };
 
-  // ใช้ validate และบันทึกการแก้ไขข้อมูลบริษัท
   const handleEditSubmit = () => {
     editForm.validateFields().then((values) => {
-      setCompanyData((prev) =>
+      setCompanies((prev) =>
         prev.map((item) =>
-          item.ID === selectedRow?.ID ? { ...item, ...values } : item
+          item.ID === selectedCompany?.ID ? { ...item, ...values } : item
         )
       );
       setShowEditModal(false);
@@ -125,12 +111,24 @@ const Companies: React.FC = () => {
   };
 
   const handleDelete = (companyID: number) => {
-    setCompanyData((prev) =>
-      prev.filter((company) => company.ID !== companyID)
-    );
+    setCompanies((prev) => prev.filter((item) => item.ID !== companyID));
   };
 
-  const columns: ColumnsType<CompanyInterface /*  & { status?: string } */> = [
+  const filteredData = companies.filter((item) => {
+    const status = getLatestStatus(item);
+    if (activeTab !== "ทั้งหมด" && status !== activeTab) {
+      if (!status && activeTab === "ยังไม่ได้ส่งคำขอ") return true;
+      return false;
+    }
+    if (searchText.trim()) {
+      return [item.ID, item.company_name, item.CreatedAt].some((field) =>
+        String(field).toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+    return true;
+  });
+
+  const columns: ColumnsType<CompanyInterface> = [
     { title: "ID", dataIndex: "ID", key: "ID" },
     {
       title: "วันที่สมัคร",
@@ -141,7 +139,7 @@ const Companies: React.FC = () => {
     {
       title: "โลโก้",
       key: "logo",
-      render: (_: any, record: CompanyInterface) => (
+      render: (_, record) => (
         <Avatar shape="square" size="large" src={record.logo || undefined}>
           {record.company_name?.charAt(0)}
         </Avatar>
@@ -150,7 +148,7 @@ const Companies: React.FC = () => {
     {
       title: "บริษัท",
       key: "company",
-      render: (_: any, record: CompanyInterface) => (
+      render: (_, record) => (
         <a href={`/company/${record.ID}`} style={{ color: "#1677ff" }}>
           {record.company_name}
         </a>
@@ -159,106 +157,69 @@ const Companies: React.FC = () => {
     {
       title: "การรับรอง",
       key: "status",
-      align: "center" as const,
-      render: (_: any, record: any) => (
-        <Button
-          onClick={() => openDetailModal(record)}
-          style={{
-            width: 100,
-            borderRadius: 12,
-            backgroundColor: record.status === "รับรอง" ? "#007AFF" : "#fff",
-            color: record.status === "รับรอง" ? "#fff" : "#000",
-            border:
-              record.status === "รับรอง" ? "none" : "1px solid rgba(0,0,0,0.2)",
-          }}
-        >
-          {record.status}
-        </Button>
-      ),
+      align: "center",
+      render: (_, record) => {
+        const status = getLatestStatus(record);
+        return (
+          <Button
+            onClick={() => openDetailModal(record)}
+            style={{
+              width: 100,
+              borderRadius: 12,
+              backgroundColor: status === "รับรอง" ? "#007AFF" : "#fff",
+              color: status === "รับรอง" ? "#fff" : "#000",
+              border: status === "รับรอง" ? "none" : "1px solid rgba(0,0,0,0.2)",
+            }}
+          >
+            {status}
+          </Button>
+        );
+      },
     },
     {
       title: "การจัดการ",
       key: "action",
-      render: (_: any, record: any) => (
+      render: (_, record) => (
         <Space>
           <EditOutlined
-            style={{ fontSize: "18px", cursor: "pointer" }}
+            style={{ fontSize: 18, cursor: "pointer" }}
             onClick={() => openEditModal(record)}
           />
-          /
-          {/* <DeleteOutlined
-            style={{ fontSize: "18px", cursor: "pointer" }}
-            onClick={() => openDeleteModal(record)}
-          /> */}
           <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.id)}
+            title="คุณแน่ใจหรือไม่ที่จะลบ?"
+            onConfirm={() => handleDelete(record.ID || 0)}
           >
-            <DeleteOutlined />
+            <DeleteOutlined style={{ cursor: "pointer" }} />
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
-  const getTableData = () => {
-    let filtered = companyData;
-
-    if (activeTab !== "ทั้งหมด") {
-      const isVerified = activeTab === "รับรอง";
-      filtered = filtered?.filter((item) => item.verify === isVerified);
-    }
-
-    if (searchText.trim()) {
-      filtered = filtered?.filter((item) =>
-        [item.ID, item.company_name, item.created_at].some((field) =>
-          String(field).toLowerCase().includes(searchText.toLowerCase())
-        )
-      );
-    }
-
-    return (filtered || []).map((item) => ({
-      ...item,
-      status: item.verify ? "รับรอง" : "รอรับรอง",
-    }));
-  };
-
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <Row>
-          <Col span={20}>
+        <Row justify="space-between">
+          <Col>
             <Title level={3}>บริษัท (Companies)</Title>
           </Col>
-          <Col span={4}>
-            <Flex align="center" gap={16} justify="end">
+          <Col>
+            <Flex align="center" gap={16}>
               จำนวน
-              <Card
-                size="small"
-                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
-              >
-                <div style={{ fontSize: 18, fontWeight: "bolder" }}>
-                  {companyData.length}
-                </div>
+              <Card size="small" style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}>
+                <div style={{ fontSize: 18, fontWeight: "bold" }}>{companies.length}</div>
               </Card>
             </Flex>
           </Col>
         </Row>
 
-        <Flex
-          justify="center"
-          align="center"
-          gap="5vw"
-          style={{ marginBottom: "1rem" }}
-        >
+        <Flex justify="center" align="center" gap="5vw" style={{ margin: "1rem 0" }}>
           <div className="backgroundTabChooseVerify">
-            {["รอรับรอง", "รับรอง", "ทั้งหมด"].map((tab) => (
+            {["ยังไม่ได้ส่งคำขอ", "รอรับรอง", "รับรอง", "ทั้งหมด"].map((tab) => (
               <div
                 key={tab}
-                className={`tabChooseVerify ${
-                  activeTab === tab ? "active" : ""
-                }`}
+                className={`tabChooseVerify ${activeTab === tab ? "active" : ""}`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}
@@ -281,7 +242,7 @@ const Companies: React.FC = () => {
         <Table
           className="custom-table"
           columns={columns}
-          dataSource={getTableData()}
+          dataSource={filteredData}
           pagination={{ pageSize: 6 }}
           size="middle"
         />
@@ -291,61 +252,25 @@ const Companies: React.FC = () => {
           onCancel={() => setShowDetailModal(false)}
           title="รายละเอียดการรับรอง"
           footer={
-            selectedRow?.status === "รับรอง"
-              ? null // ❌ ไม่แสดง footer เลย
+            getLatestStatus(selectedCompany!) === "รับรอง"
+              ? null
               : [
-                  <Button
-                    key="cancel"
-                    onClick={() => setShowDetailModal(false)}
-                  >
+                  <Button key="cancel" onClick={() => setShowDetailModal(false)}>
                     ยกเลิก
                   </Button>,
-                  <Button
-                    key="confirm"
-                    type="primary"
-                    onClick={confirmVerification}
-                  >
+                  <Button key="confirm" type="primary" onClick={handleConfirmFromDetailModal}>
                     ยืนยัน
                   </Button>,
                 ]
           }
         >
-          <p>
-            <strong>บริษัท:</strong> {selectedRow?.company_name}
-          </p>
-          <p></p>
-          {/*  {selectedRow?.verification_document &&
-            (isPdfFile(selectedRow.verification_document) ? (
-              <>
-                <embed
-                  src={selectedRow.verification_document}
-                  width="100%"
-                  height="500px"
-                  type="application/pdf"
-                />
-                <a
-                  href={selectedRow.verification_document}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "block", marginTop: 10 }}
-                >
-                  เปิดเอกสาร PDF
-                </a>
-              </>
-            ) : (
-              <Image
-                src={selectedRow.verification_document}
-                alt="แนบเอกสาร"
-                width="100%"
-                style={{ marginTop: 16, borderRadius: 8 }}
-              />
-            ))} */}
+          <p><strong>บริษัท:</strong> {selectedCompany?.company_name}</p>
         </Modal>
 
         <Modal
           open={showConfirmModal}
           onCancel={() => setShowConfirmModal(false)}
-          onOk={finalizeVerification}
+          onOk={handleVerify}
           okText="ยืนยัน"
           cancelText="ยกเลิก"
           title="ยืนยันการรับรองอีกครั้ง"
@@ -362,42 +287,12 @@ const Companies: React.FC = () => {
           cancelText="ยกเลิก"
         >
           <Form form={editForm} layout="vertical">
-            <Form.Item
-              name="company_name"
-              label="ชื่อบริษัท"
-              rules={[{ required: true }]}
-            >
+            <Form.Item name="company_name" label="ชื่อบริษัท" rules={[{ required: true }]}> 
               <Input />
             </Form.Item>
-            <Form.Item name="created_at" label="วันที่สมัคร"></Form.Item>
-            {/*             <Form.Item name="verification_document" label="หนังสือรับรอง">
-              {selectedRow?.verification_document &&
-                (isPdfFile(selectedRow.verification_document) ? (
-                  <>
-                    <embed
-                      src={selectedRow.verification_document}
-                      width="100%"
-                      height="500px"
-                      type="application/pdf"
-                    />
-                    <a
-                      href={selectedRow.verification_document}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "block", marginTop: 10 }}
-                    >
-                      เปิดเอกสาร PDF
-                    </a>
-                  </>
-                ) : (
-                  <Image
-                    src={selectedRow.verification_document}
-                    alt="แนบเอกสาร"
-                    width="100%"
-                    style={{ marginTop: 16, borderRadius: 8 }}
-                  />
-                ))}
-            </Form.Item> */}
+            <Form.Item name="created_at" label="วันที่สมัคร">
+              <Input disabled />
+            </Form.Item>
           </Form>
         </Modal>
       </Layout>

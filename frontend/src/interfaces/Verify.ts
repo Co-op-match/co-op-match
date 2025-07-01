@@ -3,7 +3,7 @@ import type { UserInterface } from "./User";
 import type { AdminInterface } from "./Admin";
 
 export interface VerifyInterface {
-  id?: number;
+  ID?: number;
   verification_document: string;
   reason: string;
 
@@ -11,7 +11,7 @@ export interface VerifyInterface {
   status?: StatusInterface;
 
   user_id: number;
-  user?: UserInterface;
+  User?: UserInterface;
 
   admin_id?: number | null;
   admin?: AdminInterface | null;

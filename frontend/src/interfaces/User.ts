@@ -11,5 +11,5 @@ export interface UserInterface {
   Role?: RoleInterface;
   ProfileImage?: ProfileImageInterface[];
   Student?: StudentInterface[];
-  verifications?: VerifyInterface[];
+  Verifications?: VerifyInterface[];
 }
