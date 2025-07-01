@@ -29,3 +29,15 @@ func GetAllaaaaaaaaaaaaaaaaaaa(c *gin.Context) {
 
 	c.JSON(http.StatusOK, company)
 }
+
+func GetAllStatusVerify(c *gin.Context) {
+	var statuses []entity.StatusVerify
+
+	db := config.DB()
+
+	if err := db.Find(&statuses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถดึงข้อมูลสถานะได้"})
+		return
+	}
+	c.JSON(http.StatusOK, statuses)
+}

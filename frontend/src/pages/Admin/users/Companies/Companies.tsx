@@ -23,16 +23,23 @@ import {
 import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
 import AdminHeader from "../../../Component/AdminNavbar";
-import { GetAllCompany } from "../../../../services/https";
+import {
+  GetAllCompany,
+  GetAllStatusVerify,
+} from "../../../../services/https/aum";
 import type { CompanyInterface } from "../../../../interfaces/Company";
 import type { ColumnsType } from "antd/es/table";
 import axios from "axios";
 import "../users.css";
+import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
 
 const Companies: React.FC = () => {
   const [companies, setCompanies] = useState<CompanyInterface[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<CompanyInterface | null>(null);
+  const [selectedCompany, setSelectedCompany] =
+    useState<CompanyInterface | null>(null);
+  const [status, setStatus] = useState<StatusVerifyInterface[]>([]);
   const [activeTab, setActiveTab] = useState("รอรับรอง");
+
   const [searchText, setSearchText] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -42,11 +49,19 @@ const Companies: React.FC = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await GetAllCompany();
-        if (response.status === 200) {
-          setCompanies(response.data);
+        const [res_company, res_status] = await Promise.all([
+          GetAllCompany(),
+          GetAllStatusVerify(),
+        ]);
+        if (res_company.status === 200) {
+          setCompanies(res_company.data);
         } else {
           message.error("ไม่พบข้อมูลบริษัท กรุณาลองใหม่อีกครั้ง");
+        }
+        if (res_status.status === 200) {
+          setStatus(res_status.data);
+        } else {
+          message.error("ไม่พบข้อมูลสถานะการรับรอง กรุณาลองใหม่อีกครั้ง");
         }
       } catch (error) {
         console.error("Error fetching companies:", error);
@@ -60,8 +75,14 @@ const Companies: React.FC = () => {
   const getLatestStatus = (company: CompanyInterface) => {
     if (!company || !company.User) return "ยังไม่ได้ส่งคำขอ";
     const verifications = company.User.Verifications || [];
-    const latest = verifications.length ? verifications.sort((a, b) => new Date(b.CreatedAt || '').getTime() - new Date(a.CreatedAt || '').getTime())[0] : null;
-    return latest?.status?.status || "ยังไม่ได้ส่งคำขอ";
+    const latest = verifications.length
+      ? verifications.sort(
+          (a, b) =>
+            new Date(b.CreatedAt || "").getTime() -
+            new Date(a.CreatedAt || "").getTime()
+        )[0]
+      : null;
+    return latest?.status_verify?.status_verify || "ยังไม่ได้ส่งคำขอ";
   };
 
   const handleVerify = async () => {
@@ -168,7 +189,8 @@ const Companies: React.FC = () => {
               borderRadius: 12,
               backgroundColor: status === "รับรอง" ? "#007AFF" : "#fff",
               color: status === "รับรอง" ? "#fff" : "#000",
-              border: status === "รับรอง" ? "none" : "1px solid rgba(0,0,0,0.2)",
+              border:
+                status === "รับรอง" ? "none" : "1px solid rgba(0,0,0,0.2)",
             }}
           >
             {status}
@@ -207,24 +229,38 @@ const Companies: React.FC = () => {
           <Col>
             <Flex align="center" gap={16}>
               จำนวน
-              <Card size="small" style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}>
-                <div style={{ fontSize: 18, fontWeight: "bold" }}>{companies.length}</div>
+              <Card
+                size="small"
+                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
+              >
+                <div style={{ fontSize: 18, fontWeight: "bold" }}>
+                  {companies.length}
+                </div>
               </Card>
             </Flex>
           </Col>
         </Row>
 
-        <Flex justify="center" align="center" gap="5vw" style={{ margin: "1rem 0" }}>
+        <Flex
+          justify="center"
+          align="center"
+          gap="5vw"
+          style={{ margin: "1rem 0" }}
+        >
           <div className="backgroundTabChooseVerify">
-            {["ยังไม่ได้ส่งคำขอ", "รอรับรอง", "รับรอง", "ทั้งหมด"].map((tab) => (
-              <div
-                key={tab}
-                className={`tabChooseVerify ${activeTab === tab ? "active" : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </div>
-            ))}
+            {["ยังไม่ได้ส่งคำขอ", "รอรับรอง", "รับรอง", "ทั้งหมด"].map(
+              (tab) => (
+                <div
+                  key={tab}
+                  className={`tabChooseVerify ${
+                    activeTab === tab ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </div>
+              )
+            )}
           </div>
 
           <Input
@@ -255,16 +291,25 @@ const Companies: React.FC = () => {
             getLatestStatus(selectedCompany!) === "รับรอง"
               ? null
               : [
-                  <Button key="cancel" onClick={() => setShowDetailModal(false)}>
+                  <Button
+                    key="cancel"
+                    onClick={() => setShowDetailModal(false)}
+                  >
                     ยกเลิก
                   </Button>,
-                  <Button key="confirm" type="primary" onClick={handleConfirmFromDetailModal}>
+                  <Button
+                    key="confirm"
+                    type="primary"
+                    onClick={handleConfirmFromDetailModal}
+                  >
                     ยืนยัน
                   </Button>,
                 ]
           }
         >
-          <p><strong>บริษัท:</strong> {selectedCompany?.company_name}</p>
+          <p>
+            <strong>บริษัท:</strong> {selectedCompany?.company_name}
+          </p>
         </Modal>
 
         <Modal
@@ -287,7 +332,11 @@ const Companies: React.FC = () => {
           cancelText="ยกเลิก"
         >
           <Form form={editForm} layout="vertical">
-            <Form.Item name="company_name" label="ชื่อบริษัท" rules={[{ required: true }]}> 
+            <Form.Item
+              name="company_name"
+              label="ชื่อบริษัท"
+              rules={[{ required: true }]}
+            >
               <Input />
             </Form.Item>
             <Form.Item name="created_at" label="วันที่สมัคร">

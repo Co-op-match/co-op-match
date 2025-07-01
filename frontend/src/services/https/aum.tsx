@@ -10,6 +10,18 @@ const requestOptions = {
   },
 };
 
+/*============================ all  ============================*/
+export async function GetAllStatusVerify() {
+  return await axios
+    .get(`${apiUrl}/status_verifies`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
+}
+
+/*============================ company  ============================*/
 export async function GetAllCompany() {
   return await axios
     .get(`${apiUrl}/admin/all`, requestOptions)

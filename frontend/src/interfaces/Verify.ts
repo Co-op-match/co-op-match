@@ -1,4 +1,4 @@
-import type { StatusInterface } from "./Status";
+import type { StatusVerifyInterface } from "./StatusVerify";
 import type { UserInterface } from "./User";
 import type { AdminInterface } from "./Admin";
 
@@ -7,8 +7,8 @@ export interface VerifyInterface {
   verification_document: string;
   reason: string;
 
-  status_id: number;
-  status?: StatusInterface;
+  status_verify_id: number;
+  status_verify?: StatusVerifyInterface;
 
   user_id: number;
   User?: UserInterface;
