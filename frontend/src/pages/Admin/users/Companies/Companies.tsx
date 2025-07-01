@@ -14,6 +14,7 @@ import {
   Form,
   Popconfirm,
   message,
+  Select,
 } from "antd";
 import {
   SearchOutlined,
@@ -65,8 +66,9 @@ const Companies: React.FC = () => {
         }
         if (res_status.status === 200) {
           setStatus(res_status.data);
-          const names = res_company.data.map((s: any) => s.status_verify);
+          const names = res_status.data.map((s: any) => s.status_verify);
           setStatusTabs([...names, "ทั้งหมด"]);
+          console.log("names ", names);
 
           /*แสดงจำนวนบริษัทแต่ละสถานะบนปุ่ม tab*/
           companies.forEach((company) => {
@@ -261,7 +263,7 @@ const Companies: React.FC = () => {
           gap="5vw"
           style={{ margin: "1rem 0" }}
         >
-          <div className="backgroundTabChooseVerify">
+          {/* <div className="backgroundTabChooseVerify">
             {statusTabs.map((tab) => (
               <div
                 key={tab}
@@ -270,10 +272,20 @@ const Companies: React.FC = () => {
                 }`}
                 onClick={() => setActiveTab(tab)}
               >
-                {tab} {/* ({statusCountMap[tab] || 0}) */}
+                {tab}
               </div>
             ))}
-          </div>
+          </div> */}
+          <Select
+            value={activeTab}
+            onChange={(value) => setActiveTab(value)}
+            style={{ width: 200 }}
+            options={statusTabs.map((status) => ({
+              label: status,
+              value: status,
+            }))}
+            placeholder="เลือกสถานะ"
+          />
 
           <Input
             placeholder="ค้นหา..."
