@@ -37,7 +37,12 @@ const Companies: React.FC = () => {
   const [companies, setCompanies] = useState<CompanyInterface[]>([]);
   const [selectedCompany, setSelectedCompany] =
     useState<CompanyInterface | null>(null);
+
+  const statusCountMap: Record<string, number> = {};
+
   const [status, setStatus] = useState<StatusVerifyInterface[]>([]);
+  const [statusTabs, setStatusTabs] = useState<string[]>([]);
+
   const [activeTab, setActiveTab] = useState("รอรับรอง");
 
   const [searchText, setSearchText] = useState("");
@@ -47,7 +52,7 @@ const Companies: React.FC = () => {
   const [editForm] = Form.useForm();
 
   useEffect(() => {
-    const fetchCompanies = async () => {
+    const fetchAllData = async () => {
       try {
         const [res_company, res_status] = await Promise.all([
           GetAllCompany(),
@@ -60,6 +65,15 @@ const Companies: React.FC = () => {
         }
         if (res_status.status === 200) {
           setStatus(res_status.data);
+          const names = res_company.data.map((s: any) => s.status_verify);
+          setStatusTabs([...names, "ทั้งหมด"]);
+
+          /*แสดงจำนวนบริษัทแต่ละสถานะบนปุ่ม tab*/
+          companies.forEach((company) => {
+            const status = getLatestStatus(company);
+            statusCountMap[status] = (statusCountMap[status] || 0) + 1;
+          });
+          statusCountMap["ทั้งหมด"] = companies.length;
         } else {
           message.error("ไม่พบข้อมูลสถานะการรับรอง กรุณาลองใหม่อีกครั้ง");
         }
@@ -69,7 +83,7 @@ const Companies: React.FC = () => {
       }
     };
 
-    fetchCompanies();
+    fetchAllData();
   }, []);
 
   const getLatestStatus = (company: CompanyInterface) => {
@@ -248,19 +262,17 @@ const Companies: React.FC = () => {
           style={{ margin: "1rem 0" }}
         >
           <div className="backgroundTabChooseVerify">
-            {["ยังไม่ได้ส่งคำขอ", "รอรับรอง", "รับรอง", "ทั้งหมด"].map(
-              (tab) => (
-                <div
-                  key={tab}
-                  className={`tabChooseVerify ${
-                    activeTab === tab ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </div>
-              )
-            )}
+            {statusTabs.map((tab) => (
+              <div
+                key={tab}
+                className={`tabChooseVerify ${
+                  activeTab === tab ? "active" : ""
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab} {/* ({statusCountMap[tab] || 0}) */}
+              </div>
+            ))}
           </div>
 
           <Input
