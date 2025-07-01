@@ -4,10 +4,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type Status struct {
+type StatusPost struct {
 	gorm.Model
-	Status string `json:"status"`
+	StatusPost string `json:"status_post"`
 
-	Verifies		[]Verify			`gorm:"foreignKey:StatusID"`
 	IntershipPosts	[]IntershipPost		`gorm:"foreignKey:StatusID"`
 }

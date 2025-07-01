@@ -30,8 +30,8 @@ type IntershipPost struct {
 	WorkModeID uint
 	WorkMode   WorkMode `gorm:"foreignKey:WorkModeID"`
 
-	StatusID uint
-	Status   Status `gorm:"foreignKey:StatusID"`
+	StatusPostID uint
+	StatusPost   StatusPost `gorm:"foreignKey:StatusPostID"`
 
 	AdminID   uint
 	Admin     Admin   `gorm:"foreignKey:AdminID"`

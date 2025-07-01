@@ -43,7 +43,7 @@ func SetupDatabase() {
 		&entity.StudentInterest{},
 		&entity.Company{},
 		&entity.Contact{},
-		&entity.Status{},
+		&entity.StatusPost{},
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
@@ -63,6 +63,7 @@ func SetupDatabase() {
 		&entity.Notification{},
 		&entity.ProfileImage{},
 		&entity.InterviewAppointment{},
+		&entity.StatusVerify{},
 		&entity.Verify{},
 	)
 
@@ -406,21 +407,15 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// Seed Status Posts
-	Statuses := []entity.Status{
-		{Status: "Open"},
-		{Status: "Closed"},
-		{Status: "Pending Approval"},
-		{Status: "ยังไม่ได้ส่งคำขอ"},
-		{Status: "รอรับรอง"},
-		{Status: "รับรอง"},
-		{Status: "ปฏิเสธ"},
-		{Status: "รอดำเนินการ"},
-		{Status: "อนุมัติ"},
-		{Status: "ปฎิเสธ"},
+	StatusPosts := []entity.StatusPost{
+		{StatusPost: "Open"},
+		{StatusPost: "Closed"},
+		{StatusPost: "Pending Approval"},
 	}
-	for _, pkg := range Statuses {
-		db.FirstOrCreate(&pkg, entity.Status{Status: pkg.Status})
+	for _, pkg := range StatusPosts {
+		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
+	
 	IntershipPost := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
@@ -563,6 +558,17 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, nt := range notificationTypes {
 		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
+	}
+
+	// Seed Status Posts
+	StatusVerifies := []entity.StatusVerify{
+		{StatusVerify: "ยังไม่ได้ส่งคำขอ"},
+		{StatusVerify: "รอรับรอง"},
+		{StatusVerify: "รับรอง"},
+		{StatusVerify: "ปฏิเสธ"},
+	}
+	for _, pkg := range StatusVerifies {
+		db.FirstOrCreate(&pkg, entity.StatusVerify{StatusVerify: pkg.StatusVerify})
 	}
 
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
