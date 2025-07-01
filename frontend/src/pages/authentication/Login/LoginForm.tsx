@@ -172,7 +172,7 @@ function LoginForm() {
                 <Form.Item name="remember" valuePropName="checked" noStyle>
                   <Checkbox>Remember Me</Checkbox>
                 </Form.Item>
-                <Link href="#">Forgot Password</Link>
+                <Link onClick={() => navigate("/reset-password")}>Forgot Password</Link>
               </div>
 
               <div className="signup-link">
