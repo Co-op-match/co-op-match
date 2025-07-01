@@ -107,7 +107,24 @@ func createSeedData(db *gorm.DB) {
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "Jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}
+		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+
+		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
+
+		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+		
+		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "s5@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+
+		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+		{Email: "tn4@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 	}
 	for _, pkg := range User {
 		db.FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
@@ -372,8 +389,18 @@ func createSeedData(db *gorm.DB) {
 	for _, s := range students {
 		db.FirstOrCreate(&s, entity.Student{FirstName: s.FirstName})
 	}
-	}
 
+	companies := []entity.Company{
+		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 2, AddressID: 1},
+		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 6, AddressID: 1},
+		{CompanyName: "Gamma Innovations Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 7, AddressID: 1},
+		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 1},
+		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 1},
+	}
+	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
+	for _, company := range companies {
+		db.FirstOrCreate(&company,entity.Company{CompanyName: company.CompanyName})
+	}
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
