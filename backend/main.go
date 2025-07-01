@@ -31,6 +31,7 @@ func main() {
 	// Auth Route
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
+	r.POST("/reset-password", users.SimpleResetPassword)
 
 	r.GET("/roles", role.GetAll)
 	r.GET("/provinces", searchjob.GetAllProvinces)
@@ -45,6 +46,7 @@ func main() {
 	router := r.Group("/")
 	{
 		router.Use(middlewares.Authorizes())
+		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 
 		studentGroup := router.Group("/students")
 		{
@@ -83,8 +85,8 @@ func main() {
 			eduGroup.PUT("/:user_id", controller.UpdateEducationByUserID)
 		}
 
-		userGroup := router.Group("/user") 
-		{       
+		userGroup := router.Group("/user")
+		{
 			userGroup.GET("/:id", controller.GetUserByID)
 			userGroup.POST("/image", controller.CreateProfileImage)
 			userGroup.PUT("/image/:id", controller.UpdateProfileImage)

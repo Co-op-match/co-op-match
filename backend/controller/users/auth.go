@@ -64,18 +64,22 @@ func SignIn(c *gin.Context) {
 	var user entity.User
 	db := config.DB()
 	if err := db.Preload("Role").Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "กรุณาสมัครสมาชิกก่อนเข้าสู่ระบบ"})
+		return
+	}
+	if !user.IsActive {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "บัญชีนี้ยังไม่ได้เปิดใช้งาน"})
 		return
 	}
 	// ค้นหา user ด้วย Username ที่ผู้ใช้กรอกเข้ามา
-	if err := config.DB().Raw("SELECT * FROM users WHERE email = ?", input.Email).Scan(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	//if err := config.DB().Raw("SELECT * FROM users WHERE email = ?", input.Email).Scan(&user).Error; err != nil {
+	//c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//return
+	//}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "อีเมลหรือรหัสผ่านไม่ถูกต้อง"})
 		return
 	}
 
@@ -97,5 +101,36 @@ func SignIn(c *gin.Context) {
 		"roleId":     user.RoleID, // เพิ่ม roleId
 		"id":         user.ID,     // เพิ่ม user ID ถ้ายังไม่มี
 	})
+
+}
+
+func SimpleResetPassword(c *gin.Context) {
+	var request struct {
+		Email       string
+		NewPassword string
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ข้อมูลไม่ถูกต้อง"})
+		return
+	}
+
+	var user entity.User
+	if err := config.DB().Where("email = ?", request.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบัญชีนี้"})
+		return
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		return
+	}
+	user.Password = string(hashedPassword)
+	if err := config.DB().Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "เปลี่ยนรหัสผ่านสำเร็จ"})
 
 }
