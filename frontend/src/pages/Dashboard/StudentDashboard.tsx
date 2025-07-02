@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Layout,
   Card,
@@ -10,18 +10,21 @@ import {
   Input,
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
-
+import CoopMatchHeader from '../component/CoopMatchHeader';
+import { UserContext } from '../../components/UserContext'; 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const StudentDashboard: React.FC = () => {
-  const navigate = useNavigate(); // ใช้งาน navigate
-
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // หรือ studentID แล้วแต่ที่คุณใช้
-    localStorage.removeItem('studentID');
-    navigate('/sign-in'); // กลับไปหน้า login
-  };
+  const navigate = useNavigate(); // ใช้งาน hook
+  const { logout } = useContext(UserContext);
+  
+    const handleLogout = () => {
+      // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
+      logout();
+      // redirect กลับไปหน้า login
+      navigate("/sign-in");
+    };
 
   // รายการงานทั้งหมด
   const jobData = [
@@ -80,7 +83,8 @@ const StudentDashboard: React.FC = () => {
   );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh',background: '#f5f5f5' }}>
+      <CoopMatchHeader  />
       <Layout>
         <Header
           style={{

@@ -8,6 +8,7 @@ import (
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
 	"co-op-match.com/co-op-match/controller/role"
+	"co-op-match.com/co-op-match/controller/searchjob"
 	"co-op-match.com/co-op-match/controller/users"
 	"co-op-match.com/co-op-match/middlewares"
 )
@@ -26,32 +27,109 @@ func main() {
 
 	// เพิ่ม CORS Middleware
 	r.Use(CORSMiddleware())
+	r.Static("/uploads", "./public/uploads")
 	// Auth Route
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
+	r.POST("/reset-password", users.SimpleResetPassword)
+
+	r.GET("/roles", role.GetAll)
+	r.GET("/provinces", searchjob.GetAllProvinces)
+
+	r.GET("/universities", controller.GetUniversities)
+
+	//Application
+
+	r.POST("/applications", controller.CreateApplication)
+	r.POST("/post", controller.CreateInternshipPost)
+
+	// Route สำหรับดึงข้อมูล Work Mode, Work Day, Stipend, JobType, StatusPost
+
+	r.GET("/work_modes", controller.GetAllWorkModes)
+	r.GET("/work_days", controller.GetAllWorkDays)
+	r.GET("/stipends", controller.GetAllStipends)
+	r.GET("/job_types", controller.GetAllJobTypes)
+	r.GET("/status_posts", controller.GetAllStatusPosts)
+	r.GET("/benefit", controller.GetAllBenefits)
+	r.GET("/getpost", controller.ListInternshipPosts)
+	r.GET("/getpost/:id", controller.GetInternshipPostById)
+	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
+	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{
 		router.Use(middlewares.Authorizes())
+		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 
-		studentGroup := r.Group("/students")
+		studentGroup := router.Group("/students")
 		{
 			studentGroup.GET("", controller.GetAllStudents)
+			studentGroup.POST("", controller.CreateStudent)
+			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
+			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
+
+		}
+		addressGroup := router.Group("/address")
+		{
+			addressGroup.GET("/", controller.GetAllAdress)
+			addressGroup.GET("/:user_id", controller.GetAddressByUserID)
+			addressGroup.POST("/:role_id/:user_id", controller.CreateAddressByRoleIDAndUserID)
+			addressGroup.PUT("/:role_id/:user_id", controller.UpdateAddressByRoleIDAndUserID)
+		}
+		studentSkillGroup := router.Group("/skills")
+		{
+			studentSkillGroup.GET("/", controller.GetAllSkill)
+			studentSkillGroup.GET("/:user_id", controller.GetStudentSkillsByUserID)
+			studentSkillGroup.POST("/:user_id", controller.CreateStudentSkillsAndInterestsByUserID)
+			studentSkillGroup.PUT("/:user_id", controller.UpdateStudentSkillsAndInterestsByUserID)
+		}
+		interestGroup := router.Group("/interests")
+		{
+			interestGroup.GET("/", controller.GetAllInterest)
+			interestGroup.GET("/:user_id", controller.GetStudentInterestsByUserID)
+		}
+		eduGroup := router.Group("/education")
+		{
+			eduGroup.GET("/", controller.GetAllEducation)
+			eduGroup.GET("/levels", controller.GetAllEducationLevel)
+			eduGroup.GET("/:user_id", controller.GetEcudutionByUserID)
+			eduGroup.POST("/", controller.CreateEducation)
+			eduGroup.PUT("/:user_id", controller.UpdateEducationByUserID)
 		}
 
-		chatGroup := r.Group("/chat")
+		userGroup := router.Group("/user")
+		{
+			userGroup.GET("/:id", controller.GetUserByID)
+			userGroup.POST("/image", controller.CreateProfileImage)
+			userGroup.PUT("/image/:id", controller.UpdateProfileImage)
+			userGroup.GET("/gender", controller.GetAllGender)
+			userGroup.GET("/image/:id", controller.GetProfileImageByUserID)
+		}
+
+		chatGroup := router.Group("/chat")
 		{
 			chatGroup.POST("/room", controller.CreateChatRoom)
 		}
+		notificationGroup := router.Group("/notification")
+		{
+			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail) // <-- ครอบคลุมทั้งสร้าง notification + ส่ง email ในตัว
+			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
+			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
+		}
 
-		companyGroup := r.Group("/company")
+		companyGroup := router.Group("/company")
 		{
 			companyGroup.POST("", controller.GetAllCompany)
 		}
+		adminGroup := r.Group("/admin")
+		{
+			adminGroup.GET("/all", controller.GetAllAdmin)
+			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
+			adminGroup.GET("/:id", controller.GetAdminByID)
+		}
 	}
-	r.GET("/roles", role.GetAll)
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
 	})
