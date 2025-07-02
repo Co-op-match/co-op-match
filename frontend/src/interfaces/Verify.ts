@@ -8,7 +8,7 @@ export interface VerifyInterface {
   reason: string;
 
   status_verify_id: number;
-  status_verify?: StatusVerifyInterface;
+  StatusVerify?: StatusVerifyInterface;
 
   user_id: number;
   User?: UserInterface;

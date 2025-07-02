@@ -98,7 +98,16 @@ const Companies: React.FC = () => {
             new Date(a.CreatedAt || "").getTime()
         )[0]
       : null;
-    return latest?.status_verify?.status_verify || "ยังไม่ได้ส่งคำขอ";
+    return latest?.StatusVerify?.status_verify || "ยังไม่ได้ส่งคำขอ";
+  };
+
+  const getLatestVerification = (company: CompanyInterface) => {
+    if (!company?.User?.Verifications?.length) return null;
+    return [...company.User.Verifications].sort(
+      (a, b) =>
+        new Date(b.CreatedAt || "").getTime() -
+        new Date(a.CreatedAt || "").getTime()
+    )[0];
   };
 
   const handleVerify = async () => {
@@ -334,6 +343,41 @@ const Companies: React.FC = () => {
           <p>
             <strong>บริษัท:</strong> {selectedCompany?.company_name}
           </p>
+
+          {(() => {
+            const latest = getLatestVerification(selectedCompany!);
+            if (!latest) return <p>ยังไม่มีการส่งคำขอรับรอง</p>;
+
+            return (
+              <>
+                <p>
+                  <strong>สถานะ:</strong>{" "}
+                  {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
+                </p>
+                <p>
+                  <strong>วันที่ส่งคำขอ:</strong>{" "}
+                  {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
+                </p>
+                <p>
+                  <strong>เอกสารการยืนยัน:</strong>{" "}
+                  <a href={latest.verification_document} target="_blank">
+                    คลิกเพื่อดู
+                  </a>
+                </p>
+                {latest.reason && (
+                  <p>
+                    <strong>เหตุผล:</strong> {latest.reason}
+                  </p>
+                )}
+                {latest.admin?.first_name && (
+                  <p>
+                    <strong>ผู้รับรอง:</strong> {latest.admin.first_name}{" "}
+                    {latest.admin.last_name}
+                  </p>
+                )}
+              </>
+            );
+          })()}
         </Modal>
 
         <Modal

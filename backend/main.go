@@ -111,7 +111,7 @@ func main() {
 		}
 		adminGroup := r.Group("/admin")
 		{
-			adminGroup.GET("/all", controller.GetAllAdmin)
+			adminGroup.GET("/", controller.GetAllAdmin)
 			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 			adminGroup.GET("/:id", controller.GetAdminByID)
 		}

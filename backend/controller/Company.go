@@ -11,25 +11,25 @@ import (
 )
 
 func GetAllCompany(c *gin.Context) {
-	var company []entity.Company
+	var companies []entity.Company
 
 	err := config.DB().
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
 		Preload("Reviews").
-		Preload("User.Verifications.Status").
-		Find(&company).Error
+		Preload("User.Verifications.StatusVerify").
+		Find(&companies).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to fetch students",
+			"error":   "Failed to fetch companies",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, company)
+	c.JSON(http.StatusOK, companies)
 }
 
 func GetCompanyByID(c *gin.Context) {
