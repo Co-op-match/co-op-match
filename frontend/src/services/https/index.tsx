@@ -31,6 +31,25 @@ async function GetRole() {
     .catch((e) => e.response);
 }
 
+async function ResetPassword(email: string, newPassword: string) {
+  try {
+    const token = localStorage.getItem('token');
+    console.log(token);
+    const response = await axios.post(`${apiUrl}/reset-password`, {
+      Email: email,
+      NewPassword: newPassword,
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${Bearer} ${Authorization}`,
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    return error.response ? error.response.data : { error: "An unknown error occurred" };
+  }
+}
+
 async function CreateUser(data: UsersInterface) {
   return await axios
     .post(`${apiUrl}/sign-up`, data, requestOptions)
@@ -138,6 +157,12 @@ async function GetWorkMode() {
 async function GetBenefit() {
   return await axios
     .get(`${apiUrl}/benefits`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetIntershipPost() {
+  return await axios
+    .get(`${apiUrl}/intership-posts`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -310,6 +335,7 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
 export {
   SignIn,
   GetRole,
+  ResetPassword,
   CreateUser,
   GetStudentById,
   GetStudentByUserId,
@@ -320,6 +346,8 @@ export {
   GetWorkDay,
   GetWorkMode,
   GetBenefit,
+  GetIntershipPost,
+
   CreateStudent,
   UpdateStudent,
   CreateProfileImage,
