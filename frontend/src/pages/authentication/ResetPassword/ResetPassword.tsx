@@ -12,15 +12,20 @@ function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values: { email: string; new_password: string }) => {
-    setLoading(true);
-    try {
-      await ResetPassword(values.email, values.new_password);
-      messageApi.success("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
+  setLoading(true);
+  try {
+    const resData = await ResetPassword(values.email, values.new_password);
+    console.log("Response data:", resData);
+
+    messageApi.success("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
+
+    setTimeout(() => {
       navigate("/sign-in");
-    } catch (error: any) {
-      message.error(error.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
-    }
-    setLoading(false);
+    }, 1000); 
+  } catch (error: any) {
+    messageApi.error(error.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
+  }
+  setLoading(false);
   };
 
   return (
@@ -32,9 +37,9 @@ function ResetPasswordPage() {
       style={{
         minHeight: "100vh",
         display: "flex",
-        justifyContent: "center", // จัดตรงกลางแนวนอน
-        alignItems: "center",     // จัดตรงกลางแนวตั้ง
-        backgroundColor: "#f5f5f5", // เปลี่ยนพื้นหลังถ้าต้องการ
+        justifyContent: "center", 
+        alignItems: "center",     
+        backgroundColor: "#f5f5f5", 
       }}
     >
       <Card
