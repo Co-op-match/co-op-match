@@ -4,16 +4,16 @@ import type { AdminInterface } from "./Admin";
 
 export interface VerifyInterface {
   ID?: number;
-  verification_document: string;
-  reason: string;
+  verification_document?: string;
+  reason?: string;
 
-  status_verify_id: number;
+  StatusVerifyID?: number;
   StatusVerify?: StatusVerifyInterface;
 
-  user_id: number;
+  UserID?: number;
   User?: UserInterface;
 
-  admin_id?: number | null;
+  AdminID?: number | null;
   admin?: AdminInterface | null;
 
   CreatedAt?: string;

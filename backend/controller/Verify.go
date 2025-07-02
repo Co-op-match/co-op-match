@@ -2,33 +2,13 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
 
 	"github.com/gin-gonic/gin"
 )
-
-func GetAllaaaaaaaaaaaaaaaaaaa(c *gin.Context) {
-	var company []entity.Company
-
-	err := config.DB().
-		Preload("Contact").
-		Preload("IntershipPosts").
-		Preload("InterviewAppointments").
-		Preload("Reviews").
-		Find(&company).Error
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to fetch students",
-			"details": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, company)
-}
 
 func GetAllStatusVerify(c *gin.Context) {
 	var statuses []entity.StatusVerify
@@ -40,4 +20,40 @@ func GetAllStatusVerify(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, statuses)
+}
+
+// handler PUT /verify/:id
+func UpdateVerifyStatus(c *gin.Context) {
+	var updateData entity.Verify
+	id := c.Param("id")
+
+	// รับ JSON ที่ส่งเข้ามาเป็น Verify struct
+	if err := c.ShouldBindJSON(&updateData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	var verify entity.Verify
+	if err := config.DB().First(&verify, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "verify not found"})
+		return
+	}
+
+	// อัปเดตเฉพาะ field ที่ต้องการ
+	if updateData.StatusVerifyID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Invalid Status Verify ID"})
+		return
+	}
+
+	verify.StatusVerifyID = updateData.StatusVerifyID
+	verify.AdminID = updateData.AdminID
+	verify.Reason = updateData.Reason
+	verify.UpdatedAt = time.Now()
+
+	if err := config.DB().Save(&verify).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, verify)
 }

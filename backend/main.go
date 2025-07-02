@@ -42,6 +42,7 @@ func main() {
 	r.GET("/benefits", searchjob.GetAllBenefits)
 	r.GET("/universities", controller.GetUniversities)
 	r.GET("/status_verifies", controller.GetAllStatusVerify)
+	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{

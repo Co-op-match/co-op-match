@@ -15,6 +15,8 @@ import {
   Popconfirm,
   message,
   Select,
+  Radio,
+  Image,
 } from "antd";
 import {
   SearchOutlined,
@@ -27,14 +29,19 @@ import AdminHeader from "../../../Component/AdminNavbar";
 import {
   GetAllCompany,
   GetAllStatusVerify,
+  UpdateCompany,
+  UpdateVerifyStatus,
 } from "../../../../services/https/aum";
 import type { CompanyInterface } from "../../../../interfaces/Company";
 import type { ColumnsType } from "antd/es/table";
 import axios from "axios";
 import "../users.css";
 import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
+import type { VerifyInterface } from "../../../../interfaces/Verify";
 
 const Companies: React.FC = () => {
+  const [form] = Form.useForm();
+
   const [companies, setCompanies] = useState<CompanyInterface[]>([]);
   const [selectedCompany, setSelectedCompany] =
     useState<CompanyInterface | null>(null);
@@ -43,6 +50,12 @@ const Companies: React.FC = () => {
 
   const [status, setStatus] = useState<StatusVerifyInterface[]>([]);
   const [statusTabs, setStatusTabs] = useState<string[]>([]);
+
+  const [rejectReason, setRejectReason] = useState("");
+  const [showRejectModal, setShowRejectModal] = useState(false);
+
+  const [showDecisionModal, setShowDecisionModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
 
   const [activeTab, setActiveTab] = useState("รอรับรอง");
 
@@ -134,6 +147,35 @@ const Companies: React.FC = () => {
     setShowConfirmModal(true);
   };
 
+  const handleSubmitDecision = async (reason: string) => {
+    const latest = getLatestVerification(selectedCompany!);
+    if (!latest) return;
+
+    const selectedStatusObj = status.find(
+      (s) => s.status_verify === selectedStatus
+    );
+    if (!selectedStatusObj) return;
+
+    console.log("selectedStatusObj: ", selectedStatusObj);
+
+    const updateVerifyData: VerifyInterface = {
+      StatusVerifyID: selectedStatusObj.ID,
+      AdminID: 1,
+      reason: selectedStatus === "ปฏิเสธ" ? reason : "",
+    };
+
+    try {
+      await UpdateVerifyStatus(latest.ID!, updateVerifyData);
+      message.success(`${selectedStatus} บริษัทเรียบร้อยแล้ว`);
+      setShowDetailModal(false);
+      const res = await GetAllCompany();
+      if (res.status === 200) setCompanies(res.data);
+    } catch (err) {
+      console.error(err);
+      message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+    }
+  };
+
   const openDetailModal = (record: CompanyInterface) => {
     setSelectedCompany(record);
     setShowDetailModal(true);
@@ -145,7 +187,7 @@ const Companies: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleEditSubmit = () => {
+  /*   const handleEditSubmit = () => {
     editForm.validateFields().then((values) => {
       setCompanies((prev) =>
         prev.map((item) =>
@@ -154,6 +196,19 @@ const Companies: React.FC = () => {
       );
       setShowEditModal(false);
     });
+  }; */
+  const handleEditSubmit = async (values: any) => {
+    try {
+      const response = await UpdateCompany(selectedCompany?.ID!, values);
+      if (response.status === 200) {
+        message.success("อัปเดตข้อมูลบริษัทเรียบร้อยแล้ว");
+        setShowEditModal(false);
+        /* loadCompanyList(); // reload data */
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("เกิดข้อผิดพลาดในการอัปเดตข้อมูลบริษัท");
+    }
   };
 
   const handleDelete = (companyID: number) => {
@@ -272,19 +327,6 @@ const Companies: React.FC = () => {
           gap="5vw"
           style={{ margin: "1rem 0" }}
         >
-          {/* <div className="backgroundTabChooseVerify">
-            {statusTabs.map((tab) => (
-              <div
-                key={tab}
-                className={`tabChooseVerify ${
-                  activeTab === tab ? "active" : ""
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </div>
-            ))}
-          </div> */}
           <Select
             value={activeTab}
             onChange={(value) => setActiveTab(value)}
@@ -318,95 +360,193 @@ const Companies: React.FC = () => {
 
         <Modal
           open={showDetailModal}
-          onCancel={() => setShowDetailModal(false)}
           title="รายละเอียดการรับรอง"
-          footer={
-            getLatestStatus(selectedCompany!) === "รับรอง"
-              ? null
-              : [
-                  <Button
-                    key="cancel"
-                    onClick={() => setShowDetailModal(false)}
-                  >
-                    ยกเลิก
-                  </Button>,
-                  <Button
-                    key="confirm"
-                    type="primary"
-                    onClick={handleConfirmFromDetailModal}
-                  >
-                    ยืนยัน
-                  </Button>,
-                ]
-          }
-        >
-          <p>
-            <strong>บริษัท:</strong> {selectedCompany?.company_name}
-          </p>
-
-          {(() => {
-            const latest = getLatestVerification(selectedCompany!);
-            if (!latest) return <p>ยังไม่มีการส่งคำขอรับรอง</p>;
-
-            return (
-              <>
-                <p>
-                  <strong>สถานะ:</strong>{" "}
-                  {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
-                </p>
-                <p>
-                  <strong>วันที่ส่งคำขอ:</strong>{" "}
-                  {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
-                </p>
-                <p>
-                  <strong>เอกสารการยืนยัน:</strong>{" "}
-                  <a href={latest.verification_document} target="_blank">
-                    คลิกเพื่อดู
-                  </a>
-                </p>
-                {latest.reason && (
-                  <p>
-                    <strong>เหตุผล:</strong> {latest.reason}
-                  </p>
-                )}
-                {latest.admin?.first_name && (
-                  <p>
-                    <strong>ผู้รับรอง:</strong> {latest.admin.first_name}{" "}
-                    {latest.admin.last_name}
-                  </p>
-                )}
-              </>
-            );
-          })()}
-        </Modal>
-
-        <Modal
-          open={showConfirmModal}
-          onCancel={() => setShowConfirmModal(false)}
-          onOk={handleVerify}
+          onCancel={() => {
+            setShowDetailModal(false);
+            form.resetFields(); // ✅ รีเซ็ต TextArea
+            setSelectedStatus(""); // ✅ รีเซ็ต Radio
+          }}
+          onOk={async () => {
+            try {
+              if (selectedStatus === "ปฏิเสธ") {
+                await form.validateFields(); // ✅ ตรวจสอบว่ากรอกเหตุผล
+              }
+              const reason = form.getFieldValue("rejectReason") || "";
+              await handleSubmitDecision(reason);
+            } catch (err) {
+              // error จะทำให้ Input มีขอบแดงอัตโนมัติ
+            }
+          }}
           okText="ยืนยัน"
           cancelText="ยกเลิก"
-          title="ยืนยันการรับรองอีกครั้ง"
         >
-          <p>คุณแน่ใจหรือไม่ว่าจะรับรองบริษัทนี้?</p>
+          <Form form={form} layout="vertical">
+            <p>
+              <strong>บริษัท:</strong> {selectedCompany?.company_name}
+            </p>
+
+            {(() => {
+              const latest = getLatestVerification(selectedCompany!);
+              if (!latest) return <p>ยังไม่มีการส่งคำขอรับรอง</p>;
+
+              return (
+                <>
+                  <p>
+                    <strong>สถานะ:</strong>{" "}
+                    {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
+                  </p>
+                  <p>
+                    <strong>วันที่ส่งคำขอ:</strong>{" "}
+                    {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
+                  </p>
+                  <p>
+                    <strong>เอกสารการยืนยัน:</strong>
+                  </p>
+
+                  {(() => {
+                    const url = latest.verification_document;
+                    const ext = url?.split(".").pop()?.toLowerCase();
+
+                    if (!url)
+                      return <p style={{ color: "gray" }}>ไม่มีเอกสาร</p>;
+
+                    if (["png", "jpg", "jpeg", "webp"].includes(ext!)) {
+                      return (
+                        <img
+                          src={url}
+                          alt="Verification Document"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: 400,
+                            borderRadius: 8,
+                          }}
+                        />
+                      );
+                    } else if (ext === "pdf") {
+                      return (
+                        <iframe
+                          src={url}
+                          title="PDF Document"
+                          width="100%"
+                          height="500px"
+                          style={{ border: "1px solid #ccc", borderRadius: 8 }}
+                        />
+                      );
+                    } else {
+                      return (
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          คลิกเพื่อเปิดเอกสาร
+                        </a>
+                      );
+                    }
+                  })()}
+
+                  <Radio.Group
+                    onChange={(e) => {
+                      setSelectedStatus(e.target.value);
+                      if (e.target.value !== "ปฏิเสธ") {
+                        form.resetFields(["rejectReason"]);
+                      }
+                    }}
+                    value={selectedStatus}
+                    style={{ marginTop: 16 }}
+                  >
+                    <Radio value="รับรอง">รับรอง</Radio>
+                    <Radio value="ปฏิเสธ">ปฏิเสธ</Radio>
+                  </Radio.Group>
+
+                  {selectedStatus === "ปฏิเสธ" && (
+                    <Form.Item
+                      name="rejectReason"
+                      rules={[
+                        {
+                          required: true,
+                          message: "กรุณาระบุเหตุผลในการปฏิเสธ",
+                        },
+                      ]}
+                    >
+                      <Input.TextArea
+                        rows={4}
+                        placeholder="กรุณาระบุเหตุผลในการปฏิเสธ"
+                      />
+                    </Form.Item>
+                  )}
+                </>
+              );
+            })()}
+          </Form>
         </Modal>
 
         <Modal
           title="แก้ไขข้อมูลบริษัท"
           open={showEditModal}
-          onOk={handleEditSubmit}
+          onOk={() => editForm.submit()}
           onCancel={() => setShowEditModal(false)}
           okText="บันทึก"
           cancelText="ยกเลิก"
         >
-          <Form form={editForm} layout="vertical">
+          <Form
+            form={editForm}
+            layout="vertical"
+            onFinish={handleEditSubmit}
+            initialValues={{
+              company_name: selectedCompany?.company_name,
+              logo: selectedCompany?.logo,
+              address_id: selectedCompany?.address_id,
+              admin_id: selectedCompany?.admin_id,
+              created_at: selectedCompany?.CreatedAt,
+            }}
+          >
             <Form.Item
               name="company_name"
               label="ชื่อบริษัท"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "กรุณาระบุชื่อบริษัท" }]}
             >
               <Input />
             </Form.Item>
+
+            <Form.Item
+              name="logo"
+              label="โลโก้ (URL)"
+              rules={[{ type: "url", message: "URL โลโก้ไม่ถูกต้อง" }]}
+            >
+              <Input placeholder="https://example.com/logo.png" />
+            </Form.Item>
+
+            {/* แสดงตัวอย่างโลโก้ที่ใส่ไว้ */}
+            {editForm.getFieldValue("logo") && (
+              <div style={{ marginBottom: 16 }}>
+                <p>ตัวอย่างโลโก้:</p>
+                <Image
+                  src={editForm.getFieldValue("logo")}
+                  alt="โลโก้บริษัท"
+                  width={150}
+                  height={150}
+                  style={{
+                    objectFit: "contain",
+                    border: "1px solid #ccc",
+                    padding: 8,
+                  }}
+                />
+              </div>
+            )}
+
+            <Form.Item
+              name="address_id"
+              label="รหัสที่อยู่ (Address ID)"
+              rules={[{ required: true, message: "กรุณาระบุที่อยู่" }]}
+            >
+              <Input type="number" />
+            </Form.Item>
+
+            <Form.Item
+              name="admin_id"
+              label="รหัสผู้ดูแล (Admin ID)"
+              rules={[{ required: true, message: "กรุณาระบุผู้ดูแล" }]}
+            >
+              <Input type="number" />
+            </Form.Item>
+
             <Form.Item name="created_at" label="วันที่สมัคร">
               <Input disabled />
             </Form.Item>
