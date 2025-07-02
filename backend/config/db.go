@@ -692,22 +692,22 @@ func createSeedData(db *gorm.DB) {
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
+			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
 			StatusVerifyID:       1,
 			UserID:               2,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
+			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
 			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify2.png",
+			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
 			StatusVerifyID:       3,
 			UserID:               4,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
+			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
 			StatusVerifyID:       4,
 			UserID:               14,
 		},
