@@ -213,12 +213,7 @@ const CompanyDashboard: React.FC = () => {
     GetWorkModes().then(res => setWorkModes(res || []));
     GetBenefits().then(res => setBenefits(res || []));
 
-    axios.get('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_province.json')
-      .then(res => {
-        const names = res.data.map((item: any) => item.name_th);
-        setProvinces(names);
-      })
-      .catch(err => console.error("โหลดจังหวัดล้มเหลว", err));
+    
   }, []);
 
   const handleAddPost = async (values: any) => {
