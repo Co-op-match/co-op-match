@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Layout, Menu } from 'antd';
+import { Avatar, Button, Dropdown, Layout, Menu } from 'antd';
 import {
   UserOutlined,
   BellOutlined,
@@ -45,6 +45,17 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(`/company/${key}`);
   };
+    const handleLogout = () => {
+    localStorage.clear(); // เคลียร์ข้อมูล
+    navigate('/sign-in');
+  };
+  const logoutMenu = (
+  <Menu>
+    <Menu.Item key="logout" danger onClick={handleLogout}>
+      ออกจากระบบ
+    </Menu.Item>
+  </Menu>
+);
 
   return (
     <Header
@@ -65,25 +76,28 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
         <img src={Logo} alt="Logo" style={{ height: 40 }} />
       </div>
 
-      {/* Menu + Avatar */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Menu
-          mode="horizontal"
-          selectedKeys={[currentPage]}
-          items={menuItems}
-          onClick={handleMenuClick}
-          style={{
-            border: 'none',
-            backgroundColor: 'transparent',
-            minWidth: 160,
-          }}
-        />
-        <Avatar
-          src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
-          icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-          style={{ cursor: "pointer", marginLeft: 16 }}
-        />
-      </div>
+{/* Menu + Avatar + Logout */}
+<div style={{ display: 'flex', alignItems: 'center' }}>
+  <Menu
+    mode="horizontal"
+    selectedKeys={[currentPage]}
+    items={menuItems}
+    onClick={handleMenuClick}
+    style={{
+      border: 'none',
+      backgroundColor: 'transparent',
+      minWidth: 160,
+    }}
+  />
+
+<Dropdown overlay={logoutMenu} placement="bottomRight" trigger={['click']}>
+  <Avatar
+    src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
+    icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+    style={{ cursor: "pointer", marginLeft: 16 }}
+  />
+</Dropdown>
+</div>
     </Header>
   );
 };
