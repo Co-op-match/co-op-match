@@ -24,6 +24,7 @@ import StepSkills from '../StudentFormSteps/StepSkills';
 import StepGeneralInfo from '../StudentFormSteps/StepGeneral';
 import './AddStudentForm.css';
 import { useNavigate } from 'react-router-dom';
+import CoopMatchHeaderDefault from '../../../component/CoopMatchHeaderDefault';
 
 
 const { Content } = Layout;
@@ -63,20 +64,32 @@ const AddStudentForm: React.FC = () => {
     };
   }, [previewUrl]);
 
-  const handleNext = async () => {
-    try {
-      const currentValues = await form.validateFields();
-      setFormData((prev: any) => ({ ...prev, ...currentValues }));
-      setCurrentStep(currentStep + 1);
-      form.resetFields();
-    } catch {
+ const handleNext = async () => {
+  try {
+    const currentValues = await form.validateFields();
+
+    // 🔒 บังคับให้เลือกรูปก่อนใน step แรก (General Info)
+    if (currentStep === 0 && !imageFile) {
       messageApi.warning({
-        content: 'กรุณากรอกข้อมูลให้ครบในขั้นตอนนี้',
+        content: 'กรุณาเลือกรูปนักศึกษาก่อนดำเนินการต่อ',
         style: { marginTop: '20vh' },
         duration: 3,
       });
+      return;
     }
-  };
+
+    setFormData((prev: any) => ({ ...prev, ...currentValues }));
+    setCurrentStep(currentStep + 1);
+    // form.resetFields();
+  } catch {
+    messageApi.warning({
+      content: 'กรุณากรอกข้อมูลให้ครบในขั้นตอนนี้',
+      style: { marginTop: '20vh' },
+      duration: 3,
+    });
+  }
+};
+
 
   const handleBack = () => {
     form.setFieldsValue(formData);
@@ -87,6 +100,7 @@ const onFinish = async () => {
   try {
     const finalValues = await form.validateFields();
     const finalData = { ...formData, ...finalValues };
+    console.log("📦 finalData:", finalData);
 
     const userId = Number(localStorage.getItem('id'));
     const roleId = Number(localStorage.getItem('roleId'));
@@ -119,10 +133,10 @@ const onFinish = async () => {
       village: finalData.village,
       street: finalData.street,
       sub_street: finalData.sub_street,
-      subdistrict: finalData.subdistrict,
-      district: finalData.district,
-      province: finalData.province,
-      post_code: String(finalData.post_code),
+      province_id: Number(finalData.province),       
+      district_id: Number(finalData.district),       
+      subdistrict_id: Number(finalData.subdistrict_id), 
+      postcode_id: Number(finalData.post_code),      
     };
     const res = await CreateStudent(payload);
     if (!(res.status === 200 || res.status === 201)) {
@@ -218,6 +232,7 @@ const onFinish = async () => {
   return (
     <>
       {contextHolder}
+      <CoopMatchHeaderDefault />
       <Layout className="add-student-layout">
         <Content className="add-student-content">
           <Card className="add-student-card">
@@ -229,30 +244,31 @@ const onFinish = async () => {
               items={steps.map((step) => ({ title: step.title }))}
             />
 
-            <Form
-              layout="vertical"
-              form={form}
-              onFinish={onFinish}
-              style={{ marginTop: 24 }}
-            >
+          <Form layout="vertical" form={form} onFinish={onFinish} style={{ marginTop: 24 }}>
+            <Card className="step-card">
               {steps[currentStep].content}
-              <Form.Item style={{ marginTop: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  {currentStep > 0 && (
-                    <Button onClick={handleBack}>ย้อนกลับ</Button>
-                  )}
-                  {currentStep < steps.length - 1 ? (
-                    <Button type="primary" onClick={handleNext}>
-                      ถัดไป
-                    </Button>
-                  ) : (
-                    <Button type="primary" htmlType="submit">
-                      บันทึก
-                    </Button>
-                  )}
-                </div>
-              </Form.Item>
-            </Form>
+            </Card>
+
+          <Form.Item className="form-footer">
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                {currentStep > 0 && (
+                  <Button onClick={handleBack}>ย้อนกลับ</Button>
+                )}
+              </div>
+
+              <div>
+                {currentStep < steps.length - 1 ? (
+                  <Button type="primary" onClick={handleNext}>ถัดไป</Button>
+                ) : (
+                  <Button type="primary" htmlType="submit">บันทึก</Button>
+                )}
+              </div>
+            </div>
+          </Form.Item>
+
+                    </Form>
+
           </Card>
         </Content>
       </Layout>

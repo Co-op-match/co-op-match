@@ -74,6 +74,7 @@ func main() {
 		addressGroup := router.Group("/address")
 		{
 			addressGroup.GET("/", controller.GetAllAdress)
+			addressGroup.GET("/provinces", controller.GetAllProvinces)
 			addressGroup.GET("/:user_id", controller.GetAddressByUserID)
 			addressGroup.POST("/:role_id/:user_id", controller.CreateAddressByRoleIDAndUserID)
 			addressGroup.PUT("/:role_id/:user_id", controller.UpdateAddressByRoleIDAndUserID)

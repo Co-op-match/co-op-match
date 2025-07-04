@@ -27,8 +27,35 @@ import {
   GetBenefits,
 } from '../../services/https/post';
 import axios from 'axios';
-import { GetAllSkill } from '../../services/https';
+import { GetAllProvinces, GetAllSkill } from '../../services/https';
 import type { SkillInterface } from '../../interfaces/Skill';
+
+interface SelectOption {
+  label: string;
+  value: string | number;
+}
+
+interface SubDistrict {
+  ID: number;
+  name_th: string;
+  Postcode?: {
+    ID: number;
+    post_code: string;
+  };
+}
+
+interface District {
+  ID: number;
+  name_th: string;
+  SubDistricts: SubDistrict[];
+}
+
+interface Province {
+  ID: number;
+  name_th: string;
+  Districts: District[];
+}
+
 
 
 const { Header, Content } = Layout;
@@ -45,9 +72,17 @@ const CompanyDashboard: React.FC = () => {
   const [workDays, setWorkDays] = useState<any[]>([]);
   const [workModes, setWorkModes] = useState<any[]>([]);
   const [benefits, setBenefits] = useState<any[]>([]);
-  const [provinces, setProvinces] = useState<string[]>([]);
   const [messageApi, contextHolder] = message.useMessage();
   const [skills, setSkills] = useState<SkillInterface[]>([]);
+
+  const [provinceOptions, setProvinceOptions] = useState<SelectOption[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<SelectOption[]>([]);
+  const [subdistrictOptions, setSubdistrictOptions] = useState<SelectOption[]>([]);
+
+  const [rawProvinces, setRawProvinces] = useState<Province[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number>();
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number>();
+  const [selectedSubdistrict, setSelectedSubdistrict] = useState<SubDistrict | null>(null);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -60,7 +95,7 @@ const CompanyDashboard: React.FC = () => {
       dataIndex: 'post_name',
       key: 'post_name',
       render: (text: string, record: InternshipPostInterface) => (
-        <Button type="link" onClick={() => navigate(`/post-detail/${record.id}`)}>{text}</Button>
+        <Button type="link" onClick={() => navigate(`/post-detail/${record.ID}`)}>{text}</Button>
       ),
     },
     {
@@ -98,18 +133,47 @@ const CompanyDashboard: React.FC = () => {
     {
       title: 'จัดการ',
       key: 'action',
-      render: (_: any, record: InternshipPostInterface) => (
-        <Button type="link" onClick={() => navigate(`/post-detail/${record.id}`)}>ดูรายละเอียด</Button>
-      ),
-    },
+      render: (_: any, record: InternshipPostInterface) => {
+        console.log('record:', record); // 👈 ดู output ว่ามี id ไหม
+        return (
+          <Button
+            type="primary"
+            onClick={() => navigate(`/post/${record.ID}`)}
+          >
+            ดูรายละเอียด
+          </Button>
+        );
+      },}      
   ];
+
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const res = await GetAllProvinces();
+        const data = res.data || res;
+        setRawProvinces(data);
+        console.log("✅ data:", data);
+        setProvinceOptions(
+          data.map((p: any) => ({
+            label: p.name_th,
+            value: Number(p.ID),
+          }))
+        );
+      } catch (error) {
+        console.error('โหลดจังหวัดล้มเหลว:', error);
+      }
+    };
+
+    loadProvinces();
+  }, []);
+
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         const skillsData = await GetAllSkill();
 
         setSkills(skillsData);
-    
+
         console.log(skillsData)
 
       } catch {
@@ -162,26 +226,33 @@ const CompanyDashboard: React.FC = () => {
     if (!companyId) {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
-
-
     }
-
+  
     values.StatusPostID = 3;
     values.CompanyID = Number(companyId);
-
+  
+    // 🔁 ดึงชื่อจาก rawProvinces ก่อนส่ง
+    const selectedProvince = rawProvinces.find(p => p.name_th === values.province);
+    const selectedDistrict = selectedProvince?.Districts?.find(d => d.name_th === values.district);
+    const selectedSubdistrict = selectedDistrict?.SubDistricts?.find(s => s.ID === values.subdistrict_id);
+  
+    values.province = selectedProvince?.name_th;
+    values.district = selectedDistrict?.name_th;
+    values.subdistrict = selectedSubdistrict?.name_th;
+    values.post_code = selectedSubdistrict?.Postcode?.post_code;
+  
     try {
       const response = await axios.post('http://localhost:8000/post', values);
       if (response.status >= 200 && response.status < 300) {
         message.success("โพสต์งานใหม่ถูกบันทึกสำเร็จ!");
         form.resetFields();
         setIsAddModalVisible(false);
-
+  
         const res = await GetPostByCompanyId(Number(companyId));
         if (Array.isArray(res?.data)) {
           const postsWithMock = res.data.map((post: any) => ({
             ...post,
             applicants: Math.floor(Math.random() * 10),
-           
           }));
           setPosts(postsWithMock);
         } else {
@@ -196,6 +267,86 @@ const CompanyDashboard: React.FC = () => {
       message.error("ไม่สามารถบันทึกโพสต์งานได้");
     }
   };
+
+  const handleProvinceChange = (provinceId: number) => {
+    console.log("✅ เลือกจังหวัด ID:", provinceId);
+    form.setFieldsValue({
+      province: provinceId,
+      district: undefined,
+      subdistrict: undefined,
+      post_code: undefined,
+    });
+
+    setSelectedProvinceId(provinceId);
+    setSelectedDistrictId(undefined);
+    setDistrictOptions([]);
+    setSubdistrictOptions([]);
+
+    const selectedProvince = rawProvinces.find((p) => Number(p.ID) === provinceId);
+    console.log("📌 ข้อมูลจังหวัดที่เลือก:", selectedProvince);
+    console.log("📌 Districts:", selectedProvince?.Districts);
+
+    if (Array.isArray(selectedProvince?.Districts)) {
+      setDistrictOptions(
+        selectedProvince.Districts.map((d: { ID: number; name_th: string }) => ({
+          label: d.name_th,
+          value: Number(d.ID),
+        }))
+      );      
+    }
+  };
+
+  const handleDistrictChange = (districtId: number) => {
+    console.log("✅ เลือกอำเภอ ID:", districtId);
+    form.setFieldsValue({
+      district: districtId,
+      subdistrict: undefined,
+      post_code: undefined,
+    });
+
+    setSelectedDistrictId(districtId);
+    setSubdistrictOptions([]);
+
+    const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
+    const selectedDistrict = selectedProvince?.Districts?.find((d: any) => Number(d.ID) === districtId);
+
+    console.log("📌 selectedDistrict:", selectedDistrict);
+    console.log("📌 SubDistricts:", selectedDistrict?.SubDistricts);
+
+    if (Array.isArray(selectedDistrict?.SubDistricts)) {
+      setSubdistrictOptions(
+        selectedDistrict.SubDistricts.map((s: { ID: number; name_th: string }) => ({
+          label: s.name_th,
+          value: Number(s.ID),
+        }))
+      );           
+    }
+  };
+
+  const handleSubdistrictChange = (subdistrictId: number) => {
+    console.log("✅ เลือกตำบล ID:", subdistrictId);
+  
+    const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
+    const selectedDistrict = selectedProvince?.Districts?.find((d: any) => d.ID === selectedDistrictId);
+    const selectedSubdistrict = selectedDistrict?.SubDistricts?.find((s: any) => s.ID === subdistrictId);
+  
+    console.log("📌 selectedSubdistrict:", selectedSubdistrict);
+    console.log("📌 Postcode ID:", selectedSubdistrict?.Postcode?.ID);
+  
+    if (selectedSubdistrict) {
+      setSelectedSubdistrict(selectedSubdistrict);
+  
+      form.setFieldsValue({
+        subdistrict: selectedSubdistrict.name_th,
+        district: selectedDistrict?.name_th,
+        province: selectedProvince?.name_th,
+        subdistrict_id: Number(subdistrictId),
+        post_code: selectedSubdistrict?.Postcode?.ID || undefined,
+      });
+    }
+  };
+  
+
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -288,30 +439,51 @@ const CompanyDashboard: React.FC = () => {
 
           <h3>ที่ตั้ง</h3>
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="รายละเอียด" name="location_detail" rules={[{ required: true, message: 'กรุณากรอกรายละเอียดสถานที่' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="แขวง/ตำบล" name="subdistrict">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="เขต/อำเภอ" name="district">
-                <Input />
-              </Form.Item>
-            </Col>
+            
             <Col span={12}>
               <Form.Item label="จังหวัด" name="province" rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}>
                 <Select
-                  placeholder="เลือกจังหวัด"
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                  }
-                  options={provinces.map(p => ({ value: p, label: p }))}
+                  options={provinceOptions}
+                  onChange={handleProvinceChange}
+                  placeholder="เลือกจังหวัด"
+                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="อำเภอ / เขต" name="district" rules={[{ required: true, message: 'กรุณาเลือกอำเภอ/เขต' }]}>
+                <Select
+                  showSearch
+                  options={districtOptions}
+                  onChange={handleDistrictChange}
+                  placeholder="เลือกอำเภอ / เขต"
+                  disabled={!districtOptions.length}
+                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="ตำบล / แขวง" name="subdistrict_id" rules={[{ required: true, message: 'กรุณาเลือกตำบล/แขวง' }]}>
+                <Select
+                  showSearch
+                  options={subdistrictOptions}
+                  onChange={handleSubdistrictChange}
+                  placeholder="เลือกตำบล / แขวง"
+                  disabled={!subdistrictOptions.length}
+                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="รหัสไปรษณีย์" name="post_code" rules={[{ required: true, message: 'กรุณาเลือกรหัสไปรษณีย์' }]}>
+                <Select
+                  disabled={!selectedSubdistrict?.Postcode}
+                  options={selectedSubdistrict?.Postcode ? [{ label: selectedSubdistrict.Postcode.post_code, value: selectedSubdistrict.Postcode.ID }] : []}
+                  placeholder="เลือกรหัสไปรษณีย์"
                 />
               </Form.Item>
             </Col>

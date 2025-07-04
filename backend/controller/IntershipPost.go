@@ -14,11 +14,17 @@ import (
 func CreateInternshipPost(c *gin.Context) {
 	var internshipPost entity.IntershipPost
 
-	// Bind the incoming JSON data to the IntershipPost struct
-	if err := c.ShouldBindJSON(&internshipPost); err != nil {
+	// ✅ รับ skill_id ที่ frontend ส่งมา
+	var payload struct {
+		entity.IntershipPost
+		Skills []uint `json:"skills"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	internshipPost = payload.IntershipPost
 
 	var jobType entity.JobType
 	var stipend entity.Stipend
@@ -29,7 +35,7 @@ func CreateInternshipPost(c *gin.Context) {
 
 	db := config.DB()
 
-	// ตรวจสอบ foreign key
+	// ✅ ตรวจสอบ foreign key
 	db.First(&jobType, internshipPost.JobTypeID)
 	if jobType.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Job Type not found"})
@@ -66,11 +72,10 @@ func CreateInternshipPost(c *gin.Context) {
 		return
 	}
 
-	// สร้าง Post พร้อม location
+	// ✅ สร้าง Post พร้อม location
 	post := entity.IntershipPost{
 		PostName:        internshipPost.PostName,
 		PostDescription: internshipPost.PostDescription,
-		Qualifications:  internshipPost.Qualifications,
 		Quantity:        internshipPost.Quantity,
 		MinGpa:          internshipPost.MinGpa,
 		CreatedAt:       internshipPost.CreatedAt,
@@ -96,9 +101,19 @@ func CreateInternshipPost(c *gin.Context) {
 		AdminID:      internshipPost.AdminID,
 	}
 
+	// ✅ บันทึกโพสต์
 	if err := db.Create(&post).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create internship post"})
 		return
+	}
+
+	// ✅ บันทึก Skill ความสัมพันธ์
+	for _, skillID := range payload.Skills {
+		skillRel := entity.CompanyRequiredSkill{
+			SkillID:         skillID,
+			IntershipPostID: post.ID,
+		}
+		db.Create(&skillRel)
 	}
 
 	c.JSON(http.StatusCreated, gin.H{

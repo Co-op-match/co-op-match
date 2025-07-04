@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"co-op-match.com/co-op-match/entity"
@@ -51,7 +52,6 @@ func SetupDatabase() {
 		&entity.Benefit{},
 		&entity.WorkMode{},
 		&entity.JobType{},
-		&entity.JobType{},
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
@@ -70,12 +70,18 @@ func SetupDatabase() {
 		&entity.Faculty{},
 		&entity.EducationLevel{},
 		&entity.Verify{},
+		&entity.Provinces{},
+		&entity.District{},
+		&entity.SubDistrict{},
+		&entity.Postcode{},
 		&entity.StatusVerify{},
 	)
-
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
-
+	ImportProvincesCSV(db, "./config/data/address/provinces.csv")
+	ImportDistrictsCSV(db, "./config/data/address/districts.csv")
+	ImportPostcodesCSV(db, "./config/data/address/postcode.csv")
+	ImportSubDistrictsCSV(db, "./config/data/address/subdistricts.csv")
 }
 
 func createSeedData(db *gorm.DB) {
@@ -202,79 +208,79 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
 	}
 	//----------------Provinces-------------//
-	provinces := []string{
-		"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
-		"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
-		"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
-		"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
-		"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
-		"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
-		"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
-		"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
-		"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
-		"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
-		"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
-		"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
-		"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
-		"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
-		"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
-		"บึงกาฬ", "ยะลา", "ยโสธร",
-	}
-	for _, provinceName := range provinces {
-		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
-	}
+	// provinces := []string{
+	// 	"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+	// 	"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
+	// 	"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
+	// 	"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
+	// 	"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
+	// 	"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
+	// 	"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
+	// 	"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
+	// 	"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
+	// 	"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
+	// 	"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
+	// 	"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
+	// 	"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
+	// 	"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
+	// 	"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
+	// 	"บึงกาฬ", "ยะลา", "ยโสธร",
+	// }
+	// for _, provinceName := range provinces {
+	// 	db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
+	// }
 
 	// ที่อยู่ (Address)
 	addresses := []entity.Address{
 		{
-			HouseNumber: "123",
-			Village:     "หมู่บ้าน ABC",
-			Street:      "ถนนหลัก",
-			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 1",
-			District:    "อำเภอเมือง",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			HouseNumber:   "123",
+			Village:       "หมู่บ้าน ABC",
+			Street:        "ถนนหลัก",
+			SubStreet:     "ซอยรอง",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 		{
-			HouseNumber: "456",
-			Village:     "หมู่บ้าน XYZ",
-			Street:      "ถนนรอง",
-			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 2",
-			District:    "อำเภอบางนา",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			HouseNumber:   "456",
+			Village:       "หมู่บ้าน XYZ",
+			Street:        "ถนนรอง",
+			SubStreet:     "ซอยรอง",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 		{
-			HouseNumber: "789",
-			Village:     "หมู่บ้าน QWE",
-			Street:      "ถนนใหญ่",
-			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 3",
-			District:    "อำเภอพระโขนง",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			HouseNumber:   "789",
+			Village:       "หมู่บ้าน QWE",
+			Street:        "ถนนใหญ่",
+			SubStreet:     "ซอยรอง",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 		{
-			HouseNumber: "101",
-			Village:     "หมู่บ้าน ASD",
-			Street:      "ถนนซอย",
-			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 4",
-			District:    "อำเภอลาดกระบัง",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			HouseNumber:   "101",
+			Village:       "หมู่บ้าน ASD",
+			Street:        "ถนนซอย",
+			SubStreet:     "ซอยรอง",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 	}
 
 	for _, addr := range addresses {
 		db.FirstOrCreate(&addr, entity.Address{
-			HouseNumber: addr.HouseNumber,
-			Village:     addr.Village,
-			District:    addr.District,
-			Subdistrict: addr.Subdistrict,
-			Province:    addr.Province,
+			HouseNumber:   addr.HouseNumber,
+			Village:       addr.Village,
+			DistrictID:    addr.DistrictID,
+			SubDistrictID: addr.SubDistrictID,
+			Province:      addr.Province,
 		})
 	}
 
@@ -423,11 +429,10 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
 
-	IntershipPost := []entity.IntershipPost{
+	intershipPosts := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
 			PostDescription: "Join our team as a software development intern",
-			Qualifications:  "Computer Science student, knowledge of Python/Java",
 			Quantity:        2,
 			MinGpa:          3.0,
 			CreatedAt:       time.Now(),
@@ -442,7 +447,6 @@ func createSeedData(db *gorm.DB) {
 		{
 			PostName:        "Data Science Intern",
 			PostDescription: "Opportunity to work with real-world datasets",
-			Qualifications:  "Statistics/Data Science background, Python/R skills",
 			Quantity:        1,
 			MinGpa:          3.2,
 			CreatedAt:       time.Now(),
@@ -454,114 +458,26 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       2,
 			StipendID:       3,
 		},
-		{
-			PostName:        "UI/UX Designer Intern",
-			PostDescription: "Assist in designing intuitive user interfaces and experiences",
-			Qualifications:  "Design student or related field, knowledge of Figma or Adobe XD",
-			Quantity:        1,
-			MinGpa:          2.75,
-			CreatedAt:       time.Now(),
-			CompanyID:       3,
-			StatusPostID:    1,
-			AdminID:         2,
-			WorkModeID:      2,
-			BenefitID:       2,
-			WorkDayID:       2,
-			StipendID:       1,
-		},
-		{
-			PostName:        "Marketing Intern",
-			PostDescription: "Support digital campaigns and social media content creation",
-			Qualifications:  "Marketing or Business major, good communication skills",
-			Quantity:        3,
-			MinGpa:          2.5,
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         3,
-			WorkModeID:      3,
-			BenefitID:       3,
-			WorkDayID:       1,
-			StipendID:       3,
-		},
-		{
-			PostName:        "Data Analyst Intern",
-			PostDescription: "Analyze data trends and provide reports using Excel and SQL",
-			Qualifications:  "Math, Statistics, or CS background, strong in Excel",
-			Quantity:        2,
-			MinGpa:          3.2,
-			CreatedAt:       time.Now(),
-			CompanyID:       1,
-			StatusPostID:    1,
-			AdminID:         4,
-			WorkModeID:      2,
-			BenefitID:       4,
-			WorkDayID:       1,
-			StipendID:       1,
-		},
-		{
-			PostName:        "Content Writer Intern",
-			PostDescription: "Write blogs, articles, and social media content",
-			Qualifications:  "Strong writing skills, fluent in Thai and English",
-			Quantity:        1,
-			MinGpa:          2.8,
-			CreatedAt:       time.Now(),
-			CompanyID:       2,
-			StatusPostID:    1,
-			AdminID:         5,
-			WorkModeID:      3,
-			BenefitID:       1,
-			WorkDayID:       2,
-			StipendID:       2,
-		},
-		{
-			PostName:        "Network Engineer Intern",
-			PostDescription: "Assist IT department in managing network and servers",
-			Qualifications:  "Knowledge in networking, CCNA is a plus",
-			Quantity:        2,
-			MinGpa:          3.0,
-			CreatedAt:       time.Now(),
-			CompanyID:       3,
-			StatusPostID:    1,
-			AdminID:         6,
-			WorkModeID:      1,
-			BenefitID:       2,
-			WorkDayID:       1,
-			StipendID:       3,
-		},
-		{
-			PostName:        "Graphic Designer Intern",
-			PostDescription: "Design promotional materials for print and digital media",
-			Qualifications:  "Proficient in Photoshop and Illustrator",
-			Quantity:        1,
-			MinGpa:          2.7,
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         7,
-			WorkModeID:      2,
-			BenefitID:       3,
-			WorkDayID:       2,
-			StipendID:       1,
-		},
-		{
-			PostName:        "QA Tester Intern",
-			PostDescription: "Test applications and report bugs to development team",
-			Qualifications:  "Attention to detail, basic understanding of software testing",
-			Quantity:        2,
-			MinGpa:          2.9,
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         8,
-			WorkModeID:      1,
-			BenefitID:       4,
-			WorkDayID:       1,
-			StipendID:       2,
-		},
 	}
-	for _, pkg := range IntershipPost {
-		db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
+
+	for _, post := range intershipPosts {
+		db.Create(&post)
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         1,
+			IntershipPostID: intershipPosts[0].ID,
+		})
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         2,
+			IntershipPostID: intershipPosts[0].ID,
+		})
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         3,
+			IntershipPostID: intershipPosts[1].ID,
+		})
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         4,
+			IntershipPostID: intershipPosts[1].ID,
+		})
 	}
 
 	// Seed Skills
@@ -620,6 +536,9 @@ func createSeedData(db *gorm.DB) {
 	}
 	// 4. เพิ่มข้อมูล Education
 	education := entity.Education{
+		UniversityID:     1,
+		FacultyID:        1,
+		ProgramID:        1,
 		Year:             3,
 		EducationLevelID: 1,
 		Grade:            3.5,
@@ -692,22 +611,22 @@ func createSeedData(db *gorm.DB) {
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
+			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
 			StatusVerifyID:       1,
 			UserID:               2,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
+			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
 			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify2.png",
+			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
 			StatusVerifyID:       3,
 			UserID:               4,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
+			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
 			StatusVerifyID:       4,
 			UserID:               14,
 		},
@@ -809,4 +728,100 @@ func insertEducationFromCSV(db *gorm.DB, filePath string) {
 	}
 
 	log.Printf("✅ นำเข้าข้อมูลเฉพาะ ป.ตรี/โท/เอก เรียบร้อย: %d รายการ\n", len(rawData))
+}
+func ImportProvincesCSV(db *gorm.DB, filePath string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalf("❌ Open file error: %v", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Fatalf("❌ Read CSV error: %v", err)
+	}
+
+	if len(records) <= 1 {
+		log.Println("⚠️ No data found")
+		return
+	}
+
+	for i, row := range records {
+		if i == 0 {
+			log.Printf("🔍 Header: %+v", row)
+			continue
+		}
+		if len(row) < 3 {
+			log.Printf("⚠️ Skipped row %d: %+v (too few columns)", i, row)
+			continue
+		}
+
+		province := entity.Provinces{
+			NameTH: row[1],
+			NameEN: row[2],
+		}
+		db.Where("name_th = ?", province.NameTH).FirstOrCreate(&province)
+	}
+	log.Println("✅ Provinces imported")
+}
+
+func ImportDistrictsCSV(db *gorm.DB, filePath string) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	records, _ := reader.ReadAll()
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		provinceID, _ := strconv.Atoi(row[1])
+		district := entity.District{
+			NameTH:     row[2],
+			NameEN:     row[3],
+			ProvinceID: uint(provinceID),
+		}
+		db.FirstOrCreate(&district, entity.District{NameTH: district.NameTH, ProvinceID: district.ProvinceID})
+	}
+	log.Println("✅ Districts imported")
+}
+func ImportPostcodesCSV(db *gorm.DB, filePath string) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	records, _ := reader.ReadAll()
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		postcode := entity.Postcode{
+			Postcode: row[1],
+		}
+		db.FirstOrCreate(&postcode, entity.Postcode{Postcode: postcode.Postcode})
+	}
+	log.Println("✅ Postcodes imported")
+}
+func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	records, _ := reader.ReadAll()
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		districtID, _ := strconv.Atoi(row[1])
+		postcodeID, _ := strconv.Atoi(row[4])
+		subDistrict := entity.SubDistrict{
+			NameTH:     row[2],
+			NameEN:     row[3],
+			DistrictID: uint(districtID),
+			PostcodeID: uint(postcodeID),
+		}
+		db.FirstOrCreate(&subDistrict, entity.SubDistrict{NameTH: subDistrict.NameTH, DistrictID: subDistrict.DistrictID})
+	}
+	log.Println("✅ SubDistricts imported")
 }

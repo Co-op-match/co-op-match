@@ -10,7 +10,6 @@ type IntershipPost struct {
 	gorm.Model
 	PostName        string    `json:"post_name"`
 	PostDescription string    `json:"post_description"`
-	Qualifications  string    `json:"qualifications"`
 	Quantity        int32     `json:"quantity"`
 	MinGpa          float32   `json:"min_gpa"`
 	CreatedAt       time.Time `json:"created_at"`

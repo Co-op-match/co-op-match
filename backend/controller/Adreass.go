@@ -11,10 +11,14 @@ import (
 )
 
 func GetAllAdress(c *gin.Context) {
-	var address []entity.Address
+	var addresses []entity.Address
 
 	err := config.DB().
-		Find(&address).Error
+		Preload("Province").
+		Preload("District").
+		Preload("SubDistrict").
+		Preload("Postcode").
+		Find(&addresses).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -24,8 +28,9 @@ func GetAllAdress(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, address)
+	c.JSON(http.StatusOK, addresses)
 }
+
 
 func GetAddressByUserID(c *gin.Context) {
 	userID := c.Param("id")
@@ -71,7 +76,7 @@ func CreateAddressByRoleIDAndUserID(c *gin.Context) {
 			return
 		}
 		company.AddressID = address.ID
-		updateErr = config.DB().Save(&company).Error	
+		updateErr = config.DB().Save(&company).Error
 	case 3: // student
 		var student entity.Student
 		if err := config.DB().Where("user_id = ?", userID).First(&student).Error; err != nil {
@@ -80,9 +85,6 @@ func CreateAddressByRoleIDAndUserID(c *gin.Context) {
 		}
 		student.AddressID = address.ID
 		updateErr = config.DB().Save(&student).Error
-
-
-
 
 	case 4: // academic staff
 		var staff entity.AcademicStaff
@@ -106,7 +108,7 @@ func CreateAddressByRoleIDAndUserID(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "สร้างที่อยู่เรียบร้อยและเชื่อมกับ role ID สำเร็จ",
 		"address": address,
-		"id": address.ID,
+		"id":      address.ID,
 	})
 }
 
@@ -127,7 +129,7 @@ func UpdateAddressByRoleIDAndUserID(c *gin.Context) {
 	}
 
 	var addressID uint
-	switch roleID {	
+	switch roleID {
 	case 2: // company
 		var company entity.Company
 		if err := config.DB().Where("user_id = ?", userID).First(&company).Error; err != nil {
@@ -142,8 +144,6 @@ func UpdateAddressByRoleIDAndUserID(c *gin.Context) {
 			return
 		}
 		addressID = student.AddressID
-
-
 
 	case 4: // academic staff
 		var staff entity.AcademicStaff
@@ -175,4 +175,19 @@ func UpdateAddressByRoleIDAndUserID(c *gin.Context) {
 		"message": "อัปเดตที่อยู่เรียบร้อยแล้ว",
 		"address": existingAddress,
 	})
+}
+func GetAllProvinces(c *gin.Context) {
+	var provinces []entity.Provinces
+
+	// preload ทุกระดับที่จำเป็น
+	if err := config.DB().
+		Preload("Districts").
+		Preload("Districts.SubDistricts").
+		Preload("Districts.SubDistricts.Postcode").
+		Find(&provinces).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, provinces)
 }

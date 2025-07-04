@@ -1,5 +1,5 @@
 export interface InternshipPostInterface {
-  id?: number;
+  ID?: number;
   post_name: string;
   post_description: string;
   qualifications: string;
