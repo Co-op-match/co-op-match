@@ -45,6 +45,7 @@ const StepSkills: React.FC<StepSkillsProps> = () => {
           <Form.Item
             label="ทักษะ"
             name="skills"
+            validateTrigger="onSubmit"
             rules={[{ required: true, message: 'กรุณาเลือกทักษะอย่างน้อย 1 รายการ' }]}
           >
             <Select mode="multiple" placeholder="เลือกทักษะ" allowClear>
@@ -60,6 +61,7 @@ const StepSkills: React.FC<StepSkillsProps> = () => {
           <Form.Item
             label="ความสนใจ"
             name="interests"
+            validateTrigger="onSubmit"
             rules={[{ required: true, message: 'กรุณาเลือกความสนใจอย่างน้อย 1 รายการ' }]}
           >
             <Select mode="multiple" placeholder="เลือกความสนใจ" allowClear>
