@@ -27,6 +27,10 @@ import {
   GetBenefits,
 } from '../../services/https/post';
 import axios from 'axios';
+import { GetAllSkill } from '../../services/https';
+import type { SkillInterface } from '../../interfaces/Skill';
+
+
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
@@ -42,62 +46,100 @@ const CompanyDashboard: React.FC = () => {
   const [workModes, setWorkModes] = useState<any[]>([]);
   const [benefits, setBenefits] = useState<any[]>([]);
   const [provinces, setProvinces] = useState<string[]>([]);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [skills, setSkills] = useState<SkillInterface[]>([]);
 
   const handleLogout = () => {
     localStorage.clear();
     navigate("/sign-in");
   };
 
-  const jobPostings = [
-    { id: 1, title: 'Frontend Intern', applicants: 5, status: 'เปิดรับสมัคร' },
-    { id: 2, title: 'Backend Developer', applicants: 2, status: 'ปิดรับสมัคร' },
-  ];
-
-  const columns = [
-    { title: 'ตำแหน่งงาน', dataIndex: 'title', key: 'title' },
-    { title: 'จำนวนผู้สมัคร', dataIndex: 'applicants', key: 'applicants' },
-    {
-      title: 'สถานะ',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => status === 'เปิดรับสมัคร' ? <Tag color="green">เปิดรับสมัคร</Tag> : <Tag color="red">ปิดรับสมัคร</Tag>,
-    },
-    {
-      title: 'จัดการ',
-      key: 'action',
-      render: (_: any, record: any) => <Button type="link" onClick={() => alert(`ดูรายละเอียดงาน ${record.title}`)}>ดูรายละเอียด</Button>,
-    },
-  ];
-
   const realColumns = [
     {
-      title: 'ชื่อโพสต์',
+      title: 'ตำแหน่งงาน',
       dataIndex: 'post_name',
       key: 'post_name',
       render: (text: string, record: InternshipPostInterface) => (
-        <Button type="link" style={{ color: '#3399FF' }} onClick={() => navigate(`/post-detail/${record.id}`)}>{text}</Button>
+        <Button type="link" onClick={() => navigate(`/post-detail/${record.id}`)}>{text}</Button>
       ),
     },
     {
-      title: 'บริษัท',
-      dataIndex: ['Company', 'company_name'],
-      key: 'company_name',
-      render: (_: any, record: InternshipPostInterface) => <span>{record.Company?.company_name || '-'}</span>,
+      title: 'จำนวนผู้สมัคร',
+      dataIndex: 'applicants',
+      key: 'applicants',
+      render: (applicants: number) => applicants ?? 0,
     },
-    { title: 'จำนวนที่รับ', dataIndex: 'quantity', key: 'quantity' },
+    {
+      title: 'สถานะ',
+      dataIndex: 'StatusPost',
+      key: 'status',
+      render: (statusObj: { status_post: string }) => {
+        const status = statusObj?.status_post; // ✅ ถูกต้อง
+
+        let color = 'default';
+        let text = status;
+
+        if (status === 'Open') {
+          color = 'green';
+          text = 'เปิดรับสมัคร';
+        } else if (status === 'Closed') {
+          color = 'red';
+          text = 'ปิดรับสมัคร';
+        } else if (status === 'Pending Approval') {
+          color = 'orange';
+          text = 'รอตรวจสอบ';
+        }
+
+        return <Tag color={color}>{text}</Tag>;
+      }
+      ,
+    },
+
     {
       title: 'จัดการ',
       key: 'action',
-      render: (_: any, record: InternshipPostInterface) => <Button type="link" onClick={() => navigate(`/post-detail/${record.id}`)}>ดูรายละเอียด</Button>,
+      render: (_: any, record: InternshipPostInterface) => (
+        <Button type="link" onClick={() => navigate(`/post-detail/${record.id}`)}>ดูรายละเอียด</Button>
+      ),
     },
   ];
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const skillsData = await GetAllSkill();
+
+        setSkills(skillsData);
+    
+        console.log(skillsData)
+
+      } catch {
+        messageApi.error({
+          content: 'โหลดข้อมูลทักษะหรือความสนใจไม่สำเร็จ',
+          style: { marginTop: '20vh' },
+          duration: 3,
+        });
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   useEffect(() => {
     const companyId = localStorage.getItem("id");
     if (companyId) {
       GetPostByCompanyId(Number(companyId)).then((res) => {
-        if (Array.isArray(res?.data)) setPosts(res.data);
-        else { console.error("โพสต์ไม่อยู่ในรูปแบบ array:", res?.data); setPosts([]); }
+        if (Array.isArray(res?.data)) {
+          // เพิ่ม mock applicants และ status
+          const postsWithMock = res.data.map((post: any) => ({
+            ...post,
+            applicants: Math.floor(Math.random() * 10),
+            status: 'เปิดรับสมัคร',
+          }));
+          setPosts(postsWithMock);
+        } else {
+          console.error("โพสต์ไม่อยู่ในรูปแบบ array:", res?.data);
+          setPosts([]);
+        }
       });
     }
 
@@ -120,10 +162,11 @@ const CompanyDashboard: React.FC = () => {
     if (!companyId) {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
+
+
     }
 
-    // 🟢 เพิ่มค่าที่ backend ต้องการ
-    values.StatusPostID = 1;
+    values.StatusPostID = 3;
     values.CompanyID = Number(companyId);
 
     try {
@@ -133,10 +176,14 @@ const CompanyDashboard: React.FC = () => {
         form.resetFields();
         setIsAddModalVisible(false);
 
-        // 🔁 โหลดโพสต์ใหม่เข้า Table
         const res = await GetPostByCompanyId(Number(companyId));
         if (Array.isArray(res?.data)) {
-          setPosts(res.data);
+          const postsWithMock = res.data.map((post: any) => ({
+            ...post,
+            applicants: Math.floor(Math.random() * 10),
+           
+          }));
+          setPosts(postsWithMock);
         } else {
           setPosts([]);
           console.error("ผลลัพธ์จาก backend ไม่ใช่ array:", res?.data);
@@ -150,25 +197,21 @@ const CompanyDashboard: React.FC = () => {
     }
   };
 
-
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Layout>
-        <Header style={{ background: '#fff', padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={3} style={{ margin: 0 }}>Company Dashboard</Title>
-          <Button type="primary" danger onClick={handleLogout}>Logout</Button>
-        </Header>
+      <Header style={{ background: '#fff', padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Title level={3} style={{ margin: 0 }}>Company Dashboard</Title>
+        <Button type="primary" danger onClick={handleLogout}>Logout</Button>
+      </Header>
 
-        <Content style={{ margin: '16px' }}>
-          <Card title="ตำแหน่งงานที่เปิดรับสมัคร (ตัวอย่างจำลอง)">
-            <Table dataSource={jobPostings} columns={columns} rowKey="id" pagination={false} />
-          </Card>
-
-          <Card title="ตำแหน่งงานที่โพสต์ไว้ (จากระบบจริง)" extra={<Button type="primary" onClick={() => setIsAddModalVisible(true)}>เพิ่มโพสต์</Button>}>
-            <Table dataSource={posts} columns={realColumns} rowKey="id" pagination={false} />
-          </Card>
-        </Content>
-      </Layout>
+      <Content style={{ margin: '16px' }}>
+        <Card
+          title="ตำแหน่งงานที่โพสต์ไว้"
+          extra={<Button type="primary" onClick={() => setIsAddModalVisible(true)}>เพิ่มโพสต์</Button>}
+        >
+          <Table dataSource={posts} columns={realColumns} rowKey="id" pagination={false} />
+        </Card>
+      </Content>
 
       <Modal title="เพิ่มโพสต์" open={isAddModalVisible} onCancel={() => setIsAddModalVisible(false)} footer={null} width={720}>
         <Form form={form} onFinish={handleAddPost} layout="vertical">
@@ -183,9 +226,20 @@ const CompanyDashboard: React.FC = () => {
           <Form.Item label="รายละเอียดงาน" name="post_description" rules={[{ required: true, message: 'กรุณากรอกรายละเอียดงาน' }]}>
             <Input.TextArea rows={3} />
           </Form.Item>
-
-          <Form.Item label="คุณสมบัติ" name="qualifications" rules={[{ required: true, message: 'กรุณากรอกคุณสมบัติ' }]}>
-            <Input.TextArea rows={3} />
+          {contextHolder}
+          <Form.Item
+            label="ทักษะ"
+            name="skills"
+            validateTrigger="onSubmit"
+            rules={[{ required: true, message: 'กรุณาเลือกทักษะอย่างน้อย 1 รายการ' }]}
+          >
+            <Select mode="multiple" placeholder="เลือกทักษะ" allowClear>
+              {skills.map(skill => (
+                <Select.Option key={skill.ID} value={skill.ID}>
+                  {skill.skill_name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item label="GPA" name="min_gpa" rules={[{ required: true, message: 'กรุณากรอก GPA' }]}>
@@ -271,7 +325,6 @@ const CompanyDashboard: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-
     </Layout>
   );
 };
