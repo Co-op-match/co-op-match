@@ -115,7 +115,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		
+
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
@@ -170,7 +170,6 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Modes
 	workModes := []entity.WorkMode{
-		{WorkMode: "ทั้งหมด"},
 		{WorkMode: "On-site"},
 		{WorkMode: "Remote"},
 		{WorkMode: "Hybrid"},
@@ -181,7 +180,6 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Days
 	workDays := []entity.WorkDay{
-		{WorkDay: "ทั้งหมด"},
 		{WorkDay: "จันทร์ - ศุกร์"},
 		{WorkDay: "จันทร์ - เสาร์"},
 		{WorkDay: "บริษัทกำหนดเอง"},
@@ -191,12 +189,11 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	stipends := []entity.Stipend{
-		{Stipend: "ทั้งหมด"},
-		{Stipend: "ไม่กำหนด"},
 		{Stipend: "ตามความสามารถนักศึกษา"},
 		{Stipend: "5,000 - 10,000 THB"},
 		{Stipend: "10,000 - 15,000 THB"},
 		{Stipend: "15,000+ THB"},
+		{Stipend: "ไม่กำหนด"},
 	}
 	for _, pkg := range stipends {
 		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
@@ -284,9 +281,9 @@ func createSeedData(db *gorm.DB) {
 		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 5},
 	}
 	for _, admin := range admins {
-		db.FirstOrCreate(&admin,entity.AcademicStaff{UserID: admin.UserID})
+		db.FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
 	}
-	
+
 	// Seed Permission
 	permissions := []entity.Permission{
 		{Name: "Read", Description: "Read-only access", AdminID: 1},
@@ -306,7 +303,7 @@ func createSeedData(db *gorm.DB) {
 		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 1, AdminID: 1, GenderID: 1},
 	}
 	for _, staff := range staffs {
-		db.FirstOrCreate(&staff,entity.AcademicStaff{UserID: staff.UserID})
+		db.FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
 	}
 
 	students := []entity.Student{
@@ -399,15 +396,15 @@ func createSeedData(db *gorm.DB) {
 	}
 	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
 	for _, company := range companies {
-		db.FirstOrCreate(&company,entity.Company{CompanyName: company.CompanyName})
+		db.FirstOrCreate(&company, entity.Company{CompanyName: company.CompanyName})
 	}
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
-		{Benefit: "travel", BenefitName: "ค่าเดินทาง"},
-		{Benefit: "food", BenefitName: "อาหาร"},
-		{Benefit: "overtime", BenefitName: "ค่าล่วงเวลา"},
-		{Benefit: "accommodation", BenefitName: "ที่พัก"},
+		{Benefit: "ค่าเดินทาง"},
+		{Benefit: "อาหาร"},
+		{Benefit: "ค่าล่วงเวลา"},
+		{Benefit: "ที่พัก"},
 	}
 	for _, b := range benefits {
 		db.FirstOrCreate(&b, entity.Benefit{Benefit: b.Benefit})
@@ -422,7 +419,14 @@ func createSeedData(db *gorm.DB) {
 	for _, pkg := range StatusPosts {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
-	
+
+	// Get Benefit references
+	var travel, food, overtime, accommodation entity.Benefit
+	db.First(&travel, "benefit = ?", "ค่าเดินทาง")
+	db.First(&food, "benefit = ?", "อาหาร")
+	db.First(&overtime, "benefit = ?", "ค่าล่วงเวลา")
+	db.First(&accommodation, "benefit = ?", "ที่พัก")
+
 	IntershipPost := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
@@ -435,9 +439,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			BenefitID:       1,
-			WorkDayID:       1,
-			StipendID:       2,
+			//BenefitID:       1,
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 1,
 		},
 		{
 			PostName:        "Data Science Intern",
@@ -450,9 +455,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
-			BenefitID:       3,
-			WorkDayID:       2,
-			StipendID:       3,
+			//BenefitID:       3,
+			WorkDayID: 2,
+			StipendID: 3,
+			JobTypeID: 3,
 		},
 		{
 			PostName:        "UI/UX Designer Intern",
@@ -465,9 +471,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         2,
 			WorkModeID:      2,
-			BenefitID:       2,
-			WorkDayID:       2,
-			StipendID:       1,
+			//BenefitID:       2,
+			WorkDayID: 2,
+			StipendID: 1,
+			JobTypeID: 5,
 		},
 		{
 			PostName:        "Marketing Intern",
@@ -480,9 +487,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         3,
 			WorkModeID:      3,
-			BenefitID:       3,
-			WorkDayID:       1,
-			StipendID:       3,
+			//BenefitID:       3,
+			WorkDayID: 1,
+			StipendID: 3,
+			JobTypeID: 3,
 		},
 		{
 			PostName:        "Data Analyst Intern",
@@ -495,9 +503,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         4,
 			WorkModeID:      2,
-			BenefitID:       4,
-			WorkDayID:       1,
-			StipendID:       1,
+			//BenefitID:       4,
+			WorkDayID: 1,
+			StipendID: 1,
+			JobTypeID: 8,
 		},
 		{
 			PostName:        "Content Writer Intern",
@@ -510,9 +519,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         5,
 			WorkModeID:      3,
-			BenefitID:       1,
-			WorkDayID:       2,
-			StipendID:       2,
+			//BenefitID:       1,
+			WorkDayID: 2,
+			StipendID: 2,
+			JobTypeID: 4,
 		},
 		{
 			PostName:        "Network Engineer Intern",
@@ -525,9 +535,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         6,
 			WorkModeID:      1,
-			BenefitID:       2,
-			WorkDayID:       1,
-			StipendID:       3,
+			//BenefitID:       2,
+			WorkDayID: 1,
+			StipendID: 3,
+			JobTypeID: 1,
 		},
 		{
 			PostName:        "Graphic Designer Intern",
@@ -540,9 +551,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         7,
 			WorkModeID:      2,
-			BenefitID:       3,
-			WorkDayID:       2,
-			StipendID:       1,
+			//BenefitID:       3,
+			WorkDayID: 2,
+			StipendID: 1,
+			JobTypeID: 4,
 		},
 		{
 			PostName:        "QA Tester Intern",
@@ -555,14 +567,28 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         8,
 			WorkModeID:      1,
-			BenefitID:       4,
-			WorkDayID:       1,
-			StipendID:       2,
+			//BenefitID:       4,
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 5,
 		},
 	}
-	for _, pkg := range IntershipPost {
-		db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
+	for i := range IntershipPost {
+		db.Create(&IntershipPost[i])
+		switch i % 4 {
+		case 0:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&travel)
+		case 1:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&food)
+		case 2:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&overtime)
+		case 3:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&accommodation)
+		}
 	}
+	//for _, pkg := range IntershipPost {
+	//db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
+	//}
 
 	// Seed Skills
 	skills := []entity.Skill{
@@ -610,7 +636,7 @@ func createSeedData(db *gorm.DB) {
 		})
 	}
 	// Seed Educational Background
-		EducationLevels := []entity.EducationLevel{
+	EducationLevels := []entity.EducationLevel{
 		{Name: "ปริญญาตรี"},
 		{Name: "ปริญญาโท"},
 		{Name: "ปริญญาเอก"},
@@ -620,10 +646,10 @@ func createSeedData(db *gorm.DB) {
 	}
 	// 4. เพิ่มข้อมูล Education
 	education := entity.Education{
-		Year:           3,
+		Year:             3,
 		EducationLevelID: 1,
-		Grade:          3.5,
-		StudentID:      1,
+		Grade:            3.5,
+		StudentID:        1,
 	}
 
 	// Insert เฉพาะถ้ายังไม่มีข้อมูลซ้ำ
