@@ -75,7 +75,6 @@ func SetupDatabase() {
 		&entity.SubDistrict{},
 		&entity.Postcode{},
 		&entity.StatusVerify{},
-
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -177,7 +176,6 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Modes
 	workModes := []entity.WorkMode{
-		{WorkMode: "ทั้งหมด"},
 		{WorkMode: "On-site"},
 		{WorkMode: "Remote"},
 		{WorkMode: "Hybrid"},
@@ -188,7 +186,6 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Days
 	workDays := []entity.WorkDay{
-		{WorkDay: "ทั้งหมด"},
 		{WorkDay: "จันทร์ - ศุกร์"},
 		{WorkDay: "จันทร์ - เสาร์"},
 		{WorkDay: "บริษัทกำหนดเอง"},
@@ -198,7 +195,6 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	stipends := []entity.Stipend{
-		{Stipend: "ทั้งหมด"},
 		{Stipend: "ไม่กำหนด"},
 		{Stipend: "ตามความสามารถนักศึกษา"},
 		{Stipend: "5,000 - 10,000 THB"},
@@ -208,66 +204,44 @@ func createSeedData(db *gorm.DB) {
 	for _, pkg := range stipends {
 		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
 	}
-	//----------------Provinces-------------//
-	// provinces := []string{
-	// 	"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
-	// 	"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
-	// 	"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
-	// 	"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
-	// 	"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
-	// 	"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
-	// 	"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
-	// 	"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
-	// 	"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
-	// 	"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
-	// 	"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
-	// 	"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
-	// 	"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
-	// 	"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
-	// 	"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
-	// 	"บึงกาฬ", "ยะลา", "ยโสธร",
-	// }
-	// for _, provinceName := range provinces {
-	// 	db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
-	// }
 
 	// ที่อยู่ (Address)
 	addresses := []entity.Address{
 		{
-			HouseNumber: "123",
-			Village:     "หมู่บ้าน ABC",
-			Street:      "ถนนหลัก",
-			SubStreet:   "ซอยรอง",
+			HouseNumber:   "123",
+			Village:       "หมู่บ้าน ABC",
+			Street:        "ถนนหลัก",
+			SubStreet:     "ซอยรอง",
 			SubDistrictID: 1,
 			DistrictID:    1,
 			ProvinceID:    1,
 			PostcodeID:    1,
 		},
 		{
-			HouseNumber: "456",
-			Village:     "หมู่บ้าน XYZ",
-			Street:      "ถนนรอง",
-			SubStreet:   "ซอยรอง",
+			HouseNumber:   "456",
+			Village:       "หมู่บ้าน XYZ",
+			Street:        "ถนนรอง",
+			SubStreet:     "ซอยรอง",
 			SubDistrictID: 1,
 			DistrictID:    1,
 			ProvinceID:    1,
 			PostcodeID:    1,
 		},
 		{
-			HouseNumber: "789",
-			Village:     "หมู่บ้าน QWE",
-			Street:      "ถนนใหญ่",
-			SubStreet:   "ซอยรอง",
+			HouseNumber:   "789",
+			Village:       "หมู่บ้าน QWE",
+			Street:        "ถนนใหญ่",
+			SubStreet:     "ซอยรอง",
 			SubDistrictID: 1,
 			DistrictID:    1,
 			ProvinceID:    1,
 			PostcodeID:    1,
 		},
 		{
-			HouseNumber: "101",
-			Village:     "หมู่บ้าน ASD",
-			Street:      "ถนนซอย",
-			SubStreet:   "ซอยรอง",
+			HouseNumber:   "101",
+			Village:       "หมู่บ้าน ASD",
+			Street:        "ถนนซอย",
+			SubStreet:     "ซอยรอง",
 			SubDistrictID: 1,
 			DistrictID:    1,
 			ProvinceID:    1,
@@ -277,11 +251,11 @@ func createSeedData(db *gorm.DB) {
 
 	for _, addr := range addresses {
 		db.FirstOrCreate(&addr, entity.Address{
-			HouseNumber: addr.HouseNumber,
-			Village:     addr.Village,
+			HouseNumber:   addr.HouseNumber,
+			Village:       addr.Village,
 			DistrictID:    addr.DistrictID,
 			SubDistrictID: addr.SubDistrictID,
-			Province:    addr.Province,
+			Province:      addr.Province,
 		})
 	}
 
@@ -411,10 +385,10 @@ func createSeedData(db *gorm.DB) {
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
-		{Benefit: "travel", BenefitName: "ค่าเดินทาง"},
-		{Benefit: "food", BenefitName: "อาหาร"},
-		{Benefit: "overtime", BenefitName: "ค่าล่วงเวลา"},
-		{Benefit: "accommodation", BenefitName: "ที่พัก"},
+		{Benefit: "ค่าเดินทาง"},
+		{Benefit: "อาหาร"},
+		{Benefit: "ค่าล่วงเวลา"},
+		{Benefit: "ที่พัก"},
 	}
 	for _, b := range benefits {
 		db.FirstOrCreate(&b, entity.Benefit{Benefit: b.Benefit})
@@ -429,7 +403,14 @@ func createSeedData(db *gorm.DB) {
 	for _, pkg := range StatusPosts {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
-	
+
+	// Get Benefit references
+	var travel, food, overtime, accommodation entity.Benefit
+	db.First(&travel, "benefit = ?", "ค่าเดินทาง")
+	db.First(&food, "benefit = ?", "อาหาร")
+	db.First(&overtime, "benefit = ?", "ค่าล่วงเวลา")
+	db.First(&accommodation, "benefit = ?", "ที่พัก")
+
 	IntershipPost := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
@@ -442,9 +423,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			BenefitID:       1,
-			WorkDayID:       1,
-			StipendID:       2,
+			//BenefitID:       1,
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 1,
 		},
 		{
 			PostName:        "Data Science Intern",
@@ -457,9 +439,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
-			BenefitID:       3,
-			WorkDayID:       2,
-			StipendID:       3,
+			//BenefitID:       3,
+			WorkDayID: 2,
+			StipendID: 3,
+			JobTypeID: 3,
 		},
 		{
 			PostName:        "UI/UX Designer Intern",
@@ -472,9 +455,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         2,
 			WorkModeID:      2,
-			BenefitID:       2,
-			WorkDayID:       2,
-			StipendID:       1,
+			//BenefitID:       2,
+			WorkDayID: 2,
+			StipendID: 1,
+			JobTypeID: 5,
 		},
 		{
 			PostName:        "Marketing Intern",
@@ -487,9 +471,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         3,
 			WorkModeID:      3,
-			BenefitID:       3,
-			WorkDayID:       1,
-			StipendID:       3,
+			//BenefitID:       3,
+			WorkDayID: 1,
+			StipendID: 3,
+			JobTypeID: 3,
 		},
 		{
 			PostName:        "Data Analyst Intern",
@@ -502,9 +487,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         4,
 			WorkModeID:      2,
-			BenefitID:       4,
-			WorkDayID:       1,
-			StipendID:       1,
+			//BenefitID:       4,
+			WorkDayID: 1,
+			StipendID: 1,
+			JobTypeID: 8,
 		},
 		{
 			PostName:        "Content Writer Intern",
@@ -517,9 +503,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         5,
 			WorkModeID:      3,
-			BenefitID:       1,
-			WorkDayID:       2,
-			StipendID:       2,
+			//BenefitID:       1,
+			WorkDayID: 2,
+			StipendID: 2,
+			JobTypeID: 4,
 		},
 		{
 			PostName:        "Network Engineer Intern",
@@ -532,9 +519,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         6,
 			WorkModeID:      1,
-			BenefitID:       2,
-			WorkDayID:       1,
-			StipendID:       3,
+			//BenefitID:       2,
+			WorkDayID: 1,
+			StipendID: 3,
+			JobTypeID: 1,
 		},
 		{
 			PostName:        "Graphic Designer Intern",
@@ -547,9 +535,10 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         7,
 			WorkModeID:      2,
-			BenefitID:       3,
-			WorkDayID:       2,
-			StipendID:       1,
+			//BenefitID:       3,
+			WorkDayID: 2,
+			StipendID: 1,
+			JobTypeID: 4,
 		},
 		{
 			PostName:        "QA Tester Intern",
@@ -562,14 +551,28 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         8,
 			WorkModeID:      1,
-			BenefitID:       4,
-			WorkDayID:       1,
-			StipendID:       2,
+			//BenefitID:       4,
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 5,
 		},
 	}
-	for _, pkg := range IntershipPost {
-		db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
+	for i := range IntershipPost {
+		db.Create(&IntershipPost[i])
+		switch i % 4 {
+		case 0:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&travel)
+		case 1:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&food)
+		case 2:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&overtime)
+		case 3:
+			db.Model(&IntershipPost[i]).Association("Benefits").Append(&accommodation)
+		}
 	}
+	//for _, pkg := range IntershipPost {
+	//db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
+	//}
 
 	// Seed Skills
 	skills := []entity.Skill{
@@ -630,7 +633,7 @@ func createSeedData(db *gorm.DB) {
 		UniversityID:     1,
 		FacultyID:        1,
 		ProgramID:        1,
-		Year:           3,
+		Year:             3,
 		EducationLevelID: 1,
 		Grade:            3.5,
 		StudentID:        1,
