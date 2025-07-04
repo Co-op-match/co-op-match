@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"co-op-match.com/co-op-match/entity"
@@ -51,7 +52,6 @@ func SetupDatabase() {
 		&entity.Benefit{},
 		&entity.WorkMode{},
 		&entity.JobType{},
-		&entity.JobType{},
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
@@ -70,11 +70,17 @@ func SetupDatabase() {
 		&entity.Faculty{},
 		&entity.EducationLevel{},
 		&entity.Verify{},
+		&entity.Provinces{},
+		&entity.District{},
+		&entity.SubDistrict{},
+		&entity.Postcode{},
 	)
-
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
-
+	ImportProvincesCSV(db, "./config/data/address/provinces.csv")
+	ImportDistrictsCSV(db, "./config/data/address/districts.csv")
+	ImportPostcodesCSV(db, "./config/data/address/postcode.csv")
+	ImportSubDistrictsCSV(db, "./config/data/address/subdistricts.csv")
 }
 
 func createSeedData(db *gorm.DB) {
@@ -114,7 +120,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		
+
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
@@ -201,27 +207,27 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
 	}
 	//----------------Provinces-------------//
-	provinces := []string{
-		"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
-		"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
-		"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
-		"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
-		"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
-		"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
-		"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
-		"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
-		"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
-		"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
-		"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
-		"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
-		"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
-		"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
-		"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
-		"บึงกาฬ", "ยะลา", "ยโสธร",
-	}
-	for _, provinceName := range provinces {
-		db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
-	}
+	// provinces := []string{
+	// 	"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+	// 	"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
+	// 	"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
+	// 	"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
+	// 	"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
+	// 	"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
+	// 	"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
+	// 	"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
+	// 	"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
+	// 	"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
+	// 	"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
+	// 	"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
+	// 	"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
+	// 	"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
+	// 	"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
+	// 	"บึงกาฬ", "ยะลา", "ยโสธร",
+	// }
+	// for _, provinceName := range provinces {
+	// 	db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
+	// }
 
 	// ที่อยู่ (Address)
 	addresses := []entity.Address{
@@ -230,40 +236,40 @@ func createSeedData(db *gorm.DB) {
 			Village:     "หมู่บ้าน ABC",
 			Street:      "ถนนหลัก",
 			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 1",
-			District:    "อำเภอเมือง",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 		{
 			HouseNumber: "456",
 			Village:     "หมู่บ้าน XYZ",
 			Street:      "ถนนรอง",
 			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 2",
-			District:    "อำเภอบางนา",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 		{
 			HouseNumber: "789",
 			Village:     "หมู่บ้าน QWE",
 			Street:      "ถนนใหญ่",
 			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 3",
-			District:    "อำเภอพระโขนง",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 		{
 			HouseNumber: "101",
 			Village:     "หมู่บ้าน ASD",
 			Street:      "ถนนซอย",
 			SubStreet:   "ซอยรอง",
-			Subdistrict: "ตำบลทดสอบ 4",
-			District:    "อำเภอลาดกระบัง",
-			Province:    "กรุงเทพมหานคร",
-			Postcode:    "12345",
+			SubDistrictID: 1,
+			DistrictID:    1,
+			ProvinceID:    1,
+			PostcodeID:    1,
 		},
 	}
 
@@ -271,8 +277,8 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&addr, entity.Address{
 			HouseNumber: addr.HouseNumber,
 			Village:     addr.Village,
-			District:    addr.District,
-			Subdistrict: addr.Subdistrict,
+			DistrictID:    addr.DistrictID,
+			SubDistrictID: addr.SubDistrictID,
 			Province:    addr.Province,
 		})
 	}
@@ -283,9 +289,9 @@ func createSeedData(db *gorm.DB) {
 		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 5},
 	}
 	for _, admin := range admins {
-		db.FirstOrCreate(&admin,entity.AcademicStaff{UserID: admin.UserID})
+		db.FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
 	}
-	
+
 	// Seed Permission
 	permissions := []entity.Permission{
 		{Name: "Read", Description: "Read-only access", AdminID: 1},
@@ -305,7 +311,7 @@ func createSeedData(db *gorm.DB) {
 		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 1, AdminID: 1, GenderID: 1},
 	}
 	for _, staff := range staffs {
-		db.FirstOrCreate(&staff,entity.AcademicStaff{UserID: staff.UserID})
+		db.FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
 	}
 
 	students := []entity.Student{
@@ -398,9 +404,8 @@ func createSeedData(db *gorm.DB) {
 	}
 	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
 	for _, company := range companies {
-		db.FirstOrCreate(&company,entity.Company{CompanyName: company.CompanyName})
+		db.FirstOrCreate(&company, entity.Company{CompanyName: company.CompanyName})
 	}
-
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
@@ -511,7 +516,7 @@ func createSeedData(db *gorm.DB) {
 		})
 	}
 	// Seed Educational Background
-		EducationLevels := []entity.EducationLevel{
+	EducationLevels := []entity.EducationLevel{
 		{Name: "ปริญญาตรี"},
 		{Name: "ปริญญาโท"},
 		{Name: "ปริญญาเอก"},
@@ -521,13 +526,13 @@ func createSeedData(db *gorm.DB) {
 	}
 	// 4. เพิ่มข้อมูล Education
 	education := entity.Education{
-		UniversityID:   1,
-		FacultyID:      1,
-		ProgramID:      1,
-		Year:           3,
+		UniversityID:     1,
+		FacultyID:        1,
+		ProgramID:        1,
+		Year:             3,
 		EducationLevelID: 1,
-		Grade:          3.5,
-		StudentID:      1,
+		Grade:            3.5,
+		StudentID:        1,
 	}
 
 	// Insert เฉพาะถ้ายังไม่มีข้อมูลซ้ำ
@@ -702,4 +707,100 @@ func insertEducationFromCSV(db *gorm.DB, filePath string) {
 	}
 
 	log.Printf("✅ นำเข้าข้อมูลเฉพาะ ป.ตรี/โท/เอก เรียบร้อย: %d รายการ\n", len(rawData))
+}
+func ImportProvincesCSV(db *gorm.DB, filePath string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalf("❌ Open file error: %v", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Fatalf("❌ Read CSV error: %v", err)
+	}
+
+	if len(records) <= 1 {
+		log.Println("⚠️ No data found")
+		return
+	}
+
+	for i, row := range records {
+		if i == 0 {
+			log.Printf("🔍 Header: %+v", row)
+			continue
+		}
+		if len(row) < 3 {
+			log.Printf("⚠️ Skipped row %d: %+v (too few columns)", i, row)
+			continue
+		}
+
+		province := entity.Provinces{
+			NameTH: row[1],
+			NameEN: row[2],
+		}
+		db.Where("name_th = ?", province.NameTH).FirstOrCreate(&province)
+	}
+	log.Println("✅ Provinces imported")
+}
+
+func ImportDistrictsCSV(db *gorm.DB, filePath string) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	records, _ := reader.ReadAll()
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		provinceID, _ := strconv.Atoi(row[1])
+		district := entity.District{
+			NameTH:     row[2],
+			NameEN:     row[3],
+			ProvinceID: uint(provinceID),
+		}
+		db.FirstOrCreate(&district, entity.District{NameTH: district.NameTH, ProvinceID: district.ProvinceID})
+	}
+	log.Println("✅ Districts imported")
+}
+func ImportPostcodesCSV(db *gorm.DB, filePath string) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	records, _ := reader.ReadAll()
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		postcode := entity.Postcode{
+			Postcode: row[1],
+		}
+		db.FirstOrCreate(&postcode, entity.Postcode{Postcode: postcode.Postcode})
+	}
+	log.Println("✅ Postcodes imported")
+}
+func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	records, _ := reader.ReadAll()
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		districtID, _ := strconv.Atoi(row[1])
+		postcodeID, _ := strconv.Atoi(row[4])
+		subDistrict := entity.SubDistrict{
+			NameTH:     row[2],
+			NameEN:     row[3],
+			DistrictID: uint(districtID),
+			PostcodeID: uint(postcodeID),
+		}
+		db.FirstOrCreate(&subDistrict, entity.SubDistrict{NameTH: subDistrict.NameTH, DistrictID: subDistrict.DistrictID})
+	}
+	log.Println("✅ SubDistricts imported")
 }

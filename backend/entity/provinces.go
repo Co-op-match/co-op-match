@@ -4,5 +4,8 @@ import "gorm.io/gorm"
 
 type Provinces struct {
 	gorm.Model
-	Province string `json:"province"`
+	NameTH   string     `json:"name_th"`
+	NameEN   string     `json:"name_en"`
+	Districts []District `gorm:"foreignKey:ProvinceID"`
+	Addresses []Address `gorm:"foreignKey:ProvinceID"`
 }
