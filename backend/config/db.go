@@ -46,7 +46,7 @@ func SetupDatabase() {
 		&entity.StudentInterest{},
 		&entity.Company{},
 		&entity.Contact{},
-		&entity.Status{},
+		&entity.StatusPost{},
 		&entity.IntershipPost{},
 		&entity.CompanyRequiredSkill{},
 		&entity.Benefit{},
@@ -74,6 +74,8 @@ func SetupDatabase() {
 		&entity.District{},
 		&entity.SubDistrict{},
 		&entity.Postcode{},
+		&entity.StatusVerify{},
+
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -419,21 +421,15 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// Seed Status Posts
-	Statuses := []entity.Status{
-		{Status: "Open"},
-		{Status: "Closed"},
-		{Status: "Pending Approval"},
-		{Status: "ยังไม่ได้ส่งคำขอ"},
-		{Status: "รอรับรอง"},
-		{Status: "รับรอง"},
-		{Status: "ปฏิเสธ"},
-		{Status: "รอดำเนินการ"},
-		{Status: "อนุมัติ"},
-		{Status: "ปฎิเสธ"},
+	StatusPosts := []entity.StatusPost{
+		{StatusPost: "Open"},
+		{StatusPost: "Closed"},
+		{StatusPost: "Pending Approval"},
 	}
-	for _, pkg := range Statuses {
-		db.FirstOrCreate(&pkg, entity.Status{Status: pkg.Status})
+	for _, pkg := range StatusPosts {
+		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
+	
 	IntershipPost := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
@@ -443,7 +439,7 @@ func createSeedData(db *gorm.DB) {
 			MinGpa:          "3.0",
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
-			StatusID:        1,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
 			BenefitID:       1,
@@ -457,13 +453,118 @@ func createSeedData(db *gorm.DB) {
 			Quantity:        1,
 			MinGpa:          "3.2",
 			CreatedAt:       time.Now(),
-			CompanyID:       1,
-			StatusID:        1,
+			CompanyID:       2,
+			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
 			BenefitID:       3,
 			WorkDayID:       2,
 			StipendID:       3,
+		},
+		{
+			PostName:        "UI/UX Designer Intern",
+			PostDescription: "Assist in designing intuitive user interfaces and experiences",
+			Qualifications:  "Design student or related field, knowledge of Figma or Adobe XD",
+			Quantity:        1,
+			MinGpa:          "2.75",
+			CreatedAt:       time.Now(),
+			CompanyID:       3,
+			StatusPostID:    1,
+			AdminID:         2,
+			WorkModeID:      2,
+			BenefitID:       2,
+			WorkDayID:       2,
+			StipendID:       1,
+		},
+		{
+			PostName:        "Marketing Intern",
+			PostDescription: "Support digital campaigns and social media content creation",
+			Qualifications:  "Marketing or Business major, good communication skills",
+			Quantity:        3,
+			MinGpa:          "2.5",
+			CreatedAt:       time.Now(),
+			CompanyID:       4,
+			StatusPostID:    1,
+			AdminID:         3,
+			WorkModeID:      3,
+			BenefitID:       3,
+			WorkDayID:       1,
+			StipendID:       3,
+		},
+		{
+			PostName:        "Data Analyst Intern",
+			PostDescription: "Analyze data trends and provide reports using Excel and SQL",
+			Qualifications:  "Math, Statistics, or CS background, strong in Excel",
+			Quantity:        2,
+			MinGpa:          "3.2",
+			CreatedAt:       time.Now(),
+			CompanyID:       1,
+			StatusPostID:    1,
+			AdminID:         4,
+			WorkModeID:      2,
+			BenefitID:       4,
+			WorkDayID:       1,
+			StipendID:       1,
+		},
+		{
+			PostName:        "Content Writer Intern",
+			PostDescription: "Write blogs, articles, and social media content",
+			Qualifications:  "Strong writing skills, fluent in Thai and English",
+			Quantity:        1,
+			MinGpa:          "2.8",
+			CreatedAt:       time.Now(),
+			CompanyID:       2,
+			StatusPostID:    1,
+			AdminID:         5,
+			WorkModeID:      3,
+			BenefitID:       1,
+			WorkDayID:       2,
+			StipendID:       2,
+		},
+		{
+			PostName:        "Network Engineer Intern",
+			PostDescription: "Assist IT department in managing network and servers",
+			Qualifications:  "Knowledge in networking, CCNA is a plus",
+			Quantity:        2,
+			MinGpa:          "3.0",
+			CreatedAt:       time.Now(),
+			CompanyID:       3,
+			StatusPostID:    1,
+			AdminID:         6,
+			WorkModeID:      1,
+			BenefitID:       2,
+			WorkDayID:       1,
+			StipendID:       3,
+		},
+		{
+			PostName:        "Graphic Designer Intern",
+			PostDescription: "Design promotional materials for print and digital media",
+			Qualifications:  "Proficient in Photoshop and Illustrator",
+			Quantity:        1,
+			MinGpa:          "2.7",
+			CreatedAt:       time.Now(),
+			CompanyID:       4,
+			StatusPostID:    1,
+			AdminID:         7,
+			WorkModeID:      2,
+			BenefitID:       3,
+			WorkDayID:       2,
+			StipendID:       1,
+		},
+		{
+			PostName:        "QA Tester Intern",
+			PostDescription: "Test applications and report bugs to development team",
+			Qualifications:  "Attention to detail, basic understanding of software testing",
+			Quantity:        2,
+			MinGpa:          "2.9",
+			CreatedAt:       time.Now(),
+			CompanyID:       4,
+			StatusPostID:    1,
+			AdminID:         8,
+			WorkModeID:      1,
+			BenefitID:       4,
+			WorkDayID:       1,
+			StipendID:       2,
 		},
 	}
 	for _, pkg := range IntershipPost {
@@ -529,7 +630,7 @@ func createSeedData(db *gorm.DB) {
 		UniversityID:     1,
 		FacultyID:        1,
 		ProgramID:        1,
-		Year:             3,
+		Year:           3,
 		EducationLevelID: 1,
 		Grade:            3.5,
 		StudentID:        1,
@@ -587,26 +688,37 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
 	}
 
+	// Seed Status Posts
+	StatusVerifies := []entity.StatusVerify{
+		{StatusVerify: "ยังไม่ได้ส่งคำขอ"},
+		{StatusVerify: "รอรับรอง"},
+		{StatusVerify: "รับรอง"},
+		{StatusVerify: "ปฏิเสธ"},
+	}
+	for _, pkg := range StatusVerifies {
+		db.FirstOrCreate(&pkg, entity.StatusVerify{StatusVerify: pkg.StatusVerify})
+	}
+
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             4,
+			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
+			StatusVerifyID:       1,
 			UserID:               2,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
+			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify2.png",
-			StatusID:             4,
+			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
+			StatusVerifyID:       3,
 			UserID:               4,
 		},
 		{
-			VerificationDocument: "https://swr.co.th/verify1.png",
-			StatusID:             5,
+			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
+			StatusVerifyID:       4,
 			UserID:               14,
 		},
 	}

@@ -6,15 +6,15 @@ import (
 
 type Verify struct {
 	gorm.Model
-	VerificationDocument string `json:"verification_document"`
-	Reason               string `json:"reason"` // ใช้กรอกเหตุผลเมื่อสถานะเป็น "ปฏิเสธ"
+	VerificationDocument 	string `json:"verification_document"`
+	Reason               	string `json:"reason"` // ใช้กรอกเหตุผลเมื่อสถานะเป็น "ปฏิเสธ"
 
-	StatusID	uint
-	Status		Status		`gorm:"foreignKey:StatusID"`
+	StatusVerifyID			uint
+	StatusVerify			StatusVerify		`gorm:"foreignKey:StatusVerifyID"`
 
-	UserID		uint
-	User		User		`gorm:"foreignKey:UserID"`
+	UserID					uint
+	User					User		`gorm:"foreignKey:UserID"`
 
-	AdminID		*uint		// nullable เพราะตอนอัปโหลดใหม่ ยังไม่มี admin
-	Admin		*Admin		`gorm:"foreignKey:AdminID"`
+	AdminID					*uint		// nullable เพราะตอนอัปโหลดใหม่ ยังไม่มี admin
+	Admin					*Admin		`gorm:"foreignKey:AdminID"`
 }
