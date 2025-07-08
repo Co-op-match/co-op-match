@@ -404,176 +404,56 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
 
-	// Get Benefit references
-	var travel, food, overtime, accommodation entity.Benefit
-	db.First(&travel, "benefit = ?", "ค่าเดินทาง")
-	db.First(&food, "benefit = ?", "อาหาร")
-	db.First(&overtime, "benefit = ?", "ค่าล่วงเวลา")
-	db.First(&accommodation, "benefit = ?", "ที่พัก")
-
-	IntershipPost := []entity.IntershipPost{
+	intershipPosts := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
 			PostDescription: "Join our team as a software development intern",
-			Qualifications:  "Computer Science student, knowledge of Python/Java",
 			Quantity:        2,
-			MinGpa:          "3.0",
+			MinGpa:          3.0,
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			//BenefitID:       1,
-			WorkDayID: 1,
-			StipendID: 2,
-			JobTypeID: 1,
+			BenefitID:       1,
+			WorkDayID:       1,
+			StipendID:       2,
 		},
 		{
 			PostName:        "Data Science Intern",
 			PostDescription: "Opportunity to work with real-world datasets",
-			Qualifications:  "Statistics/Data Science background, Python/R skills",
 			Quantity:        1,
-			MinGpa:          "3.2",
+			MinGpa:          3.2,
 			CreatedAt:       time.Now(),
 			CompanyID:       2,
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
-			//BenefitID:       3,
-			WorkDayID: 2,
-			StipendID: 3,
-			JobTypeID: 3,
-		},
-		{
-			PostName:        "UI/UX Designer Intern",
-			PostDescription: "Assist in designing intuitive user interfaces and experiences",
-			Qualifications:  "Design student or related field, knowledge of Figma or Adobe XD",
-			Quantity:        1,
-			MinGpa:          "2.75",
-			CreatedAt:       time.Now(),
-			CompanyID:       3,
-			StatusPostID:    1,
-			AdminID:         2,
-			WorkModeID:      2,
-			//BenefitID:       2,
-			WorkDayID: 2,
-			StipendID: 1,
-			JobTypeID: 5,
-		},
-		{
-			PostName:        "Marketing Intern",
-			PostDescription: "Support digital campaigns and social media content creation",
-			Qualifications:  "Marketing or Business major, good communication skills",
-			Quantity:        3,
-			MinGpa:          "2.5",
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         3,
-			WorkModeID:      3,
-			//BenefitID:       3,
-			WorkDayID: 1,
-			StipendID: 3,
-			JobTypeID: 3,
-		},
-		{
-			PostName:        "Data Analyst Intern",
-			PostDescription: "Analyze data trends and provide reports using Excel and SQL",
-			Qualifications:  "Math, Statistics, or CS background, strong in Excel",
-			Quantity:        2,
-			MinGpa:          "3.2",
-			CreatedAt:       time.Now(),
-			CompanyID:       1,
-			StatusPostID:    1,
-			AdminID:         4,
-			WorkModeID:      2,
-			//BenefitID:       4,
-			WorkDayID: 1,
-			StipendID: 1,
-			JobTypeID: 8,
-		},
-		{
-			PostName:        "Content Writer Intern",
-			PostDescription: "Write blogs, articles, and social media content",
-			Qualifications:  "Strong writing skills, fluent in Thai and English",
-			Quantity:        1,
-			MinGpa:          "2.8",
-			CreatedAt:       time.Now(),
-			CompanyID:       2,
-			StatusPostID:    1,
-			AdminID:         5,
-			WorkModeID:      3,
-			//BenefitID:       1,
-			WorkDayID: 2,
-			StipendID: 2,
-			JobTypeID: 4,
-		},
-		{
-			PostName:        "Network Engineer Intern",
-			PostDescription: "Assist IT department in managing network and servers",
-			Qualifications:  "Knowledge in networking, CCNA is a plus",
-			Quantity:        2,
-			MinGpa:          "3.0",
-			CreatedAt:       time.Now(),
-			CompanyID:       3,
-			StatusPostID:    1,
-			AdminID:         6,
-			WorkModeID:      1,
-			//BenefitID:       2,
-			WorkDayID: 1,
-			StipendID: 3,
-			JobTypeID: 1,
-		},
-		{
-			PostName:        "Graphic Designer Intern",
-			PostDescription: "Design promotional materials for print and digital media",
-			Qualifications:  "Proficient in Photoshop and Illustrator",
-			Quantity:        1,
-			MinGpa:          "2.7",
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         7,
-			WorkModeID:      2,
-			//BenefitID:       3,
-			WorkDayID: 2,
-			StipendID: 1,
-			JobTypeID: 4,
-		},
-		{
-			PostName:        "QA Tester Intern",
-			PostDescription: "Test applications and report bugs to development team",
-			Qualifications:  "Attention to detail, basic understanding of software testing",
-			Quantity:        2,
-			MinGpa:          "2.9",
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         8,
-			WorkModeID:      1,
-			//BenefitID:       4,
-			WorkDayID: 1,
-			StipendID: 2,
-			JobTypeID: 5,
+			BenefitID:       3,
+			WorkDayID:       2,
+			StipendID:       3,
 		},
 	}
-	for i := range IntershipPost {
-		db.Create(&IntershipPost[i])
-		switch i % 4 {
-		case 0:
-			db.Model(&IntershipPost[i]).Association("Benefits").Append(&travel)
-		case 1:
-			db.Model(&IntershipPost[i]).Association("Benefits").Append(&food)
-		case 2:
-			db.Model(&IntershipPost[i]).Association("Benefits").Append(&overtime)
-		case 3:
-			db.Model(&IntershipPost[i]).Association("Benefits").Append(&accommodation)
-		}
-	}
-	//for _, pkg := range IntershipPost {
-	//db.FirstOrCreate(&pkg, entity.IntershipPost{PostName: pkg.PostName})
-	//}
 
+	for _, post := range intershipPosts {
+		db.Create(&post)
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         1,
+			IntershipPostID: intershipPosts[0].ID,
+		})
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         2,
+			IntershipPostID: intershipPosts[0].ID,
+		})
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         3,
+			IntershipPostID: intershipPosts[1].ID,
+		})
+		db.Create(&entity.CompanyRequiredSkill{
+			SkillID:         4,
+			IntershipPostID: intershipPosts[1].ID,
+		})
+	}
 	// Seed Skills
 	skills := []entity.Skill{
 		{SkillName: "Python"},

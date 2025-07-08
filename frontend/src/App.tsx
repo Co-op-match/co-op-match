@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate ,Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import LoginForm from "./pages/authentication/Login/LoginForm";
 import RegisterPage from "./pages/authentication/Register/RegisterForm";
 import RoleSelectionPage from "./pages/authentication/SelectRole/SelectRoleForm";
@@ -14,6 +14,8 @@ import { UserProvider } from "./components/UserContext";
 import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
 import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
 import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
+import CompanyApplication from './pages/company/application/application';
+import PostDetails from './pages/company/post/postdetails';
 
 
 function App() {
@@ -22,16 +24,16 @@ function App() {
       <UserProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/sign-in" replace />} />
-      
+
           {/* Public Routes */}
-        <Route element={<UserProvider><Outlet /></UserProvider>}>
-          <Route path="/sign-in" element={<LoginForm />} />
-          <Route path="/sign-up" element={<RegisterPage />} />
-          <Route path="/role-select" element={<RoleSelectionPage />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route element={<UserProvider><Outlet /></UserProvider>}>
+            <Route path="/sign-in" element={<LoginForm />} />
+            <Route path="/sign-up" element={<RegisterPage />} />
+            <Route path="/role-select" element={<RoleSelectionPage />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
 
-        </Route>
+          </Route>
 
           {/* Protected Routes */}
           <Route
@@ -67,7 +69,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-                    <Route
+          <Route
             path="/student/add-student"
             element={
               <ProtectedRoute allowedRoles={[3]}>
@@ -83,6 +85,24 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/company/application"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CompanyApplication />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/post/:id"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/lecturer/dashboard"
             element={
