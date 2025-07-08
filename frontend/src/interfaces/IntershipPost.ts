@@ -1,4 +1,9 @@
 export interface IntershipPostInterface {
+  WorkModeID?: number;
+  WorkDayID?: number;
+  StipendID?: number;
+  JobTypeID?: number;
+  Benefits: any;
   ID?: number;
   post_name?: string;
   post_description?: string;
@@ -24,4 +29,5 @@ export interface IntershipPostInterface {
   StatusPostID?: number;
   AdminID?: number;
   BenefitID?: number;
+  
 }

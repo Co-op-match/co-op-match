@@ -36,10 +36,12 @@ type IntershipPost struct {
 	StatusPostID uint
 	StatusPost   StatusPost `gorm:"foreignKey:StatusPostID"`
 
-	AdminID   uint
-	Admin     Admin   `gorm:"foreignKey:AdminID"`
-	BenefitID uint    `json:"benefit_id"`
-	Benefit   Benefit `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	AdminID uint
+	Admin   Admin `gorm:"foreignKey:AdminID"`
+	//BenefitID uint
+	//Benefit   Benefit `gorm:"foreignKey:BenefitID"`
+
+	Benefits []Benefit `gorm:"many2many:intership_post_benefits;" json:"Benefits"`
 
 	Applications []Application `gorm:"foreignKey:IntershipPostID"` // one-to-many
 

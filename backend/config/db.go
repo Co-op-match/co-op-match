@@ -176,7 +176,6 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Modes
 	workModes := []entity.WorkMode{
-		{WorkMode: "ทั้งหมด"},
 		{WorkMode: "On-site"},
 		{WorkMode: "Remote"},
 		{WorkMode: "Hybrid"},
@@ -187,7 +186,6 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Work Days
 	workDays := []entity.WorkDay{
-		{WorkDay: "ทั้งหมด"},
 		{WorkDay: "จันทร์ - ศุกร์"},
 		{WorkDay: "จันทร์ - เสาร์"},
 		{WorkDay: "บริษัทกำหนดเอง"},
@@ -197,7 +195,6 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	stipends := []entity.Stipend{
-		{Stipend: "ทั้งหมด"},
 		{Stipend: "ไม่กำหนด"},
 		{Stipend: "ตามความสามารถนักศึกษา"},
 		{Stipend: "5,000 - 10,000 THB"},
@@ -207,28 +204,6 @@ func createSeedData(db *gorm.DB) {
 	for _, pkg := range stipends {
 		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
 	}
-	//----------------Provinces-------------//
-	// provinces := []string{
-	// 	"กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
-	// 	"จันทบุรี", "ฉะเชิงเทรา", "ชัยนาท", "ชัยภูมิ", "ชลบุรี",
-	// 	"ชุมพร", "เชียงใหม่", "เชียงราย", "ตราด", "ตรัง",
-	// 	"ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
-	// 	"นครสวรรค์", "นครศรีธรรมราช", "นนทบุรี", "นราธิวาส", "น่าน",
-	// 	"บึงกาฬ", "บุรีรัมย์", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปทุมธานี",
-	// 	"ปัตตานี", "พระนครศรีอยุธยา", "พังงา", "พัทลุง", "พะเยา",
-	// 	"เพชรบุรี", "เพชรบูรณ์", "พิจิตร", "พิษณุโลก", "แพร่",
-	// 	"มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยะลา", "ยโสธร",
-	// 	"ร้อยเอ็ด", "ระนอง", "ราชบุรี", "ระยอง", "ลพบุรี",
-	// 	"ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร",
-	// 	"สตูล", "สมุทรปราการ", "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว",
-	// 	"สระบุรี", "สงขลา", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี",
-	// 	"สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อำนาจเจริญ", "อุดรธานี",
-	// 	"อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "อำนาจเจริญ",
-	// 	"บึงกาฬ", "ยะลา", "ยโสธร",
-	// }
-	// for _, provinceName := range provinces {
-	// 	db.FirstOrCreate(&entity.Provinces{Province: provinceName}, &entity.Provinces{Province: provinceName})
-	// }
 
 	// ที่อยู่ (Address)
 	addresses := []entity.Address{
@@ -410,10 +385,10 @@ func createSeedData(db *gorm.DB) {
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
-		{Benefit: "travel", BenefitName: "ค่าเดินทาง"},
-		{Benefit: "food", BenefitName: "อาหาร"},
-		{Benefit: "overtime", BenefitName: "ค่าล่วงเวลา"},
-		{Benefit: "accommodation", BenefitName: "ที่พัก"},
+		{Benefit: "ค่าเดินทาง"},
+		{Benefit: "อาหาร"},
+		{Benefit: "ค่าล่วงเวลา"},
+		{Benefit: "ที่พัก"},
 	}
 	for _, b := range benefits {
 		db.FirstOrCreate(&b, entity.Benefit{Benefit: b.Benefit})
@@ -479,7 +454,6 @@ func createSeedData(db *gorm.DB) {
 			IntershipPostID: intershipPosts[1].ID,
 		})
 	}
-
 	// Seed Skills
 	skills := []entity.Skill{
 		{SkillName: "Python"},

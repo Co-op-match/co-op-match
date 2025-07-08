@@ -26,11 +26,11 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
     if (!userId || isNaN(userId)) return;
-    GetUserById(userId).then(setUser).catch(err => console.error("Failed to fetch user", err));
+    
+    GetUserById(userId)
+      .then(setUser)
+      .catch(err => console.error("Failed to fetch user", err));
   }, []);
-
-  const currentPage = ['dashboard', 'search', 'profile', 'notifications', 'settings']
-    .find((key) => location.pathname.includes(key)) || 'dashboard';
 
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
@@ -40,9 +40,14 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];
 
+  // แก้ไขการกำหนด menuItems
   const menuItems = minimalMenu
     ? [fullMenu.find((item) => item.key === 'profile')!]
     : fullMenu;
+
+  // แก้ไขการหา currentPage ให้ตรงกับ menuItems ที่แสดง
+  const availableKeys = menuItems.map(item => item.key);
+  const currentPage = availableKeys.find((key) => location.pathname.includes(key)) || availableKeys[0];
 
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(`/student/${key}`);
@@ -62,13 +67,26 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
         zIndex: 1000,
       }}
     >
-      {/* Logo */}
-      <div onClick={() => navigate("/student/dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+      {/** Logo **/}
+      <div 
+        onClick={() => navigate("/student/dashboard")} 
+        style={{ 
+          cursor: "pointer", 
+          display: "flex", 
+          alignItems: "center",
+          flex: '0 0 auto' // ป้องกัน logo โดนบีบ
+        }}
+      >
         <img src={Logo} alt="Logo" style={{ height: 40 }} />
       </div>
 
-      {/* Menu + Avatar */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      {/** Menu + Avatar **/}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center',
+        flex: '1 1 auto', // ให้ส่วนนี้ขยายได้
+        justifyContent: 'flex-end' // จัดให้อยู่ด้านขวา
+      }}>
         <Menu
           mode="horizontal"
           selectedKeys={[currentPage]}
@@ -77,13 +95,18 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
           style={{
             border: 'none',
             backgroundColor: 'transparent',
-            minWidth: 160,
+            minWidth: minimalMenu ? 'auto' : 550, // ปรับ minWidth ตาม mode
+            flex: '0 0 auto'
           }}
         />
         <Avatar
           src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
           icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-          style={{ cursor: "pointer", marginLeft: 16 }}
+          style={{ 
+            cursor: "pointer", 
+            marginLeft: 16,
+            flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
+          }}
         />
       </div>
     </Header>

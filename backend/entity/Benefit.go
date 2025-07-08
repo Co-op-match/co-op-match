@@ -6,8 +6,5 @@ import (
 
 type Benefit struct {
 	gorm.Model
-	Benefit     string `json:"benefit"`
-	BenefitName string `json:"benefit_name"`
-
-	IntershipPosts []IntershipPost `gorm:"foreignKey:BenefitID"` // One-to-Many
+	Benefit string `json:"benefit"`
 }
