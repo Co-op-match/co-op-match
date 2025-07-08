@@ -16,6 +16,7 @@ import {
   Radio,
   Image,
   Tabs,
+  Card,
 } from "antd";
 import {
   SearchOutlined,
@@ -66,6 +67,9 @@ const CompanyManagement: React.FC = () => {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [reload, setReload] = useState<boolean>(true);
+
+  const totalActive = activeCompanies.length;
+  const totalDeleted = deletedCompanies.length;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -234,6 +238,27 @@ const CompanyManagement: React.FC = () => {
     }
   };
 
+  const statusCounts = useMemo(() => {
+    const source = tabKey === "active" ? activeCompanies : deletedCompanies;
+    const allStatuses = statusFilterOptions.filter((s) => s !== "ทั้งหมด");
+
+    // เริ่มด้วยทุกสถานะ = 0
+    const counts: Record<string, number> = {};
+    allStatuses.forEach((status) => {
+      counts[status] = 0;
+    });
+
+    // นับจริง
+    for (const c of source) {
+      const status = getCompanyLatestStatus(c);
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      }
+    }
+
+    return counts;
+  }, [tabKey, activeCompanies, deletedCompanies, statusFilterOptions]);
+
   const columns: ColumnsType<CompanyInterface> = [
     { title: "ID", dataIndex: "ID", key: "ID" },
     {
@@ -274,7 +299,7 @@ const CompanyManagement: React.FC = () => {
           <Button
             onClick={() => showVerificationModal(rec)}
             style={{
-              width: 100,
+              width: 110,
               borderRadius: 12,
               backgroundColor: bgColor,
               color: textColor,
@@ -310,19 +335,44 @@ const CompanyManagement: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <Row justify="space-between">
+        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
           <Col>
             <Title level={3}>บริษัท (Companies)</Title>
           </Col>
-          <Col>
+          {/* <Col>
             <Flex align="center" gap={16}>
               จำนวน
-              <span style={{ fontSize: 18, fontWeight: "bold" }}>
-                {activeCompanies.length}
-              </span>
+              <Card
+                size="small"
+                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
+              >
+                <div style={{ fontSize: 18, fontWeight: "bold" }}>
+                  {tabKey == "active" ? totalActive : totalDeleted}
+                </div>
+              </Card>
             </Flex>
+          </Col> */}
+        </Row>
+
+        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }}>
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <Col key={status}>
+              <div className="custom-summary-box">
+                <div className="summary-title">{status}</div>
+                <div className="summary-count">{count}</div>
+              </div>
+            </Col>
+          ))}
+           <Col>
+            <div className="custom-summary-box">
+              <div className="summary-title">จำนวนบริษัททั้งหมด</div>
+              <div className="summary-count">
+                {tabKey === "active" ? totalActive : totalDeleted}
+              </div>
+            </div>
           </Col>
         </Row>
+
         <Tabs
           defaultActiveKey="active"
           onChange={(key) => setTabKey(key)}
@@ -330,6 +380,7 @@ const CompanyManagement: React.FC = () => {
             { label: "บริษัททั้งหมด", key: "active" },
             { label: "บริษัทที่ถูกลบ", key: "deleted" },
           ]}
+           style={{ marginTop: "1rem" }}
         />
         <Flex
           justify="center"
@@ -371,6 +422,7 @@ const CompanyManagement: React.FC = () => {
             onChange={(e) => setSearchKeyword(e.target.value)}
           />
         </Flex>
+
         <Table
           className="custom-table"
           columns={columns}
@@ -378,6 +430,7 @@ const CompanyManagement: React.FC = () => {
           pagination={{ pageSize: 6 }}
           size="middle"
         />
+
         <Modal
           open={isDetailModalVisible}
           title="รายละเอียดการรับรอง"

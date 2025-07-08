@@ -66,7 +66,7 @@ func CreateInternshipPost(c *gin.Context) {
 		return
 	}
 
-	db.First(&benefit, internshipPost.BenefitID)
+	//db.First(&benefit, internshipPost.BenefitID)
 	if benefit.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Benefit not found"})
 		return
@@ -95,8 +95,8 @@ func CreateInternshipPost(c *gin.Context) {
 		WorkMode:     workMode,
 		StatusPostID: internshipPost.StatusPostID,
 		StatusPost:   statusPost,
-		BenefitID:    internshipPost.BenefitID,
-		Benefit:      benefit,
+		/* BenefitID:    internshipPost.BenefitID,
+		Benefit:      benefit, */
 		CompanyID:    internshipPost.CompanyID,
 		AdminID:      internshipPost.AdminID,
 	}
