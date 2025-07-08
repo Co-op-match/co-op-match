@@ -60,12 +60,27 @@
   transition: transform 0.3s ease;
 }
 
-.custom-table .ant-table-tbody > tr > td {
-  background-color: #e7edf3 !important;
-}
-
+/* ✅ สีพื้นหลังของหัวตาราง */
 .custom-table .ant-table-thead > tr > th {
   background-color: #afd5f4 !important;
+}
+
+/* ✅ แถวปกติใน tbody */
+.custom-table .ant-table-tbody > tr > td {
+  background-color: #e7edf3  !important;
+  transition: background-color 0.3s ease;
+}
+
+/* ✅ ถ้าเป็นแถวถูกระงับ เพิ่มความเฉพาะเจาะจงให้ override ได้ */
+.custom-table .ant-table-tbody > tr.suspended-row > td {
+  background-color: #d9d9d9 !important;
+  color: #888 !important;
+  font-style: italic;
+}
+
+/* ปิด hover สำหรับแถวถูกระงับ */
+.custom-table .ant-table-tbody > tr.suspended-row:hover > td {
+  background-color: #d9d9d9 !important;
 }
 
 .fade-in-card:hover {
@@ -82,3 +97,12 @@
     transform: translateY(0);
   }
 }
+
+
+/*============================ table ที่โดนลบ ============================*/
+/* .deleted-row {
+  background-color: #fff1f0 !important;
+  color: #a8071a !important;
+  font-style: italic;
+}
+ */

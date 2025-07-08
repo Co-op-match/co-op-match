@@ -28,7 +28,7 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       localStorage.removeItem("token_type");
       alert("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
-      window.location.href = "/login";
+      window.location.href = "/sign-in";
     }
     return Promise.reject(error);
   }

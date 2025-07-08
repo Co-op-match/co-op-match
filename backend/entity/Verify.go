@@ -1,20 +1,23 @@
 package entity
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
 type Verify struct {
 	gorm.Model
-	VerificationDocument 	string `json:"verification_document"`
-	Reason               	string `json:"reason"` // ใช้กรอกเหตุผลเมื่อสถานะเป็น "ปฏิเสธ"
+	VerificationDocument string    `json:"verification_document"`
+	Reason               string    `json:"reason"` // ใช้กรอกเหตุผลเมื่อสถานะเป็น "ปฏิเสธ"
+	ConfirmationDate     time.Time `json:"confirmation_date"`
+	
+	StatusVerifyID       uint
+	StatusVerify         StatusVerify `gorm:"foreignKey:StatusVerifyID"`
 
-	StatusVerifyID			uint
-	StatusVerify			StatusVerify		`gorm:"foreignKey:StatusVerifyID"`
+	UserID uint
+	User   User `gorm:"foreignKey:UserID"`
 
-	UserID					uint
-	User					User		`gorm:"foreignKey:UserID"`
-
-	AdminID					*uint		// nullable เพราะตอนอัปโหลดใหม่ ยังไม่มี admin
-	Admin					*Admin		`gorm:"foreignKey:AdminID"`
+	AdminID *uint  // nullable เพราะตอนอัปโหลดใหม่ ยังไม่มี admin
+	Admin   *Admin `gorm:"foreignKey:AdminID"`
 }

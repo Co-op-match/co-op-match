@@ -15,7 +15,7 @@ export interface CompanyInterface {
   User?: UserInterface;
 
   address_id?: number;
-  address?: AddressInterface;
+  Address?: AddressInterface;
 
   admin_id?: number;
   admin?: AdminInterface;

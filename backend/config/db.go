@@ -126,8 +126,17 @@ func createSeedData(db *gorm.DB) {
 		{Email: "tn4@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 	}
-	for _, pkg := range User {
+	/* for _, pkg := range User {
 		db.FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
+	} */
+	for _, pkg := range User {
+		var count int64
+		db.Unscoped().Model(&entity.User{}).
+			Where("Email = ?", pkg.Email).
+			Count(&count)
+		if count == 0 {
+			db.Create(&pkg)
+		}
 	}
 
 	// Seed Profile Images
@@ -283,10 +292,16 @@ func createSeedData(db *gorm.DB) {
 		{FirstName: "สมชาย", LastName: "แอดมิน", Birthday: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), UserID: 1},
 		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 5},
 	}
-	for _, admin := range admins {
-		db.FirstOrCreate(&admin,entity.AcademicStaff{UserID: admin.UserID})
+	for _, a := range admins {
+		var count int64
+		db.Unscoped().Model(&entity.Admin{}).
+			Where("user_id = ?", a.UserID).
+			Count(&count)
+		if count == 0 {
+			db.Create(&a)
+		}
 	}
-	
+
 	// Seed Permission
 	permissions := []entity.Permission{
 		{Name: "Read", Description: "Read-only access", AdminID: 1},
@@ -305,8 +320,14 @@ func createSeedData(db *gorm.DB) {
 		{AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D", UserID: 16, AddressID: 1, AdminID: 1, GenderID: 2},
 		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 1, AdminID: 1, GenderID: 1},
 	}
-	for _, staff := range staffs {
-		db.FirstOrCreate(&staff,entity.AcademicStaff{UserID: staff.UserID})
+	for _, s := range staffs {
+		var count int64
+		db.Unscoped().Model(&entity.AcademicStaff{}).
+			Where("user_id = ?", s.UserID).
+			Count(&count)
+		if count == 0 {
+			db.Create(&s)
+		}
 	}
 
 	students := []entity.Student{
@@ -387,7 +408,13 @@ func createSeedData(db *gorm.DB) {
 		},
 	}
 	for _, s := range students {
-		db.FirstOrCreate(&s, entity.Student{FirstName: s.FirstName})
+		var count int64
+		db.Unscoped().Model(&entity.Student{}).
+			Where("first_name = ?", s.FirstName).
+			Count(&count)
+		if count == 0 {
+			db.Create(&s)
+		}
 	}
 
 	companies := []entity.Company{
@@ -397,9 +424,14 @@ func createSeedData(db *gorm.DB) {
 		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 1},
 		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 1},
 	}
-	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
-	for _, company := range companies {
-		db.FirstOrCreate(&company,entity.Company{CompanyName: company.CompanyName})
+	for _, c := range companies {
+		var count int64
+		db.Unscoped().Model(&entity.Company{}).
+			Where("company_name = ?", c.CompanyName).
+			Count(&count)
+		if count == 0 {
+			db.Create(&c)
+		}
 	}
 
 	// สิทธิประโยชน์ (Benefit)
@@ -691,26 +723,10 @@ func createSeedData(db *gorm.DB) {
 
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
-		{
-			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
-			StatusVerifyID:       1,
-			UserID:               2,
-		},
-		{
-			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
-			StatusVerifyID:       2,
-			UserID:               6,
-		},
-		{
-			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
-			StatusVerifyID:       3,
-			UserID:               4,
-		},
-		{
-			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
-			StatusVerifyID:       4,
-			UserID:               14,
-		},
+		{ VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png", StatusVerifyID: 2, UserID: 2, },
+		{ VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png", StatusVerifyID: 2, UserID: 6, },
+		{ VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf", StatusVerifyID: 2, UserID: 4, },
+		{ VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf", StatusVerifyID: 2, UserID: 14, },
 	}
 	for _, v := range verifies {
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})

@@ -6,6 +6,7 @@ export interface VerifyInterface {
   ID?: number;
   verification_document?: string;
   reason?: string;
+  /* confirmation_date?: string; */
 
   StatusVerifyID?: number;
   StatusVerify?: StatusVerifyInterface;
@@ -18,4 +19,5 @@ export interface VerifyInterface {
 
   CreatedAt?: string;
   DeletedAt?: string | null;
+  UpdatedAt?: string;
 }

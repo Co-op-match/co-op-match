@@ -108,7 +108,10 @@ func main() {
 
 		companyGroup := router.Group("/company")
 		{
-			companyGroup.GET("", controller.GetAllCompany)
+			companyGroup.GET("", controller.GetAllActiveCompanies)
+			companyGroup.GET("/all-deleted", controller.GetAllDeletedCompany)
+			companyGroup.DELETE("/delete/:id", controller.DeleteCompany)
+			//companyGroup.PATCH("/suspend/:id", controller.SuspendCompany)
 		}
 		adminGroup := r.Group("/admin")
 		{
