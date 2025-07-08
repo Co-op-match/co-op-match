@@ -35,14 +35,29 @@ func main() {
 
 	r.GET("/roles", role.GetAll)
 	r.GET("/provinces", searchjob.GetAllProvinces)
-	r.GET("/jobtypes", searchjob.GetAllJobTypes)
-	r.GET("/stipends", searchjob.GetAllStipends)
-	r.GET("/workdays", searchjob.GetAllWorkDays)
-	r.GET("/workmodes", searchjob.GetAllWorkModes)
-	r.GET("/benefits", searchjob.GetAllBenefits)
+
 	r.GET("/universities", controller.GetUniversities)
 	r.GET("/status_verifies", controller.GetAllStatusVerify)
 	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
+
+	//Application
+
+	r.POST("/applications", controller.CreateApplication)
+	r.POST("/post", controller.CreateInternshipPost)
+
+	// Route สำหรับดึงข้อมูล Work Mode, Work Day, Stipend, JobType, StatusPost
+
+	r.GET("/work_modes", controller.GetAllWorkModes)
+	r.GET("/work_days", controller.GetAllWorkDays)
+	r.GET("/stipends", controller.GetAllStipends)
+	r.GET("/job_types", controller.GetAllJobTypes)
+	r.GET("/status_posts", controller.GetAllStatusPosts)
+	r.GET("/benefit", controller.GetAllBenefits)
+	r.GET("/getpost", controller.ListInternshipPosts)
+	r.GET("/getpost/:id", controller.GetInternshipPostById)
+	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
+	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
+
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{
@@ -61,6 +76,7 @@ func main() {
 		addressGroup := router.Group("/address")
 		{
 			addressGroup.GET("/", controller.GetAllAdress)
+			addressGroup.GET("/provinces", controller.GetAllProvinces)
 			addressGroup.GET("/:user_id", controller.GetAddressByUserID)
 			addressGroup.POST("/:role_id/:user_id", controller.CreateAddressByRoleIDAndUserID)
 			addressGroup.PUT("/:role_id/:user_id", controller.UpdateAddressByRoleIDAndUserID)

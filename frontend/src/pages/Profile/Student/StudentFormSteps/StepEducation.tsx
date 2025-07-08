@@ -19,6 +19,7 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
   const [selectededucationLevels, setSelectededucationLevels] = useState<number>();
   const [loading, setLoading] = useState(true);
 
+  
   useEffect(() => {
     const load = async () => {
       try {
@@ -46,6 +47,38 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
     load();
   }, []);
 
+useEffect(() => {
+  const universityId = form.getFieldValue("university_id");
+  const facultyId = form.getFieldValue("faculty_id");
+
+  if (!universityId || universities.length === 0) return;
+
+  setSelectedUniversity(universityId);
+
+  const selectedUniv = universities.find((u) => u.value === universityId);
+  const facOptions = (selectedUniv?.faculties || []).map((f: any) => ({
+    label: f.name_th,
+    value: f.ID,
+    programs: f.Programs || [],
+  }));
+
+  setFaculties(facOptions);
+
+  if (facultyId) {
+    setSelectedFaculty(facultyId);
+    const selectedFac = facOptions.find((f: { value: any; }) => f.value === facultyId);
+    const progOptions = (selectedFac?.programs || []).map((p: any) => ({
+      label: p.name_th,
+      value: p.ID,
+    }));
+    setPrograms(progOptions);
+  }
+
+  const eduLevelId = form.getFieldValue("education_level_id");
+  if (eduLevelId) {
+    setSelectededucationLevels(eduLevelId);
+  }
+}, [universities]);
 
   const handleUniversityChange = (univId: number) => {
     setSelectedUniversity(univId);

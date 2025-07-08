@@ -230,9 +230,6 @@ func sendEmail(to, subject, body string) error {
 
 	d := gomail.NewDialer("smtp.gmail.com", 587, "coopmatch4@gmail.com", "vzyb vdiz kdgc klzv")
 
-	// Optional: ปิด TLS verification (ใช้เฉพาะ dev)
-	// d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
 	return d.DialAndSend(m)
 }
 

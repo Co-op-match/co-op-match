@@ -1,57 +1,165 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Row, Col, Select } from 'antd';
 import type { FormInstance } from 'antd';
+import { GetAllProvinces } from '../../../../services/https';
 
 export interface StepAddressProps {
   form: FormInstance<any>;
   formData: any;
 }
 
+interface SelectOption {
+  label: string;
+  value: number;
+}
+
 const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [amphures, setAmphures] = useState<any[]>([]);
-  const [tambons, setTambons] = useState<any[]>([]);
+  const [provinceOptions, setProvinceOptions] = useState<SelectOption[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<SelectOption[]>([]);
+  const [subdistrictOptions, setSubdistrictOptions] = useState<SelectOption[]>([]);
+
+  const [rawProvinces, setRawProvinces] = useState<any[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number>();
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number>();
+  const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_province.json')
-      .then(res => res.json())
-      .then(setProvinces)
-      .catch(console.error);
+    const loadProvinces = async () => {
+      try {
+        const res = await GetAllProvinces();
+        const data = res.data || res;
+        setRawProvinces(data);
+        console.log("✅ data:", data);
+        setProvinceOptions(
+          data.map((p: any) => ({
+            label: p.name_th,
+            value: Number(p.ID),
+          }))
+        );
+      } catch (error) {
+        console.error('โหลดจังหวัดล้มเหลว:', error);
+      }
+    };
+
+    loadProvinces();
   }, []);
+  useEffect(() => {
+  const provinceId = form.getFieldValue("province");
+  const districtId = form.getFieldValue("district");
+  const subdistrictId = form.getFieldValue("subdistrict_id");
 
-  const handleProvinceChange = (provinceName: string) => {
-    form.setFieldsValue({ district: undefined, subdistrict: undefined, post_code: undefined });
-    setAmphures([]);
-    setTambons([]);
+  if (!provinceId || !rawProvinces.length) return;
 
-    fetch('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_amphure.json')
-      .then(res => res.json())
-      .then(data => {
-        const selectedProvince = provinces.find(p => p.name_th === provinceName);
-        const filtered = data.filter((a: any) => a.province_id === selectedProvince?.id);
-        setAmphures(filtered);
-      });
-  };
+  const selectedProvince = rawProvinces.find((p) => Number(p.ID) === provinceId);
+  if (!selectedProvince) return;
 
-  const handleAmphureChange = (amphureName: string) => {
-    form.setFieldsValue({ subdistrict: undefined, post_code: undefined });
-    setTambons([]);
+  setSelectedProvinceId(provinceId);
 
-    fetch('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_tambon.json')
-      .then(res => res.json())
-      .then(data => {
-        const selectedAmphure = amphures.find(a => a.name_th === amphureName);
-        const filtered = data.filter((t: any) => t.amphure_id === selectedAmphure?.id);
-        setTambons(filtered);
-      });
-  };
+  const districts = selectedProvince?.Districts || [];
+  const mappedDistricts = districts.map((d: any) => ({
+    label: d.name_th,
+    value: Number(d.ID),
+  }));
+  setDistrictOptions(mappedDistricts);
 
-const handleTambonChange = (tambonName: string) => {
-  const selectedTambon = tambons.find(t => t.name_th === tambonName);
-  if (selectedTambon) {
-    form.setFieldsValue({ post_code: String(selectedTambon.zip_code) }); // ← ตรงนี้
+  if (districtId) {
+    setSelectedDistrictId(districtId);
+    const selectedDistrict = districts.find((d: any) => Number(d.ID) === districtId);
+    const subdistricts = selectedDistrict?.SubDistricts || [];
+
+    const mappedSubdistricts = subdistricts.map((s: any) => ({
+      label: s.name_th,
+      value: Number(s.ID),
+    }));
+    setSubdistrictOptions(mappedSubdistricts);
+
+    if (subdistrictId) {
+      const selectedSub = subdistricts.find((s: any) => Number(s.ID) === subdistrictId);
+      if (selectedSub) {
+        setSelectedSubdistrict(selectedSub);
+      }
+    }
+  }
+}, [rawProvinces]);
+
+  const handleProvinceChange = (provinceId: number) => {
+  console.log("✅ เลือกจังหวัด ID:", provinceId);
+  form.setFieldsValue({
+    province: provinceId,
+    district: undefined,
+    subdistrict: undefined,
+    post_code: undefined,
+  });
+
+  setSelectedProvinceId(provinceId);
+  setSelectedDistrictId(undefined);
+  setDistrictOptions([]);
+  setSubdistrictOptions([]);
+
+  const selectedProvince = rawProvinces.find((p) => Number(p.ID) === provinceId);
+  console.log("📌 ข้อมูลจังหวัดที่เลือก:", selectedProvince);
+  console.log("📌 Districts:", selectedProvince?.Districts);
+
+  if (Array.isArray(selectedProvince?.Districts)) {
+    setDistrictOptions(
+      selectedProvince.Districts.map((d: any) => ({
+        label: d.name_th,
+        value: Number(d.ID),
+      }))
+    );
   }
 };
+
+const handleDistrictChange = (districtId: number) => {
+  console.log("✅ เลือกอำเภอ ID:", districtId);
+  form.setFieldsValue({
+    district: districtId,
+    subdistrict: undefined,
+    post_code: undefined,
+  });
+
+  setSelectedDistrictId(districtId);
+  setSubdistrictOptions([]);
+
+  const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
+  const selectedDistrict = selectedProvince?.Districts?.find((d: any) => Number(d.ID) === districtId);
+
+  console.log("📌 selectedDistrict:", selectedDistrict);
+  console.log("📌 SubDistricts:", selectedDistrict?.SubDistricts);
+
+  if (Array.isArray(selectedDistrict?.SubDistricts)) {
+    setSubdistrictOptions(
+      selectedDistrict.SubDistricts.map((s: any) => ({
+        label: s.name_th,
+        value: Number(s.ID),
+      }))
+    );
+  }
+};
+
+const handleSubdistrictChange = (subdistrictId: number) => {
+  console.log("✅ เลือกตำบล ID:", subdistrictId);
+
+  const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
+  const selectedDistrict = selectedProvince?.Districts?.find((d: any) => d.ID === selectedDistrictId);
+  const selectedSubdistrict = selectedDistrict?.SubDistricts?.find((s: any) => s.ID === subdistrictId);
+
+  console.log("📌 selectedSubdistrict:", selectedSubdistrict);
+  console.log("📌 Postcode ID:", selectedSubdistrict?.Postcode?.ID);
+  
+if (selectedSubdistrict) {
+  setSelectedSubdistrict(selectedSubdistrict); // ← set state สำหรับแสดงรหัสไปรษณีย์
+
+  console.log("📌 sub ID:", subdistrictId); // ✅ แยกออกมาไว้ข้างนอก
+
+  form.setFieldsValue({
+    subdistrict_id: Number(subdistrictId), // หรือ subdistrict_id ถ้า backend ใช้ชื่อนั้น
+    post_code: selectedSubdistrict?.Postcode?.ID || undefined,
+  });
+}
+
+};
+
 
 
   return (
@@ -92,11 +200,15 @@ const handleTambonChange = (tambonName: string) => {
             name="province"
             rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}
           >
-            <Select placeholder="เลือกจังหวัด" onChange={handleProvinceChange}>
-              {provinces.map(p => (
-                <Select.Option key={p.id} value={p.name_th}>{p.name_th}</Select.Option>
-              ))}
-            </Select>
+            <Select
+              showSearch
+              options={provinceOptions}
+              onChange={handleProvinceChange}
+              placeholder="เลือกจังหวัด"
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Col>
 
@@ -107,43 +219,57 @@ const handleTambonChange = (tambonName: string) => {
             rules={[{ required: true, message: 'กรุณาเลือกอำเภอ/เขต' }]}
           >
             <Select
+              showSearch
+              options={districtOptions}
+              onChange={handleDistrictChange}
               placeholder="เลือกอำเภอ / เขต"
-              disabled={!amphures.length}
-              onChange={handleAmphureChange}
-            >
-              {amphures.map(a => (
-                <Select.Option key={a.id} value={a.name_th}>{a.name_th}</Select.Option>
-              ))}
-            </Select>
+              disabled={!districtOptions.length}
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Col>
 
         <Col span={12}>
           <Form.Item
             label="ตำบล / แขวง"
-            name="subdistrict"
+            name="subdistrict_id"
             rules={[{ required: true, message: 'กรุณาเลือกตำบล/แขวง' }]}
           >
-            <Select placeholder="เลือกตำบล / แขวง" disabled={!tambons.length} onChange={handleTambonChange}>
-              {tambons.map(t => (
-                <Select.Option key={t.id} value={t.name_th}>{t.name_th}</Select.Option>
-              ))}
-            </Select>
+            <Select
+              showSearch
+              options={subdistrictOptions}
+              onChange={handleSubdistrictChange}
+              placeholder="เลือกตำบล / แขวง"
+              disabled={!subdistrictOptions.length}
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Col>
-
         <Col span={12}>
           <Form.Item
             label="รหัสไปรษณีย์"
             name="post_code"
-            rules={[
-              { required: true, message: 'กรุณากรอกรหัสไปรษณีย์' },
-   
-            ]}
+            rules={[{ required: true, message: 'กรุณาเลือกรหัสไปรษณีย์' }]}
           >
-            <Input maxLength={5} />
-          </Form.Item>
-        </Col>
+            <Select
+          disabled={!selectedSubdistrict?.Postcode}
+          options={
+            selectedSubdistrict?.Postcode
+              ? [{
+                  label: selectedSubdistrict.Postcode.post_code,
+                  value: selectedSubdistrict.Postcode.ID         
+                }]
+              : []
+          }
+          placeholder="เลือกรหัสไปรษณีย์"
+        />
+
+  </Form.Item>
+</Col>
       </Row>
     </>
   );

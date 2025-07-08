@@ -117,16 +117,16 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
               </Descriptions.Item>
               <Descriptions.Item label="ถนน">{student?.Address?.street}</Descriptions.Item>
               <Descriptions.Item label="ตำบล/แขวง">
-                {student?.Address?.subdistrict}
+                {student?.Address?.Subdistrict?.name_th}
               </Descriptions.Item>
               <Descriptions.Item label="อำเภอ/เขต">
-                {student?.Address?.district}
+                {student?.Address?.District?.name_th}
               </Descriptions.Item>
               <Descriptions.Item label="จังหวัด">
-                {student?.Address?.province}
+                {student?.Address?.Province?.name_th}
               </Descriptions.Item>
               <Descriptions.Item label="รหัสไปรษณีย์">
-                {student?.Address?.post_code}
+                {student?.Address?.Postcode?.post_code}
               </Descriptions.Item>
             </Descriptions>
           </div>

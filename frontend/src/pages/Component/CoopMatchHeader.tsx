@@ -14,73 +14,44 @@ import type { UserInterface } from '../../interfaces/User';
 
 const { Header } = Layout;
 
-const CoopMatchHeader: React.FC = () => {
+interface CoopMatchHeaderDefaultProps {
+  minimalMenu?: boolean;
+}
+
+const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userIdString = localStorage.getItem("id");
-        if (!userIdString) return;
-
-        const userId = Number(userIdString);
-        if (isNaN(userId)) return;
-
-        const data = await GetUserById(userId);
-        setUser(data);
-         console.log("user",data)
-      } catch (error) {
-        console.error("Failed to fetch user", error);
-      }
-    };
-
-    fetchUser();
+    const userId = Number(localStorage.getItem("id"));
+    if (!userId || isNaN(userId)) return;
+    
+    GetUserById(userId)
+      .then(setUser)
+      .catch(err => console.error("Failed to fetch user", err));
   }, []);
 
-
-  // แปลง path เป็น key เช่น /student/profile → "profile"
-  const currentPage = (() => {
-    if (location.pathname.includes('dashboard')) return 'dashboard';
-    if (location.pathname.includes('search')) return 'search';
-    if (location.pathname.includes('profile')) return 'profile';
-    if (location.pathname.includes('notifications')) return 'notifications';
-    if (location.pathname.includes('settings')) return 'settings';
-    return 'dashboard'; // fallback
-  })();
-
-  const handleMenuClick = ({ key }: { key: string }) => {
-    switch (key) {
-      case 'dashboard':
-        navigate('/student/dashboard');
-        break;
-      case 'search':
-        navigate('/student/search');
-        break;
-      case 'profile':
-        navigate('/student/profile');
-        break;
-      case 'notifications':
-        navigate('/student/notifications');
-        break;
-      case 'settings':
-        navigate('/student/settings');
-        break;
-    }
-  };
-
-  const handleLogoClick = () => {
-  navigate("/student/dashboard");
-};
-
-  const menuItems = [
+  const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
     { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];
+
+  // แก้ไขการกำหนด menuItems
+  const menuItems = minimalMenu
+    ? [fullMenu.find((item) => item.key === 'profile')!]
+    : fullMenu;
+
+  // แก้ไขการหา currentPage ให้ตรงกับ menuItems ที่แสดง
+  const availableKeys = menuItems.map(item => item.key);
+  const currentPage = availableKeys.find((key) => location.pathname.includes(key)) || availableKeys[0];
+
+  const handleMenuClick = ({ key }: { key: string }) => {
+    navigate(`/student/${key}`);
+  };
 
   return (
     <Header
@@ -96,41 +67,50 @@ const CoopMatchHeader: React.FC = () => {
         zIndex: 1000,
       }}
     >
-<div
-  onClick={handleLogoClick}
-  style={{
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-  }}
->
-  <img src={Logo} alt="Logo" style={{ height: 40 }} />
-</div>
+      {/** Logo **/}
+      <div 
+        onClick={() => navigate("/student/dashboard")} 
+        style={{ 
+          cursor: "pointer", 
+          display: "flex", 
+          alignItems: "center",
+          flex: '0 0 auto' // ป้องกัน logo โดนบีบ
+        }}
+      >
+        <img src={Logo} alt="Logo" style={{ height: 40 }} />
+      </div>
 
-
-<div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-<Menu
-        mode="horizontal"
-        selectedKeys={[currentPage]}
-        items={menuItems}
-        onClick={handleMenuClick}
-    style={{
-      border: 'none',
-      backgroundColor: 'transparent',
-      minWidth: 541,
-    }}
-  />
-  <Avatar
-    src={user?.ProfileImage?.[0]?.image_url
-      ? `http://localhost:8000${user.ProfileImage[0].image_url}`
-      : undefined}
-    icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-    style={{ cursor: "pointer", marginLeft: 16 }}
-  />
-</div>
-
+      {/** Menu + Avatar **/}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center',
+        flex: '1 1 auto', // ให้ส่วนนี้ขยายได้
+        justifyContent: 'flex-end' // จัดให้อยู่ด้านขวา
+      }}>
+        <Menu
+          mode="horizontal"
+          selectedKeys={[currentPage]}
+          items={menuItems}
+          onClick={handleMenuClick}
+          style={{
+            border: 'none',
+            backgroundColor: 'transparent',
+            minWidth: minimalMenu ? 'auto' : 550, // ปรับ minWidth ตาม mode
+            flex: '0 0 auto'
+          }}
+        />
+        <Avatar
+          src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
+          icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+          style={{ 
+            cursor: "pointer", 
+            marginLeft: 16,
+            flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
+          }}
+        />
+      </div>
     </Header>
   );
 };
 
-export default CoopMatchHeader;
+export default CoopMatchHeaderDefault;

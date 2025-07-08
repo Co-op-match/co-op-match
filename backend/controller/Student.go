@@ -77,6 +77,10 @@ func GetStudentByUserID(c *gin.Context) {
 		Preload("Education.Program").
 		Preload("Gender").
 		Preload("Address").
+		Preload("Address.Postcode").
+		Preload("Address.Province").
+		Preload("Address.SubDistrict").
+		Preload("Address.District").
 		Preload("StudentSkill").
 		Preload("StudentInterest").
 		Where("user_id = ?", UserID).

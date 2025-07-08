@@ -2,11 +2,15 @@
   background-color: #e3f2fd;
   min-height: 100vh;
   padding: 24px;
+  justify-content: center;
+  align-items: center;
+  display: flex
 }
 
 .add-student-content {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
 }
 
@@ -22,10 +26,20 @@
   padding: 50px;
   padding-top : 15px;
   border-radius: 20px;
-  width: 90%;
-  max-width: 850px;
+  width: 900px;     
+  height: auto;      /* เดิมคือ 90% */
+  max-width: 1000px;   /* เดิมคือ 850px */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
+.step-card {
+  background: #fff;
+  border: none;         /* ลบเส้นขอบออก */
+  box-shadow: none;     /* ลบเงาออก */
+  border-radius: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
 
 .add-student-steps {
   margin-bottom: 24px;
@@ -78,4 +92,14 @@
 .add-student-submit-button {
   width: 100%;
   margin-top: 24px;
+}
+
+.form-footer {
+  position: sticky;
+  bottom: 0;
+  background-color: white; /* เพื่อไม่ให้โปร่ง */
+  padding-top: 16px;
+  margin-top: 32px;
+  margin-bottom: 0px;
+  z-index: 10;
 }

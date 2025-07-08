@@ -341,6 +341,15 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
     throw error.response?.data || error.message;
   }
 }
+ async function GetAllProvinces() {
+  try {
+    const res = await axios.get(`${apiUrl}/address/provinces`, requestOptions);
+    return res.data; 
+  } catch (error: any) {
+    console.error("Failed to fetch EducationLevel:", error);
+    throw error.response?.data || error.message;
+  }
+}
 
 //======================================= Company ============================================
 export async function GetAllCompany() {
@@ -394,6 +403,7 @@ export {
   UpdateEducation,
   GetUniversity,
   GetAllEducationLevel,
+  GetAllProvinces
 
 
 };
