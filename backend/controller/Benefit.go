@@ -14,7 +14,6 @@ func GetAllBenefits(c *gin.Context) {
 	var benefits []entity.Benefit
 
 	db.Find(&benefits)
-
 	c.JSON(http.StatusOK, benefits)
 }
 

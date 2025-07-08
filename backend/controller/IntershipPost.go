@@ -212,6 +212,7 @@ func GetInternshipPostById(c *gin.Context) {
 		Preload("WorkMode").
 		Preload("StatusPost").
 		Preload("Benefit").
+		Preload("CompanyRequiredSkills.Skill").
 		First(&internshipPost, internshipPostID)
 
 	if result.Error != nil {
@@ -302,6 +303,7 @@ func GetPostsByCompanyID(c *gin.Context) {
 		Preload("WorkDay").
 		Preload("WorkMode").
 		Preload("Benefit").
+		Preload("CompanyRequiredSkills.Skill"). // ✅ preload ทักษะที่ต้องการของแต่ละโพสต์
 		Where("company_id = ?", id).
 		Find(&posts).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

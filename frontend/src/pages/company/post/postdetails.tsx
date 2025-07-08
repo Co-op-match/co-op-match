@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Typography, Divider, Button, Row, Col } from 'antd';
+import { Card, Typography, Button } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
 import { GetPostById } from '../../../services/https/post/index';
 // import { GetPostByCompanyId } from '../../../services/https/post/index';
@@ -20,7 +20,7 @@ const PostDetails = () => {
       GetPostById(Number(id)).then((res) => {
         if (res?.data) setPost(res.data);
 
-        
+
       });
 
     }
@@ -70,8 +70,8 @@ const PostDetails = () => {
             {[
               post?.location_detail,
               post?.subdistrict,
+              post?.district,
               post?.province,
-              post?.location_province,
             ]
               .filter(Boolean) // ลบ null/undefined
               .join(' / ')}
@@ -100,7 +100,16 @@ const PostDetails = () => {
           }
         />
 
-        <Section title="คุณสมบัติผู้สมัคร" content={post?.qualifications} />
+        <Section
+          title="คุณสมบัติผู้สมัคร"
+          content={
+            post?.company_required_skills
+              ?.map((rel: any) => rel?.Skill?.skill_name)
+              .filter(Boolean)
+              .join(', ') || '-'
+          }
+        />
+
         <Section title="เกรดขั้นต่ำ" content={post?.min_gpa} />
         <Section title="ค่าตอบแทน" content={post?.Stipend?.stipend} />
         <Section title="สิทธิประโยชน์" content={post?.Benefit?.benefit_name} />
@@ -138,7 +147,7 @@ const PostDetails = () => {
               .join(' / ')}
           </Text>
         </div>
-        
+
 
       </div>
     </div>

@@ -133,9 +133,6 @@ const JobPostings = () => {
     }
   };
 
-
-
-
   // Columns for the table
   const columns = [
     {
@@ -146,13 +143,12 @@ const JobPostings = () => {
         <Button
           type="link"
           style={{ color: '#3399FF' }}
-          onClick={() => navigate(`/post-detail/${record.id}`)}
+          onClick={() => navigate(`/post/${record.id}`)} // ✅ แก้ตรงนี้
         >
           {text}
         </Button>
       ),
     },
-
     {
       title: 'บริษัท',
       dataIndex: 'company_name',

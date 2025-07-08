@@ -97,7 +97,7 @@ function App() {
           <Route
             path="/post/:id"
             element={
-              <ProtectedRoute allowedRoles={[1, 2, 3]}>
+              <ProtectedRoute allowedRoles={[2]}>
                 <PostDetails />
               </ProtectedRoute>
             }

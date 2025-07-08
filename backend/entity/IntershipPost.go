@@ -43,4 +43,5 @@ type IntershipPost struct {
 
 	Applications []Application `gorm:"foreignKey:IntershipPostID"` // one-to-many
 
+	CompanyRequiredSkills []CompanyRequiredSkill `gorm:"foreignKey:IntershipPostID" json:"company_required_skills"`
 }

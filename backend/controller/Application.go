@@ -72,7 +72,7 @@ func ListApplications(c *gin.Context) {
             applications.internship_post_id, 
             internship_posts.post_name
         `).
-		Joins("left join internship_posts on internship_posts.id = applications.internship_post_id").
+		Joins("left join intership_posts on intership_posts.id = applications.intership_post_id").
 		Scan(&applications)
 
 	if results.Error != nil {
