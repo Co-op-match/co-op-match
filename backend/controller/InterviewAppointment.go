@@ -18,7 +18,6 @@ func CreateInterviewAppointment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	// ตรวจสอบว่า CompanyID และ StudentID มีอยู่ในฐานข้อมูลหรือไม่
 	var company entity.Company
 	db := config.DB()
