@@ -11,6 +11,7 @@ import (
 // GET /status_posts - List all status posts
 func GetAllStatusPosts(c *gin.Context) {
 	db := config.DB()
+
 	var statusPosts []entity.StatusPost
 
 	db.Find(&statusPosts)
