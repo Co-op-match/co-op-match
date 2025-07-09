@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 // import { GetApplications, UpdateApplication } from '../../../services/https/Application/index';
 // เปลี่ยนเป็น
-import CoopMatchHeader from '../../component/CoopMatchHeader';
+import CompanyHeader from '../../Component/CompanyHeader';
 
 
 interface ApplicationInterface {
@@ -98,7 +98,7 @@ const Dashboard = () => {
     return (
         
         <div style={containerStyle}>
-            <CoopMatchHeader  />
+            <CompanyHeader  />
             {/* สรุปผลทั้งหมด */}
             <div style={summaryCardStyle}>
                 <h3 style={headingStyle}>สรุปผลคำขอ</h3>
