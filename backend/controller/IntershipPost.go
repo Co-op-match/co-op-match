@@ -79,11 +79,10 @@ func CreateInternshipPost(c *gin.Context) {
 		Quantity:        internshipPost.Quantity,
 		MinGpa:          internshipPost.MinGpa,
 		CreatedAt:       internshipPost.CreatedAt,
-
-		LocationDetail: internshipPost.LocationDetail,
-		Subdistrict:    internshipPost.Subdistrict,
-		District:       internshipPost.District,
-		Province:       internshipPost.Province,
+		LocationDetail:  internshipPost.LocationDetail,
+		Subdistrict:     internshipPost.Subdistrict,
+		District:        internshipPost.District,
+		Province:        internshipPost.Province,
 
 		JobTypeID:    internshipPost.JobTypeID,
 		JobType:      jobType,
