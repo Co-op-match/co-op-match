@@ -9,5 +9,4 @@ type Benefit struct {
 	Benefit string `json:"benefit"`
 
 	IntershipPosts []IntershipPost `gorm:"foreignKey:BenefitID"` // One-to-Many
-
 }
