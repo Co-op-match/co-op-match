@@ -16,6 +16,9 @@ import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
 import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
 import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
+import CompanyPostPage from './pages/company/post/post';
+import PostDetailsStudent from './pages/Student/Application/Post';
+
 
 
 function App() {
@@ -78,6 +81,15 @@ function App() {
             }
           />
           <Route
+            path="/student/post-student"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <PostDetailsStudent />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/company/dashboard"
             element={
               <ProtectedRoute allowedRoles={[2]}>
@@ -99,6 +111,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company/post"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CompanyPostPage />
               </ProtectedRoute>
             }
           />

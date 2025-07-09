@@ -1,455 +1,500 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Input, message, Form, Select, InputNumber, Row, Col } from 'antd';
-import axios from 'axios';
-import { GetWorkModes, GetWorkDays, GetStipends, GetJobTypes, GetStatusPosts, GetBenefits } from '../../../services/https/post/index'; // เพิ่มการ import ฟังก์ชันที่ดึงข้อมูลจาก API
+import React, { useEffect, useState } from 'react';
+import {
+  Layout,
+  Card,
+  Typography,
+  Button,
+  Table,
+  Tag,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Row,
+  Col,
+  message,
+} from 'antd';
+import CompanyHeader from '../../Component/CompanyHeader';
 import { useNavigate } from 'react-router-dom';
+import { GetPostByCompanyId } from '../../../services/https/post';
+import { type InternshipPostInterface } from '../../../interface/IIntershipPost';
+import {
+  GetJobTypes,
+  GetStipends,
+  GetWorkDays,
+  GetWorkModes,
+  GetBenefits,
+} from '../../../services/https/post';
+import axios from 'axios';
+import { GetAllProvinces, GetAllSkill } from '../../../services/https';
+import type { SkillInterface } from '../../../interfaces/Skill';
 
-
-// Define the interface for Job Post data
-interface JobPost {
-  id: number;
-  post_name: string;
-  company_name: string;
-  post_description: string;
-  qualifications: string;
-  company_id: number;
-  quantity: number;
-  location: string;
-  district: string;
-  province: string;
+interface SelectOption {
+  label: string;
+  value: string | number;
 }
 
-// List of all 77 provinces in Thailand (alphabetical order)
-const provinces = [
-  'กระบี่', 'กรุงเทพมหานคร', 'กาญจนบุรี', 'กาฬสินธุ์', 'กำแพงเพชร', 'ขอนแก่น', 'จันทบุรี', 'ฉะเชิงเทรา',
-  'ชัยนาท', 'ชัยภูมิ', 'ชุมพร', 'เชียงราย', 'เชียงใหม่', 'ตรัง', 'ตราด', 'ตาก', 'นครนายก', 'นครปฐม',
-  'นครพนม', 'นครราชสีมา', 'นครศรีธรรมราช', 'นครสวรรค์', 'นนทบุรี', 'นราธิวาส', 'น่าน', 'ปทุมธานี',
-  'ประจวบคีรีขันธ์', 'ปราจีนบุรี', 'ปัตตานี', 'พะเยา', 'พังงา', 'พิจิตร', 'พิษณุโลก', 'เพชรบุรี',
-  'เพชรบูรณ์', 'แพร่', 'ภูเก็ต', 'มหาสารคาม', 'มุกดาหาร', 'แม่ฮ่องสอน', 'ยโสธร', 'ระยอง', 'ราชบุรี',
-  'ลพบุรี', 'ลำปาง', 'ลำพูน', 'เลย', 'ศรีสะเกษ', 'สกลนคร', 'สงขลา', 'สตูล', 'สมุทรปราการ', 'สมุทรสงคราม',
-  'สมุทรสาคร', 'สระแก้ว', 'สระบุรี', 'สิงห์บุรี', 'สุพรรณบุรี', 'สุราษฎร์ธานี', 'สุรินทร์', 'สตูล', 'หนองคาย',
-  'หนองบัวลำภู', 'อำนาจเจริญ', 'อุดรธานี', 'อุทัยธานี', 'อุบลราชธานี', 'อ่างทอง', 'ยะลา', 'ร้อยเอ็ด',
-  'ลำพูน', 'ประจวบคีรีขันธ์', 'ราชบุรี', 'สมุทรปราการ', 'สงขลา', 'ปทุมธานี', 'พระนครศรีอยุธยา', 'ปราจีนบุรี',
-];
+interface SubDistrict {
+  ID: number;
+  name_th: string;
+  Postcode?: {
+    ID: number;
+    post_code: string;
+  };
+}
 
-const JobPostings = () => {
-  const [visible, setVisible] = useState(false); // Control modal visibility for post details
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false); // Control modal visibility for adding new post
-  const [selectedPost, setSelectedPost] = useState<JobPost | null>(null); // Store selected post details
-  const [jobPosts, setJobPosts] = useState<JobPost[]>([]); // Store job posts fetched from API
-  const [workModes, setWorkModes] = useState([]); // Store work modes
-  const [workDays, setWorkDays] = useState([]); // Store work days
-  const [stipends, setStipends] = useState([]); // Store stipends
-  const [jobTypes, setJobTypes] = useState([]); // Store job types
-  const [statusPosts, setStatusPosts] = useState([]); // Store status posts
-  const [benefits, setBenefits] = useState([]);
+interface District {
+  ID: number;
+  name_th: string;
+  SubDistricts: SubDistrict[];
+}
+
+interface Province {
+  ID: number;
+  name_th: string;
+  Districts: District[];
+}
+
+
+
+const { Header, Content } = Layout;
+const { Title } = Typography;
+
+const CompanyDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [posts, setPosts] = useState<InternshipPostInterface[]>([]);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
+  const [jobTypes, setJobTypes] = useState<any[]>([]);
+  const [stipends, setStipends] = useState<any[]>([]);
+  const [workDays, setWorkDays] = useState<any[]>([]);
+  const [workModes, setWorkModes] = useState<any[]>([]);
+  const [benefits, setBenefits] = useState<any[]>([]);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [skills, setSkills] = useState<SkillInterface[]>([]);
 
+  const [provinceOptions, setProvinceOptions] = useState<SelectOption[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<SelectOption[]>([]);
+  const [subdistrictOptions, setSubdistrictOptions] = useState<SelectOption[]>([]);
 
-  const [form] = Form.useForm(); // Form instance for adding a new post
+  const [rawProvinces, setRawProvinces] = useState<Province[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number>();
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number>();
+  const [selectedSubdistrict, setSelectedSubdistrict] = useState<SubDistrict | null>(null);
 
-  // Fetch data for job posts and other necessary data when component mounts
-  useEffect(() => {
-    const fetchJobPosts = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/getpost'); // ✅ แก้ตรงนี้
-        console.log('Fetched job posts:', response.data);
-
-        if (Array.isArray(response.data)) {
-          setJobPosts(response.data);
-        } else {
-          message.error('รูปแบบข้อมูล job post ไม่ถูกต้อง');
-        }
-      } catch (error) {
-        message.error('ไม่สามารถดึงข้อมูลโพสต์งานจากเซิร์ฟเวอร์ได้');
-      }
-    };
-
-
-
-    const fetchWorkModes = async () => {
-      const response = await GetWorkModes();
-      console.log(response)
-      setWorkModes(response);
-    };
-
-    const fetchWorkDays = async () => {
-      const response = await GetWorkDays();
-      setWorkDays(response);
-    };
-
-    const fetchStipends = async () => {
-      const response = await GetStipends();
-      setStipends(response);
-    };
-
-    const fetchJobTypes = async () => {
-      const response = await GetJobTypes();
-      setJobTypes(response);
-    };
-
-    const fetchStatusPosts = async () => {
-      const response = await GetStatusPosts();
-      setStatusPosts(response);
-    };
-
-    const fetchBenefit = async () => {
-      const response = await GetBenefits();
-      setBenefits(response);
-    };
-
-    fetchJobPosts();
-    fetchWorkModes();
-    fetchWorkDays();
-    fetchStipends();
-    fetchJobTypes();
-    fetchStatusPosts();
-    fetchBenefit();
-  }, []);
-
-  // Handle adding a new post
-  const handleAddPost = async (values: any) => {
-    values.StatusPostID = 1; // 🟢 บังคับค่าแบบไม่ให้ผู้ใช้เลือก
-
-    console.log("👉 ค่าที่จะส่ง:", values);
-
-    try {
-      const response = await axios.post('http://localhost:8000/post', values);
-      if (response.status >= 200 && response.status < 300) {
-        message.success('โพสต์งานใหม่ถูกบันทึกสำเร็จ!');
-        form.resetFields();
-        setIsAddModalVisible(false);
-
-        // ✅ รีโหลดหน้า
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
-        message.error('เกิดข้อผิดพลาดในการบันทึกโพสต์งาน');
-      }
-    } catch (error) {
-      message.error('ไม่สามารถบันทึกโพสต์งานได้');
-    }
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/sign-in");
   };
 
-  // Columns for the table
-  const columns = [
+  const realColumns = [
     {
-      title: 'ชื่อโพสต์',
+      title: 'ตำแหน่งงาน',
       dataIndex: 'post_name',
       key: 'post_name',
-      render: (text: string, record: JobPost) => (
-        <Button
-          type="link"
-          style={{ color: '#3399FF' }}
-          onClick={() => navigate(`/post/${record.id}`)} // ✅ แก้ตรงนี้
-        >
-          {text}
-        </Button>
+      render: (text: string, record: InternshipPostInterface) => (
+        <Button type="link" onClick={() => navigate(`/post  /${record.ID}`)}>{text}</Button>
       ),
     },
     {
-      title: 'บริษัท',
-      dataIndex: 'company_name',
-      key: 'company_name',
+      title: 'จำนวนผู้สมัคร',
+      dataIndex: 'applicants',
+      key: 'applicants',
+      render: (applicants: number) => applicants ?? 0,
     },
     {
-      title: 'จำนวนที่รับ',
-      dataIndex: 'quantity',
-      key: 'quantity',
+      title: 'สถานะ',
+      dataIndex: 'StatusPost',
+      key: 'status',
+      render: (statusObj: { status_post: string }) => {
+        const status = statusObj?.status_post; // ✅ ถูกต้อง
+
+        let color = 'default';
+        let text = status;
+
+        if (status === 'Open') {
+          color = 'green';
+          text = 'เปิดรับสมัคร';
+        } else if (status === 'Closed') {
+          color = 'red';
+          text = 'ปิดรับสมัคร';
+        } else if (status === 'Pending Approval') {
+          color = 'orange';
+          text = 'รอตรวจสอบ';
+        }
+
+        return <Tag color={color}>{text}</Tag>;
+      }
+      ,
     },
+
+    {
+      title: 'จัดการ',
+      key: 'action',
+      render: (_: any, record: InternshipPostInterface) => {
+        console.log('record:', record); // 👈 ดู output ว่ามี id ไหม
+        return (
+          <Button
+            type="primary"
+            onClick={() => navigate(`/post/${record.ID}`)}
+          >
+            ดูใบสมัคร
+          </Button>
+        );
+      },}      
   ];
+
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const res = await GetAllProvinces();
+        const data = res.data || res;
+        setRawProvinces(data);
+        console.log("✅ data:", data);
+        setProvinceOptions(
+          data.map((p: any) => ({
+            label: p.name_th,
+            value: Number(p.ID),
+          }))
+        );
+      } catch (error) {
+        console.error('โหลดจังหวัดล้มเหลว:', error);
+      }
+    };
+
+    loadProvinces();
+  }, []);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const skillsData = await GetAllSkill();
+
+        setSkills(skillsData);
+
+        console.log(skillsData)
+
+      } catch {
+        messageApi.error({
+          content: 'โหลดข้อมูลทักษะหรือความสนใจไม่สำเร็จ',
+          style: { marginTop: '20vh' },
+          duration: 3,
+        });
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
+  useEffect(() => {
+    const companyId = localStorage.getItem("id");
+    if (companyId) {
+      GetPostByCompanyId(Number(companyId)).then((res) => {
+        if (Array.isArray(res?.data)) {
+          // เพิ่ม mock applicants และ status
+          const postsWithMock = res.data.map((post: any) => ({
+            ...post,
+            applicants: Math.floor(Math.random() * 10),
+            status: 'เปิดรับสมัคร',
+          }));
+          setPosts(postsWithMock);
+        } else {
+          console.error("โพสต์ไม่อยู่ในรูปแบบ array:", res?.data);
+          setPosts([]);
+        }
+      });
+    }
+
+    GetJobTypes().then(res => setJobTypes(res || []));
+    GetStipends().then(res => setStipends(res || []));
+    GetWorkDays().then(res => setWorkDays(res || []));
+    GetWorkModes().then(res => setWorkModes(res || []));
+    GetBenefits().then(res => setBenefits(res || []));
+
+    
+  }, []);
+
+  const handleAddPost = async (values: any) => {
+    const companyId = localStorage.getItem("id");
+    if (!companyId) {
+      message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
+      return;
+    }
+  
+    values.StatusPostID = 3;
+    values.CompanyID = Number(companyId);
+  
+    // 🔁 ดึงชื่อจาก rawProvinces ก่อนส่ง
+    const selectedProvince = rawProvinces.find(p => p.name_th === values.province);
+    const selectedDistrict = selectedProvince?.Districts?.find(d => d.name_th === values.district);
+    const selectedSubdistrict = selectedDistrict?.SubDistricts?.find(s => s.ID === values.subdistrict_id);
+  
+    values.province = selectedProvince?.name_th;
+    values.district = selectedDistrict?.name_th;
+    values.subdistrict = selectedSubdistrict?.name_th;
+    values.post_code = selectedSubdistrict?.Postcode?.post_code;
+  
+    try {
+      const response = await axios.post('http://localhost:8000/post', values);
+      if (response.status >= 200 && response.status < 300) {
+        message.success("โพสต์งานใหม่ถูกบันทึกสำเร็จ!");
+        form.resetFields();
+        setIsAddModalVisible(false);
+  
+        const res = await GetPostByCompanyId(Number(companyId));
+        if (Array.isArray(res?.data)) {
+          const postsWithMock = res.data.map((post: any) => ({
+            ...post,
+            applicants: Math.floor(Math.random() * 10),
+          }));
+          setPosts(postsWithMock);
+        } else {
+          setPosts([]);
+          console.error("ผลลัพธ์จาก backend ไม่ใช่ array:", res?.data);
+        }
+      } else {
+        message.error("เกิดข้อผิดพลาดในการบันทึกโพสต์งาน");
+      }
+    } catch (error) {
+      console.error("❌ POST error:", error);
+      message.error("ไม่สามารถบันทึกโพสต์งานได้");
+    }
+  };
+
+  const handleProvinceChange = (provinceId: number) => {
+    console.log("✅ เลือกจังหวัด ID:", provinceId);
+    form.setFieldsValue({
+      province: provinceId,
+      district: undefined,
+      subdistrict: undefined,
+      post_code: undefined,
+    });
+
+    setSelectedProvinceId(provinceId);
+    setSelectedDistrictId(undefined);
+    setDistrictOptions([]);
+    setSubdistrictOptions([]);
+
+    const selectedProvince = rawProvinces.find((p) => Number(p.ID) === provinceId);
+    console.log("📌 ข้อมูลจังหวัดที่เลือก:", selectedProvince);
+    console.log("📌 Districts:", selectedProvince?.Districts);
+
+    if (Array.isArray(selectedProvince?.Districts)) {
+      setDistrictOptions(
+        selectedProvince.Districts.map((d: { ID: number; name_th: string }) => ({
+          label: d.name_th,
+          value: Number(d.ID),
+        }))
+      );      
+    }
+  };
+
+  const handleDistrictChange = (districtId: number) => {
+    console.log("✅ เลือกอำเภอ ID:", districtId);
+    form.setFieldsValue({
+      district: districtId,
+      subdistrict: undefined,
+      post_code: undefined,
+    });
+
+    setSelectedDistrictId(districtId);
+    setSubdistrictOptions([]);
+
+    const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
+    const selectedDistrict = selectedProvince?.Districts?.find((d: any) => Number(d.ID) === districtId);
+
+    console.log("📌 selectedDistrict:", selectedDistrict);
+    console.log("📌 SubDistricts:", selectedDistrict?.SubDistricts);
+
+    if (Array.isArray(selectedDistrict?.SubDistricts)) {
+      setSubdistrictOptions(
+        selectedDistrict.SubDistricts.map((s: { ID: number; name_th: string }) => ({
+          label: s.name_th,
+          value: Number(s.ID),
+        }))
+      );           
+    }
+  };
+
+  const handleSubdistrictChange = (subdistrictId: number) => {
+    console.log("✅ เลือกตำบล ID:", subdistrictId);
+  
+    const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
+    const selectedDistrict = selectedProvince?.Districts?.find((d: any) => d.ID === selectedDistrictId);
+    const selectedSubdistrict = selectedDistrict?.SubDistricts?.find((s: any) => s.ID === subdistrictId);
+  
+    console.log("📌 selectedSubdistrict:", selectedSubdistrict);
+    console.log("📌 Postcode ID:", selectedSubdistrict?.Postcode?.ID);
+  
+    if (selectedSubdistrict) {
+      setSelectedSubdistrict(selectedSubdistrict);
+  
+      form.setFieldsValue({
+        subdistrict: selectedSubdistrict.name_th,
+        district: selectedDistrict?.name_th,
+        province: selectedProvince?.name_th,
+        subdistrict_id: Number(subdistrictId),
+        post_code: selectedSubdistrict?.Postcode?.ID || undefined,
+      });
+    }
+  };
+  
 
 
   return (
-    <div style={containerStyle}>
-      <h2 style={headingStyle}>โพสต์รับสมัครฝึกงาน</h2>
+    <Layout style={{ minHeight: '100vh' }}>
+      <CompanyHeader />
+      <Header style={{ background: '#fff', padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Title level={3} style={{ margin: 0 }}>Company Dashboard</Title>
+        <Button type="primary" danger onClick={handleLogout}>Logout</Button>
+      </Header>
 
-      <Row justify="end" style={{ marginBottom: '20px' }}>
-        {/* Button to open add job post modal */}
-        <Button type="primary" onClick={() => setIsAddModalVisible(true)} style={buttonStyle}>
-          เพิ่มโพสต์
-        </Button>
-      </Row>
-
-      <Table
-        dataSource={jobPosts}
-        columns={columns}
-        rowKey="id"
-        pagination={false}
-        style={tableStyle}
-      />
-
-      {/* Modal for showing job post details */}
-      <JobPostModal
-        open={visible}
-        onCancel={() => setVisible(false)}
-        post={selectedPost}
-      />
-
-      {/* Modal for adding a new job post */}
-      <Modal
-        title="เพิ่มโพสต์"
-        open={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
-        footer={null}
-        style={{ borderRadius: '12px', width: '600px' }}
-      >
-        <Form
-          form={form}
-          onFinish={handleAddPost}
-          layout="vertical"
+      <Content style={{ margin: '16px' }}>
+        <Card
+          title="ตำแหน่งงานที่โพสต์ไว้"
+          extra={<Button type="primary" onClick={() => setIsAddModalVisible(true)}>เพิ่มโพสต์</Button>}
         >
-          <Form.Item
-            label="หัวข้อหรือตำแหน่งที่เปิดรับ"
-            name="post_name"
-            rules={[{ required: true, message: 'กรุณากรอกหัวข้อหรือตำแหน่งที่เปิดรับ' }]}
-          >
-            <Input placeholder="กรอกหัวข้อหรือตำแหน่งที่เปิดรับ" />
+          <Table dataSource={posts} columns={realColumns} rowKey="id" pagination={false} />
+        </Card>
+      </Content>
+
+      <Modal title="เพิ่มโพสต์" open={isAddModalVisible} onCancel={() => setIsAddModalVisible(false)} footer={null} width={720}>
+        <Form form={form} onFinish={handleAddPost} layout="vertical">
+          <Form.Item label="หัวข้อหรือตำแหน่งที่เปิดรับ" name="post_name" rules={[{ required: true, message: 'กรุณากรอกหัวข้อหรือตำแหน่งที่เปิดรับ' }]}>
+            <Input />
           </Form.Item>
 
-          <Form.Item
-            label="จำนวนที่รับ"
-            name="quantity"
-            rules={[{ required: true, message: 'กรุณากรอกจำนวนที่รับ' }]}
-          >
-            <InputNumber placeholder="กรอกจำนวนที่รับ" style={{ width: '100%' }} />
+          <Form.Item label="จำนวนที่รับ" name="quantity" rules={[{ required: true, message: 'กรุณากรอกจำนวนที่รับ' }]}>
+            <InputNumber style={{ width: '100%' }} />
           </Form.Item>
 
+          <Form.Item label="รายละเอียดงาน" name="post_description" rules={[{ required: true, message: 'กรุณากรอกรายละเอียดงาน' }]}>
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          {contextHolder}
           <Form.Item
-            label="รายละเอียดงาน"
-            name="post_description"
-            rules={[{ required: true, message: 'กรุณากรอกรายละเอียดงาน' }]}
+            label="ทักษะ"
+            name="skills"
+            validateTrigger="onSubmit"
+            rules={[{ required: true, message: 'กรุณาเลือกทักษะอย่างน้อย 1 รายการ' }]}
           >
-            <Input.TextArea rows={4} placeholder="กรอกรายละเอียดงาน" />
+            <Select mode="multiple" placeholder="เลือกทักษะ" allowClear>
+              {skills.map(skill => (
+                <Select.Option key={skill.ID} value={skill.ID}>
+                  {skill.skill_name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
-          <Form.Item
-            label="คุณสมบัติ"
-            name="qualifications"
-            rules={[{ required: true, message: 'กรุณากรอกคุณสมบัติ' }]}
-          >
-            <Input.TextArea rows={4} placeholder="กรอกคุณสมบัติเป็นข้อๆ" />
+          <Form.Item label="GPA" name="min_gpa" rules={[{ required: true, message: 'กรุณากรอก GPA' }]}>
+            <InputNumber min={0} max={4} step={0.01} style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item
-            label="เกรดเฉลี่ยขั้นต่ำ (GPA)"
-            name="min_gpa"
-            rules={[{ required: true, message: 'กรุณากรอกเกรดเฉลี่ยขั้นต่ำ' }]}
-          >
-            <InputNumber step={0.01} min={0} max={4} style={{ width: '100%' }} placeholder="ตัวอย่าง: 2.50" />
-          </Form.Item>
-
-          <Form.Item
-            label="ประเภทงาน"
-            name="JobTypeID"
-            rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}
-          >
+          <Form.Item label="ประเภทงาน" name="JobTypeID" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
             <Select placeholder="เลือกประเภทงาน">
-              {jobTypes.map((jt: any) => (
-                <Select.Option key={jt.ID} value={jt.ID}>
-                  {jt.job_type}
-                </Select.Option>
+              {jobTypes.map(j => (
+                <Select.Option key={j.ID} value={j.ID}>{j.job_type}</Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-
-          <Form.Item
-            label="ค่าตอบแทน"
-            name="StipendID"
-            rules={[{ required: true, message: 'กรุณาเลือกค่าตอบแทน' }]}
-          >
+          <Form.Item label="ค่าตอบแทน" name="StipendID" rules={[{ required: true, message: 'กรุณาเลือกค่าตอบแทน' }]}>
             <Select placeholder="เลือกค่าตอบแทน">
-              {stipends.map((s: any) => (
-                <Select.Option key={s.ID} value={s.ID}>
-                  {s.stipend}
-                </Select.Option>
+              {stipends.map(s => (
+                <Select.Option key={s.ID} value={s.ID}>{s.stipend}</Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-
-          <Form.Item
-            label="วันทำงาน"
-            name="WorkDayID"
-            rules={[{ required: true, message: 'กรุณาเลือกวันทำงาน' }]}
-          >
+          <Form.Item label="วันทำงาน" name="WorkDayID" rules={[{ required: true, message: 'กรุณาเลือกวันทำงาน' }]}>
             <Select placeholder="เลือกวันทำงาน">
-              {workDays.map((wd: any) => (
-                <Select.Option key={wd.ID} value={wd.ID}>
-                  {wd.work_day}
-                </Select.Option>
+              {workDays.map(w => (
+                <Select.Option key={w.ID} value={w.ID}>{w.work_day}</Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="รูปแบบการทำงาน"
-            name="WorkModeID"
-            rules={[{ required: true, message: 'กรุณาเลือกรูปแบบการทำงาน' }]}
-          >
+          <Form.Item label="รูปแบบการทำงาน" name="WorkModeID" rules={[{ required: true, message: 'กรุณาเลือกรูปแบบการทำงาน' }]}>
             <Select placeholder="เลือกรูปแบบการทำงาน">
-              {workModes.map((wm: any) => (
-                <Select.Option key={wm.ID} value={wm.ID}>
-                  {wm.work_mode}
-                </Select.Option>
+              {workModes.map(w => (
+                <Select.Option key={w.ID} value={w.ID}>{w.work_mode}</Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-
-          <Form.Item
-            label="สวัสดิการ"
-            name="benefit_id"
-            rules={[{ required: true, message: 'กรุณาเลือกสวัสดิการ' }]}
-          >
+          <Form.Item label="สวัสดิการ" name="benefit_id" rules={[{ required: true, message: 'กรุณาเลือกสวัสดิการ' }]}>
             <Select placeholder="เลือกสวัสดิการ">
-              {benefits.map((b: any) => (
-                <Select.Option key={b.ID} value={b.ID}>
-                  {b.benefit_name}
-                </Select.Option>
+              {benefits.map(b => (
+                <Select.Option key={b.ID} value={b.ID}>{b.benefit}</Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-
-
-          <h3 style={{ fontWeight: 'bold', marginTop: '20px' }}>ที่ตั้ง</h3>
+          <h3>ที่ตั้ง</h3>
           <Row gutter={16}>
+            
             <Col span={12}>
-              <Form.Item
-                label="รายละเอียด"
-                name="location"
-                rules={[{ required: true, message: 'กรุณากรอกรายละเอียดที่ตั้ง' }]}
-              >
-                <Input placeholder="กรอกรายละเอียดที่ตั้ง" />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item name="district" label="แขวง/ตำบล">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="province" label="เขต/อำเภอ">
-                <Input />
-              </Form.Item>
-            </Col>
-
-
-            <Col span={12}>
-              <Form.Item
-                label="จังหวัด"
-                name="location_province"
-                rules={[{ required: true, message: 'กรุณากรอกจังหวัด' }]}
-              >
+              <Form.Item label="จังหวัด" name="province" rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}>
                 <Select
                   showSearch
-                  placeholder="กรอกจังหวัด"
-                  optionFilterProp="children"
-                  filterOption={(input, option) => {
-                    if (option && typeof option.children === 'string') {
-                      const children = option.children as string;
-                      return children.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-                    }
-                    return false;
-                  }}
-                  allowClear
-                >
-                  {provinces.map((province, index) => (
-                    <Select.Option key={index} value={province}>
-                      {province}
-                    </Select.Option>
-                  ))}
-                </Select>
+                  options={provinceOptions}
+                  onChange={handleProvinceChange}
+                  placeholder="เลือกจังหวัด"
+                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="อำเภอ / เขต" name="district" rules={[{ required: true, message: 'กรุณาเลือกอำเภอ/เขต' }]}>
+                <Select
+                  showSearch
+                  options={districtOptions}
+                  onChange={handleDistrictChange}
+                  placeholder="เลือกอำเภอ / เขต"
+                  disabled={!districtOptions.length}
+                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="ตำบล / แขวง" name="subdistrict_id" rules={[{ required: true, message: 'กรุณาเลือกตำบล/แขวง' }]}>
+                <Select
+                  showSearch
+                  options={subdistrictOptions}
+                  onChange={handleSubdistrictChange}
+                  placeholder="เลือกตำบล / แขวง"
+                  disabled={!subdistrictOptions.length}
+                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="รหัสไปรษณีย์" name="post_code" rules={[{ required: true, message: 'กรุณาเลือกรหัสไปรษณีย์' }]}>
+                <Select
+                  disabled={!selectedSubdistrict?.Postcode}
+                  options={selectedSubdistrict?.Postcode ? [{ label: selectedSubdistrict.Postcode.post_code, value: selectedSubdistrict.Postcode.ID }] : []}
+                  placeholder="เลือกรหัสไปรษณีย์"
+                />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item>
-            <Row gutter={10} justify="end">
-              <Col span={8}>
-                <Button
-                  type="default"
-                  onClick={() => setIsAddModalVisible(false)}
-                  style={{ width: '50%' }}
-                >
-                  ยกเลิก
-                </Button>
-              </Col>
-              <Col span={8}>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  style={{ width: '50%' }}
-                >
-                  โพสต์
-                </Button>
-              </Col>
+            <Row justify="end" gutter={10}>
+              <Col span={8}><Button onClick={() => setIsAddModalVisible(false)} block>ยกเลิก</Button></Col>
+              <Col span={8}><Button type="primary" htmlType="submit" block>โพสต์</Button></Col>
             </Row>
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </Layout>
   );
 };
 
-// Modal for showing post details
-const JobPostModal = ({ visible, onCancel, post }: any) => {
-  if (!post) return null;
-
-  return (
-    <Modal
-      title="รายละเอียดโพสต์งาน"
-      open={visible}
-      onCancel={onCancel}
-      footer={[
-        <Button key="close" onClick={onCancel} style={buttonStyle}>
-          ปิด
-        </Button>,
-      ]}
-    >
-      <p><strong>หัวข้อหรือตำแหน่งที่เปิดรับ:</strong> {post.post_name}</p>
-      <p><strong>จำนวนที่รับ:</strong> {post.quantity}</p>
-      <p><strong>รายละเอียด:</strong> {post.post_description}</p>
-      <p><strong>คุณสมบัติ:</strong> {post.qualifications}</p>
-      <p><strong>รายละเอียดที่ตั้ง:</strong> {post.location}</p>
-      <p><strong>แขวง/ตำบล:</strong> {post.district}</p>
-      <p><strong>เขต/อำเภอ:</strong> {post.province}</p>
-      <p><strong>จังหวัด:</strong> {post.location_province}</p>
-    </Modal>
-  );
-};
-
-const containerStyle = {
-  backgroundColor: '#f0f8ff',
-  padding: '20px',
-  borderRadius: '12px',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-};
-
-const headingStyle = {
-  fontSize: '32px',
-  fontWeight: 'bold',
-  color: '#0066cc',
-  marginBottom: '40px',
-};
-
-const tableStyle = {
-  backgroundColor: '#ffffff',
-  borderRadius: '10px',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-};
-
-const buttonStyle = {
-  backgroundColor: '#0066cc',
-  color: 'white',
-  borderRadius: '6px',
-  padding: '10px 20px',
-  fontWeight: 'bold',
-};
-
-export default JobPostings;
+export default CompanyDashboard;

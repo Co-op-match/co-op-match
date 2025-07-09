@@ -34,7 +34,7 @@ func CreateApplication(c *gin.Context) {
 		ResumeUrl:       application.ResumeUrl,
 		SubmitAt:        application.SubmitAt,
 		IntershipPostID: application.IntershipPostID, // โยงความสัมพันธ์กับ IntershipPost
-		// IntershipPost:   internshipPost,              // โยงความสัมพันธ์กับ IntershipPost
+		IntershipPost:   internshipPost,              // โยงความสัมพันธ์กับ IntershipPost
 	}
 
 	// บันทึกข้อมูล Application

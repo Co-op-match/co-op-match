@@ -12,20 +12,20 @@ import {
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
 //import CoopMatchHeaderDefault from '../component/CoopMatchHeader';
 import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
-import { UserContext } from '../../components/UserContext'; 
+import { UserContext } from '../../components/UserContext';
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate(); // ใช้งาน hook
   const { logout } = useContext(UserContext);
-  
-    const handleLogout = () => {
-      // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
-      logout();
-      // redirect กลับไปหน้า login
-      navigate("/sign-in");
-    };
+
+  const handleLogout = () => {
+    // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
+    logout();
+    // redirect กลับไปหน้า login
+    navigate("/sign-in");
+  };
 
   // รายการงานทั้งหมด
   const jobData = [
@@ -78,14 +78,17 @@ const StudentDashboard: React.FC = () => {
       {applied ? (
         <Tag color="green">สมัครแล้ว</Tag>
       ) : (
-        <Button type="primary">สมัครงาน</Button>
+        <Button type="primary" onClick={() => navigate('/student/post-student')}>
+          สมัครงาน
+        </Button>
+
       )}
     </Card>
   );
 
   return (
-    <Layout style={{ minHeight: '100vh',background: '#f5f5f5' }}>
-      <CoopMatchHeaderDefault  />
+    <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+      <CoopMatchHeaderDefault />
       <Layout>
         <Header
           style={{
