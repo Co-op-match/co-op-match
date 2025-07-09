@@ -132,7 +132,7 @@ async function GetProvince() {
 }
 async function GetJobtype() {
   return await axios
-    .get(`${apiUrl}/jobtypes`, requestOptions)
+    .get(`${apiUrl}/job_types`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -144,19 +144,19 @@ async function GetStipends() {
 }
 async function GetWorkDay() {
   return await axios
-    .get(`${apiUrl}/workdays`, requestOptions)
+    .get(`${apiUrl}/work_days`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 async function GetWorkMode() {
   return await axios
-    .get(`${apiUrl}/workmodes`, requestOptions)
+    .get(`${apiUrl}/work_modes`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 async function GetBenefit() {
   return await axios
-    .get(`${apiUrl}/benefits`, requestOptions)
+    .get(`${apiUrl}/benefit`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }

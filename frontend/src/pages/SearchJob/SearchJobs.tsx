@@ -185,14 +185,15 @@ const SearchJobs: React.FC = () => {
 
     // Benefits filter
     if (filters.benefits.length > 0) {
-      filtered = filtered.filter(post => {
-        if (post.Benefits && Array.isArray(post.Benefits)) {
-          return filters.benefits.some((benefitLabel) =>
-            post.Benefits.some((benefit: { benefit: string }) => benefit.benefit === benefitLabel)
-          );
-        }
-        return false;
-      });
+      filtered = filtered.filter(post =>
+        post.Benefit && filters.benefits.includes(post.Benefit.benefit)
+      );
+    }
+    // Province filter
+    if (filters.province) {
+      filtered = filtered.filter(post =>
+        post.Company?.Address?.Province?.ID === filters.province
+      );
     }
 
     setFilteredPosts(filtered);
@@ -282,8 +283,11 @@ const SearchJobs: React.FC = () => {
         description={
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Space>
-              <EnvironmentOutlined />
               <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
+            </Space>
+            <Space>
+              <EnvironmentOutlined />
+              <Text style={{ color: '#434343' }}>{job.Company?.Address?.Province?.name_th}</Text>
             </Space>
             <Space>
               <CalendarOutlined />
