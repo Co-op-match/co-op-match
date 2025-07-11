@@ -129,6 +129,9 @@ func main() {
 			companyGroup.POST("", controller.CreateCompany)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
+			companyGroup.GET("/all-active", controller.GetAllActiveCompanies)
+			companyGroup.GET("/all-deleted", controller.GetAllDeletedCompany)
+			companyGroup.DELETE("/delete/:id", controller.DeleteCompany)
 		}
 				contactGroup := router.Group("/contact")
 		{

@@ -15,12 +15,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllActiveCompanies(c *gin.Context) {
-	var companies []entity.Company
+func GetAllCompany(c *gin.Context) {
+	var company []entity.Company
 
 	err := config.DB().
-		Preload("Address").
-		Preload("Admin").
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
@@ -29,31 +27,13 @@ func GetAllActiveCompanies(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to fetch companies",
+			"error":   "Failed to fetch students",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, companies)
-}
-
-func GetAllDeletedCompany(c *gin.Context) {
-	var companies []entity.Company
-	if err := config.DB().
-		Unscoped(). // ดึงรวม soft deleted
-		Where("deleted_at IS NOT NULL").
-		Preload("Contact").
-		Preload("IntershipPosts").
-		Preload("InterviewAppointments").
-		Preload("Reviews").
-		Preload("User.Verifications.StatusVerify").
-		Find(&companies).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get companies"})
-		return
-	}
-
-	c.JSON(http.StatusOK, companies)
+	c.JSON(http.StatusOK, company)
 }
 
 func GetCompanyByID(c *gin.Context) {
@@ -63,7 +43,6 @@ func GetCompanyByID(c *gin.Context) {
 	if err := config.DB().
 		Preload("Address").
 		Preload("Admin").
-		Preload("Contact").
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
@@ -170,4 +149,72 @@ func GetVerifyByUserId(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, verify)
+}
+
+func GetAllActiveCompanies(c *gin.Context) {
+	var companies []entity.Company
+
+	err := config.DB().
+		Preload("Address").
+		Preload("Admin").
+		Preload("Contact").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Reviews").
+		Preload("User.Verifications.StatusVerify").
+		Where("deleted_at IS NULL").
+		Find(&companies).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch companies",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, companies)
+}
+
+func GetAllDeletedCompany(c *gin.Context) {
+	var companies []entity.Company
+	if err := config.DB().
+		Unscoped(). // ดึงรวม soft deleted
+		Where("deleted_at IS NOT NULL").
+		Preload("Contact").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Reviews").
+		Preload("User.Verifications.StatusVerify").
+		Find(&companies).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get companies"})
+		return
+	}
+
+	c.JSON(http.StatusOK, companies)
+}
+
+func DeleteCompany(c *gin.Context) {
+	id := c.Param("id")
+
+	// Step 1: หา company ตาม id
+	var company entity.Company
+	if err := config.DB().First(&company, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "company not found"})
+		return
+	}
+
+	// Step 2: ลบ company
+	if err := config.DB().Delete(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete company"})
+		return
+	}
+
+	// Step 3: ลบ user ที่เกี่ยวข้อง
+	if err := config.DB().Delete(&entity.User{}, company.UserID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "soft deleted"})
 }

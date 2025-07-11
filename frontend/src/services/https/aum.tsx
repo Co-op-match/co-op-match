@@ -35,7 +35,7 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
 // สำหรับ student, company => ไม่เห็นข้อมูลบริษัทที่โดนลบ
 export async function GetAllActiveCompanies() {
   return await api
-    .get(`${apiUrl}/company`, requestOptions)
+    .get(`${apiUrl}/company/all-active`, requestOptions)
     .then((res) => res)
     .catch((e) => {
       console.error("Error fetching data:", e);
