@@ -11,13 +11,16 @@ import ProtectedRoute from "./components/ProtectedRoute"; // 👈 เพิ่�
 import SearchJobs from "./pages/SearchJob/SearchJobs";
 import CheckUser from "./components/CheckUser";
 import { UserProvider } from "./components/UserContext";
-import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
+// import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
 import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
 import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
+import AddCompanyForm from "./pages/Profile/Company/AddCompany/AddCompanyForm";
+import CompanyProfile from "./pages/Profile/Company/Company";
 import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
+
 
 
 
@@ -65,10 +68,28 @@ function App() {
             }
           />
           <Route
+            path="/company/profile"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CheckUser>
+                  <CompanyProfile />
+                </CheckUser>
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route
             path="/student/add-profile"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <AddressForm />
+              </ProtectedRoute>
+            }
+          /> */}
+           <Route
+            path="/company/add-company"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <AddCompanyForm />
               </ProtectedRoute>
             }
           />
