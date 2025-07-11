@@ -1,6 +1,7 @@
 import type { RoleInterface } from "./Role";
 import type { ProfileImageInterface } from "./ProfileImage";
 import type { StudentInterface } from "./Student";
+import type { CompanyInterface } from "./Company";
 export interface UserInterface {
   ID: number;
   Email: string;
@@ -9,4 +10,5 @@ export interface UserInterface {
   Role?: RoleInterface;
   ProfileImage?: ProfileImageInterface[];
   Student?: StudentInterface[];
+  Company?: CompanyInterface[];
 }

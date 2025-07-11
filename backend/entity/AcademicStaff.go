@@ -24,5 +24,7 @@ type AcademicStaff struct {
 	GenderID  uint   `json:"gender_id"`
 	Gender    Gender `gorm:"foreignKey:GenderID"`
 
-	Contacts []Contact `gorm:"foreignKey:AcademicStaffID"`
+	ContactID  uint   `json:"contact_id"`
+	Contact    Contact `gorm:"foreignKey:ContactID"`
+
 }

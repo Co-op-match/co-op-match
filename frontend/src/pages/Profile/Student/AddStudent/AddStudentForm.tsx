@@ -18,10 +18,10 @@ import {
 
 import type { GenderInterface } from '../../../../interfaces/Gender';
 import type { StudentInterface } from '../../../../interfaces/Student';
-import StepEducation from '../StudentFormSteps/StepEducation';
-import StepAddress from '../StudentFormSteps/StepAddress';
-import StepSkills from '../StudentFormSteps/StepSkills';
-import StepGeneralInfo from '../StudentFormSteps/StepGeneral';
+import StepEducation from './StudentFormSteps/StepEducation';
+import StepAddress from './StudentFormSteps/StepAddress';
+import StepSkills from './StudentFormSteps/StepSkills';
+import StepGeneralInfo from './StudentFormSteps/StepGeneral';
 import './AddStudentForm.css';
 import { useNavigate } from 'react-router-dom';
 import CoopMatchHeaderDefault from '../../../component/CoopMatchHeaderDefault';
@@ -244,7 +244,7 @@ const onFinish = async () => {
               items={steps.map((step) => ({ title: step.title }))}
             />
 
-          <Form layout="vertical" form={form} onFinish={onFinish} style={{ marginTop: 24 }}>
+          <Form layout="vertical" form={form} style={{ marginTop: 24 }}>
             <Card className="step-card">
               {steps[currentStep].content}
             </Card>
@@ -261,14 +261,12 @@ const onFinish = async () => {
                 {currentStep < steps.length - 1 ? (
                   <Button type="primary" onClick={handleNext}>ถัดไป</Button>
                 ) : (
-                  <Button type="primary" htmlType="submit">บันทึก</Button>
+                  <Button type="primary" onClick={onFinish} >บันทึก</Button>
                 )}
               </div>
             </div>
           </Form.Item>
-
-                    </Form>
-
+          </Form>
           </Card>
         </Content>
       </Layout>

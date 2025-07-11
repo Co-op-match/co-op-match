@@ -1,0 +1,160 @@
+.company-layout {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  min-height: 100vh;
+  min-width: 100vw;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 1) 0%, rgba(207, 234, 250, 1) 50%, rgba(159, 218, 252, 1) 100%);
+}
+
+.company-profile-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.company-profile-text {
+  font-weight: 700;
+  font-size: 28px;
+  color: #0d47a1;
+  white-space: nowrap;
+  margin-right: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.company-profile-line {
+  flex: 1;
+  height: 3px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+.company-main-section {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.company-left-card,
+.company-review-card,
+.company-post-list-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08); /* ใช้เงาสีกรม */
+  padding: 24px;
+}
+
+.company-left-card {
+  flex: 2;
+  min-width: 400px;
+}
+
+.company-review-card {
+  flex: 1;
+  min-width: 320px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.company-post-list-card {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.company-profile-container {
+  display: flex;
+  gap: 40px;
+  align-items: stretch;
+  padding: 24px;
+  flex-wrap: wrap;
+}
+
+.company-profile-left {
+  text-align: center;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.company-logo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.company-logo-edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #1890ff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 0 2px white;
+  cursor: pointer;
+}
+.company-profile-text{
+   color: #0d47a1;
+   margin-top: 0px;
+}
+.company-name {
+  color: #0d47a1;
+} 
+
+.company-profile-details {
+  flex: 1;
+}
+
+.company-divider-section {
+  margin-top: 16px;
+}
+
+.company-divider {
+  height: 1px;
+  background-color: #d9d9d9;
+  border: none;
+  border-radius: 4px;
+  margin: 16px 0;
+  filter: blur(0.5px);
+}
+
+.company-vertical-divider {
+  width: 1px;
+  background-color: #d9d9d9;
+  border: none;
+  border-radius: 4px;
+  margin: 0 16px;
+  align-self: stretch;
+  filter: blur(0.5px);
+}
+
+.ant-descriptions-item-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.company-review-section {
+  width: 100%;
+  padding: 0;
+}
+
+.verify-badge {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4caf50;
+  background: #e8f5e9;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+}

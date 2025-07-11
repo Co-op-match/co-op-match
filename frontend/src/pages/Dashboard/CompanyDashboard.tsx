@@ -8,6 +8,7 @@ import {
   Tag,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import CompanyHeader from '../component/CompanyHeader';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -79,19 +80,7 @@ const CompanyDashboard: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Layout>
-        <Header style={{
-          background: '#fff',
-          padding: '0 16px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <Title level={3} style={{ margin: 0 }}>Company Dashboard</Title>
-          <Button type="primary" danger onClick={handleLogout}>
-            Logout
-          </Button>
-        </Header>
-
+      <CompanyHeader/>
         <Content style={{ margin: '16px' }}>
           <Card title="ตำแหน่งงานที่เปิดรับสมัคร">
             <Table

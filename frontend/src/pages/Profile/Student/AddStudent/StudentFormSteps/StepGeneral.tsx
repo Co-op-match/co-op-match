@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, DatePicker, Radio, Upload, Avatar, Row, Col, message, type FormInstance } from 'antd';
 import { UserOutlined, EditOutlined } from '@ant-design/icons';
-import { GetAllGender } from '../../../../services/https';
-import type { GenderInterface } from '../../../../interfaces/Gender';
+import { GetAllGender } from '../../../../../services/https';
+import type { GenderInterface } from '../../../../../interfaces/Gender';
 
 export interface StepGeneralInfoProps {
   form: FormInstance<any>;

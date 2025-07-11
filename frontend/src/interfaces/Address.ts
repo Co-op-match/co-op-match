@@ -18,7 +18,7 @@ export interface AddressInterface {
   District?: DistrictInterface;
 
   subdistrict_id: number;
-  Subdistrict?: SubDistrictInterface;
+  SubDistrict?: SubDistrictInterface;
 
   postcode_id: number;
   Postcode?: PostcodeInterface;
