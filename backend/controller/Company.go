@@ -1,7 +1,12 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
@@ -20,9 +25,7 @@ func GetAllActiveCompanies(c *gin.Context) {
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
 		Preload("Reviews").
-		Preload("User.Verifications.StatusVerify").
-		Where("deleted_at IS NULL").
-		Find(&companies).Error
+		Find(&company).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -55,18 +58,20 @@ func GetAllDeletedCompany(c *gin.Context) {
 
 func GetCompanyByID(c *gin.Context) {
 	id := c.Param("id")
-	var company []entity.Company
+	var company entity.Company
 
 	if err := config.DB().
 		Preload("Address").
 		Preload("Admin").
 		Preload("Contact").
-		Preload("IntershipPost").
-		Preload("InterviewAppointment").
-		Preload("Review").
+		Preload("Contact").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Reviews").
 		First(&company, id).Error; err != nil {
+
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Student not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
@@ -76,50 +81,93 @@ func GetCompanyByID(c *gin.Context) {
 	c.JSON(http.StatusOK, company)
 }
 
-func DeleteCompany(c *gin.Context) {
-	id := c.Param("id")
+func CreateCompany(c *gin.Context) {
+	// รับค่าจาก form
+	companyName := c.PostForm("company_name")
+	userIDStr := c.PostForm("user_id")
+	addressIDStr := c.PostForm("address_id")
+	adminIDStr := c.PostForm("admin_id")
+	contactIDStr := c.PostForm("contact_id")
 
-	// Step 1: หา company ตาม id
-	var company entity.Company
-	if err := config.DB().First(&company, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "company not found"})
+	if companyName == "" || userIDStr == "" || addressIDStr == "" || adminIDStr == "" || contactIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required fields"})
 		return
 	}
 
-	// Step 2: ลบ company
-	if err := config.DB().Delete(&company).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete company"})
+	// แปลงเป็นตัวเลข
+	userID, _ := strconv.ParseUint(userIDStr, 10, 64)
+	addressID, _ := strconv.ParseUint(addressIDStr, 10, 64)
+	contactID, _ := strconv.ParseUint(contactIDStr, 10, 64)
+
+	// รับไฟล์ logo
+	file, err := c.FormFile("logo")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Logo file is required"})
 		return
 	}
 
-	// Step 3: ลบ user ที่เกี่ยวข้อง
-	if err := config.DB().Delete(&entity.User{}, company.UserID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
+	// เตรียม path และบันทึกไฟล์
+	uploadDir := "public/uploads/companyLogo"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		_ = os.MkdirAll(uploadDir, os.ModePerm)
+	}
+
+	filename := fmt.Sprintf("%s-%s", time.Now().Format("20060102-150405"), file.Filename)
+	filePath := filepath.Join(uploadDir, filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo"})
+		return
+	}
+	relativePath := fmt.Sprintf("/uploads/companyLogo/%s", filename)
+
+	// สร้าง Company object
+	company := entity.Company{
+		CompanyName: companyName,
+		Logo:        relativePath,
+		UserID:      uint(userID),
+		AddressID:   uint(addressID),
+		ContactID:   uint(contactID),
+	}
+
+	// บันทึกลงฐานข้อมูล
+	if err := config.DB().Create(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create company"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "soft deleted"})
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Company created successfully",
+		"data":    company,
+	})
 }
 
-/* func SuspendCompany(c *gin.Context) {
-	id := c.Param("id")
+func GetCompanyByUserId(c *gin.Context) {
+	userID := c.Param("user_id")
 
 	var company entity.Company
-	if err := config.DB().Preload("User").First(&company, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัท"})
+	if err := config.DB().
+		Preload("Contact").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Address").
+		Preload("Address.Postcode").
+		Preload("Address.Province").
+		Preload("Address.SubDistrict").
+		Preload("Address.District").
+		Preload("Reviews").Where("user_id = ?", userID).First(&company).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัทที่เชื่อมกับ user_id นี้"})
 		return
 	}
+	c.JSON(http.StatusOK, company)
+}
 
-	if company.UserID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "บริษัทไม่มีบัญชีผู้ใช้"})
+func GetVerifyByUserId(c *gin.Context) {
+	userID := c.Param("user_id")
+
+	var verify entity.Verify
+	if err := config.DB().Preload("StatusVerify").Where("user_id = ?", userID).First(&verify).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัทที่เชื่อมกับ user_id นี้"})
 		return
 	}
-
-	if err := config.DB().Model(&entity.User{}).Where("id = ?", company.UserID).
-		Update("is_active", false).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถระงับบัญชีได้"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "ระงับบัญชีบริษัทแล้ว"})
-} */
+	c.JSON(http.StatusOK, verify)
+}

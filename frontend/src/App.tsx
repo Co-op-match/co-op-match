@@ -17,11 +17,17 @@ import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
 import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 import CheckUser from "./components/CheckUser";
 import { UserProvider } from "./components/UserContext";
-import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
+// import AddressForm from "./pages/Profile/Student/AddAddess/Addres";
 import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
 import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
+import AddCompanyForm from "./pages/Profile/Company/AddCompany/AddCompanyForm";
+import CompanyProfile from "./pages/Profile/Company/Company";
 import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
+import CompanyPostPage from './pages/company/post/post';
+import PostDetailsStudent from './pages/Student/Application/Post';
+
+
 
 
 function App() {
@@ -69,10 +75,28 @@ function App() {
             }
           />
           <Route
+            path="/company/profile"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CheckUser>
+                  <CompanyProfile />
+                </CheckUser>
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route
             path="/student/add-profile"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <AddressForm />
+              </ProtectedRoute>
+            }
+          /> */}
+           <Route
+            path="/company/add-company"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <AddCompanyForm />
               </ProtectedRoute>
             }
           />
@@ -84,6 +108,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/student/post-student"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <PostDetailsStudent />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/company/dashboard"
             element={
@@ -106,6 +139,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company/post"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CompanyPostPage />
               </ProtectedRoute>
             }
           />

@@ -31,7 +31,6 @@ func GetAllAdress(c *gin.Context) {
 	c.JSON(http.StatusOK, addresses)
 }
 
-
 func GetAddressByUserID(c *gin.Context) {
 	userID := c.Param("id")
 
@@ -70,13 +69,13 @@ func CreateAddressByRoleIDAndUserID(c *gin.Context) {
 	var updateErr error
 	switch roleID {
 	case 2: // company
-		var company entity.Company
-		if err := config.DB().Where("user_id = ?", userID).First(&company).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัท"})
+		// ตรวจสอบว่า user มีอยู่จริงหรือไม่
+		var user entity.User
+		if err := config.DB().Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบผู้ใช้"})
 			return
 		}
-		company.AddressID = address.ID
-		updateErr = config.DB().Save(&company).Error
+
 	case 3: // student
 		var student entity.Student
 		if err := config.DB().Where("user_id = ?", userID).First(&student).Error; err != nil {

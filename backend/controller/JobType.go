@@ -11,6 +11,7 @@ import (
 // GET /job_types - List all job types
 func GetAllJobTypes(c *gin.Context) {
 	db := config.DB()
+
 	var jobTypes []entity.JobType
 
 	db.Find(&jobTypes)

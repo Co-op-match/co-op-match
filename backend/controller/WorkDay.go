@@ -14,7 +14,6 @@ func GetAllWorkDays(c *gin.Context) {
 	var workDays []entity.WorkDay
 
 	db.Find(&workDays)
-
 	c.JSON(http.StatusOK, workDays)
 }
 

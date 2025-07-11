@@ -25,6 +25,7 @@ func GetWorkModeById(c *gin.Context) {
 
 	db := config.DB()
 	result := db.First(&workMode, id)
+
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Work mode not found"})
 		return

@@ -450,6 +450,7 @@ func createSeedData(db *gorm.DB) {
 			//BenefitID:       1,
 			WorkDayID:       1,
 			StipendID:       2,
+			JobTypeID:       1,
 		},
 		{
 			PostName:        "Data Science Intern",
@@ -464,6 +465,7 @@ func createSeedData(db *gorm.DB) {
 			//BenefitID:       3,
 			WorkDayID:       2,
 			StipendID:       3,
+			JobTypeID:       4,
 		},
 	}
 

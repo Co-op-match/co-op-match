@@ -2,15 +2,15 @@ import type { CompanyInterface } from "./Company";
 import type { StudentInterface } from "./Student";
 
 export interface InterviewAppointmentInterface {
-  id?: number;
-  appointment_date?: string;
-  status?: string;
-  mode?: string;
-  details?: string;
+  ID?: number;
+  appointment_date: string;
+  status: string;
+  mode: string;
+  details: string;
 
-  company_id?: number;
-  company?: CompanyInterface;
+  company_id: number;
+  Company?: CompanyInterface;
 
-  student_id?: number;
-  student?: StudentInterface;
+  student_id: number;
+  Student?: StudentInterface;
 }

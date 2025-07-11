@@ -12,7 +12,6 @@ import (
 func GetAllStipends(c *gin.Context) {
 	db := config.DB()
 	var stipends []entity.Stipend
-
 	db.Find(&stipends)
 
 	c.JSON(http.StatusOK, stipends)

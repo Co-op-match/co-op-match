@@ -9,6 +9,8 @@ import type { EducationInterface } from "../../interfaces/Education";
 import type { AddressInterface } from "../../interfaces/Address";
 import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
+import type { CompanyInterface } from "../../interfaces/Company";
+import type { ContactInterface } from "../../interfaces/Contact";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -142,7 +144,7 @@ async function GetProvince() {
 }
 async function GetJobtype() {
   return await axios
-    .get(`${apiUrl}/jobtypes`, requestOptions)
+    .get(`${apiUrl}/job_types`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -154,19 +156,19 @@ async function GetStipends() {
 }
 async function GetWorkDay() {
   return await axios
-    .get(`${apiUrl}/workdays`, requestOptions)
+    .get(`${apiUrl}/work_days`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 async function GetWorkMode() {
   return await axios
-    .get(`${apiUrl}/workmodes`, requestOptions)
+    .get(`${apiUrl}/work_modes`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 async function GetBenefit() {
   return await axios
-    .get(`${apiUrl}/benefits`, requestOptions)
+    .get(`${apiUrl}/benefit`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -214,6 +216,55 @@ async function GetAllGender(): Promise<GenderInterface[]> {
   } catch (error) {
     console.error("Failed to get genders:", error);
     return []; // กรณี error คืน array ว่าง
+  }
+}
+//=======================================Company============================================
+async function GetAllCompany() {
+  return await axios
+    .get(`${apiUrl}/company`, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
+async function CreateCompany(data: FormData) {
+await axios.post(`${apiUrl}/company`, data, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `${Bearer} ${Authorization}`, // ✅ สำคัญ
+  },
+})
+  .then(res => res)
+  .catch(e => e.response);
+}
+
+async function GetCompanyByUserId(user_id: number): Promise<CompanyInterface> {
+  try {
+    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function GetVerifyByUserId(user_id: number) {
+  try {
+    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/verify/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+//=======================================Contact============================================
+async function CreateContact(data:ContactInterface) {
+  return await axios
+    .post(`${apiUrl}/contact`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetContactByUserId(user_id: number): Promise<ContactInterface> {
+  try {
+    const res = await axios.get<ContactInterface>(`${apiUrl}/contact/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
   }
 }
 /// ============================== Address =================================== //
@@ -384,7 +435,7 @@ export {
   UpdateProfileImage,
   GetAllGender,
   GetProfileImageByUserID,
-    GetAllAddress,
+  GetAllAddress,
   GetAddressByUserId,
   CreateAddress,
   UpdateAddress,
@@ -403,7 +454,12 @@ export {
   UpdateEducation,
   GetUniversity,
   GetAllEducationLevel,
-  GetAllProvinces
+  GetAllProvinces,
 
-
+  GetCompanyByUserId,
+  CreateCompany,
+  GetAllCompany,
+  GetContactByUserId,
+  CreateContact,
+  GetVerifyByUserId,
 };
