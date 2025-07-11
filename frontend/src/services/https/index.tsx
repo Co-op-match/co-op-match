@@ -402,17 +402,6 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
   }
 }
 
-//======================================= Company ============================================
-export async function GetAllCompany() {
-  return await axios
-    .get(`${apiUrl}/company`, requestOptions)
-    .then((res) => res)
-    .catch((e) => {
-      console.error("Error fetching data:", e);
-      return e.response;
-    });
-}
-
 export {
   SignIn,
   GetRole,
