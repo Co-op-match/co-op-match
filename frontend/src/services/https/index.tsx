@@ -401,7 +401,20 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
     throw error.response?.data || error.message;
   }
 }
+// ============================== Notifycation =================================== //
 
+async function SendEmailVerify(user_id:number) {
+ return await axios
+    .post(`${apiUrl}/notificatio/email/verify-status/${user_id}`,requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
+async function SendEmailinterview(id:number) {
+ return await axios
+    .post(`${apiUrl}/interview/send-email/${id}`,requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
 export {
   SignIn,
   GetRole,
@@ -451,4 +464,6 @@ export {
   GetContactByUserId,
   CreateContact,
   GetVerifyByUserId,
+  SendEmailVerify,
+  SendEmailinterview,
 };
