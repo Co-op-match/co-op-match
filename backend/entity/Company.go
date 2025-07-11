@@ -19,7 +19,7 @@ type Company struct {
 	Admin   Admin `gorm:"foreignKey:AdminID"`
 
 	ContactID uint    `json:"contact_id"`
-	Contact   Contact `gorm:"foreignKey:ContactID;unique"`
+	Contact   Contact `gorm:"foreignKey:ContactID"`
 
 	IntershipPosts        []IntershipPost        `gorm:"foreignKey:CompanyID"` // one-to-many
 	InterviewAppointments []InterviewAppointment `gorm:"foreignKey:CompanyID"` // one-to-many
