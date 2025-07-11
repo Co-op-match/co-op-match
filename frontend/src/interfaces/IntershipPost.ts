@@ -1,4 +1,9 @@
 export interface IntershipPostInterface {
+  WorkModeID?: number;
+  WorkDayID?: number;
+  StipendID?: number;
+  JobTypeID?: number;
+  Benefits: any;
   ID?: number;
   post_name?: string;
   post_description?: string;
@@ -8,6 +13,12 @@ export interface IntershipPostInterface {
   Company?: {
     company_name: string;
     logo: string;
+    Address?: {
+      Province?: {
+        ID: number;
+        name_th: string; 
+      };
+    };
   };
   WorkMode?: {
     work_mode: string;
@@ -24,4 +35,8 @@ export interface IntershipPostInterface {
   StatusPostID?: number;
   AdminID?: number;
   BenefitID?: number;
+  Benefit?: {
+    benefit: string;
+    };
+
 }

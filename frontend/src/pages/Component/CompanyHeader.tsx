@@ -28,12 +28,12 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     GetUserById(userId).then(setUser).catch(err => console.error("Failed to fetch user", err));
   }, []);
 
-  const currentPage = ['dashboard',  'profile', 'notifications', 'settings']
+  const currentPage = ['dashboard',  'post', 'notifications', 'settings']
     .find((key) => location.pathname.includes(key)) || 'dashboard';
 
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
-    { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
+    { key: 'post', icon: <UserOutlined />, label: 'รับสมัคร' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];

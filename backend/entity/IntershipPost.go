@@ -10,10 +10,13 @@ type IntershipPost struct {
 	gorm.Model
 	PostName        string    `json:"post_name"`
 	PostDescription string    `json:"post_description"`
-	Qualifications  string    `json:"qualifications"`
 	Quantity        int32     `json:"quantity"`
-	MinGpa          string    `json:"min_gpa"`
+	MinGpa          float32   `json:"min_gpa"`
 	CreatedAt       time.Time `json:"created_at"`
+	LocationDetail  string    `json:"location_detail"` // รายละเอียดที่ตั้ง
+	Subdistrict     string    `json:"subdistrict"`     // แขวง/ตำบล
+	District        string    `json:"district"`        // เขต/อำเภอ
+	Province        string    `json:"province"`        // จังหวัด
 
 	CompanyID uint
 	Company   Company `gorm:"foreignKey:CompanyID"`
@@ -40,4 +43,5 @@ type IntershipPost struct {
 
 	Applications []Application `gorm:"foreignKey:IntershipPostID"` // one-to-many
 
+	CompanyRequiredSkills []CompanyRequiredSkill `gorm:"foreignKey:IntershipPostID" json:"company_required_skills"`
 }

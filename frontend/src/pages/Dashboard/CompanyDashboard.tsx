@@ -1,97 +1,52 @@
+// src/pages/company/CompanyDashboard.tsx
 import React from 'react';
-import {
-  Layout,
-  Card,
-  Typography,
-  Button,
-  Table,
-  Tag,
-} from 'antd';
+import { Layout, Typography, Row, Col, Card, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import CompanyHeader from '../component/CompanyHeader';
+import CompanyHeader from '../Component/CompanyHeader';
 
-const { Header, Content } = Layout;
-const { Title } = Typography;
+const { Content } = Layout;
+const { Title, Paragraph } = Typography;
 
 const CompanyDashboard: React.FC = () => {
-  const navigate = useNavigate(); // ใช้งาน hook
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
-    localStorage.removeItem("token");
-    localStorage.removeItem("token_type");
-    localStorage.removeItem("id");
-    localStorage.removeItem("isLogin");
-    localStorage.removeItem("role");
-    localStorage.removeItem("roleId");
-
-    // redirect กลับไปหน้า login
-    navigate("/sign-in");
+  const handleCreatePost = () => {
+    navigate('/company/create-post');
   };
-
-  const jobPostings = [
-    {
-      id: 1,
-      title: 'Frontend Intern',
-      applicants: 5,
-      status: 'เปิดรับสมัคร',
-    },
-    {
-      id: 2,
-      title: 'Backend Developer',
-      applicants: 2,
-      status: 'ปิดรับสมัคร',
-    },
-  ];
-
-  const columns = [
-    {
-      title: 'ตำแหน่งงาน',
-      dataIndex: 'title',
-      key: 'title',
-    },
-    {
-      title: 'จำนวนผู้สมัคร',
-      dataIndex: 'applicants',
-      key: 'applicants',
-    },
-    {
-      title: 'สถานะ',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) =>
-        status === 'เปิดรับสมัคร' ? (
-          <Tag color="green">เปิดรับสมัคร</Tag>
-        ) : (
-          <Tag color="red">ปิดรับสมัคร</Tag>
-        ),
-    },
-    {
-      title: 'จัดการ',
-      key: 'action',
-      render: (_: any, record: any) => (
-        <Button type="link" onClick={() => alert(`ดูรายละเอียดงาน ${record.title}`)}>
-          ดูรายละเอียด
-        </Button>
-      ),
-    },
-  ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Layout>
-      <CompanyHeader/>
-        <Content style={{ margin: '16px' }}>
-          <Card title="ตำแหน่งงานที่เปิดรับสมัคร">
-            <Table
-              dataSource={jobPostings}
-              columns={columns}
-              rowKey="id"
-              pagination={false}
-            />
-          </Card>
-        </Content>
-      </Layout>
+      <CompanyHeader />
+
+      <Content style={{ margin: '24px', padding: 24, background: '#fff' }}>
+        <Title level={3}>แดชบอร์ดบริษัท</Title>
+        <Paragraph>
+          ยินดีต้อนรับเข้าสู่หน้าจัดการสำหรับบริษัทของคุณ คุณสามารถเพิ่มโพสต์ฝึกงาน ดูรายการโพสต์ และจัดการข้อมูลบริษัทได้ที่นี่
+        </Paragraph>
+
+        <Button type="primary" onClick={handleCreatePost} style={{ marginBottom: 24 }}>
+          เพิ่มโพสต์ใหม่
+        </Button>
+
+        {/* ตัวอย่างการแสดงข้อมูล */}
+        <Row gutter={[16, 16]}>
+          <Col span={8}>
+            <Card title="จำนวนโพสต์ทั้งหมด" bordered={false}>
+              5 โพสต์
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card title="โพสต์ที่กำลังเปิดรับ" bordered={false}>
+              3 โพสต์
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card title="จำนวนผู้สมัคร" bordered={false}>
+              27 คน
+            </Card>
+          </Col>
+        </Row>
+      </Content>
     </Layout>
   );
 };

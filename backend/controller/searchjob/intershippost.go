@@ -11,7 +11,7 @@ import (
 func GetAllIntershipPosts(c *gin.Context) {
 	var posts []entity.IntershipPost
 	db := config.DB()
-	results := db.Preload("Company").Preload("WorkMode").Preload("WorkDay").Preload("Stipend").Preload("JobType").Find(&posts)
+	results := db.Preload("Company").Preload("Company.Address.Province").Preload("WorkMode").Preload("WorkDay").Preload("Stipend").Preload("JobType").Preload("Benefit").Find(&posts)
 	if results.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": results.Error.Error()})
 		return
