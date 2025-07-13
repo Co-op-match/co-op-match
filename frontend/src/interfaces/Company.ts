@@ -5,6 +5,7 @@ import type { ContactInterface } from "./Contact";
 import type { IntershipPostInterface } from "./IntershipPost";
 import type { InterviewAppointmentInterface } from "./InterviewAppointment";
 import type { ReviewInterface } from "./Review";
+import type { FormInstance } from "antd";
 
 export interface CompanyInterface {
   data: CompanyInterface | PromiseLike<CompanyInterface>;
@@ -27,4 +28,17 @@ export interface CompanyInterface {
   Reviews?: ReviewInterface[];
 
   CreatedAt?: string;
+}
+
+export interface CompanyFormProps {
+  form: FormInstance;
+  rawProvinces: any[];
+  districtOptions: any[];
+  subdistrictOptions: any[];
+  selectedSubdistrict: any;
+  onFinish: (values: any) => void;
+  onProvinceChange: (id: number) => void;
+  onDistrictChange: (id: number) => void;
+  onSubdistrictChange: (id: number, option: any) => void;
+  isEdit?: boolean;
 }

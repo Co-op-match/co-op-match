@@ -39,9 +39,10 @@ import type { ColumnsType } from "antd/es/table";
 import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
-import CompanyEditModal from "./CompanyEditModal";
-import { CreateCompany } from "../../../../services/https";
+import { CreateCompany, GetAllProvinces } from "../../../../services/https";
 import AddCompanyModal from "./AddCompanyModal";
+import EditCompanyModal from "./EditCompanyModal";
+import CompanyFormModal from "./CompanyFormModal";
 
 const CompanyManagement: React.FC = () => {
   const [form] = Form.useForm();
@@ -74,29 +75,37 @@ const CompanyManagement: React.FC = () => {
   const totalActive = activeCompanies.length;
   const totalDeleted = deletedCompanies.length;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resActive, resDeleted, resStatuses] = await Promise.all([
-          GetAllActiveCompanies(),
-          GetAllDeletedCompany(),
-          GetAllStatusVerify(),
-        ]);
+  const [rawProvinces, setRawProvinces] = useState<any[]>([]);
+  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<any[]>([]);
+  const [subdistrictOptions, setSubdistrictOptions] = useState<any[]>([]);
+  const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
 
-        if (resActive.status === 200) setActiveCompanies(resActive.data);
-        if (resDeleted.status === 200) setDeletedCompanies(resDeleted.data);
-        if (resStatuses.status === 200) {
-          const names = resStatuses.data.map((s: any) => s.status_verify);
-          setStatusList(resStatuses.data);
-          setStatusFilterOptions(["ทั้งหมด", ...names]);
-        }
-      } catch (error) {
-        console.error("Error fetching companies:", error);
-        message.error("เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท");
-      }
-    };
+  useEffect(() => {
     fetchData();
-  }, [reload]);
+    loadProvinces();
+  }, [reload, currentCompany]);
+
+  const fetchData = async () => {
+    try {
+      const [resActive, resDeleted, resStatuses] = await Promise.all([
+        GetAllActiveCompanies(),
+        GetAllDeletedCompany(),
+        GetAllStatusVerify(),
+      ]);
+
+      if (resActive.status === 200) setActiveCompanies(resActive.data);
+      if (resDeleted.status === 200) setDeletedCompanies(resDeleted.data);
+      if (resStatuses.status === 200) {
+        const names = resStatuses.data.map((s: any) => s.status_verify);
+        setStatusList(resStatuses.data);
+        setStatusFilterOptions(["ทั้งหมด", ...names]);
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      message.error("เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท");
+    }
+  };
 
   const getCompanyLatestStatus = (company: CompanyInterface) => {
     const verifications = company.User?.Verifications || [];
@@ -276,6 +285,123 @@ const CompanyManagement: React.FC = () => {
     return counts;
   }, [tabKey, activeCompanies, deletedCompanies, statusFilterOptions]);
 
+  /*=========================   จัดการจังหวัด   ================================*/
+  const loadProvinces = async () => {
+    try {
+      const res = await GetAllProvinces(); // เรียกแค่ตัวเดียว
+      const data = res.data || res;
+      setRawProvinces(data);
+      setProvinceOptions(
+        data.map((p: any) => ({
+          label: p.name_th,
+          value: p.ID,
+        }))
+      );
+
+      if (currentCompany?.Address?.Province?.ID) {
+        // set ค่า default + preload ตัวเลือก
+        const province = data.find(
+          (p: any) => p.ID === currentCompany.Address?.Province?.ID
+        );
+        if (province) {
+          setDistrictOptions(
+            province.Districts.map((d: any) => ({
+              label: d.name_th,
+              value: d.ID,
+            }))
+          );
+
+          const district = province.Districts.find(
+            (d: any) => d.ID === currentCompany.Address?.District?.ID
+          );
+          if (district) {
+            setSubdistrictOptions(
+              district.SubDistricts.map((s: any) => ({
+                label: s.name_th,
+                value: s.ID,
+                data: s,
+              }))
+            );
+
+            const subdistrict = district.SubDistricts.find(
+              (s: any) => s.ID === currentCompany.Address?.SubDistrict?.ID
+            );
+            if (subdistrict) {
+              setSelectedSubdistrict(subdistrict);
+
+              editForm.setFieldsValue({
+                Address: {
+                  Province: province.ID,
+                  District: district.ID,
+                  SubDistrict: subdistrict.ID,
+                  Postcode: subdistrict.Postcode?.ID,
+                },
+              });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("โหลดจังหวัดล้มเหลว:", err);
+    }
+  };
+
+  const handleProvinceChange = (provinceId: number) => {
+    const province = rawProvinces.find((p: any) => p.ID === provinceId);
+    if (province) {
+      const districts = province.Districts || [];
+      setDistrictOptions(
+        districts.map((d: any) => ({ label: d.name_th, value: d.ID }))
+      );
+      setSubdistrictOptions([]);
+      setSelectedSubdistrict(null);
+
+      editForm.setFieldsValue({
+        Address: {
+          Province: provinceId,
+          District: undefined,
+          SubDistrict: undefined,
+          Postcode: undefined,
+        },
+      });
+    }
+  };
+  const handleDistrictChange = (districtId: number) => {
+    const provinceId = editForm.getFieldValue(["Address", "Province"]);
+    const province = rawProvinces.find((p: any) => p.ID === provinceId);
+    const district = province?.Districts.find((d: any) => d.ID === districtId);
+    if (district) {
+      const subs = district.SubDistricts || [];
+      setSubdistrictOptions(
+        subs.map((s: any) => ({
+          label: s.name_th,
+          value: s.ID,
+          data: s,
+        }))
+      );
+      setSelectedSubdistrict(null);
+
+      editForm.setFieldsValue({
+        Address: {
+          District: districtId,
+          SubDistrict: undefined,
+          Postcode: undefined,
+        },
+      });
+    }
+  };
+  const handleSubdistrictChange = (subId: number, option: any) => {
+    setSelectedSubdistrict(option.data);
+
+    editForm.setFieldsValue({
+      Address: {
+        SubDistrict: subId,
+        Postcode: option.data?.Postcode?.ID,
+      },
+    });
+  };
+
+  /*=========================   จัดการตาราง   ================================*/
   const columns: ColumnsType<CompanyInterface> = [
     { title: "ID", dataIndex: "ID", key: "ID" },
     {
@@ -577,17 +703,48 @@ const CompanyManagement: React.FC = () => {
           </Form>
         </Modal>
 
-        <CompanyEditModal
+        {/* <EditCompanyModal
           isEditModalVisible={isEditModalVisible}
           setIsEditModalVisible={setIsEditModalVisible}
           editForm={editForm}
           currentCompany={currentCompany}
           updateCompanyData={updateCompanyData}
+                    provinceOptions={provinceOptions}
+          districtOptions={districtOptions}
+          subdistrictOptions={subdistrictOptions}
+          selectedSubdistrict={selectedSubdistrict}
+          handleProvinceChange={handleProvinceChange}
+          handleDistrictChange={handleDistrictChange}
+          handleSubdistrictChange={handleSubdistrictChange}
         />
         <AddCompanyModal
           isVisible={isAddModalVisible}
           setIsVisible={setIsAddModalVisible}
           onSubmit={createCompany}
+        /> */}
+        <CompanyFormModal
+          form={editForm}
+          rawProvinces={rawProvinces}
+          districtOptions={districtOptions}
+          subdistrictOptions={subdistrictOptions}
+          selectedSubdistrict={selectedSubdistrict}
+          onFinish={updateCompanyData}
+          onProvinceChange={handleProvinceChange}
+          onDistrictChange={handleDistrictChange}
+          onSubdistrictChange={handleSubdistrictChange}
+          isEdit={true}
+          initialValues={{
+            ...currentCompany,
+            Address: {
+              Province: currentCompany?.Address?.Province?.ID,
+              District: currentCompany?.Address?.District?.ID,
+              SubDistrict: currentCompany?.Address?.SubDistrict?.ID,
+              Postcode: currentCompany?.Address?.Postcode?.ID,
+            },
+            created_at_formatted: dayjs(currentCompany?.CreatedAt).format(
+              "DD/MM/YYYY HH:mm"
+            ),
+          }}
         />
       </Layout>
     </Layout>

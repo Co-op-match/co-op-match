@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Modal,
-  Form,
-  Input,
-  Row,
-  Col,
-  Select,
-  Button,
-  Image,
-} from "antd";
+import { Modal, Form, Input, Row, Col, Select, Button, Image } from "antd";
 import Title from "antd/es/typography/Title";
 import { GetAllProvinces } from "../../../../services/https/index";
 
@@ -129,7 +120,11 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 src={form.getFieldValue("logo")}
                 width={150}
                 height={150}
-                style={{ objectFit: "contain", border: "1px solid #ccc", padding: 8 }}
+                style={{
+                  objectFit: "contain",
+                  border: "1px solid #ccc",
+                  padding: 8,
+                }}
               />
             </Col>
           </Row>
@@ -138,57 +133,108 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
         <Title level={5}>ที่อยู่</Title>
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name={["Address", "house_number"]} label="บ้านเลขที่" rules={[{ required: true }]}> <Input /> </Form.Item>
+            <Form.Item
+              name={["Address", "house_number"]}
+              label="บ้านเลขที่"
+              rules={[{ required: true }]}
+            >
+              {" "}
+              <Input />{" "}
+            </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name={["Address", "village"]} label="หมู่บ้าน"> <Input /> </Form.Item>
+            <Form.Item name={["Address", "village"]} label="หมู่บ้าน">
+              {" "}
+              <Input />{" "}
+            </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name={["Address", "street"]} label="ถนน"> <Input /> </Form.Item>
+            <Form.Item name={["Address", "street"]} label="ถนน">
+              {" "}
+              <Input />{" "}
+            </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name={["Address", "sub_street"]} label="ซอย"> <Input /> </Form.Item>
-          </Col>
-
-          <Col span={12}>
-            <Form.Item name={["Address", "Province"]} label="จังหวัด" rules={[{ required: true }]}> <Select
-              options={rawProvinces.map((p: any) => ({ label: p.name_th, value: p.ID }))}
-              onChange={handleProvinceChange}
-              showSearch
-              placeholder="เลือกจังหวัด"
-            /> </Form.Item>
-          </Col>
-
-          <Col span={12}>
-            <Form.Item name={["Address", "District"]} label="อำเภอ / เขต" rules={[{ required: true }]}> <Select
-              options={districtOptions}
-              onChange={handleDistrictChange}
-              disabled={!districtOptions.length}
-              showSearch
-              placeholder="เลือกอำเภอ / เขต"
-            /> </Form.Item>
+            <Form.Item name={["Address", "sub_street"]} label="ซอย">
+              {" "}
+              <Input />{" "}
+            </Form.Item>
           </Col>
 
           <Col span={12}>
-            <Form.Item name={["Address", "SubDistrict"]} label="ตำบล / แขวง" rules={[{ required: true }]}> <Select
-              options={subdistrictOptions}
-              onChange={handleSubdistrictChange}
-              disabled={!subdistrictOptions.length}
-              showSearch
-              placeholder="เลือกตำบล / แขวง"
-            /> </Form.Item>
+            <Form.Item
+              name={["Address", "Province"]}
+              label="จังหวัด"
+              rules={[{ required: true }]}
+            >
+              {" "}
+              <Select
+                options={rawProvinces.map((p: any) => ({
+                  label: p.name_th,
+                  value: p.ID,
+                }))}
+                onChange={handleProvinceChange}
+                showSearch
+                placeholder="เลือกจังหวัด"
+              />{" "}
+            </Form.Item>
           </Col>
 
           <Col span={12}>
-            <Form.Item name={["Address", "Postcode"]} label="รหัสไปรษณีย์" rules={[{ required: true }]}> <Select
-              options={selectedSubdistrict?.Postcode
-                ? [{
-                    label: selectedSubdistrict.Postcode.post_code,
-                    value: selectedSubdistrict.Postcode.ID,
-                  }]
-                : []}
-              disabled={!selectedSubdistrict?.Postcode}
-            /> </Form.Item>
+            <Form.Item
+              name={["Address", "District"]}
+              label="อำเภอ / เขต"
+              rules={[{ required: true }]}
+            >
+              {" "}
+              <Select
+                options={districtOptions}
+                onChange={handleDistrictChange}
+                disabled={!districtOptions.length}
+                showSearch
+                placeholder="เลือกอำเภอ / เขต"
+              />{" "}
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name={["Address", "SubDistrict"]}
+              label="ตำบล / แขวง"
+              rules={[{ required: true }]}
+            >
+              {" "}
+              <Select
+                options={subdistrictOptions}
+                onChange={handleSubdistrictChange}
+                disabled={!subdistrictOptions.length}
+                showSearch
+                placeholder="เลือกตำบล / แขวง"
+              />{" "}
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name={["Address", "Postcode"]}
+              label="รหัสไปรษณีย์"
+              rules={[{ required: true }]}
+            >
+              {" "}
+              <Select
+                options={
+                  selectedSubdistrict?.Postcode
+                    ? [
+                        {
+                          label: selectedSubdistrict.Postcode.post_code,
+                          value: selectedSubdistrict.Postcode.ID,
+                        },
+                      ]
+                    : []
+                }
+                disabled={!selectedSubdistrict?.Postcode}
+              />{" "}
+            </Form.Item>
           </Col>
         </Row>
       </Form>

@@ -27,6 +27,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("token_type");
+      localStorage.removeItem("isLogin");
       alert("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
       window.location.href = "/sign-in";
     }

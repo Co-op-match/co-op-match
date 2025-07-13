@@ -168,17 +168,22 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
       width={800}
     >
       <Form
-        form={editForm}
-        layout="vertical"
-        onFinish={updateCompanyData}
-        initialValues={{
-          ...currentCompany,
-          created_at_formatted: dayjs(currentCompany?.CreatedAt).format(
-            "DD/MM/YYYY HH:mm"
-          ),
-        }}
-        key={currentCompany?.ID}
-      >
+  form={editForm}
+  layout="vertical"
+  onFinish={updateCompanyData}
+  initialValues={{
+    ...currentCompany,
+    Address: {
+      Province: currentCompany?.Address?.Province?.ID,
+      District: currentCompany?.Address?.District?.ID,
+      SubDistrict: currentCompany?.Address?.SubDistrict?.ID,
+      Postcode: currentCompany?.Address?.Postcode?.ID,
+    },
+    created_at_formatted: dayjs(currentCompany?.CreatedAt).format("DD/MM/YYYY HH:mm"),
+  }}
+  key={currentCompany?.ID}
+/>
+
         <Row gutter={24}>
           <Col span={16}>
             <Form.Item
