@@ -7,43 +7,68 @@ import {
   Col,
   Select,
   Button,
-  Steps,
-  Upload,
-  Image,
   message,
+  Steps,
 } from "antd";
-import { InboxOutlined, UploadOutlined } from "@ant-design/icons";
-import { GetAllProvinces } from "../../../../services/https/index";
-import { CreateUserCompanyContact } from "../../../../services/https/aum";
+import Title from "antd/es/typography/Title";
+import { GetAllGender, GetAllProvinces } from "../../../../services/https";
+import {
+  CreateAcademicStaff,
+  CreateUserAcademicStaffContact,
+} from "../../../../services/https/aum";
 const { Step } = Steps;
-const { Dragger } = Upload;
 
-interface AddCompanyModalProps {
+interface AddLecturersModalProps {
   isAddModalVisible: boolean;
   setIsAddModalVisible: (visible: boolean) => void;
+  reload: boolean;
+  setReload: (val: boolean) => void;
 }
 
-const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
+const AddLecturersModal: React.FC<AddLecturersModalProps> = ({
   isAddModalVisible,
   setIsAddModalVisible,
+  reload,
+  setReload,
 }) => {
   const [form] = Form.useForm();
   const [step, setStep] = useState(0);
-  const [reload, setReload] = useState<boolean>(true);
-
+  const [genderOptions, setGenderOptions] = useState<any[]>([]);
   const [rawProvinces, setRawProvinces] = useState<any[]>([]);
   const [districtOptions, setDistrictOptions] = useState<any[]>([]);
   const [subdistrictOptions, setSubdistrictOptions] = useState<any[]>([]);
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
+  const [formStepValues, setFormStepValues] = useState<any>({});
 
   useEffect(() => {
     const loadProvinces = async () => {
-      const res = await GetAllProvinces();
-      const data = res.data || res;
-      setRawProvinces(data);
+      const provincesRes = await GetAllProvinces();
+      setRawProvinces(provincesRes.data || provincesRes);
+
+      const gendersRes = await GetAllGender();
+      if (Array.isArray(gendersRes)) {
+        setGenderOptions(
+          gendersRes.map((g) => ({ label: g.name, value: g.ID }))
+        );
+      }
     };
     loadProvinces();
   }, [reload]);
+
+  const handleNext = async () => {
+    try {
+      const currentValues = await form.validateFields();
+      setFormStepValues({ ...formStepValues, ...currentValues });
+      setStep(step + 1);
+      form.resetFields();
+    } catch (err) {
+      message.error("กรุณากรอกข้อมูลให้ครบ");
+    }
+  };
+
+  const handlePrevious = () => {
+    setStep(step - 1);
+  };
 
   const handleProvinceChange = (provinceId: number) => {
     const province = rawProvinces.find((p) => p.ID === provinceId);
@@ -94,42 +119,14 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
     });
   };
 
-  const handleNext = () => {
-    form.validateFields().then(() => setStep(step + 1));
-  };
-
-  const handlePrevious = () => {
-    setStep(step - 1);
-  };
-
-  /*   const handleFinish = async () => {
-    try {
-      const values = await form.validateFields();
-      onSubmit(values);
-      setIsAddModalVisible(false);
-      form.resetFields();
-      setStep(0);
-    } catch (err) {
-      message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
-    }
-  }; */
-
   const handleSubmit = async () => {
     try {
-      const formValues = form.getFieldsValue(true); // ✅ ดึงทุก step
-
-      const user = formValues.User || {};
-      const contact = formValues.Contact || {};
-      const address = formValues.Address || {};
+      const finalValues = await form.validateFields();
+      const values = { ...formStepValues, ...finalValues };
+      const user = values.User || {};
 
       if (!user.Email || !user.Password) {
         message.error("กรุณากรอกอีเมลและรหัสผ่าน");
-        return;
-      }
-
-      const logoFile = formValues.logo?.[0]?.originFileObj;
-      if (!logoFile) {
-        message.error("กรุณาอัปโหลดโลโก้บริษัท");
         return;
       }
 
@@ -142,83 +139,80 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
       const formData = new FormData();
       formData.append("email", user.Email);
       formData.append("password", user.Password);
-      formData.append("role_id", "3");
-
+      formData.append("role_id", "4");
+      formData.append("academic_position", values.academic_position);
+      formData.append("age", values.age.toString());
+      formData.append("faculty", values.faculty);
+      formData.append("department", values.department);
+      formData.append("university", values.university);
       formData.append("admin_id", adminId);
-
-      formData.append("company_name", formValues.company_name || "");
-
-      formData.append("contact_phone", contact.PhoneNumber || "");
-      formData.append("contact_email", contact.Email || "");
-      formData.append("contact_website", contact.Website || "");
-      formData.append("contact_line", contact.Line || "");
-      formData.append("contact_facebook", contact.Facebook || "");
-
-      formData.append("address_house_number", address.house_number || "");
-      formData.append("address_village", address.village || "");
-      formData.append("address_street", address.street || "");
-      formData.append("address_sub_street", address.sub_street || "");
+      formData.append("gender_id", values.gender_id.toString());
       formData.append(
         "address_province_id",
-        address.Province?.toString() || ""
+        values.Address.Province.toString()
       );
       formData.append(
         "address_district_id",
-        address.District?.toString() || ""
+        values.Address.District.toString()
       );
       formData.append(
         "address_sub_district_id",
-        address.SubDistrict?.toString() || ""
+        values.Address.SubDistrict.toString()
       );
       formData.append(
         "address_postcode_id",
-        address.Postcode?.toString() || ""
+        values.Address.Postcode.toString()
       );
+      formData.append("address_house_number", values.Address.house_number);
+      formData.append("address_village", values.Address.village || "");
+      formData.append("address_street", values.Address.street || "");
+      formData.append("address_sub_street", values.Address.sub_street || "");
+      formData.append("contact_phone", values.Contact.PhoneNumber);
+      formData.append("contact_email", values.Contact.Email);
+      formData.append("contact_website", values.Contact.Website || "");
+      formData.append("contact_line", values.Contact.Line || "");
+      formData.append("contact_facebook", values.Contact.Facebook || "");
 
-      formData.append("logo", logoFile);
-
-      const res = await CreateUserCompanyContact(formData); // 🔁 เรียก API ใหม่
+      const res = await CreateUserAcademicStaffContact(formData);
 
       if (res.status === 201) {
-        message.success("เพิ่มบริษัทสำเร็จ");
-        form.resetFields();
+        message.success("เพิ่มอาจารย์สำเร็จ");
         setIsAddModalVisible(false);
-        setStep(0);
+        form.resetFields();
         setReload(!reload);
+        setStep(0);
       } else {
         message.error(res.data?.error || "เกิดข้อผิดพลาด");
       }
     } catch (err) {
-      message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
+      message.error("เกิดข้อผิดพลาด");
+      console.error(err);
     }
   };
 
   return (
     <Modal
-      title="เพิ่มบริษัทใหม่"
+      title="เพิ่มอาจารย์ใหม่"
       open={isAddModalVisible}
       onCancel={() => {
-        setIsAddModalVisible(false); 
-        form.resetFields(); 
-        setStep(0); 
+        setIsAddModalVisible(false);
+        form.resetFields();
+        setStep(0);
       }}
       footer={null}
-      width={850}
+      width={800}
     >
       <Steps current={step} style={{ marginBottom: 24 }}>
         <Step title="บัญชีผู้ใช้" />
         <Step title="ข้อมูลติดต่อ" />
-        <Step title="ข้อมูลบริษัท" />
+        <Step title="ข้อมูลอาจารย์" />
       </Steps>
 
       <Form
-        form={form}
         layout="vertical"
+        form={form}
         onFinish={handleSubmit}
-        onFinishFailed={(errorInfo) => {
-          console.log("❌ Validation Failed:", errorInfo);
-          message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
-        }}
+        onFinishFailed={() => message.error("กรุณากรอกข้อมูลให้ครบถ้วน")}
         initialValues={{ Address: {} }}
       >
         {step === 0 && (
@@ -229,13 +223,15 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 label="อีเมล"
                 rules={[{ required: true, type: "email" }]}
               >
-                <Input />
+                
+                <Input autoComplete="username" />
               </Form.Item>
               <Form.Item
                 name={["User", "Password"]}
                 label="รหัสผ่าน"
                 rules={[{ required: true }]}
               >
+                
                 <Input.Password autoComplete="new-password" />
               </Form.Item>
               <Form.Item
@@ -249,14 +245,14 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                       if (
                         !value ||
                         getFieldValue(["User", "Password"]) === value
-                      ) {
+                      )
                         return Promise.resolve();
-                      }
                       return Promise.reject("รหัสผ่านไม่ตรงกัน");
                     },
                   }),
                 ]}
               >
+                
                 <Input.Password autoComplete="new-password" />
               </Form.Item>
             </Col>
@@ -270,26 +266,31 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                 name={["Contact", "PhoneNumber"]}
                 label="เบอร์โทรศัพท์"
               >
+                
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name={["Contact", "Email"]} label="อีเมลติดต่อ">
+                
                 <Input type="email" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name={["Contact", "Website"]} label="เว็บไซต์">
+                
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name={["Contact", "Facebook"]} label="Facebook">
+                
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name={["Contact", "Line"]} label="Line">
+                
                 <Input />
               </Form.Item>
             </Col>
@@ -299,70 +300,65 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
         {step === 2 && (
           <>
             <Row gutter={16}>
-              <Col span={16}>
+              <Col span={12}>
                 <Form.Item
-                  name="company_name"
-                  label="ชื่อบริษัท"
+                  name="academic_position"
+                  label="ตำแหน่ง"
                   rules={[{ required: true }]}
                 >
+                  
                   <Input />
                 </Form.Item>
               </Col>
-              <Col span={8}>
-                {/* <Form.Item
-                  name="logo"
-                  label="โลโก้บริษัท"
-                  valuePropName="file"
-                  getValueFromEvent={(e) => e.file}
-                  rules={[{ required: true, message: "กรุณาอัปโหลดโลโก้" }]}
-                >
-                  <Upload beforeUpload={() => false} maxCount={1}>
-                    <Button icon={<UploadOutlined />}>อัปโหลดไฟล์</Button>
-                  </Upload>
-                </Form.Item> */}
+              <Col span={12}>
+                <Form.Item name="age" label="อายุ">
+                  
+                  <Input type="number" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
                 <Form.Item
-                  name="logo"
-                  label="โลโก้บริษัท"
-                  valuePropName="fileList"
-                  getValueFromEvent={(e) =>
-                    Array.isArray(e) ? e : e?.fileList
-                  }
-                  rules={[{ required: true, message: "กรุณาอัปโหลดโลโก้" }]}
+                  name="faculty"
+                  label="คณะ"
+                  rules={[{ required: true }]}
                 >
-                  <Upload
-                    beforeUpload={() => false}
-                    maxCount={1}
-                    listType="picture"
-                  >
-                    <Button icon={<UploadOutlined />}>อัปโหลดโลโก้</Button>
-                  </Upload>
+                  
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="department"
+                  label="ภาควิชา"
+                  rules={[{ required: true }]}
+                >
+                  
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item
+                  name="university"
+                  label="มหาวิทยาลัย"
+                  rules={[{ required: true }]}
+                >
+                  
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item
+                  name="gender_id"
+                  label="เพศ"
+                  rules={[{ required: true }]}
+                >
+                  
+                  <Select options={genderOptions} placeholder="เลือกเพศ" />
                 </Form.Item>
               </Col>
             </Row>
-            {form.getFieldValue("logo")?.[0]?.originFileObj && (
-              <Row>
-                <Col>
-                  <Image
-                    src={URL.createObjectURL(
-                      form.getFieldValue("logo")[0].originFileObj
-                    )}
-                    width={150}
-                    height={150}
-                    style={{
-                      objectFit: "contain",
-                      border: "1px solid #ccc",
-                      padding: 8,
-                    }}
-                  />
-                </Col>
-              </Row>
-            )}
 
-            <Row gutter={16}>
-              <Col span={24}>
-                <h4>ที่อยู่บริษัท</h4>
-              </Col>
-            </Row>
+            <Title level={5}>ที่อยู่</Title>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
@@ -370,21 +366,25 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                   label="บ้านเลขที่"
                   rules={[{ required: true }]}
                 >
+                  
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item name={["Address", "village"]} label="หมู่บ้าน">
+                  
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item name={["Address", "street"]} label="ถนน">
+                  
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item name={["Address", "sub_street"]} label="ซอย">
+                  
                   <Input />
                 </Form.Item>
               </Col>
@@ -394,13 +394,13 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                   label="จังหวัด"
                   rules={[{ required: true }]}
                 >
+                  
                   <Select
                     options={rawProvinces.map((p) => ({
                       label: p.name_th,
                       value: p.ID,
                     }))}
                     onChange={handleProvinceChange}
-                    showSearch
                     placeholder="เลือกจังหวัด"
                   />
                 </Form.Item>
@@ -411,11 +411,11 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                   label="อำเภอ / เขต"
                   rules={[{ required: true }]}
                 >
+                  
                   <Select
                     options={districtOptions}
                     onChange={handleDistrictChange}
                     disabled={!districtOptions.length}
-                    showSearch
                     placeholder="เลือกอำเภอ / เขต"
                   />
                 </Form.Item>
@@ -426,11 +426,11 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                   label="ตำบล / แขวง"
                   rules={[{ required: true }]}
                 >
+                  
                   <Select
                     options={subdistrictOptions}
                     onChange={handleSubdistrictChange}
                     disabled={!subdistrictOptions.length}
-                    showSearch
                     placeholder="เลือกตำบล / แขวง"
                   />
                 </Form.Item>
@@ -441,7 +441,9 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                   label="รหัสไปรษณีย์"
                   rules={[{ required: true }]}
                 >
+                  
                   <Select
+                    disabled={!selectedSubdistrict?.Postcode}
                     options={
                       selectedSubdistrict?.Postcode
                         ? [
@@ -452,7 +454,6 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
                           ]
                         : []
                     }
-                    disabled={!selectedSubdistrict?.Postcode}
                   />
                 </Form.Item>
               </Col>
@@ -477,5 +478,4 @@ const AddCompanyModal: React.FC<AddCompanyModalProps> = ({
     </Modal>
   );
 };
-
-export default AddCompanyModal;
+export default AddLecturersModal;

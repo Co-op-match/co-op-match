@@ -39,13 +39,11 @@ import type { ColumnsType } from "antd/es/table";
 import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
-import { CreateCompany, GetAllProvinces } from "../../../../services/https";
 import AddCompanyModal from "./AddCompanyModal";
 import EditCompanyModal from "./EditCompanyModal";
-import CompanyFormModal from "./CompanyFormModal";
 
 const CompanyManagement: React.FC = () => {
-  const [form] = Form.useForm();
+  const [verifyForm] = Form.useForm();
   const [editForm] = Form.useForm();
 
   const [activeCompanies, setActiveCompanies] = useState<CompanyInterface[]>(
@@ -75,15 +73,8 @@ const CompanyManagement: React.FC = () => {
   const totalActive = activeCompanies.length;
   const totalDeleted = deletedCompanies.length;
 
-  const [rawProvinces, setRawProvinces] = useState<any[]>([]);
-  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
-  const [districtOptions, setDistrictOptions] = useState<any[]>([]);
-  const [subdistrictOptions, setSubdistrictOptions] = useState<any[]>([]);
-  const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
-
   useEffect(() => {
     fetchData();
-    loadProvinces();
   }, [reload, currentCompany]);
 
   const fetchData = async () => {
@@ -165,9 +156,9 @@ const CompanyManagement: React.FC = () => {
     setSelectedVerifyStatus(latest?.StatusVerify?.status_verify || "");
 
     if (latest?.StatusVerify?.status_verify === "ปฏิเสธ") {
-      form.setFieldsValue({ rejectReason: latest.reason || "" });
+      verifyForm.setFieldsValue({ rejectReason: latest.reason || "" });
     } else {
-      form.resetFields(["rejectReason"]);
+      verifyForm.resetFields(["rejectReason"]);
     }
   };
 
@@ -176,38 +167,6 @@ const CompanyManagement: React.FC = () => {
     console.log("company: ", company);
     editForm.setFieldsValue(company);
     setIsEditModalVisible(true);
-  };
-
-  const updateCompanyData = async (values: any) => {
-    try {
-      const res = await UpdateCompany(currentCompany?.ID!, {
-        ...values,
-        address_id: currentCompany?.address_id, // แนบไว้ถ้ามี
-        admin_id: currentCompany?.admin_id,
-      });
-      if (res.status === 200) {
-        message.success("อัปเดตข้อมูลบริษัทเรียบร้อยแล้ว");
-        setIsEditModalVisible(false);
-        setReload(!reload);
-      }
-    } catch (err) {
-      message.error("เกิดข้อผิดพลาดในการอัปเดต");
-      console.error(err);
-    }
-  };
-
-  const createCompany = async (values: any) => {
-    try {
-      const res = await CreateCompany(values);
-      if (res.status === 201) {
-        message.success("เพิ่มบริษัทเรียบร้อยแล้ว");
-        setIsAddModalVisible(false);
-        setReload(!reload);
-      }
-    } catch (err) {
-      message.error("เกิดข้อผิดพลาดในการเพิ่มบริษัท");
-      console.error(err);
-    }
   };
 
   const removeCompany = async (companyId: number) => {
@@ -285,122 +244,6 @@ const CompanyManagement: React.FC = () => {
     return counts;
   }, [tabKey, activeCompanies, deletedCompanies, statusFilterOptions]);
 
-  /*=========================   จัดการจังหวัด   ================================*/
-  const loadProvinces = async () => {
-    try {
-      const res = await GetAllProvinces(); // เรียกแค่ตัวเดียว
-      const data = res.data || res;
-      setRawProvinces(data);
-      setProvinceOptions(
-        data.map((p: any) => ({
-          label: p.name_th,
-          value: p.ID,
-        }))
-      );
-
-      if (currentCompany?.Address?.Province?.ID) {
-        // set ค่า default + preload ตัวเลือก
-        const province = data.find(
-          (p: any) => p.ID === currentCompany.Address?.Province?.ID
-        );
-        if (province) {
-          setDistrictOptions(
-            province.Districts.map((d: any) => ({
-              label: d.name_th,
-              value: d.ID,
-            }))
-          );
-
-          const district = province.Districts.find(
-            (d: any) => d.ID === currentCompany.Address?.District?.ID
-          );
-          if (district) {
-            setSubdistrictOptions(
-              district.SubDistricts.map((s: any) => ({
-                label: s.name_th,
-                value: s.ID,
-                data: s,
-              }))
-            );
-
-            const subdistrict = district.SubDistricts.find(
-              (s: any) => s.ID === currentCompany.Address?.SubDistrict?.ID
-            );
-            if (subdistrict) {
-              setSelectedSubdistrict(subdistrict);
-
-              editForm.setFieldsValue({
-                Address: {
-                  Province: province.ID,
-                  District: district.ID,
-                  SubDistrict: subdistrict.ID,
-                  Postcode: subdistrict.Postcode?.ID,
-                },
-              });
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error("โหลดจังหวัดล้มเหลว:", err);
-    }
-  };
-
-  const handleProvinceChange = (provinceId: number) => {
-    const province = rawProvinces.find((p: any) => p.ID === provinceId);
-    if (province) {
-      const districts = province.Districts || [];
-      setDistrictOptions(
-        districts.map((d: any) => ({ label: d.name_th, value: d.ID }))
-      );
-      setSubdistrictOptions([]);
-      setSelectedSubdistrict(null);
-
-      editForm.setFieldsValue({
-        Address: {
-          Province: provinceId,
-          District: undefined,
-          SubDistrict: undefined,
-          Postcode: undefined,
-        },
-      });
-    }
-  };
-  const handleDistrictChange = (districtId: number) => {
-    const provinceId = editForm.getFieldValue(["Address", "Province"]);
-    const province = rawProvinces.find((p: any) => p.ID === provinceId);
-    const district = province?.Districts.find((d: any) => d.ID === districtId);
-    if (district) {
-      const subs = district.SubDistricts || [];
-      setSubdistrictOptions(
-        subs.map((s: any) => ({
-          label: s.name_th,
-          value: s.ID,
-          data: s,
-        }))
-      );
-      setSelectedSubdistrict(null);
-
-      editForm.setFieldsValue({
-        Address: {
-          District: districtId,
-          SubDistrict: undefined,
-          Postcode: undefined,
-        },
-      });
-    }
-  };
-  const handleSubdistrictChange = (subId: number, option: any) => {
-    setSelectedSubdistrict(option.data);
-
-    editForm.setFieldsValue({
-      Address: {
-        SubDistrict: subId,
-        Postcode: option.data?.Postcode?.ID,
-      },
-    });
-  };
-
   /*=========================   จัดการตาราง   ================================*/
   const columns: ColumnsType<CompanyInterface> = [
     { title: "ID", dataIndex: "ID", key: "ID" },
@@ -432,6 +275,7 @@ const CompanyManagement: React.FC = () => {
       title: "การรับรอง",
       key: "status",
       align: "center",
+      fixed: "right" as const,
       filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
       onFilter: (val, rec) => getCompanyLatestStatus(rec) === val,
       filterMode: "tree",
@@ -457,6 +301,7 @@ const CompanyManagement: React.FC = () => {
     {
       title: "การจัดการ",
       key: "action",
+      fixed: "right" as const,
       render: (_, rec) => (
         <Flex gap={16}>
           <EditOutlined
@@ -589,16 +434,16 @@ const CompanyManagement: React.FC = () => {
           title="รายละเอียดการรับรอง"
           onCancel={() => {
             setIsDetailModalVisible(false);
-            form.resetFields();
+            verifyForm.resetFields();
             setSelectedVerifyStatus("");
           }}
           onOk={async () => {
             if (isReadOnlyStatus) return;
             try {
               if (selectedVerifyStatus === "ปฏิเสธ") {
-                await form.validateFields();
+                await verifyForm.validateFields();
               }
-              const reason = form.getFieldValue("rejectReason") || "";
+              const reason = verifyForm.getFieldValue("rejectReason") || "";
               await submitVerificationDecision(reason);
             } catch (err) {}
           }}
@@ -606,7 +451,7 @@ const CompanyManagement: React.FC = () => {
           cancelText="ยกเลิก"
           footer={isReadOnlyStatus ? null : undefined}
         >
-          <Form form={form} layout="vertical">
+          <Form form={verifyForm} layout="vertical">
             <p>
               <strong>บริษัท:</strong> {currentCompany?.company_name}
             </p>
@@ -671,7 +516,7 @@ const CompanyManagement: React.FC = () => {
                     onChange={(e) => {
                       setSelectedVerifyStatus(e.target.value);
                       if (e.target.value !== "ปฏิเสธ")
-                        form.resetFields(["rejectReason"]);
+                        verifyForm.resetFields(["rejectReason"]);
                     }}
                     value={selectedVerifyStatus}
                     style={{ marginTop: 16 }}
@@ -703,48 +548,17 @@ const CompanyManagement: React.FC = () => {
           </Form>
         </Modal>
 
-        {/* <EditCompanyModal
+        <EditCompanyModal
           isEditModalVisible={isEditModalVisible}
           setIsEditModalVisible={setIsEditModalVisible}
           editForm={editForm}
           currentCompany={currentCompany}
-          updateCompanyData={updateCompanyData}
-                    provinceOptions={provinceOptions}
-          districtOptions={districtOptions}
-          subdistrictOptions={subdistrictOptions}
-          selectedSubdistrict={selectedSubdistrict}
-          handleProvinceChange={handleProvinceChange}
-          handleDistrictChange={handleDistrictChange}
-          handleSubdistrictChange={handleSubdistrictChange}
+          setReload={setReload}
+          reload={reload}
         />
         <AddCompanyModal
-          isVisible={isAddModalVisible}
-          setIsVisible={setIsAddModalVisible}
-          onSubmit={createCompany}
-        /> */}
-        <CompanyFormModal
-          form={editForm}
-          rawProvinces={rawProvinces}
-          districtOptions={districtOptions}
-          subdistrictOptions={subdistrictOptions}
-          selectedSubdistrict={selectedSubdistrict}
-          onFinish={updateCompanyData}
-          onProvinceChange={handleProvinceChange}
-          onDistrictChange={handleDistrictChange}
-          onSubdistrictChange={handleSubdistrictChange}
-          isEdit={true}
-          initialValues={{
-            ...currentCompany,
-            Address: {
-              Province: currentCompany?.Address?.Province?.ID,
-              District: currentCompany?.Address?.District?.ID,
-              SubDistrict: currentCompany?.Address?.SubDistrict?.ID,
-              Postcode: currentCompany?.Address?.Postcode?.ID,
-            },
-            created_at_formatted: dayjs(currentCompany?.CreatedAt).format(
-              "DD/MM/YYYY HH:mm"
-            ),
-          }}
+          isAddModalVisible={isAddModalVisible}
+          setIsAddModalVisible={setIsAddModalVisible}
         />
       </Layout>
     </Layout>

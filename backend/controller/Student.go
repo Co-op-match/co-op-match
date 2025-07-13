@@ -176,3 +176,101 @@ func GetUniversities(c *gin.Context) {
 
 	c.JSON(http.StatusOK, universities)
 }
+
+// GET /students/active
+func GetAllActiveStudents(c *gin.Context) {
+	var students []entity.Student
+
+	err := config.DB().
+		Preload("Gender").
+		Preload("User").
+		Preload("Address.Province").
+		Preload("Address.District").
+		Preload("Address.SubDistrict").
+		Preload("Address.Postcode").
+		Preload("Admin").
+		Preload("Education.University").
+		Preload("Education.Faculty").
+		Preload("Education.Program").
+		Preload("Education.EducationLevel").
+		Preload("StudentSkill.Skill").
+		Preload("StudentInterest.Interest").
+		Preload("ApplicationDetails").
+		Preload("InterviewAppointment").
+		Preload("Reviews").
+		Preload("JobMatches").
+		Where("students.deleted_at IS NULL").
+		Find(&students).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch active students",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, students)
+}
+
+// GET /students/deleted
+func GetAllDeletedStudents(c *gin.Context) {
+	var students []entity.Student
+
+	err := config.DB().
+		Unscoped(). // ดึง soft deleted ด้วย
+		Where("students.deleted_at IS NOT NULL").
+		Preload("Gender").
+		Preload("User").
+		Preload("Address.Province").
+		Preload("Address.District").
+		Preload("Address.SubDistrict").
+		Preload("Address.Postcode").
+		Preload("Admin").
+		Preload("Education.University").
+		Preload("Education.Faculty").
+		Preload("Education.Program").
+		Preload("Education.EducationLevel").
+		Preload("StudentSkill.Skill").
+		Preload("StudentInterest.Interest").
+		Preload("ApplicationDetails").
+		Preload("InterviewAppointment").
+		Preload("Reviews").
+		Preload("JobMatches").
+		Find(&students).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch deleted students",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, students)
+}
+
+func DeleteStudent(c *gin.Context) {
+	id := c.Param("id")
+
+	// Step 1: หา student ตาม id
+	var student entity.Student
+	if err := config.DB().First(&student, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "student not found"})
+		return
+	}
+
+	// Step 2: ลบ student
+	if err := config.DB().Delete(&student).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete student"})
+		return
+	}
+
+	// Step 3: ลบ user ที่เกี่ยวข้อง
+	if err := config.DB().Delete(&entity.User{}, student.UserID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "student soft deleted successfully"})
+}

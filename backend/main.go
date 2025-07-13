@@ -72,6 +72,9 @@ func main() {
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
 			studentGroup.GET("users", controller.GetAllUser)
+			studentGroup.GET("/all-active", controller.GetAllActiveStudents)
+			studentGroup.GET("/all-deleted", controller.GetAllDeletedStudents)
+			studentGroup.DELETE("/delete/:id", controller.DeleteStudent)
 		}
 		addressGroup := router.Group("/address")
 		{
@@ -127,6 +130,7 @@ func main() {
 		{
 			companyGroup.GET("", controller.GetAllCompany)
 			companyGroup.POST("", controller.CreateCompany)
+			companyGroup.POST("/create-user-company-contact", controller.CreateUserCompanyContact)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 			companyGroup.GET("/all-active", controller.GetAllActiveCompanies)
@@ -144,6 +148,17 @@ func main() {
 			adminGroup.GET("/", controller.GetAllAdmin)
 			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 			adminGroup.GET("/:id", controller.GetAdminByID)
+			adminGroup.GET("/all-active", controller.GetAllActiveAdmins)
+			adminGroup.GET("/all-deleted", controller.GetAllDeletedAdmins)
+			adminGroup.DELETE("/delete/:id", controller.DeleteAdmin)
+		}
+		academicStaffGroup := r.Group("/academic-staff")
+		{
+			academicStaffGroup.POST("/create-user-academic-staff-contact", controller.CreateUserAcademicStaffContact)
+			academicStaffGroup.GET("/all-active", controller.GetAllActiveAcademicStaffs)
+			academicStaffGroup.GET("/all-deleted", controller.GetAllDeletedAcademicStaffs)
+			academicStaffGroup.DELETE("/delete/:id", controller.DeleteAcademicStaff)
+			academicStaffGroup.PATCH("/update/:id", controller.UpdateAcademicStaff)
 		}
 	}
 	r.GET("/", func(c *gin.Context) {

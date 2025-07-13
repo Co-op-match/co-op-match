@@ -10,6 +10,7 @@ import (
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
@@ -296,4 +297,119 @@ func UpdateCompany(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, company)
+}
+
+func CreateUserCompanyContact(c *gin.Context) {
+	// === รับค่าจาก form ===
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+	roleID := c.PostForm("role_id")
+	companyName := c.PostForm("company_name")
+
+	// === รับค่าที่อยู่ ===
+	provinceID := c.PostForm("address_province_id")
+	districtID := c.PostForm("address_district_id")
+	subdistrictID := c.PostForm("address_sub_district_id")
+	postcodeID := c.PostForm("address_postcode_id")
+	houseNumber := c.PostForm("address_house_number")
+	village := c.PostForm("address_village")
+	street := c.PostForm("address_street")
+	subStreet := c.PostForm("address_sub_street")
+
+	// === รับค่าติดต่อ ===
+	phone := c.PostForm("contact_phone")
+	contactEmail := c.PostForm("contact_email")
+	website := c.PostForm("contact_website")
+	line := c.PostForm("contact_line")
+	facebook := c.PostForm("contact_facebook")
+
+	// === เช็ค email ซ้ำ ===
+	var existing entity.User
+	if err := config.DB().Where("email = ?", email).First(&existing).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "อีเมลนี้ถูกใช้งานแล้ว"})
+		return
+	}
+
+	// === สร้าง User ===
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 14)
+	user := entity.User{
+		Email:    email,
+		Password: string(hashedPassword),
+		IsActive: true,
+	}
+	if rid, err := strconv.ParseUint(roleID, 10, 64); err == nil {
+		user.RoleID = uint(rid)
+	}
+	if err := config.DB().Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างผู้ใช้ไม่สำเร็จ"})
+		return
+	}
+
+	// === สร้าง Contact ===
+	contact := entity.Contact{
+		PhoneNumber: phone,
+		Email:       contactEmail,
+		Website:     website,
+		Line:        line,
+		Facebook:    facebook,
+	}
+	if err := config.DB().Create(&contact).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างข้อมูลติดต่อไม่สำเร็จ"})
+		return
+	}
+
+	// === สร้าง Address ===
+	provinceIDUint, _ := strconv.ParseUint(provinceID, 10, 64)
+	districtIDUint, _ := strconv.ParseUint(districtID, 10, 64)
+	subdistrictIDUint, _ := strconv.ParseUint(subdistrictID, 10, 64)
+	postcodeIDUint, _ := strconv.ParseUint(postcodeID, 10, 64)
+	address := entity.Address{
+		ProvinceID:    uint(provinceIDUint),
+		DistrictID:    uint(districtIDUint),
+		SubDistrictID: uint(subdistrictIDUint),
+		PostcodeID:    uint(postcodeIDUint),
+		HouseNumber:   houseNumber,
+		Village:       village,
+		Street:        street,
+		SubStreet:     subStreet,
+	}
+	if err := config.DB().Create(&address).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างที่อยู่ไม่สำเร็จ"})
+		return
+	}
+
+	// === อัปโหลดโลโก้ ===
+	file, err := c.FormFile("logo")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กรุณาอัปโหลดโลโก้บริษัท"})
+		return
+	}
+	uploadDir := "public/uploads/companyLogo"
+	_ = os.MkdirAll(uploadDir, os.ModePerm)
+	filename := fmt.Sprintf("%s-%s", time.Now().Format("20060102-150405"), file.Filename)
+	path := filepath.Join(uploadDir, filename)
+	if err := c.SaveUploadedFile(file, path); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปโหลดโลโก้ไม่สำเร็จ"})
+		return
+	}
+	logoURL := fmt.Sprintf("/uploads/companyLogo/%s", filename)
+
+	// === สร้าง Company ===
+	company := entity.Company{
+		CompanyName: companyName,
+		Logo:        logoURL,
+		UserID:      user.ID,
+		ContactID:   contact.ID,
+		AddressID:   address.ID,
+	}
+	if err := config.DB().Create(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างบริษัทไม่สำเร็จ"})
+		return
+	}
+
+	// === Success ===
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "สร้างบริษัทสำเร็จ",
+		"data":    company,
+	})
 }

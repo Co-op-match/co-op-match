@@ -6,31 +6,32 @@ import {
   Row,
   Col,
   Select,
-  Image,
   Button,
   type FormInstance,
   message,
 } from "antd";
 import Title from "antd/es/typography/Title";
-import dayjs from "dayjs";
-import type { CompanyInterface } from "../../../../interfaces/Company";
-import { GetAllProvinces } from "../../../../services/https/index";
-import { UpdateCompany } from "../../../../services/https/aum";
+import {
+  GetAllProvinces,
+  GetAllGender,
+} from "../../../../services/https/index";
+import type { AcademicStaffInterface } from "../../../../interfaces/AcademicStaff";
+import { UpdateAcademicStaff } from "../../../../services/https/aum";
 
-interface CompanyEditModalProps {
+interface LecturersEditModalProps {
   isEditModalVisible: boolean;
   setIsEditModalVisible: (value: boolean) => void;
   editForm: FormInstance;
-  currentCompany: CompanyInterface | null;
+  selectedStaff: AcademicStaffInterface | null;
   setReload: React.Dispatch<React.SetStateAction<boolean>>;
   reload: boolean;
 }
 
-const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
+const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
   isEditModalVisible,
   setIsEditModalVisible,
   editForm,
-  currentCompany,
+  selectedStaff,
   setReload,
   reload,
 }) => {
@@ -39,20 +40,22 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
   const [districtOptions, setDistrictOptions] = useState<any[]>([]);
   const [subdistrictOptions, setSubdistrictOptions] = useState<any[]>([]);
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
+  const [genderOptions, setGenderOptions] = useState<any[]>([]);
 
   useEffect(() => {
-    loadProvinces();
-  }, [currentCompany]);
+    loadProvincesAndGenders();
+  }, [selectedStaff]);
 
-  const updateCompanyData = async (values: any) => {
+  const updateStaffData = async (values: any) => {
     try {
-      const res = await UpdateCompany(currentCompany?.ID!, {
+      const res = await UpdateAcademicStaff(selectedStaff?.ID!, {
         ...values,
-        address_id: currentCompany?.address_id, // แนบไว้ถ้ามี
-        admin_id: currentCompany?.admin_id,
+        address_id: selectedStaff?.address_id,
+        admin_id: selectedStaff?.admin_id,
+        gender_id: values.gender_id,
       });
       if (res.status === 200) {
-        message.success("อัปเดตข้อมูลบริษัทเรียบร้อยแล้ว");
+        message.success("อัปเดตข้อมูลอาจารย์เรียบร้อยแล้ว");
         setIsEditModalVisible(false);
         setReload(!reload);
       }
@@ -62,22 +65,27 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
     }
   };
 
-  const loadProvinces = async () => {
+  const loadProvincesAndGenders = async () => {
     try {
-      const res = await GetAllProvinces(); // เรียกแค่ตัวเดียว
-      const data = res.data || res;
-      setRawProvinces(data);
+      const provincesRes = await GetAllProvinces();
+      const provinces = provincesRes.data || provincesRes;
+
+      const gendersRes = await GetAllGender();
+      if (Array.isArray(gendersRes)) {
+        setGenderOptions(
+          gendersRes.map((g) => ({ label: g.name, value: g.ID }))
+        );
+      }
+
+      setRawProvinces(provinces);
+
       setProvinceOptions(
-        data.map((p: any) => ({
-          label: p.name_th,
-          value: p.ID,
-        }))
+        provinces.map((p: any) => ({ label: p.name_th, value: p.ID }))
       );
 
-      if (currentCompany?.Address?.Province?.ID) {
-        // set ค่า default + preload ตัวเลือก
-        const province = data.find(
-          (p: any) => p.ID === currentCompany.Address?.Province?.ID
+      if (selectedStaff?.Address?.Province?.ID) {
+        const province = provinces.find(
+          (p: any) => p.ID === selectedStaff.Address?.Province?.ID
         );
         if (province) {
           setDistrictOptions(
@@ -86,9 +94,8 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
               value: d.ID,
             }))
           );
-
           const district = province.Districts.find(
-            (d: any) => d.ID === currentCompany.Address?.District?.ID
+            (d: any) => d.ID === selectedStaff.Address?.District?.ID
           );
           if (district) {
             setSubdistrictOptions(
@@ -98,13 +105,11 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 data: s,
               }))
             );
-
             const subdistrict = district.SubDistricts.find(
-              (s: any) => s.ID === currentCompany.Address?.SubDistrict?.ID
+              (s: any) => s.ID === selectedStaff.Address?.SubDistrict?.ID
             );
             if (subdistrict) {
               setSelectedSubdistrict(subdistrict);
-
               editForm.setFieldsValue({
                 Address: {
                   Province: province.ID,
@@ -118,7 +123,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
         }
       }
     } catch (err) {
-      console.error("โหลดจังหวัดล้มเหลว:", err);
+      console.error("โหลดข้อมูลล้มเหลว:", err);
     }
   };
 
@@ -170,7 +175,6 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
 
   const handleSubdistrictChange = (subId: number, option: any) => {
     setSelectedSubdistrict(option.data);
-
     editForm.setFieldsValue({
       Address: {
         SubDistrict: subId,
@@ -181,7 +185,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
 
   return (
     <Modal
-      title="แก้ไขข้อมูลบริษัท"
+      title="แก้ไขข้อมูลอาจารย์"
       open={isEditModalVisible}
       onOk={() => editForm.submit()}
       onCancel={() => setIsEditModalVisible(false)}
@@ -192,60 +196,59 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
       <Form
         form={editForm}
         layout="vertical"
-        onFinish={updateCompanyData}
+        onFinish={updateStaffData}
         initialValues={{
-          ...currentCompany,
+          ...selectedStaff,
           Address: {
-            Province: currentCompany?.Address?.Province?.ID,
-            District: currentCompany?.Address?.District?.ID,
-            SubDistrict: currentCompany?.Address?.SubDistrict?.ID,
-            Postcode: currentCompany?.Address?.Postcode?.ID,
+            Province: selectedStaff?.Address?.Province?.ID,
+            District: selectedStaff?.Address?.District?.ID,
+            SubDistrict: selectedStaff?.Address?.SubDistrict?.ID,
+            Postcode: selectedStaff?.Address?.Postcode?.ID,
           },
-          created_at_formatted: dayjs(currentCompany?.CreatedAt).format(
-            "DD/MM/YYYY HH:mm"
-          ),
+          gender_id: selectedStaff?.Gender?.ID,
         }}
-        key={currentCompany?.ID}
+        key={selectedStaff?.ID}
       >
         <Row gutter={24}>
-          <Col span={16}>
+          <Col span={12}>
             <Form.Item
-              name="company_name"
-              label="ชื่อบริษัท"
+              name="academic_position"
+              label="ตำแหน่งทางวิชาการ"
               rules={[{ required: true }]}
             >
-              <Input placeholder="ชื่อบริษัท" />
+              <Input placeholder="ตำแหน่งทางวิชาการ" />
             </Form.Item>
           </Col>
-          <Col span={8}>
-            <Form.Item
-              name="logo"
-              label="โลโก้ (URL)"
-              rules={[{ type: "url" }]}
-            >
+          <Col span={12}>
+            <Form.Item name="age" label="อายุ">
+              <Input type="number" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="faculty" label="คณะ">
               <Input />
             </Form.Item>
           </Col>
+          <Col span={12}>
+            <Form.Item name="department" label="ภาควิชา">
+              <Input />
+            </Form.Item>
+          </Col>
+          <Col span={24}>
+            <Form.Item name="university" label="มหาวิทยาลัย">
+              <Input />
+            </Form.Item>
+          </Col>
+          <Col span={24}>
+            <Form.Item
+              name="gender_id"
+              label="เพศ"
+              rules={[{ required: true }]}
+            >
+              <Select options={genderOptions} placeholder="เลือกเพศ" />
+            </Form.Item>
+          </Col>
         </Row>
-
-        {editForm.getFieldValue("logo") && (
-          <Row justify="start" style={{ marginBottom: 24 }}>
-            <Col>
-              <p>ตัวอย่างโลโก้:</p>
-              <Image
-                src={editForm.getFieldValue("logo")}
-                alt="โลโก้บริษัท"
-                width={150}
-                height={150}
-                style={{
-                  objectFit: "contain",
-                  border: "1px solid #ccc",
-                  padding: 8,
-                }}
-              />
-            </Col>
-          </Row>
-        )}
 
         <Title level={5}>ที่อยู่</Title>
         <Row gutter={16}>
@@ -285,15 +288,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 options={provinceOptions}
                 onChange={handleProvinceChange}
                 placeholder="เลือกจังหวัด"
-                filterOption={(input, option) =>
-                  (option?.label as string)
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
               />
             </Form.Item>
           </Col>
-
           <Col span={12}>
             <Form.Item
               label="อำเภอ / เขต"
@@ -306,15 +303,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 onChange={handleDistrictChange}
                 placeholder="เลือกอำเภอ / เขต"
                 disabled={!districtOptions.length}
-                filterOption={(input, option) =>
-                  (option?.label as string)
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
               />
             </Form.Item>
           </Col>
-
           <Col span={12}>
             <Form.Item
               label="ตำบล / แขวง"
@@ -327,15 +318,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 onChange={handleSubdistrictChange}
                 placeholder="เลือกตำบล / แขวง"
                 disabled={!subdistrictOptions.length}
-                filterOption={(input, option) =>
-                  (option?.label as string)
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
               />
             </Form.Item>
           </Col>
-
           <Col span={12}>
             <Form.Item
               label="รหัสไปรษณีย์"
@@ -358,13 +343,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
             </Form.Item>
           </Col>
         </Row>
-
-        <Form.Item name="created_at_formatted" label="วันที่สมัคร">
-          <Input disabled />
-        </Form.Item>
       </Form>
     </Modal>
   );
 };
 
-export default CompanyEditModal;
+export default LecturersEditModal;

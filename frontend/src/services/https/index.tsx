@@ -225,15 +225,18 @@ async function GetAllCompany() {
     .then(res => res)
     .catch(e => e.response);
 }
-async function CreateCompany(data: FormData) {
-await axios.post(`${apiUrl}/company`, data, {
-  headers: {
-    'Content-Type': 'multipart/form-data',
-    Authorization: `${Bearer} ${Authorization}`, // ✅ สำคัญ
-  },
-})
-  .then(res => res)
-  .catch(e => e.response);
+async function CreateCompany(data: FormData): Promise<any> {
+  try {
+    const res = await axios.post(`${apiUrl}/company`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `${Bearer} ${Authorization}`,
+      },
+    });
+    return res;
+  } catch (e: any) {
+    return e.response;
+  }
 }
 
 async function GetCompanyByUserId(user_id: number): Promise<CompanyInterface> {

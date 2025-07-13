@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Table,
@@ -6,385 +6,506 @@ import {
   Row,
   Col,
   Button,
-  Card,
-  Flex,
-  Space,
   Modal,
   Form,
+  Radio,
+  message,
+  Select,
+  Flex,
+  Tabs,
   Popconfirm,
-  Image,
 } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
+  EditOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import AdminHeader from "../../../Component/AdminNavbar";
 import Title from "antd/es/typography/Title";
 import "../users.css";
+import AdminHeader from "../../../Component/AdminNavbar";
+import {
+  GetAllStatusVerify,
+  GetAllActiveAcademicStaffs,
+  GetAllDeletedAcademicStaffs,
+  UpdateVerifyStatus,
+  DeleteAcademicStaff,
+} from "../../../../services/https/aum";
+import type { AcademicStaffInterface } from "../../../../interfaces/AcademicStaff";
+import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
+import type { VerifyInterface } from "../../../../interfaces/Verify";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
+import EditLecturersModal from "./EditLecturersModal";
+import AddLecturersModal from "./AddLecturersModal";
 
-const { Content } = Layout;
-
-const initialData = [
-  {
-    key: 1,
-    id: 1,
-    name: "กุลณิภา กระจ่างวงศ์",
-    university: "ไฮเทค โซลูชั่นส์ จำกัด",
-    faculty: "เทคโนโลยีสารสนเทศ",
-    date: "20/05/2568",
-    status: "รับรอง",
-    academic_position: "รองศาสตราจารย์",
-    department: "วิทยาการคอมพิวเตอร์",
-    age: 45,
-    verification_document:
-      "https://www.dhr.nu.ac.th/wp-content/uploads/2023/02/FormE5.pdf",
-  },
-  {
-    key: 2,
-    id: 2,
-    name: "พรรณวร วิเชียรชาย",
-    university: "สมาร์ทวิชั่น อินโนเวชั่น จำกัด",
-    faculty: "บริหารธุรกิจ",
-    date: "20/05/2568",
-    status: "รอรับรอง",
-    academic_position: "ผู้ช่วยศาสตราจารย์",
-    department: "การจัดการ",
-    age: 50,
-    verification_document:
-      "https://www.dhr.nu.ac.th/wp-content/uploads/2023/02/FormE5.pdf",
-  },
-];
-
-const AcademicStaff: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("รอรับรอง");
-  const [searchText, setSearchText] = useState("");
-  const [data, setData] = useState(initialData);
+const AcademicStaffManagement: React.FC = () => {
+  const [form] = Form.useForm();
   const [editForm] = Form.useForm();
-  const [selectedRow, setSelectedRow] = useState<any>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [reload, setReload] = useState<boolean>(true);
 
-  const openDetailModal = (record: any) => {
-    setSelectedRow(record);
-    setShowDetailModal(true);
+  const [activeStaffs, setActiveStaffs] = useState<AcademicStaffInterface[]>(
+    []
+  );
+  const [deletedStaffs, setDeletedStaffs] = useState<AcademicStaffInterface[]>(
+    []
+  );
+  const [selectedStaff, setSelectedStaff] = useState<AcademicStaffInterface>(
+    {} as AcademicStaffInterface
+  );
+
+  const [statusList, setStatusList] = useState<StatusVerifyInterface[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [statusFilterOptions, setStatusFilterOptions] = useState<string[]>([]);
+  const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<
+    string[]
+  >([]);
+  const [tabKey, setTabKey] = useState("active");
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedStaff, reload]);
+
+  const fetchData = async () => {
+    const [resActive, resDeleted, resStatus] = await Promise.all([
+      GetAllActiveAcademicStaffs(),
+      GetAllDeletedAcademicStaffs(),
+      GetAllStatusVerify(),
+    ]);
+
+    if (resActive.status === 200) setActiveStaffs(resActive.data);
+    if (resDeleted.status === 200) setDeletedStaffs(resDeleted.data);
+    if (resStatus.status === 200) {
+      setStatusList(resStatus.data);
+      setStatusFilterOptions([
+        "ทั้งหมด",
+        ...resStatus.data.map((s: any) => s.status_verify),
+      ]);
+    }
   };
 
-  const confirmVerification = () => {
-    setShowDetailModal(false);
-    setShowConfirmModal(true);
+  const getLatestVerification = (staff: AcademicStaffInterface) => {
+    const verifications = staff.User?.Verifications || [];
+    return verifications.sort(
+      (a, b) =>
+        new Date(b.CreatedAt || "").getTime() -
+        new Date(a.CreatedAt || "").getTime()
+    )[0];
   };
 
-  const finalizeVerification = () => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === selectedRow.key ? { ...item, status: "รับรอง" } : item
-      )
+  const getStaffLatestStatus = (staff: AcademicStaffInterface) => {
+    const verifications = staff.User?.Verifications || [];
+    const latest = verifications.sort(
+      (a, b) =>
+        new Date(b.CreatedAt || "").getTime() -
+        new Date(a.CreatedAt || "").getTime()
+    )[0];
+    return latest?.StatusVerify?.status_verify || "ยังไม่ได้ส่งคำขอ";
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "รับรอง":
+        return { bgColor: "#52c41a", textColor: "#fff", border: "none" };
+      case "ปฏิเสธ":
+        return { bgColor: "#ff4d4f", textColor: "#fff", border: "none" };
+      case "รอรับรอง":
+        return { bgColor: "#faad14", textColor: "#fff", border: "none" };
+      default:
+        return {
+          bgColor: "#fff",
+          textColor: "#000",
+          border: "1px solid rgba(0,0,0,0.2)",
+        };
+    }
+  };
+
+  const statusCounts = useMemo(() => {
+    const source = tabKey === "active" ? activeStaffs : deletedStaffs;
+    const allStatuses = statusFilterOptions.filter((s) => s !== "ทั้งหมด");
+    const counts: Record<string, number> = {};
+    allStatuses.forEach((status) => {
+      counts[status] = 0;
+    });
+    for (const s of source) {
+      const status = getStaffLatestStatus(s);
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      }
+    }
+    return counts;
+  }, [tabKey, activeStaffs, deletedStaffs, statusFilterOptions]);
+
+  const handleSubmitStatus = async () => {
+    const latest = getLatestVerification(selectedStaff!);
+    const selectedStatusObj = statusList.find(
+      (s) => s.status_verify === selectedStatus
     );
-    setShowConfirmModal(false);
+    if (!latest || !selectedStatusObj) return;
+
+    const reason = form.getFieldValue("rejectReason") || "";
+    const updateData: VerifyInterface = {
+      StatusVerifyID: selectedStatusObj.ID,
+      AdminID: 1,
+      reason: selectedStatus === "ปฏิเสธ" ? reason : "",
+    };
+
+    try {
+      await UpdateVerifyStatus(latest.ID!, updateData);
+      message.success("อัปเดตสถานะเรียบร้อยแล้ว");
+      setIsModalVisible(false);
+      fetchData();
+    } catch (err) {
+      message.error("เกิดข้อผิดพลาด");
+    }
   };
 
-  const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
-    { title: "วันที่สมัคร", dataIndex: "date", key: "date" },
-    { title: "ชื่อ-นามสกุล", dataIndex: "name", key: "name" },
+  const handleDeleteStaff = async (id: number) => {
+    try {
+      const res = await DeleteAcademicStaff(id);
+      if (res.status === 200) {
+        message.success("ลบอาจารย์สำเร็จ");
+        fetchData();
+      } else {
+        message.error("เกิดข้อผิดพลาดในการลบ");
+      }
+    } catch (err) {
+      message.error("ลบไม่สำเร็จ");
+    }
+  };
+
+  const showEditStaffModal = (staff: AcademicStaffInterface) => {
+    setSelectedStaff(staff);
+    console.log("staff: ", staff);
+    editForm.setFieldsValue(staff);
+    setIsEditModalVisible(true);
+  };
+
+  const columns: ColumnsType<AcademicStaffInterface> = [
+    { title: "ID", dataIndex: "ID", key: "ID" },
+    {
+      title: "อีเมล",
+      key: "Email",
+      render: (_: any, rec: AcademicStaffInterface) =>
+        `${rec.User?.Email || ""}`,
+    },
     { title: "มหาวิทยาลัย", dataIndex: "university", key: "university" },
-    { title: "สาขา", dataIndex: "faculty", key: "faculty" },
+    { title: "คณะ", dataIndex: "faculty", key: "faculty" },
+    { title: "ภาควิชา", dataIndex: "department", key: "department" },
+    {
+      title: "ตำแหน่ง",
+      dataIndex: "academic_position",
+      key: "academic_position",
+    },
     {
       title: "การรับรอง",
       key: "status",
+      fixed: "right" as const,
       align: "center" as const,
-      render: (_: any, record: any) => (
-        <Button
-          onClick={() => openDetailModal(record)}
-          style={{
-            width: 100,
-            borderRadius: 12,
-            backgroundColor: record.status === "รับรอง" ? "#007AFF" : "#fff",
-            color: record.status === "รับรอง" ? "#fff" : "#000",
-            border:
-              record.status === "รับรอง" ? "none" : "1px solid rgba(0,0,0,0.2)",
-          }}
-        >
-          {record.status}
-        </Button>
-      ),
+      filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
+      onFilter: (val: any, rec: any) => getStaffLatestStatus(rec) === val,
+      filterMode: "tree" as const,
+      render: (_: any, rec: AcademicStaffInterface) => {
+        const status = getStaffLatestStatus(rec);
+        const { bgColor, textColor, border } = getStatusStyle(status);
+        return (
+          <Button
+            onClick={() => {
+              setSelectedStaff(rec);
+              setIsModalVisible(true);
+              setSelectedStatus(status);
+              form.setFieldsValue({
+                rejectReason: getLatestVerification(rec)?.reason,
+              });
+            }}
+            style={{
+              width: 110,
+              borderRadius: 12,
+              backgroundColor: bgColor,
+              color: textColor,
+              border,
+            }}
+          >
+            {status}
+          </Button>
+        );
+      },
     },
     {
       title: "การจัดการ",
-      key: "actions",
-      render: (_: any, record: any) => (
-        <Space>
+      key: "action",
+      fixed: "right" as const,
+      render: (_: any, rec: AcademicStaffInterface) => (
+        <Flex gap={16}>
           <EditOutlined
-            style={{ cursor: "pointer" }}
-            onClick={() => {
-              setSelectedRow(record);
-              editForm.setFieldsValue(record);
-              setShowEditModal(true);
-            }}
+            style={{ fontSize: 18, cursor: "pointer" }}
+            onClick={() => showEditStaffModal(rec)}
           />
-          /
           <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDeleteCard(record.ID || "")}
+            title="คุณแน่ใจหรือไม่ที่จะลบอาจารย์คนนี้?"
+            onConfirm={() => handleDeleteStaff(rec.ID)}
           >
-            <DeleteOutlined />
+            <DeleteOutlined style={{ cursor: "pointer", color: "red" }} />
           </Popconfirm>
-        </Space>
+        </Flex>
       ),
     },
   ];
 
-  const isPdfFile = (url: string) => {
-    return url?.toLowerCase().endsWith(".pdf");
-  };
-
-  const getFilteredData = () => {
-    let filtered = data;
-    if (activeTab !== "ทั้งหมด") {
-      filtered = filtered.filter((item) => item.status === activeTab);
-    }
-    if (searchText.trim()) {
-      filtered = filtered.filter((item) =>
-        Object.values(item).some((val) =>
-          String(val).toLowerCase().includes(searchText.toLowerCase())
+  const filteredStaffs = useMemo(() => {
+    const base = tabKey === "active" ? activeStaffs : deletedStaffs;
+    const filtered = selectedFilterStatuses.length
+      ? base.filter((s) =>
+          selectedFilterStatuses.includes(getStaffLatestStatus(s))
         )
-      );
-    }
-    return filtered;
-  };
-
-  const handleEditSubmit = () => {
-    editForm.validateFields().then((values) => {
-      setData((prev) =>
-        prev.map((item) =>
-          item.key === selectedRow.key ? { ...item, ...values } : item
-        )
-      );
-      setShowEditModal(false);
+      : base;
+    return filtered.filter((s) => {
+      const name = `${s.User?.Email || ""}`.toLowerCase();
+      return name.includes(searchKeyword.toLowerCase());
     });
-  };
-
-  const handleDeleteCard = async (cardID: string) => {
-    console.log("Delete card with ID:", cardID);
-  };
+  }, [
+    activeStaffs,
+    deletedStaffs,
+    tabKey,
+    selectedFilterStatuses,
+    searchKeyword,
+  ]);
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <Row>
-          <Col span={20}>
-            <Title level={3}>อาจารย์ (Lecturers)</Title>
-          </Col>
-          <Col span={4}>
-            <Flex align="center" gap={16} justify="end">
-              จำนวน
-              <Card
-                size="small"
-                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
-              >
-                <div style={{ fontSize: 18, fontWeight: "bolder" }}>
-                  {data.length}
-                </div>
-              </Card>
-            </Flex>
+        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
+          <Col>
+            <Title level={3}>อาจารย์ (Academic Staff)</Title>
           </Col>
         </Row>
+
+        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }} wrap>
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <Col key={status}>
+              <div className="custom-summary-box">
+                <div className="summary-title">{status}</div>
+                <div className="summary-count">{count}</div>
+              </div>
+            </Col>
+          ))}
+          <Col>
+            <div className="custom-summary-box highlight-box">
+              <div className="summary-title">จำนวนอาจารย์ทั้งหมด</div>
+              <div className="summary-count">
+                {tabKey === "active"
+                  ? activeStaffs.length
+                  : deletedStaffs.length}
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        <Tabs
+          defaultActiveKey="active"
+          onChange={(key) => setTabKey(key)}
+          items={[
+            { label: "อาจารย์ทั้งหมด", key: "active" },
+            { label: "อาจารย์ที่ถูกลบ", key: "deleted" },
+          ]}
+          style={{ marginTop: "1rem" }}
+        />
 
         <Flex
           justify="center"
           align="center"
           gap="5vw"
-          style={{ marginBottom: "1rem" }}
+          style={{ margin: "1rem 0" }}
         >
-          <div className="backgroundTabChooseVerify">
-            {["รอรับรอง", "รับรอง", "ทั้งหมด"].map((tab) => (
-              <div
-                key={tab}
-                className={`tabChooseVerify ${
-                  activeTab === tab ? "active" : ""
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </div>
-            ))}
-          </div>
-
+          <Select
+            mode="multiple"
+            value={selectedFilterStatuses}
+            onChange={(values) => {
+              if (values.includes("ทั้งหมด")) {
+                const allStatuses = statusFilterOptions.filter(
+                  (s) => s !== "ทั้งหมด"
+                );
+                const isAllSelected =
+                  selectedFilterStatuses.length === allStatuses.length &&
+                  allStatuses.every((s) => selectedFilterStatuses.includes(s));
+                if (isAllSelected) {
+                  setSelectedFilterStatuses([]);
+                } else {
+                  setSelectedFilterStatuses(allStatuses);
+                }
+              } else {
+                setSelectedFilterStatuses(values);
+              }
+            }}
+            style={{ width: "40vw" }}
+            options={statusFilterOptions.map((s) => ({ label: s, value: s }))}
+            placeholder="เลือกสถานะ"
+            allowClear
+          />
           <Input
             placeholder="ค้นหา..."
             suffix={<SearchOutlined style={{ color: "#999" }} />}
             className="searchInput"
-            value={searchText}
-            onChange={(e) => {
-              setSearchText(e.target.value);
-              setActiveTab("ทั้งหมด");
-            }}
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
           />
+          <Col>
+            <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
+              เพิ่มอาจารย์
+            </Button>
+          </Col>
         </Flex>
 
         <Table
           className="custom-table"
           columns={columns}
-          dataSource={getFilteredData()}
+          dataSource={filteredStaffs}
+          rowKey="ID"
           pagination={{ pageSize: 6 }}
           size="middle"
+          scroll={{ x: "max-content" }}
         />
+
         <Modal
-          open={showEditModal}
-          onCancel={() => setShowEditModal(false)}
-          onOk={handleEditSubmit}
-          okText="บันทึก"
+          open={isModalVisible}
+          title="รายละเอียดการรับรอง"
+          onCancel={() => {
+            setIsModalVisible(false);
+            form.resetFields();
+            setSelectedStatus("");
+          }}
+          onOk={handleSubmitStatus}
+          okText="ยืนยัน"
           cancelText="ยกเลิก"
-          title="แก้ไขข้อมูลอาจารย์"
+          footer={
+            getStaffLatestStatus(selectedStaff) === "รอรับรอง"
+              ? undefined
+              : null
+          }
         >
-          <Form form={editForm} layout="vertical">
-            <Form.Item
-              name="name"
-              label="ชื่อ-นามสกุล"
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="university"
-              label="มหาวิทยาลัย"
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item name="faculty" label="สาขา" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="academic_position" label="ตำแหน่งทางวิชาการ">
-              <Input />
-            </Form.Item>
-            <Form.Item name="department" label="ภาควิชา">
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="age"
-              label="อายุ"
-              rules={[{ type: "number", min: 0 }]}
-            >
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item name="verification_document" label="หนังสือรับรอง">
-              {selectedRow?.verification_document &&
-                (isPdfFile(selectedRow.verification_document) ? (
-                  <>
-                    <embed
-                      src={selectedRow.verification_document}
-                      width="100%"
-                      height="500px"
-                      type="application/pdf"
-                    />
-                    <a
-                      href={selectedRow.verification_document}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "block", marginTop: 10 }}
+          <Form form={form} layout="vertical">
+            <p>
+              <strong>อีเมล:</strong> {selectedStaff?.User?.Email}
+            </p>
+            {(() => {
+              const latest = getLatestVerification(selectedStaff);
+              if (!latest) return <p>ยังไม่มีการส่งคำขอรับรอง</p>;
+              return (
+                <>
+                  <p>
+                    <strong>สถานะ:</strong>{" "}
+                    {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
+                  </p>
+                  <p>
+                    <strong>วันที่ส่งคำขอ:</strong>{" "}
+                    {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
+                  </p>
+                  <p>
+                    <strong>วันที่ยืนยัน:</strong>{" "}
+                    {latest?.UpdatedAt
+                      ? dayjs(latest?.UpdatedAt).format("DD/MM/YYYY HH:mm")
+                      : "-"}
+                  </p>
+                  <p>
+                    <strong>เอกสารการยืนยัน:</strong>
+                  </p>
+                  {(() => {
+                    const url = latest.verification_document;
+                    const ext = url?.split(".").pop()?.toLowerCase();
+                    if (!url)
+                      return <p style={{ color: "gray" }}>ไม่มีเอกสาร</p>;
+                    if (["png", "jpg", "jpeg", "webp"].includes(ext!)) {
+                      return (
+                        <img
+                          src={url}
+                          alt="Verification Document"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: 400,
+                            borderRadius: 8,
+                          }}
+                        />
+                      );
+                    } else if (ext === "pdf") {
+                      return (
+                        <iframe
+                          src={url}
+                          title="PDF Document"
+                          width="100%"
+                          height="500px"
+                          style={{ border: "1px solid #ccc", borderRadius: 8 }}
+                        />
+                      );
+                    } else {
+                      return (
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          คลิกเพื่อเปิดเอกสาร
+                        </a>
+                      );
+                    }
+                  })()}
+                  <Radio.Group
+                    onChange={(e) => {
+                      setSelectedStatus(e.target.value);
+                      if (e.target.value !== "ปฏิเสธ")
+                        form.resetFields(["rejectReason"]);
+                    }}
+                    value={selectedStatus}
+                    style={{ marginTop: 16 }}
+                    disabled={
+                      getStaffLatestStatus(selectedStaff) !== "รอรับรอง"
+                    }
+                  >
+                    <Radio value="รับรอง">รับรอง</Radio>
+                    <Radio value="ปฏิเสธ">ปฏิเสธ</Radio>
+                  </Radio.Group>
+                  {selectedStatus === "ปฏิเสธ" && (
+                    <Form.Item
+                      name="rejectReason"
+                      rules={[
+                        {
+                          required: true,
+                          message: "กรุณาระบุเหตุผลในการปฏิเสธ",
+                        },
+                      ]}
                     >
-                      เปิดเอกสาร PDF
-                    </a>
-                  </>
-                ) : (
-                  <Image
-                    src={selectedRow.verification_document}
-                    alt="แนบเอกสาร"
-                    width="100%"
-                    style={{ marginTop: 16, borderRadius: 8 }}
-                  />
-                ))}
-            </Form.Item>
+                      <Input.TextArea
+                        rows={4}
+                        placeholder="กรุณาระบุเหตุผลในการปฏิเสธ"
+                        disabled={
+                          getStaffLatestStatus(selectedStaff) !== "รอรับรอง"
+                        }
+                      />
+                    </Form.Item>
+                  )}
+                </>
+              );
+            })()}
           </Form>
         </Modal>
 
-        <Modal
-          open={showDetailModal}
-          onCancel={() => setShowDetailModal(false)}
-          title="รายละเอียดการรับรอง"
-          footer={
-            selectedRow?.status === "รับรอง"
-              ? null
-              : [
-                  <Button
-                    key="cancel"
-                    onClick={() => setShowDetailModal(false)}
-                  >
-                    ยกเลิก
-                  </Button>,
-                  <Button
-                    key="confirm"
-                    type="primary"
-                    onClick={confirmVerification}
-                  >
-                    ยืนยัน
-                  </Button>,
-                ]
-          }
-        >
-          <p>
-            <strong>ชื่อ:</strong> {selectedRow?.name}
-          </p>
-          <p>
-            <strong>ตำแหน่งทางวิชาการ:</strong> {selectedRow?.academic_position}
-          </p>
-          <p>
-            <strong>อายุ:</strong> {selectedRow?.age}
-          </p>
-          <p>
-            <strong>คณะ:</strong> {selectedRow?.faculty}
-          </p>
-          <p>
-            <strong>ภาควิชา:</strong> {selectedRow?.department}
-          </p>
-          <p>
-            <strong>มหาวิทยาลัย:</strong> {selectedRow?.university}
-          </p>
-          {selectedRow?.verification_document &&
-            (isPdfFile(selectedRow.verification_document) ? (
-              <>
-                <embed
-                  src={selectedRow.verification_document}
-                  width="100%"
-                  height="500px"
-                  type="application/pdf"
-                />
-                <a
-                  href={selectedRow.verification_document}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "block", marginTop: 10 }}
-                >
-                  เปิดเอกสาร PDF
-                </a>
-              </>
-            ) : (
-              <Image
-                src={selectedRow.verification_document}
-                alt="แนบเอกสาร"
-                width="100%"
-                style={{ marginTop: 16, borderRadius: 8 }}
-              />
-            ))}
-        </Modal>
-
-        <Modal
-          title="ยืนยันการรับรองอีกครั้ง"
-          open={showConfirmModal}
-          onOk={finalizeVerification}
-          onCancel={() => setShowConfirmModal(false)}
-          okText="ยืนยัน"
-          cancelText="ยกเลิก"
-        >
-          <p>คุณแน่ใจหรือไม่ว่าจะรับรองอาจารย์นี้?</p>
-        </Modal>
+        <EditLecturersModal
+          isEditModalVisible={isEditModalVisible}
+          setIsEditModalVisible={setIsEditModalVisible}
+          editForm={editForm}
+          selectedStaff={selectedStaff}
+          setReload={setReload}
+          reload={reload}
+        />
+        <AddLecturersModal
+          isAddModalVisible={isAddModalVisible}
+          setIsAddModalVisible={setIsAddModalVisible}
+          setReload={setReload}
+          reload={reload}
+        />
       </Layout>
     </Layout>
   );
 };
 
-export default AcademicStaff;
+export default AcademicStaffManagement;

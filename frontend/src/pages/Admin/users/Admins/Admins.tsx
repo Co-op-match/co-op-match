@@ -1,212 +1,188 @@
 import React, { useEffect, useState } from "react";
 import {
   Layout,
-  Input,
   Row,
   Col,
-  Table,
-  Card,
-  Space,
   Typography,
+  Input,
+  Button,
+  Table,
+  Tabs,
+  Flex,
   Popconfirm,
-  Modal,
-  Form,
-  DatePicker,
+  message,
+  Card,
 } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
+  EditOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
 import AdminHeader from "../../../Component/AdminNavbar";
 import "../users.css";
+import type { AdminInterface } from "../../../../interfaces/Admin";
+import {
+  GetAllActiveAdmins,
+  GetAllDeletedAdmins,
+  DeleteAdmin,
+} from "../../../../services/https/aum";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 
 const { Title } = Typography;
 
-const initialAdminData = [
-  {
-    key: "1",
-    id: 1,
-    name: "สิริรัตน์ สายใจ",
-    birthday: "01/01/2535",
-    email: "sirirat@example.com",
-    userId: "1",
-  },
-  {
-    key: "2",
-    id: 2,
-    name: "พีรพงศ์ พรหมลิขิต",
-    birthday: "15/05/2532",
-    email: "peeraphong@example.com",
-    userId: "2",
-  },
-];
+const AdminManagementPage: React.FC = () => {
+  const [tabKey, setTabKey] = useState("active");
+  const [activeAdmins, setActiveAdmins] = useState<AdminInterface[]>([]);
+  const [deletedAdmins, setDeletedAdmins] = useState<AdminInterface[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminInterface | null>(
+    null
+  );
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
-const AdminList: React.FC = () => {
-  const [adminData, setAdminData] = useState(initialAdminData);
-  const [searchText, setSearchText] = useState("");
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState<any | null>(null);
-  const [editForm] = Form.useForm();
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
-    { title: "ชื่อ-นามสกุล", dataIndex: "name", key: "name" },
-    { title: "วันเกิด", dataIndex: "birthday", key: "birthday" },
-    { title: "อีเมล", dataIndex: "email", key: "email" },
-    { title: "เลขประจำตัวผู้ใช้", dataIndex: "userId", key: "userId" },
+  const fetchData = async () => {
+    const [resActive, resDeleted] = await Promise.all([
+      GetAllActiveAdmins(),
+      GetAllDeletedAdmins(),
+    ]);
+    if (resActive.status === 200) setActiveAdmins(resActive.data);
+    if (resDeleted.status === 200) setDeletedAdmins(resDeleted.data);
+  };
+
+  const columns: ColumnsType<AdminInterface> = [
+    { title: "ID", dataIndex: "ID", key: "ID" },
+    { title: "ชื่อ", dataIndex: "first_name", key: "first_name" },
+    { title: "นามสกุล", dataIndex: "last_name", key: "last_name" },
+    {
+      title: "วันเกิด",
+      dataIndex: "birthday",
+      key: "birthday",
+      render: (_: any, rec: AdminInterface) =>
+        rec.birthday ? dayjs(rec.birthday).format("DD/MM/YYYY") : "-",
+    },
+    { title: "อีเมล", dataIndex: ["User", "Email"], key: "email" },
     {
       title: "การจัดการ",
-      key: "actions",
-      render: (_: any, record: any) => (
-        <Space>
+      key: "action",
+      fixed: "right" as const,
+      render: (_: any, rec: AdminInterface) => (
+        <Flex gap={16}>
           <EditOutlined
-            style={{ cursor: "pointer" }}
-            onClick={() => openEditModal(record)}
+            style={{ fontSize: 18, cursor: "pointer" }}
+            onClick={() => showEditAdminModal(rec)}
           />
-          /
           <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDeleteCard(record.id)}
+            title="คุณแน่ใจหรือไม่ที่จะลบผู้ดูแลระบบคนนี้?"
+            onConfirm={() => handleDeleteAdmin(rec.ID!)}
           >
-            <DeleteOutlined />
+            <DeleteOutlined style={{ cursor: "pointer", color: "red" }} />
           </Popconfirm>
-        </Space>
+        </Flex>
       ),
     },
   ];
 
-  useEffect(() => {
-    if (editingAdmin) {
-      const birthday = editingAdmin.birthday;
-      const parsedBirthday = dayjs.isDayjs(birthday)
-        ? birthday
-        : dayjs(birthday, "DD/MM/YYYY");
-
-      editForm.setFieldsValue({
-        ...editingAdmin,
-        birthday: parsedBirthday.isValid() ? parsedBirthday : null,
-      });
+  const handleDeleteAdmin = async (id: number) => {
+    try {
+      const res = await DeleteAdmin(id);
+      if (res.status === 200) {
+        message.success("ลบผู้ดูแลระบบสำเร็จ");
+        fetchData();
+      } else {
+        message.error("เกิดข้อผิดพลาดในการลบ");
+      }
+    } catch (err) {
+      message.error("ลบไม่สำเร็จ");
     }
-  }, [editingAdmin, editForm]);
-
-  const filteredData = adminData.filter((item) =>
-    Object.values(item).some(
-      (val) =>
-        typeof val === "string" &&
-        val.toLowerCase().includes(searchText.toLowerCase())
-    )
-  );
-
-  const openEditModal = (record: any) => {
-    setEditingAdmin(record);
-    // editForm.setFieldsValue(record);
-    setShowEditModal(true);
   };
 
-  const handleEditSubmit = () => {
-    editForm.validateFields().then((values) => {
-      const updated = {
-        ...editingAdmin,
-        ...values,
-        birthday: values.birthday.format("DD/MM/YYYY"),
-      };
-      const updatedData = adminData.map((admin) =>
-        admin.id === updated.id ? updated : admin
-      );
-      setAdminData(updatedData);
-      setShowEditModal(false);
-    });
+  const showEditAdminModal = (admin: AdminInterface) => {
+    setSelectedAdmin(admin);
+    setIsEditModalVisible(true);
   };
 
-  const handleDeleteCard = (id: string | number) => {
-    setAdminData((prev) => prev.filter((admin) => admin.id !== id));
-  };
+  const filteredAdmins = (
+    tabKey === "active" ? activeAdmins : deletedAdmins
+  ).filter((admin) => {
+    const matchesSearch =
+      admin.first_name?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      admin.last_name?.toLowerCase().includes(searchKeyword.toLowerCase());
+    return matchesSearch;
+  });
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <Row justify="space-between" align="middle">
+        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
           <Col>
-            <Title level={3}>ผู้ดูแลระบบ (Admins)</Title>
+            <Title level={3}>ผู้ดูแลระบบ (Admin)</Title>
           </Col>
           <Col>
-            <Space>
-              <span style={{ fontWeight: "bold" }}>จำนวน</span>
+            <Flex align="center" gap={16}>
+              จำนวน
               <Card
                 size="small"
                 style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
               >
                 <div style={{ fontSize: 18, fontWeight: "bold" }}>
-                  {adminData.length}
+                  {tabKey == "active"
+                    ? activeAdmins.length
+                    : deletedAdmins.length}
                 </div>
               </Card>
-            </Space>
+            </Flex>
           </Col>
         </Row>
 
-        <Row justify="center" style={{ margin: "1.5rem 0" }}>
+        <Tabs
+          defaultActiveKey="active"
+          onChange={(key) => setTabKey(key)}
+          items={[
+            { label: "ผู้ดูแลทั้งหมด", key: "active" },
+            { label: "ผู้ดูแลที่ถูกลบ", key: "deleted" },
+          ]}
+          style={{ marginTop: "1rem" }}
+        />
+
+        <Flex
+          justify="center"
+          align="center"
+          gap="5vw"
+          style={{ margin: "1rem 0" }}
+        >
           <Input
-            placeholder="ค้นหา Admin..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="searchInput2"
+            placeholder="ค้นหา..."
+            suffix={<SearchOutlined style={{ color: "#999" }} />}
+            className="searchInput"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
           />
-        </Row>
+          <Col>
+            <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
+              เพิ่มผู้ดูแลระบบ
+            </Button>
+          </Col>
+        </Flex>
 
         <Table
           className="custom-table"
-          dataSource={filteredData}
           columns={columns}
-          pagination={{ pageSize: 5 }}
+          dataSource={filteredAdmins}
+          rowKey="ID"
+          pagination={{ pageSize: 6 }}
           size="middle"
+          scroll={{ x: "max-content" }}
         />
-
-        <Modal
-          title="แก้ไขข้อมูลผู้ดูแลระบบ"
-          open={showEditModal}
-          onOk={handleEditSubmit}
-          onCancel={() => setShowEditModal(false)}
-          okText="บันทึก"
-          cancelText="ยกเลิก"
-        >
-          <Form form={editForm} layout="vertical">
-            <Form.Item
-              label="ชื่อ - นามสกุล"
-              name="name"
-              rules={[{ required: true, message: "กรุณากรอกชื่อ-นามสกุล" }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              label="วันเกิด"
-              name="birthday"
-              rules={[{ required: true, message: "กรุณาเลือกวันเกิด" }]}
-            >
-              <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item
-              label="อีเมล"
-              name="email"
-              rules={[{ required: true, message: "กรุณากรอกอีเมล" }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              label="เลขประจำตัวผู้ใช้"
-              name="userId"
-              rules={[{ required: true, message: "กรุณากรอก User ID" }]}
-            >
-              <Input />
-            </Form.Item>
-          </Form>
-        </Modal>
       </Layout>
     </Layout>
   );
 };
 
-export default AdminList;
+export default AdminManagementPage;

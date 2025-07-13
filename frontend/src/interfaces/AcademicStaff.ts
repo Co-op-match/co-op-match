@@ -4,7 +4,7 @@ import type { AdminInterface } from "./Admin";
 import type { GenderInterface } from "./Gender";
 
 export interface AcademicStaffInterface {
-  id: number;
+  ID: number;
   academic_position: string;
   age: number;
   faculty: string;
@@ -17,8 +17,8 @@ export interface AcademicStaffInterface {
   admin_id: number;
   gender_id: number;
 
-  user?: UserInterface;
-  address?: AddressInterface;
-  admin?: AdminInterface;
-  gender?: GenderInterface;
+  User?: UserInterface;
+  Address?: AddressInterface;
+  Admin?: AdminInterface;
+  Gender?: GenderInterface;
 }
