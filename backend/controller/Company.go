@@ -155,7 +155,10 @@ func GetAllActiveCompanies(c *gin.Context) {
 	var companies []entity.Company
 
 	err := config.DB().
-		Preload("Address").
+		Preload("Address.Province").
+		Preload("Address.District").
+		Preload("Address.SubDistrict").
+		Preload("Address.Postcode").
 		Preload("Admin").
 		Preload("Contact").
 		Preload("IntershipPosts").
@@ -181,6 +184,10 @@ func GetAllDeletedCompany(c *gin.Context) {
 	if err := config.DB().
 		Unscoped(). // ดึงรวม soft deleted
 		Where("deleted_at IS NOT NULL").
+		Preload("Address.Province").
+		Preload("Address.District").
+		Preload("Address.SubDistrict").
+		Preload("Address.Postcode").
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
@@ -217,4 +224,76 @@ func DeleteCompany(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "soft deleted"})
+}
+
+func UpdateCompany(c *gin.Context) {
+	// รับ company id จาก path param
+	idStr := c.Param("id")
+	companyID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company ID"})
+		return
+	}
+
+	var input struct {
+		CompanyName string `json:"company_name"`
+		Logo        string `json:"logo"`
+		Address     struct {
+			HouseNumber  string `json:"house_number"`
+			Village      string `json:"village"`
+			Street       string `json:"street"`
+			SubStreet    string `json:"sub_street"`
+			Province     uint   `json:"Province"`
+			District     uint   `json:"District"`
+			SubDistrict  uint   `json:"SubDistrict"`
+			Postcode     uint   `json:"Postcode"`
+		} `json:"Address"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+
+	db := config.DB()
+
+	var company entity.Company
+	if err := db.Preload("Address").First(&company, companyID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
+
+	// อัปเดต company field
+	company.CompanyName = input.CompanyName
+	company.Logo = input.Logo
+
+	// อัปเดต address field
+	if company.Address.ID != 0 {
+		company.Address.HouseNumber = input.Address.HouseNumber
+		company.Address.Village = input.Address.Village
+		company.Address.Street = input.Address.Street
+		company.Address.SubStreet = input.Address.SubStreet
+		company.Address.ProvinceID = input.Address.Province
+		company.Address.DistrictID = input.Address.District
+		company.Address.SubDistrictID = input.Address.SubDistrict
+		company.Address.PostcodeID = input.Address.Postcode
+	}
+
+	// บันทึกลงฐานข้อมูล
+	if err := db.Save(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update company"})
+		return
+	}
+
+	// Save address ด้วย (หากจำเป็น)
+	if err := db.Save(&company.Address).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
+		return
+	}
+
+	c.JSON(http.StatusOK, company)
 }

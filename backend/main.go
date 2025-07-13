@@ -132,6 +132,7 @@ func main() {
 			companyGroup.GET("/all-active", controller.GetAllActiveCompanies)
 			companyGroup.GET("/all-deleted", controller.GetAllDeletedCompany)
 			companyGroup.DELETE("/delete/:id", controller.DeleteCompany)
+			companyGroup.PATCH("/patch-company/:id", controller.UpdateCompany)
 		}
 				contactGroup := router.Group("/contact")
 		{

@@ -1,8 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Row, Col, Select, Image, type FormInstance } from 'antd';
-import Title from 'antd/es/typography/Title';
-import dayjs from 'dayjs';
-import type { CompanyInterface } from '../../../../interfaces/Company';
+import React, { useEffect, useState } from "react";
+import {
+  Modal,
+  Form,
+  Input,
+  Row,
+  Col,
+  Select,
+  Image,
+  Button,
+  type FormInstance,
+} from "antd";
+import Title from "antd/es/typography/Title";
+import dayjs from "dayjs";
+import type { CompanyInterface } from "../../../../interfaces/Company";
+import { GetAllProvinces } from "../../../../services/https/index";
 
 interface CompanyEditModalProps {
   isEditModalVisible: boolean;
@@ -19,47 +30,131 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
   currentCompany,
   updateCompanyData,
 }) => {
-      const [provinces, setProvinces] = useState<any[]>([]);
-  const [amphures, setAmphures] = useState<any[]>([]);
-  const [tambons, setTambons] = useState<any[]>([]);
+  const [rawProvinces, setRawProvinces] = useState<any[]>([]);
+  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<any[]>([]);
+  const [subdistrictOptions, setSubdistrictOptions] = useState<any[]>([]);
+  const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_province.json')
-      .then(res => res.json())
-      .then(setProvinces)
-      .catch(console.error);
-  }, []);
+    const loadProvinces = async () => {
+      try {
+        const res = await GetAllProvinces(); // เรียกแค่ตัวเดียว
+        const data = res.data || res;
+        setRawProvinces(data);
+        setProvinceOptions(
+          data.map((p: any) => ({
+            label: p.name_th,
+            value: p.ID,
+          }))
+        );
 
-  const handleProvinceChange = (provinceName: string) => {
-    editForm.setFieldsValue({ Address: { district: undefined, subdistrict: undefined, post_code: undefined } });
-    setAmphures([]);
-    setTambons([]);
-    fetch('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_amphure.json')
-      .then(res => res.json())
-      .then(data => {
-        const selectedProvince = provinces.find(p => p.name_th === provinceName);
-        const filtered = data.filter((a: any) => a.province_id === selectedProvince?.id);
-        setAmphures(filtered);
+        if (currentCompany?.Address?.Province?.ID) {
+          // set ค่า default + preload ตัวเลือก
+          const province = data.find(
+            (p: any) => p.ID === currentCompany.Address?.Province?.ID
+          );
+          if (province) {
+            setDistrictOptions(
+              province.Districts.map((d: any) => ({
+                label: d.name_th,
+                value: d.ID,
+              }))
+            );
+
+            const district = province.Districts.find(
+              (d: any) => d.ID === currentCompany.Address?.District?.ID
+            );
+            if (district) {
+              setSubdistrictOptions(
+                district.SubDistricts.map((s: any) => ({
+                  label: s.name_th,
+                  value: s.ID,
+                  data: s,
+                }))
+              );
+
+              const subdistrict = district.SubDistricts.find(
+                (s: any) => s.ID === currentCompany.Address?.SubDistrict?.ID
+              );
+              if (subdistrict) {
+                setSelectedSubdistrict(subdistrict);
+
+                editForm.setFieldsValue({
+                  Address: {
+                    Province: province.ID,
+                    District: district.ID,
+                    SubDistrict: subdistrict.ID,
+                    Postcode: subdistrict.Postcode?.ID,
+                  },
+                });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("โหลดจังหวัดล้มเหลว:", err);
+      }
+    };
+
+    loadProvinces();
+  }, [currentCompany]);
+
+  const handleProvinceChange = (provinceId: number) => {
+    const province = rawProvinces.find((p: any) => p.ID === provinceId);
+    if (province) {
+      const districts = province.Districts || [];
+      setDistrictOptions(
+        districts.map((d: any) => ({ label: d.name_th, value: d.ID }))
+      );
+      setSubdistrictOptions([]);
+      setSelectedSubdistrict(null);
+
+      editForm.setFieldsValue({
+        Address: {
+          Province: provinceId,
+          District: undefined,
+          SubDistrict: undefined,
+          Postcode: undefined,
+        },
       });
-  };
-
-  const handleAmphureChange = (amphureName: string) => {
-    editForm.setFieldsValue({ Address: { subdistrict: undefined, post_code: undefined } });
-    setTambons([]);
-    fetch('https://raw.githubusercontent.com/kongvut/thai-province-data/master/api_tambon.json')
-      .then(res => res.json())
-      .then(data => {
-        const selectedAmphure = amphures.find(a => a.name_th === amphureName);
-        const filtered = data.filter((t: any) => t.amphure_id === selectedAmphure?.id);
-        setTambons(filtered);
-      });
-  };
-
-  const handleTambonChange = (tambonName: string) => {
-    const selectedTambon = tambons.find(t => t.name_th === tambonName);
-    if (selectedTambon) {
-      editForm.setFieldsValue({ Address: { post_code: String(selectedTambon.zip_code) } });
     }
+  };
+
+  const handleDistrictChange = (districtId: number) => {
+    const provinceId = editForm.getFieldValue(["Address", "Province"]);
+    const province = rawProvinces.find((p: any) => p.ID === provinceId);
+    const district = province?.Districts.find((d: any) => d.ID === districtId);
+    if (district) {
+      const subs = district.SubDistricts || [];
+      setSubdistrictOptions(
+        subs.map((s: any) => ({
+          label: s.name_th,
+          value: s.ID,
+          data: s,
+        }))
+      );
+      setSelectedSubdistrict(null);
+
+      editForm.setFieldsValue({
+        Address: {
+          District: districtId,
+          SubDistrict: undefined,
+          Postcode: undefined,
+        },
+      });
+    }
+  };
+
+  const handleSubdistrictChange = (subId: number, option: any) => {
+    setSelectedSubdistrict(option.data);
+
+    editForm.setFieldsValue({
+      Address: {
+        SubDistrict: subId,
+        Postcode: option.data?.Postcode?.ID,
+      },
+    });
   };
 
   return (
@@ -78,8 +173,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
         onFinish={updateCompanyData}
         initialValues={{
           ...currentCompany,
-          Address: currentCompany?.Address,
-          created_at_formatted: dayjs(currentCompany?.CreatedAt).format("DD/MM/YYYY HH:mm"),
+          created_at_formatted: dayjs(currentCompany?.CreatedAt).format(
+            "DD/MM/YYYY HH:mm"
+          ),
         }}
         key={currentCompany?.ID}
       >
@@ -88,7 +184,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
             <Form.Item
               name="company_name"
               label="ชื่อบริษัท"
-              rules={[{ required: true, message: "กรุณาระบุชื่อบริษัท" }]}
+              rules={[{ required: true }]}
             >
               <Input placeholder="ชื่อบริษัท" />
             </Form.Item>
@@ -97,9 +193,9 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
             <Form.Item
               name="logo"
               label="โลโก้ (URL)"
-              rules={[{ type: "url", message: "URL โลโก้ไม่ถูกต้อง" }]}
+              rules={[{ type: "url" }]}
             >
-              <Input placeholder="https://example.com/logo.png" />
+              <Input />
             </Form.Item>
           </Col>
         </Row>
@@ -113,19 +209,23 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 alt="โลโก้บริษัท"
                 width={150}
                 height={150}
-                style={{ objectFit: "contain", border: "1px solid #ccc", padding: 8 }}
+                style={{
+                  objectFit: "contain",
+                  border: "1px solid #ccc",
+                  padding: 8,
+                }}
               />
             </Col>
           </Row>
         )}
 
-        <Title level={5} style={{ marginTop: 16 }}>ที่อยู่</Title>
+        <Title level={5}>ที่อยู่</Title>
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name={["Address", "house_number"]}
               label="บ้านเลขที่"
-              rules={[{ required: true, message: "กรุณาระบุบ้านเลขที่" }]}
+              rules={[{ required: true }]}
             >
               <Input />
             </Form.Item>
@@ -135,7 +235,6 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
               <Input />
             </Form.Item>
           </Col>
-
           <Col span={12}>
             <Form.Item name={["Address", "street"]} label="ถนน">
               <Input />
@@ -149,53 +248,85 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
 
           <Col span={12}>
             <Form.Item
-              name={["Address", "province"]}
               label="จังหวัด"
-              rules={[{ required: true, message: "กรุณาเลือกจังหวัด" }]}
+              name={["Address", "Province"]}
+              rules={[{ required: true }]}
             >
-              <Select placeholder="เลือกจังหวัด" onChange={handleProvinceChange}>
-                {provinces.map(p => (
-                  <Select.Option key={p.id} value={p.name_th}>{p.name_th}</Select.Option>
-                ))}
-              </Select>
+              <Select
+                showSearch
+                options={provinceOptions}
+                onChange={handleProvinceChange}
+                placeholder="เลือกจังหวัด"
+                filterOption={(input, option) =>
+                  (option?.label as string)
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              />
             </Form.Item>
           </Col>
 
           <Col span={12}>
             <Form.Item
-              name={["Address", "district"]}
               label="อำเภอ / เขต"
-              rules={[{ required: true, message: "กรุณาเลือกอำเภอ/เขต" }]}
+              name={["Address", "District"]}
+              rules={[{ required: true }]}
             >
-              <Select placeholder="เลือกอำเภอ / เขต" disabled={!amphures.length} onChange={handleAmphureChange}>
-                {amphures.map(a => (
-                  <Select.Option key={a.id} value={a.name_th}>{a.name_th}</Select.Option>
-                ))}
-              </Select>
+              <Select
+                showSearch
+                options={districtOptions}
+                onChange={handleDistrictChange}
+                placeholder="เลือกอำเภอ / เขต"
+                disabled={!districtOptions.length}
+                filterOption={(input, option) =>
+                  (option?.label as string)
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              />
             </Form.Item>
           </Col>
 
           <Col span={12}>
             <Form.Item
-              name={["Address", "subdistrict"]}
               label="ตำบล / แขวง"
-              rules={[{ required: true, message: "กรุณาเลือกตำบล/แขวง" }]}
+              name={["Address", "SubDistrict"]}
+              rules={[{ required: true }]}
             >
-              <Select placeholder="เลือกตำบล / แขวง" disabled={!tambons.length} onChange={handleTambonChange}>
-                {tambons.map(t => (
-                  <Select.Option key={t.id} value={t.name_th}>{t.name_th}</Select.Option>
-                ))}
-              </Select>
+              <Select
+                showSearch
+                options={subdistrictOptions}
+                onChange={handleSubdistrictChange}
+                placeholder="เลือกตำบล / แขวง"
+                disabled={!subdistrictOptions.length}
+                filterOption={(input, option) =>
+                  (option?.label as string)
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              />
             </Form.Item>
           </Col>
 
           <Col span={12}>
             <Form.Item
-              name={["Address", "post_code"]}
               label="รหัสไปรษณีย์"
-              rules={[{ required: true, message: "กรุณากรอกรหัสไปรษณีย์" }]}
+              name={["Address", "Postcode"]}
+              rules={[{ required: true }]}
             >
-              <Input maxLength={5} />
+              <Select
+                disabled={!selectedSubdistrict?.Postcode}
+                options={
+                  selectedSubdistrict?.Postcode
+                    ? [
+                        {
+                          label: selectedSubdistrict.Postcode.post_code,
+                          value: selectedSubdistrict.Postcode.ID,
+                        },
+                      ]
+                    : []
+                }
+              />
             </Form.Item>
           </Col>
         </Row>

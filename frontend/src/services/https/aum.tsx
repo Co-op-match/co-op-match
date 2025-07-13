@@ -54,7 +54,7 @@ export async function GetAllDeletedCompany() {
 }
 export async function UpdateCompany(companyId: number, data: VerifyInterface) {
   return await axios
-    .patch(`${apiUrl}/patch-company/${companyId}`, data, requestOptions)
+    .patch(`${apiUrl}/company/patch-company/${companyId}`, data, requestOptions)
     .then((res) => res)
     .catch((e) => {
       console.error("Error updating verification status:", e);

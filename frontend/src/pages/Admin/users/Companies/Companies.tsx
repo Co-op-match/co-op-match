@@ -40,6 +40,8 @@ import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify"
 import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
 import CompanyEditModal from "./CompanyEditModal";
+import { CreateCompany } from "../../../../services/https";
+import AddCompanyModal from "./AddCompanyModal";
 
 const CompanyManagement: React.FC = () => {
   const [form] = Form.useForm();
@@ -66,6 +68,7 @@ const CompanyManagement: React.FC = () => {
   const [selectedVerifyStatus, setSelectedVerifyStatus] = useState<string>("");
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [reload, setReload] = useState<boolean>(true);
 
   const totalActive = activeCompanies.length;
@@ -184,6 +187,20 @@ const CompanyManagement: React.FC = () => {
     }
   };
 
+  const createCompany = async (values: any) => {
+    try {
+      const res = await CreateCompany(values);
+      if (res.status === 201) {
+        message.success("เพิ่มบริษัทเรียบร้อยแล้ว");
+        setIsAddModalVisible(false);
+        setReload(!reload);
+      }
+    } catch (err) {
+      message.error("เกิดข้อผิดพลาดในการเพิ่มบริษัท");
+      console.error(err);
+    }
+  };
+
   const removeCompany = async (companyId: number) => {
     const res = await DeleteCompany(companyId);
     if (res.status === 200) {
@@ -224,11 +241,11 @@ const CompanyManagement: React.FC = () => {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "รับรอง":
-        return { bgColor: "#007AFF", textColor: "#fff", border: "none" };
+        return { bgColor: "#52c41a", textColor: "#fff", border: "none" };
       case "ปฏิเสธ":
-        return { bgColor: "#FF4D4F", textColor: "#fff", border: "none" };
+        return { bgColor: "#ff4d4f", textColor: "#fff", border: "none" };
       case "รอรับรอง":
-        return { bgColor: "#d9d9d9", textColor: "#000", border: "none" };
+        return { bgColor: "#faad14", textColor: "#fff", border: "none" };
       default:
         return {
           bgColor: "#fff",
@@ -339,6 +356,11 @@ const CompanyManagement: React.FC = () => {
           <Col>
             <Title level={3}>บริษัท (Companies)</Title>
           </Col>
+          <Col>
+            <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
+              เพิ่มบริษัท
+            </Button>
+          </Col>
           {/* <Col>
             <Flex align="center" gap={16}>
               จำนวน
@@ -354,7 +376,7 @@ const CompanyManagement: React.FC = () => {
           </Col> */}
         </Row>
 
-        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }}>
+        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }} wrap>
           {Object.entries(statusCounts).map(([status, count]) => (
             <Col key={status}>
               <div className="custom-summary-box">
@@ -363,8 +385,8 @@ const CompanyManagement: React.FC = () => {
               </div>
             </Col>
           ))}
-           <Col>
-            <div className="custom-summary-box">
+          <Col>
+            <div className="custom-summary-box highlight-box">
               <div className="summary-title">จำนวนบริษัททั้งหมด</div>
               <div className="summary-count">
                 {tabKey === "active" ? totalActive : totalDeleted}
@@ -380,7 +402,7 @@ const CompanyManagement: React.FC = () => {
             { label: "บริษัททั้งหมด", key: "active" },
             { label: "บริษัทที่ถูกลบ", key: "deleted" },
           ]}
-           style={{ marginTop: "1rem" }}
+          style={{ marginTop: "1rem" }}
         />
         <Flex
           justify="center"
@@ -421,6 +443,11 @@ const CompanyManagement: React.FC = () => {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
           />
+          <Col>
+            <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
+              เพิ่มบริษัท
+            </Button>
+          </Col>
         </Flex>
 
         <Table
@@ -557,149 +584,11 @@ const CompanyManagement: React.FC = () => {
           currentCompany={currentCompany}
           updateCompanyData={updateCompanyData}
         />
-
-        {/*         <Modal
-          title="แก้ไขข้อมูลบริษัท"
-          open={isEditModalVisible}
-          onOk={() => editForm.submit()}
-          onCancel={() => setIsEditModalVisible(false)}
-          okText="บันทึก"
-          cancelText="ยกเลิก"
-          width={800}
-        >
-          <Form
-            form={editForm}
-            layout="vertical"
-            onFinish={updateCompanyData}
-            initialValues={{
-              ...currentCompany,
-              Address: currentCompany?.Address,
-              created_at_formatted: dayjs(currentCompany?.CreatedAt).format(
-                "DD/MM/YYYY HH:mm"
-              ),
-            }}
-            key={currentCompany?.ID} // to force re-render when switching companies
-          >
-            <Row gutter={24}>
-              <Col span={16}>
-                <Form.Item
-                  name="company_name"
-                  label="ชื่อบริษัท"
-                  rules={[{ required: true, message: "กรุณาระบุชื่อบริษัท" }]}
-                >
-                  <Input placeholder="ชื่อบริษัท" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  name="logo"
-                  label="โลโก้ (URL)"
-                  rules={[{ type: "url", message: "URL โลโก้ไม่ถูกต้อง" }]}
-                >
-                  <Input placeholder="https://example.com/logo.png" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            {editForm.getFieldValue("logo") && (
-              <Row justify="start" style={{ marginBottom: 24 }}>
-                <Col>
-                  <p>ตัวอย่างโลโก้:</p>
-                  <Image
-                    src={editForm.getFieldValue("logo")}
-                    alt="โลโก้บริษัท"
-                    width={150}
-                    height={150}
-                    style={{
-                      objectFit: "contain",
-                      border: "1px solid #ccc",
-                      padding: 8,
-                    }}
-                  />
-                </Col>
-              </Row>
-            )}
-
-            <Title level={5} style={{ marginTop: 16 }}>
-              ที่อยู่
-            </Title>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name={["Address", "house_number"]}
-                  label="บ้านเลขที่"
-                  rules={[{ required: true, message: "กรุณาระบุบ้านเลขที่" }]}
-                >
-                  <Input placeholder="เช่น 1/22" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name={["Address", "village"]} label="หมู่บ้าน">
-                  <Input placeholder="เช่น หมู่บ้าน A" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name={["Address", "street"]} label="ถนน">
-                  <Input placeholder="เช่น ถนนพหลโยธิน" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name={["Address", "sub_street"]} label="ซอย">
-                  <Input placeholder="เช่น ซอย 1" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name={["Address", "province"]}
-                  label="จังหวัด"
-                  rules={[{ required: true, message: "กรุณาระบุจังหวัด" }]}
-                >
-                  <Input placeholder="เช่น นครปฐม" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name={["Address", "district"]}
-                  label="อำเภอ / เขต"
-                  rules={[{ required: true, message: "กรุณาระบุอำเภอ / เขต" }]}
-                >
-                  <Input placeholder="เช่น เมืองนครปฐม" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name={["Address", "subdistrict"]}
-                  label="ตำบล / แขวง"
-                  rules={[{ required: true, message: "กรุณาระบุตำบล / แขวง" }]}
-                >
-                  <Input placeholder="เช่น ห้วยจรเข้" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name={["Address", "post_code"]}
-                  label="รหัสไปรษณีย์"
-                  rules={[{ required: true, message: "กรุณาระบุรหัสไปรษณีย์" }]}
-                >
-                  <Input placeholder="เช่น 73000" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item name="created_at_formatted" label="วันที่สมัคร">
-              <Input disabled />
-            </Form.Item>
-          </Form>
-        </Modal> */}
+        <AddCompanyModal
+          isVisible={isAddModalVisible}
+          setIsVisible={setIsAddModalVisible}
+          onSubmit={createCompany}
+        />
       </Layout>
     </Layout>
   );

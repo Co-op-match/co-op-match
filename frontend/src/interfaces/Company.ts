@@ -25,4 +25,6 @@ export interface CompanyInterface {
   Intership_posts?: IntershipPostInterface[];
   Interview_appointments?: InterviewAppointmentInterface[];
   Reviews?: ReviewInterface[];
+
+  CreatedAt?: string;
 }

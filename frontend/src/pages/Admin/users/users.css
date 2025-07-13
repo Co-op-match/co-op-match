@@ -1,7 +1,11 @@
 .custom-summary-box {
-  width: 200px;
+  /* width: 200px; */
+  flex: 1 1 200px; /* ✅ ยืดได้หดได้: เริ่มจาก 160px */
+  max-width: 200px; /* ✅ ไม่เกิน 200px */
+  min-width: 150px; /* ✅ ไม่ต่ำกว่า 120px */
   height: 100px;
-  background-color: #afd5f4;
+  /* background-color: #afd5f4; */
+  background: #fff;
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -25,6 +29,10 @@
   color: #000;
 }
 
+.highlight-box {
+  background-color: #f0f5ff;
+  border: 2px solid #f0f5ff;
+}
 
 .backgroundTabChooseVerify {
   background: #fff;
@@ -81,8 +89,8 @@
 }
 
 .custom-table .ant-table-container {
-  background-color: #afd5f4 !important;
-  border: 1px solid #afd5f4;
+  /* background-color: #afd5f4 !important; */
+  /* border: 1px solid #afd5f4; */
   animation: fadeIn 0.5s ease-in-out;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
   transition: transform 0.3s ease;
@@ -90,18 +98,18 @@
 
 /* ✅ สีพื้นหลังของหัวตาราง */
 .custom-table .ant-table-thead > tr > th {
-  background-color: #afd5f4 !important;
+  /* background-color: #afd5f4 !important; */
 }
 
 /* ✅ แถวปกติใน tbody */
 .custom-table .ant-table-tbody > tr > td {
-  background-color: #e7edf3  !important;
+  /* background-color: #e7edf3  !important; */
   transition: background-color 0.3s ease;
 }
 
 /* ✅ ถ้าเป็นแถวถูกระงับ เพิ่มความเฉพาะเจาะจงให้ override ได้ */
 .custom-table .ant-table-tbody > tr.suspended-row > td {
-  background-color: #d9d9d9 !important;
+  /* background-color: #d9d9d9 !important; */
   color: #888 !important;
   font-style: italic;
 }
