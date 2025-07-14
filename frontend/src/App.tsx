@@ -81,13 +81,15 @@ function App() {
             }
           />
           <Route
-            path="/student/post-student"
+            path="/student/post-student/:id"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <PostDetailsStudent />
               </ProtectedRoute>
             }
           />
+
+
 
           <Route
             path="/company/dashboard"

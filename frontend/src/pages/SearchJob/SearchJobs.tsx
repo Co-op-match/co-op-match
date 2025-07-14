@@ -244,67 +244,91 @@ const SearchJobs: React.FC = () => {
   );
 
   // Job card component
-  const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => (
-    <Card
-      hoverable
-      style={{ height: '100%' }}
-      cover={
-        <div style={{
-          height: 120,
-          background: 'linear-gradient(to right, #002c8c, #0057d8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <img
-            src={job.Company?.logo}
-            alt={job.Company?.company_name}
-            style={{ height: '80px', objectFit: 'contain' }}
-          />
-        </div>
-      }
-      actions={[
-        <Button type="primary">สมัครงาน</Button>
-      ]}
-    >
-      <Card.Meta
-        title={
-          <div>
-            <Text strong style={{ fontSize: '18px' }}>{job.post_name}</Text><br />
-            <Tag
-              color={getWorkModeColor(job.WorkMode?.work_mode)}
-              style={{ marginTop: 4, fontWeight: 'bold', color: 'white' }}
-            >
-              {job.WorkMode?.work_mode || 'ไม่ระบุ'}
-            </Tag>
+  const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => {
+    const navigate = useNavigate();
+
+    return (
+      <Card
+        hoverable
+        style={{ borderRadius: 10 }}
+        cover={
+          <div
+            style={{
+              height: 120,
+              background: 'linear-gradient(to right, #002c8c, #0057d8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <img
+              src={job.Company?.logo || '/logo.png'}
+              alt={job.Company?.company_name}
+              style={{ height: '80px', objectFit: 'contain' }}
+            />
           </div>
         }
-        description={
-          <Space direction="vertical" size="small" style={{ width: '100%' }}>
-            <Space>
-              <EnvironmentOutlined />
-              <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
-            </Space>
-            <Space>
-              <CalendarOutlined />
-              <Text style={{ color: '#434343' }}>วันทำงาน: {job.WorkDay?.work_day}</Text>
-            </Space>
-            <Space>
-              <UserOutlined />
-              <Text style={{ color: '#434343' }}>จำนวนรับสมัคร: {job.quantity} อัตรา</Text>
-            </Space>
-            <Space>
-              <DollarOutlined />
-              <Text style={{ color: '#434343' }}>เบี้ยเลี้ยง: {job.Stipend?.stipend}</Text>
-            </Space>
-            <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
-              {job.post_description}
-            </Paragraph>
-          </Space>
-        }
-      />
-    </Card>
-  );
+        actions={[
+          <Button type="primary" onClick={() => navigate(`/post-detail/${job.ID}`)}>
+            ดูรายละเอียด
+          </Button>,
+        ]}
+      >
+        <Card.Meta
+          title={
+            <div>
+              <Text strong style={{ fontSize: '18px' }}>
+                {job.post_name}
+              </Text>
+              <br />
+              <Tag
+                color="#2db7f5"
+                style={{ marginTop: 4, fontWeight: 'bold', color: 'white' }}
+              >
+                {job.WorkMode?.work_mode || 'ไม่ระบุ'}
+              </Tag>
+            </div>
+          }
+          description={
+            <>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                <EnvironmentOutlined style={{ marginRight: 8 }} />
+                <Text>{[
+                  job.location_detail,
+                  job.subdistrict,
+                  job.district,
+                  job.province,
+                ]
+                  .filter(Boolean)
+                  .join(' / ')}</Text>
+              </div>
+              <Space>
+                <CalendarOutlined />
+                <Text style={{ color: '#434343' }}>วันทำงาน: {job.WorkDay?.work_day}</Text>
+              </Space>
+              <br />
+              <Space>
+                <UserOutlined />
+                <Text style={{ color: '#434343' }}>
+                  จำนวนรับสมัคร: {job.quantity} อัตรา
+                </Text>
+              </Space>
+              <br />
+              <Space>
+                <DollarOutlined />
+                <Text style={{ color: '#434343' }}>
+                  เบี้ยเลี้ยง: {job.Stipend?.stipend}
+                </Text>
+              </Space>
+              <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginTop: 8 }}>
+                {job.post_description}
+              </Paragraph>
+            </>
+          }
+        />
+      </Card>
+    );
+  };
 
   // Effects
   useEffect(() => {

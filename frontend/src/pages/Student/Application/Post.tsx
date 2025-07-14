@@ -22,13 +22,13 @@ const PostDetails = () => {
         if (res?.data) setPost(res.data);
 
         // ✅ โหลดโพสต์อื่น ๆ ของบริษัทเดียวกัน
-        // const companyId = res.data.company_id;
-        // GetPostByCompanyId(companyId).then((relatedRes) => {
-        //   if (relatedRes?.data) {
-        //     const others = relatedRes.data.filter((p: any) => p.id !== Number(id));
-        //     setRelatedPosts(others);
-        //   }
-        // });
+        const companyId = res.data.company_id;
+        GetPostByCompanyId(companyId).then((relatedRes) => {
+          if (relatedRes?.data) {
+            const others = relatedRes.data.filter((p: any) => p.id !== Number(id));
+            setRelatedPosts(others);
+          }
+        });
       });
 
     }

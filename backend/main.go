@@ -51,7 +51,7 @@ func main() {
 	r.GET("/job_types", controller.GetAllJobTypes)
 	r.GET("/status_posts", controller.GetAllStatusPosts)
 	r.GET("/benefit", controller.GetAllBenefits)
-	r.GET("/getpost", controller.ListInternshipPosts)
+	r.GET("/getpost", controller.ListIntershipPosts)
 	r.GET("/getpost/:id", controller.GetInternshipPostById)
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)

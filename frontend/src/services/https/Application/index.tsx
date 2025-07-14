@@ -62,6 +62,13 @@ async function CreatePost(data: ApplicationInterface) {
     .catch((e) => e.response);
 }
 
+async function GetAllInternshipPosts() {
+  return await axios
+    .get(`${apiUrl}/getpost`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 export {
   CreateApplication,
   GetApplications,
@@ -69,4 +76,5 @@ export {
   UpdateApplication,
   DeleteApplication,
   CreatePost,
+  GetAllInternshipPosts,
 };
