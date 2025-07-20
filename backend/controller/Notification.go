@@ -284,3 +284,84 @@ func MarkNotificationAsRead(c *gin.Context) {
 
 	c.JSON(http.StatusOK, notification)
 }
+
+func SendVerifyStatusEmail(c *gin.Context) {
+	userIDStr := c.Param("userID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// 1. ดึงข้อมูล User และ Company ที่เกี่ยวข้อง
+	var company entity.Company
+	if err := config.DB().
+		Preload("User").
+		Where("user_id = ?", userID).
+		First(&company).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลบริษัทของผู้ใช้นี้"})
+		return
+	}
+
+	// 2. ดึง Verify ล่าสุดจาก user_id
+	var latestVerify entity.Verify
+	if err := config.DB().
+		Preload("StatusVerify").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		First(&latestVerify).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบสถานะการยืนยันล่าสุด"})
+		return
+	}
+
+	// 3. เตรียมข้อความและไอคอนตามสถานะ
+	status := latestVerify.StatusVerify.StatusVerify
+
+	// 4. โหลดโลโก้
+	logoBase64 := "data:image/png;base64," + getLogoBase64()
+
+	// 5. เตรียมข้อมูลส่งเข้า template
+	data := map[string]interface{}{
+		"LogoBase64":     logoBase64,
+		"RecipientName":  company.CompanyName,
+		"Status":         status,
+		"Company":        company.CompanyName,
+		"ActionURL":      "https://coopmatch.example/company/dashboard",
+		"PrivacyURL":     "https://coopmatch.example/privacy",
+		"TermsURL":       "https://coopmatch.example/terms",
+		"UnsubscribeURL": "https://coopmatch.example/unsubscribe",
+	}
+
+	// 6. โหลดและประมวลผล HTML Template
+	tmpl, err := template.ParseFiles("utils/email_template_Verify.html")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถโหลด template: " + err.Error()})
+		return
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถ render template: " + err.Error()})
+		return
+	}
+
+	// 7. ส่งอีเมลจริง
+	if err := sendEmail(
+		company.User.Email,
+		"แจ้งสถานะการยืนยันบริษัทจากระบบ Co-op Match",
+		body.String(),
+	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ส่งอีเมลล้มเหลว: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+	"message": "ส่งอีเมลแจ้งสถานะการยืนยันบริษัทเรียบร้อยแล้ว",
+	"email":   company.User.Email,
+	"status":   status,
+})
+
+}
+
+
+

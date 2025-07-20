@@ -45,6 +45,7 @@ func GetEcudutionByUserID(c *gin.Context) {
 	userID := c.Param("user_id")
 
 	var student entity.Student
+	
 	if err := config.DB().Preload("Education").Where("user_id = ?", userID).First(&student).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนักศึกษา"})
 		return

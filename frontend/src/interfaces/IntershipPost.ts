@@ -13,6 +13,12 @@ export interface IntershipPostInterface {
   Company?: {
     company_name: string;
     logo: string;
+    Address?: {
+      Province?: {
+        ID: number;
+        name_th: string; 
+      };
+    };
   };
   WorkMode?: {
     work_mode: string;
@@ -29,5 +35,8 @@ export interface IntershipPostInterface {
   StatusPostID?: number;
   AdminID?: number;
   BenefitID?: number;
-  
+  Benefit?: {
+    benefit: string;
+    };
+
 }

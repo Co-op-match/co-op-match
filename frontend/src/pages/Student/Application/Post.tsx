@@ -37,9 +37,18 @@ const PostDetails = () => {
   if (!post) return <div className="text-center p-8">Loading...</div>;
 
   return (
+
     <div style={styles.container}>
+      <Button
+        type="link"
+        onClick={() => navigate(-1)}
+        style={{ marginBottom: 16, paddingLeft: 0 }}
+      >
+        ← ย้อนกลับ
+      </Button>
       {/* ส่วนหัวบริษัท */}
       <div style={styles.header}>
+
         <img
           src={post?.Company?.logo || '/logo.png'}
           alt=""
@@ -47,7 +56,7 @@ const PostDetails = () => {
         />
         <div style={{ marginLeft: 16 }}>
           <Title level={3} style={{ margin: 0 }}>
-            {post?.Company?.CompanyName}
+            {post?.Company?.company_name}
           </Title>
           <Text type="secondary">{post?.Company?.Contact?.Address}</Text>
         </div>
@@ -69,13 +78,14 @@ const PostDetails = () => {
             {[
               post?.location_detail,
               post?.subdistrict,
+              post?.district,
               post?.province,
-              post?.location_province,
             ]
-              .filter(Boolean) // ลบ null/undefined
+              .filter(Boolean)
               .join(' / ')}
           </Text>
         </div>
+
 
         {/* อัตรา */}
         <div style={{ fontSize: 16, marginRight: 8, color: '#1890ff' }}>
@@ -105,11 +115,11 @@ const PostDetails = () => {
             </>
           }
         />
-
         <Section title="คุณสมบัติผู้สมัคร" content={post?.qualifications} />
-        <Section title="เกรดขั้นต่ำ" content={post?.min_gpa} />
-        <Section title="ค่าตอบแทน" content={post?.Stipend?.stipend} />
-        <Section title="สิทธิประโยชน์" content={post?.Benefit?.benefit_name} />
+        <Section title="เกรดขั้นต่ำ" content={post?.min_gpa || '-'} />
+        <Section title="ค่าตอบแทน" content={post?.Stipend?.stipend || '-'} />
+        <Section title="สิทธิประโยชน์" content={post?.Benefit?.benefit || '-'} />
+
         <Section
           title="ติดต่อ"
           content={
@@ -200,13 +210,18 @@ const styles = {
     borderRadius: 12,
     objectFit: 'cover' as const,
   },
-  
+
   card: {
     backgroundColor: '#f0f6ff',
     padding: 24,
     borderRadius: 12,
     border: '1px solid #d0e4ff',
+    maxWidth: 800,
+    margin: '0 auto',
+    // maxHeight: 300, // 👈 จำกัดความสูงสูงสุด
+    // overflowY: 'auto', // 👈 เพิ่ม scrollbar ถ้าข้อมูลเกิน
   },
+
 };
 
 

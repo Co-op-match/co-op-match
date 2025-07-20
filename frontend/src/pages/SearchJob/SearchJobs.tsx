@@ -162,7 +162,7 @@ const SearchJobs: React.FC = () => {
     // Search term filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.post_name?.toLowerCase().includes(searchLower) ||
         post.Company?.company_name?.toLowerCase().includes(searchLower) ||
         post.post_description?.toLowerCase().includes(searchLower)
@@ -185,14 +185,15 @@ const SearchJobs: React.FC = () => {
 
     // Benefits filter
     if (filters.benefits.length > 0) {
-      filtered = filtered.filter(post => {
-        if (post.Benefits && Array.isArray(post.Benefits)) {
-          return filters.benefits.some((benefitLabel) =>
-            post.Benefits.some((benefit: { benefit: string }) => benefit.benefit === benefitLabel)
-          );
-        }
-        return false;
-      });
+      filtered = filtered.filter(post =>
+        post.Benefit && filters.benefits.includes(post.Benefit.benefit)
+      );
+    }
+    // Province filter
+    if (filters.province) {
+      filtered = filtered.filter(post =>
+        post.Company?.Address?.Province?.ID === filters.province
+      );
     }
 
     setFilteredPosts(filtered);
@@ -244,91 +245,75 @@ const SearchJobs: React.FC = () => {
   );
 
   // Job card component
-  const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => {
-    const navigate = useNavigate();
+  const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => (
+    <Card
+      hoverable
+      style={{ height: '100%' }}
+      cover={
+        <div style={{
+          height: 120,
+          background: 'linear-gradient(to right, #002c8c, #0057d8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <img
+            src={job.Company?.logo}
+            alt={job.Company?.company_name}
+            style={{ height: '80px', objectFit: 'contain' }}
+          />
+        </div>
+      }
+      actions={[
+        <Button
+          type="primary"
+          size="large"
+          onClick={() => navigate(`/student/post-student/${job.ID}`)}
 
-    return (
-      <Card
-        hoverable
-        style={{ borderRadius: 10 }}
-        cover={
-          <div
-            style={{
-              height: 120,
-              background: 'linear-gradient(to right, #002c8c, #0057d8)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <img
-              src={job.Company?.logo || '/logo.png'}
-              alt={job.Company?.company_name}
-              style={{ height: '80px', objectFit: 'contain' }}
-            />
+        >
+          สมัครฝึกงาน
+        </Button>
+
+      ]}
+    >
+      <Card.Meta
+        title={
+          <div>
+            <Text strong style={{ fontSize: '18px' }}>{job.post_name}</Text><br />
+            <Tag
+              color={getWorkModeColor(job.WorkMode?.work_mode)}
+              style={{ marginTop: 4, fontWeight: 'bold', color: 'white' }}
+            >
+              {job.WorkMode?.work_mode || 'ไม่ระบุ'}
+            </Tag>
           </div>
         }
-        actions={[
-          <Button type="primary" onClick={() => navigate(`/post-detail/${job.ID}`)}>
-            ดูรายละเอียด
-          </Button>,
-        ]}
-      >
-        <Card.Meta
-          title={
-            <div>
-              <Text strong style={{ fontSize: '18px' }}>
-                {job.post_name}
-              </Text>
-              <br />
-              <Tag
-                color="#2db7f5"
-                style={{ marginTop: 4, fontWeight: 'bold', color: 'white' }}
-              >
-                {job.WorkMode?.work_mode || 'ไม่ระบุ'}
-              </Tag>
-            </div>
-          }
-          description={
-            <>
-              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
-                <EnvironmentOutlined style={{ marginRight: 8 }} />
-                <Text>{[
-                  job.location_detail,
-                  job.subdistrict,
-                  job.district,
-                  job.province,
-                ]
-                  .filter(Boolean)
-                  .join(' / ')}</Text>
-              </div>
-              <Space>
-                <CalendarOutlined />
-                <Text style={{ color: '#434343' }}>วันทำงาน: {job.WorkDay?.work_day}</Text>
-              </Space>
-              <br />
-              <Space>
-                <UserOutlined />
-                <Text style={{ color: '#434343' }}>
-                  จำนวนรับสมัคร: {job.quantity} อัตรา
-                </Text>
-              </Space>
-              <br />
-              <Space>
-                <DollarOutlined />
-                <Text style={{ color: '#434343' }}>
-                  เบี้ยเลี้ยง: {job.Stipend?.stipend}
-                </Text>
-              </Space>
-              <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginTop: 8 }}>
-                {job.post_description}
-              </Paragraph>
-            </>
-          }
-        />
-      </Card>
-    );
-  };
+        description={
+          <Space direction="vertical" size="small" style={{ width: '100%' }}>
+            <Space>
+              <EnvironmentOutlined />
+              <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
+            </Space>
+            <Space>
+              <CalendarOutlined />
+              <Text style={{ color: '#434343' }}>วันทำงาน: {job.WorkDay?.work_day}</Text>
+            </Space>
+            <Space>
+              <UserOutlined />
+              <Text style={{ color: '#434343' }}>จำนวนรับสมัคร: {job.quantity} อัตรา</Text>
+            </Space>
+            <Space>
+              <DollarOutlined />
+              <Text style={{ color: '#434343' }}>เบี้ยเลี้ยง: {job.Stipend?.stipend}</Text>
+            </Space>
+            <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
+              {job.post_description}
+            </Paragraph>
+          </Space>
+        }
+      />
+    </Card>
+  );
 
   // Effects
   useEffect(() => {
@@ -474,6 +459,7 @@ const SearchJobs: React.FC = () => {
               </Col>
             ))}
           </Row>
+          
 
           {filteredPosts.length === 0 && (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>

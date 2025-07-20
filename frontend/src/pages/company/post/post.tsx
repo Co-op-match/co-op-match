@@ -222,8 +222,10 @@ const CompanyDashboard: React.FC = () => {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
     }
+
+    values.StatusPostID = 1;
   
-    values.StatusPostID = 3;
+    // values.StatusPostID = 3;
     values.CompanyID = Number(companyId);
   
     // 🔁 ดึงชื่อจาก rawProvinces ก่อนส่ง

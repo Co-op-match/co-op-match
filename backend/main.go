@@ -118,11 +118,20 @@ func main() {
 			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail) // <-- ครอบคลุมทั้งสร้าง notification + ส่ง email ในตัว
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
+			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
 		}
 
 		companyGroup := router.Group("/company")
 		{
-			companyGroup.POST("", controller.GetAllCompany)
+			companyGroup.GET("", controller.GetAllCompany)
+			companyGroup.POST("", controller.CreateCompany)
+			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
+			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
+		}
+				contactGroup := router.Group("/contact")
+		{
+			contactGroup.POST("", controller.CreateContact)
+			contactGroup.GET("/:user_id", controller.GetContactByUserId)
 		}
 		adminGroup := r.Group("/admin")
 		{
