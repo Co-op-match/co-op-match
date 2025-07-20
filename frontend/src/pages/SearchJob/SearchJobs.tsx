@@ -258,8 +258,15 @@ const SearchJobs: React.FC = () => {
           justifyContent: 'center'
         }}>
           <img
-            src={job.Company?.logo}
-            alt={job.Company?.company_name}
+            //src={job.Company?.logo}
+            src={
+              job.Company?.logo?.startsWith('http')
+                ? job.Company.logo 
+                : job.Company?.logo
+                  ? `http://localhost:8000${job.Company.logo}` 
+                  : undefined
+            }
+            //alt={job.Company?.company_name}
             style={{ height: '80px', objectFit: 'contain' }}
           />
         </div>
