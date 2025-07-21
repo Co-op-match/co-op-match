@@ -15,9 +15,15 @@ const requestOptions = {
 };
 
 // ฟังก์ชันสำหรับสร้าง Application ใหม่
-async function CreateApplication(data: ApplicationInterface) {
+// ✅ ใหม่: ฟังก์ชันสำหรับสร้าง Application พร้อมแนบไฟล์ (resume, transcript)
+async function CreateApplication(postId: number, formData: FormData) {
   return await axios
-    .post(`${apiUrl}/applications`, data, requestOptions)
+    .post(`${apiUrl}/applications/${postId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `${Bearer} ${Authorization}`,
+      },
+    })
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -69,6 +75,12 @@ async function GetAllInternshipPosts() {
     .catch((e) => e.response);
 }
 
+async function GetPostById(id: number) {
+  return await axios
+    .get(`${apiUrl}/getpost/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 export {
   CreateApplication,
   GetApplications,
@@ -77,4 +89,5 @@ export {
   DeleteApplication,
   CreatePost,
   GetAllInternshipPosts,
+  GetPostById,
 };

@@ -257,11 +257,17 @@ const SearchJobs: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <img
-            src={job.Company?.logo}
-            alt={job.Company?.company_name}
-            style={{ height: '80px', objectFit: 'contain' }}
-          />
+          {job.Company?.logo && job.Company.logo.trim() !== '' ? (
+            <img
+              src={job.Company.logo}
+              alt={job.Company.company_name || 'โลโก้บริษัท'}
+              style={{ height: '80px', objectFit: 'contain' }}
+            />
+          ) : (
+            <Text style={{ color: 'white', fontSize: 18 }}>
+              ไม่มีโลโก้
+            </Text>
+          )}
         </div>
       }
       actions={[
@@ -269,11 +275,9 @@ const SearchJobs: React.FC = () => {
           type="primary"
           size="large"
           onClick={() => navigate(`/student/post-student/${job.ID}`)}
-
         >
           สมัครฝึกงาน
         </Button>
-
       ]}
     >
       <Card.Meta
@@ -459,7 +463,7 @@ const SearchJobs: React.FC = () => {
               </Col>
             ))}
           </Row>
-          
+
 
           {filteredPosts.length === 0 && (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>

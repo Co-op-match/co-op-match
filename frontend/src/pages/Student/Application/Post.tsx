@@ -95,10 +95,15 @@ const PostDetails = () => {
 
         {/* ปุ่ม */}
         <div style={{ marginTop: 24, textAlign: 'right' }}>
-          <Button type="primary" size="large" onClick={() => navigate('/history-application')}>
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => navigate(`/student/applications/${post.ID}`)}
+          >
             สมัครฝึกงาน
           </Button>
         </div>
+
 
       </Card>
 

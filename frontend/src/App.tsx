@@ -20,7 +20,7 @@ import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
-
+import AddApplication from './pages/Student/Application/AddApplication';
 
 
 
@@ -85,7 +85,7 @@ function App() {
               </ProtectedRoute>
             }
           /> */}
-           <Route
+          <Route
             path="/company/add-company"
             element={
               <ProtectedRoute allowedRoles={[2]}>
@@ -110,6 +110,14 @@ function App() {
             }
           />
 
+          <Route
+            path="/student/applications/:postId"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AddApplication />
+              </ProtectedRoute>
+            }
+          />
 
 
           <Route

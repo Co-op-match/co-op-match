@@ -8,9 +8,10 @@ import (
 
 type Application struct {
 	gorm.Model
-	Status    string    `json:"status"`
-	ResumeUrl string    `json:"resume_url"`
-	SubmitAt  time.Time `json:"submit_at"`
+	Status        string `json:"status"`
+	ResumeUrl     string `json:"resume_url"`
+	TranscriptUrl string
+	SubmitAt      time.Time `json:"submit_at"`
 
 	IntershipPostID uint          // FK to Intership_post
 	IntershipPost   IntershipPost `gorm:"foreignKey:IntershipPostID"`

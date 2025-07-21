@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"co-op-match.com/co-op-match/config"
@@ -9,96 +10,104 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// POST /applications - Create a new application entry
+// POST /applications/:id → id = InternshipPostID
 func CreateApplication(c *gin.Context) {
-	var application entity.Application
-
-	// Bind the incoming JSON data to the Application struct
-	if err := c.ShouldBindJSON(&application); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	postID := c.Param("id")
+	if postID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing post ID"})
 		return
 	}
 
-	// ตรวจสอบว่า IntershipPostID มีอยู่ในฐานข้อมูลหรือไม่
 	var internshipPost entity.IntershipPost
-	db := config.DB()
-	db.First(&internshipPost, application.IntershipPostID)
-	if internshipPost.ID == 0 {
+	if err := config.DB().First(&internshipPost, postID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Internship post not found"})
 		return
 	}
 
-	// สร้าง Application entry
-	app := entity.Application{
-		Status:          application.Status,
-		ResumeUrl:       application.ResumeUrl,
-		SubmitAt:        application.SubmitAt,
-		IntershipPostID: application.IntershipPostID, // โยงความสัมพันธ์กับ IntershipPost
-		IntershipPost:   internshipPost,              // โยงความสัมพันธ์กับ IntershipPost
+	// ✅ รับข้อมูลจาก form-data
+	status := c.PostForm("status")
+	submitAtStr := c.PostForm("submit_at")
+	userIDStr := c.PostForm("student_id")
+
+	if status == "" || submitAtStr == "" || userIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required fields"})
+		return
 	}
 
-	// บันทึกข้อมูล Application
-	if err := db.Create(&app).Error; err != nil {
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	submitAt, err := time.Parse(time.RFC3339, submitAtStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid submitAt format"})
+		return
+	}
+
+	// ✅ รับไฟล์ resume
+	resumeFile, err := c.FormFile("resume")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Resume file is required"})
+		return
+	}
+	resumePath := "public/uploads/resumes/" + resumeFile.Filename
+	c.SaveUploadedFile(resumeFile, resumePath)
+
+	// ✅ รับไฟล์ transcript (optional)
+	transcriptFile, err := c.FormFile("transcript")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Transcript file is required"})
+		return
+	}
+	transcriptPath := "public/uploads/transcripts/" + transcriptFile.Filename
+	c.SaveUploadedFile(transcriptFile, transcriptPath)
+
+	// ✅ หา student
+	var student entity.Student
+	if err := config.DB().Where("user_id = ?", userID).First(&student).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Student not found"})
+		return
+	}
+
+	// ✅ ตรวจสอบการสมัครซ้ำ
+	var existingApp entity.Application
+	if err := config.DB().
+		Joins("JOIN application_details ON applications.id = application_details.application_id").
+		Where("application_details.student_id = ? AND applications.intership_post_id = ?", student.ID, internshipPost.ID).
+		First(&existingApp).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "You have already applied for this post"})
+		return
+	}
+
+	// ✅ บันทึก application
+	application := entity.Application{
+		Status:          status,
+		ResumeUrl:       "/" + resumePath, // หรือเก็บเป็น relative path
+		TranscriptUrl:   "/" + transcriptPath,
+		SubmitAt:        submitAt,
+		IntershipPostID: internshipPost.ID,
+	}
+	if err := config.DB().Create(&application).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create application"})
 		return
 	}
 
-	// ส่ง response กลับไปที่ client
+	appDetail := entity.ApplicationDetails{
+		StudentID:     student.ID,
+		ApplicationID: application.ID,
+	}
+	if err := config.DB().Create(&appDetail).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create application detail"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Application created successfully",
-		"data":    app,
+		"message":            "Application submitted successfully",
+		"application":        application,
+		"application_detail": appDetail,
 	})
-}
-
-// GET /applications - List all applications
-func ListApplications(c *gin.Context) {
-	var applications []struct {
-		ID              uint      `json:"id"`
-		Status          string    `json:"status"`
-		ResumeUrl       string    `json:"resume_url"`
-		SubmitAt        time.Time `json:"submit_at"`
-		IntershipPostID uint      `json:"internship_post_id"`
-		PostName        string    `json:"post_name"`
-	}
-
-	db := config.DB()
-
-	results := db.Table("applications").
-		Select(`
-            applications.id, 
-            applications.status, 
-            applications.resume_url, 
-            applications.submit_at, 
-            applications.internship_post_id, 
-            internship_posts.post_name
-        `).
-		Joins("left join intership_posts on intership_posts.id = applications.intership_post_id").
-		Scan(&applications)
-
-	if results.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": results.Error.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, applications)
-}
-
-// GET /applications/:id - Get details of a specific application
-func GetApplicationById(c *gin.Context) {
-	applicationID := c.Param("id")
-	var application entity.Application
-
-	db := config.DB()
-
-	// Query a specific application entry by ID
-	result := db.First(&application, applicationID)
-
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Application not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, application)
 }
 
 // PUT /applications/:id - Update a specific application entry
