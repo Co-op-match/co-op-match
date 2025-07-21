@@ -372,6 +372,7 @@ func createSeedData(db *gorm.DB) {
 		{StatusPost: "Open"},
 		{StatusPost: "Closed"},
 		{StatusPost: "Pending Approval"},
+		{StatusPost: "Reject"},
 	}
 	for _, pkg := range StatusPosts {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})

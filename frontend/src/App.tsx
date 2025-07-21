@@ -161,6 +161,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/post"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </UserProvider>
     </BrowserRouter>
