@@ -560,27 +560,28 @@ func createSeedData(db *gorm.DB) {
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
-			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
-			StatusVerifyID:       1,
+			VerificationDocument: "/uploads/verifyDocument/001.png",
+			StatusVerifyID:       2,
 			UserID:               2,
 		},
 		{
-			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
+			VerificationDocument: "/uploads/verifyDocument/002.pdf",
 			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
-			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
-			StatusVerifyID:       3,
+			VerificationDocument: "/uploads/verifyDocument/001.png",
+			StatusVerifyID:       2,
 			UserID:               4,
 		},
 		{
-			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
-			StatusVerifyID:       4,
+			VerificationDocument: "/uploads/verifyDocument/002.pdf",
+			StatusVerifyID:       2,
 			UserID:               14,
 		},
 	}
 	for _, v := range verifies {
+		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
 }
