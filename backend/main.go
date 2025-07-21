@@ -32,6 +32,7 @@ func main() {
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
 	r.POST("/reset-password", users.SimpleResetPassword)
+	r.POST("/logout", users.Logout)
 
 	r.GET("/roles", role.GetAll)
 	r.GET("/provinces", searchjob.GetAllProvinces)
@@ -61,6 +62,7 @@ func main() {
 	{
 		router.Use(middlewares.Authorizes())
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
+		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
 
 		studentGroup := router.Group("/students")
 		{
@@ -128,7 +130,7 @@ func main() {
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 		}
-				contactGroup := router.Group("/contact")
+		contactGroup := router.Group("/contact")
 		{
 			contactGroup.POST("", controller.CreateContact)
 			contactGroup.GET("/:user_id", controller.GetContactByUserId)

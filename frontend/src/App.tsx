@@ -20,7 +20,7 @@ import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
-
+import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
 
 
 
@@ -54,6 +54,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <SearchJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/recommendations"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <StudentRecommendedPosts />
               </ProtectedRoute>
             }
           />

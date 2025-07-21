@@ -405,7 +405,28 @@ async function SendEmailinterview(id:number) {
     .then(res => res)
     .catch(e => e.response);
 }
+
+async function GetRecommendedPosts(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/students/recommended-posts/${studentId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function Logout(email: string) {
+  try {
+    const response = await axios.post(
+      `${apiUrl}/logout`,
+      { email },
+      requestOptions
+    );
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message;
+  }
+}
+
 export {
+  GetRecommendedPosts,
   SignIn,
   GetRole,
   ResetPassword,
@@ -456,4 +477,5 @@ export {
   GetVerifyByUserId,
   SendEmailVerify,
   SendEmailinterview,
+
 };

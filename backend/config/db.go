@@ -221,7 +221,7 @@ func createSeedData(db *gorm.DB) {
 		{HouseNumber: "987", Village: "หมู่บ้าน LPD", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 		{HouseNumber: "654", Village: "หมู่บ้าน MNO", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 		{HouseNumber: "321", Village: "หมู่บ้าน NRE", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "159", Village: "หมู่บ้าน OWN", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},	
+		{HouseNumber: "159", Village: "หมู่บ้าน OWN", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 	}
 	for _, addr := range addresses {
 		db.FirstOrCreate(&addr, entity.Address{
@@ -340,6 +340,21 @@ func createSeedData(db *gorm.DB) {
 			AddressID:   10,
 			AdminID:     1,
 		},
+		{
+			FirstName:   "วิชญ์",
+			LastName:    "เทคโน",
+			Birthday:    time.Date(2002, 10, 20, 0, 0, 0, 0, time.UTC),
+			Age:         22,
+			Nationality: "ไทย",
+			Religion:    "พุทธ",
+			PhoneNumber: "0891234567",
+			Height:      158.0,
+			Weight:      48.0,
+			GenderID:    1,
+			UserID:      5,
+			AddressID:   4,
+			AdminID:     1,
+		},
 	}
 	for _, s := range students {
 		db.Unscoped().FirstOrCreate(&s, entity.Student{UserID: s.UserID})
@@ -382,7 +397,7 @@ func createSeedData(db *gorm.DB) {
 			PostName:        "Software Development Intern",
 			PostDescription: "Join our team as a software development intern",
 			Quantity:        2,
-			MinGpa:          3.0,
+			MinGpa:          2.0,
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
 			StatusPostID:    1,
@@ -397,7 +412,7 @@ func createSeedData(db *gorm.DB) {
 			PostName:        "Data Science Intern",
 			PostDescription: "Opportunity to work with real-world datasets",
 			Quantity:        1,
-			MinGpa:          3.2,
+			MinGpa:          2.2,
 			CreatedAt:       time.Now(),
 			CompanyID:       2,
 			StatusPostID:    1,
@@ -407,6 +422,36 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       2,
 			StipendID:       3,
 			JobTypeID:       4,
+		},
+		{
+			PostName:        "AI/ML Intern",
+			PostDescription: "Explore artificial intelligence projects",
+			Quantity:        1,
+			MinGpa:          2.5,
+			CreatedAt:       time.Now(),
+			CompanyID:       3,
+			StatusPostID:    1,
+			AdminID:         1,
+			WorkModeID:      1,
+			BenefitID:       2,
+			WorkDayID:       3,
+			StipendID:       2,
+			JobTypeID:       4,
+		},
+		{
+			PostName:        "Frontend Developer Intern",
+			PostDescription: "Build beautiful UIs with React",
+			Quantity:        1,
+			MinGpa:          2.8,
+			CreatedAt:       time.Now(),
+			CompanyID:       1,
+			StatusPostID:    1,
+			AdminID:         1,
+			WorkModeID:      1,
+			BenefitID:       1,
+			WorkDayID:       1,
+			StipendID:       2,
+			JobTypeID:       1,
 		},
 	}
 
@@ -428,6 +473,12 @@ func createSeedData(db *gorm.DB) {
 			SkillID:         4,
 			IntershipPostID: intershipPosts[1].ID,
 		})
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 1, IntershipPostID: 3}) // Python
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 5, IntershipPostID: 3}) // Data Analysis
+
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 3, IntershipPostID: 4}) // JavaScript
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 4, IntershipPostID: 4}) // SQL
+
 	}
 	// Seed Skills
 	skills := []entity.Skill{
@@ -456,6 +507,8 @@ func createSeedData(db *gorm.DB) {
 		{SkillID: 1, StudentID: 1}, // Python
 		{SkillID: 2, StudentID: 1}, // Java
 		{SkillID: 4, StudentID: 1}, // SQL
+		{SkillID: 1, StudentID: 2}, // Python
+		{SkillID: 5, StudentID: 2}, // Data Analysis
 	}
 	for _, pkg := range studentSkills {
 		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
@@ -474,6 +527,20 @@ func createSeedData(db *gorm.DB) {
 			IntershipPostID: pkg.IntershipPostID,
 		})
 	}
+	studentInterests := []entity.StudentInterest{
+		{StudentID: 1, InterestID: 1}, // Web Development
+		{StudentID: 1, InterestID: 3}, // Data Science
+		{StudentID: 2, InterestID: 4}, // AI/ML
+		{StudentID: 3, InterestID: 2}, // Mobile Development
+	}
+
+	for _, si := range studentInterests {
+		db.FirstOrCreate(&si, entity.StudentInterest{
+			StudentID:  si.StudentID,
+			InterestID: si.InterestID,
+		})
+	}
+
 	// Seed Educational Background
 	EducationLevels := []entity.EducationLevel{
 		{Name: "ปริญญาตรี"},
