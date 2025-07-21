@@ -64,7 +64,7 @@ const WORK_MODE_COLORS = {
   default: '#d9d9d9'
 } as const;
 
-const SearchJobs: React.FC = () => {
+function SearchJobs(){
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [searchTerm, setSearchTerm] = useState('');
