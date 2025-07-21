@@ -39,6 +39,7 @@ import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
 import AddCompanyModal from "./AddCompanyModal";
 import EditCompanyModal from "./EditCompanyModal";
+import { SendEmailVerify } from "../../../../services/https";
 
 const CompanyManagement: React.FC = () => {
   const [verifyForm] = Form.useForm();
@@ -137,6 +138,7 @@ const CompanyManagement: React.FC = () => {
 
     try {
       await UpdateVerifyStatus(latest.ID!, updateData);
+      await SendEmailVerify(latest.UserID!);
       message.success(`${selectedVerifyStatus} บริษัทเรียบร้อยแล้ว`);
       setIsDetailModalVisible(false);
       const res = await GetAllActiveCompanies();
