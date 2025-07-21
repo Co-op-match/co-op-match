@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { GetUserById } from "../services/https";
 import type { UserInterface } from "../interfaces/User";
-
+import { Logout } from "../services/https";
 type UserContextType = {
   user: UserInterface | null;
   loading: boolean;
@@ -51,15 +51,24 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [fetchUser]);
 
   // ฟังก์ชัน logout
-  const logout = () => {
-    localStorage.removeItem("id");       // เคลียร์ localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("token_type");
-    localStorage.removeItem("roleId");
-    localStorage.removeItem("isLogin");
+  const logout = async () => {
+  try {
+    if (user?.Email) {
+      await Logout(user.Email); // เรียก API logout พร้อมส่ง email
+    }
+  } catch (error) {
+    console.error("Logout API failed", error);
+  }
 
-    setUser(null);    // เคลียร์ user ใน Context
-  };
+  localStorage.removeItem("id");
+  localStorage.removeItem("token");
+  localStorage.removeItem("token_type");
+  localStorage.removeItem("roleId");
+  localStorage.removeItem("isLogin");
+
+  setUser(null);
+};
+
 
   return (
     <UserContext.Provider value={{ user, loading, refetchUser: fetchUser, logout }}>
