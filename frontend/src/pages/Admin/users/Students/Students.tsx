@@ -28,6 +28,8 @@ import {
   DeleteStudent,
 } from "../../../../services/https/aum";
 import type { ColumnsType } from "antd/es/table";
+import EditStudentForm from "./EditStudentModal";
+import AddStudentForm from "./AddStudentModal";
 
 const { Title } = Typography;
 
@@ -203,6 +205,29 @@ const StudentManagementPage: React.FC = () => {
           size="middle"
           scroll={{ x: "max-content" }}
         />
+
+        {/* Modal เพิ่มนักศึกษา */}
+        <AddStudentForm
+          visible={isAddModalVisible}
+          onCancel={() => setIsAddModalVisible(false)}
+          onSuccess={() => {
+            fetchData();
+            setIsAddModalVisible(false);
+          }}
+        />
+
+        {/* Modal แก้ไขนักศึกษา */}
+        {selectedStudent && (
+          <EditStudentForm
+            visible={isEditModalVisible}
+            onCancel={() => setIsEditModalVisible(false)}
+            student={selectedStudent}
+            onSuccess={() => {
+              fetchData();
+              setIsEditModalVisible(false);
+            }}
+          />
+        )}
       </Layout>
     </Layout>
   );
