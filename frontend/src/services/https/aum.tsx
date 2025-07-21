@@ -52,6 +52,21 @@ export async function GetAllDeletedStudents() {
       return e.response;
     });
 }
+export async function CreateUserStudentContact(data: FormData) {
+  return await axios.post(`${apiUrl}/student`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  });
+}
+export async function UpdateStudent(id: number, data: any) {
+  return await axios.patch(`${apiUrl}/student/${id}`, data, {
+    headers: {
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  });
+}
 export async function DeleteStudent(studentId: number) {
   return await axios
     .delete(`${apiUrl}/students/delete/${studentId}`, requestOptions)

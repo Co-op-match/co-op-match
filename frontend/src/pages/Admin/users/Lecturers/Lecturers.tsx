@@ -415,40 +415,28 @@ const AcademicStaffManagement: React.FC = () => {
                     <strong>เอกสารการยืนยัน:</strong>
                   </p>
                   {(() => {
-                    const url = latest.verification_document;
-                    const ext = url?.split(".").pop()?.toLowerCase();
-                    if (!url)
+                    const url = latest.verification_document
+                      ? `http://localhost:8000${latest.verification_document}`
+                      : undefined;
+
+                    if (!url) {
                       return <p style={{ color: "gray" }}>ไม่มีเอกสาร</p>;
-                    if (["png", "jpg", "jpeg", "webp"].includes(ext!)) {
-                      return (
-                        <img
-                          src={url}
-                          alt="Verification Document"
-                          style={{
-                            maxWidth: "100%",
-                            maxHeight: 400,
-                            borderRadius: 8,
-                          }}
-                        />
-                      );
-                    } else if (ext === "pdf") {
-                      return (
-                        <iframe
-                          src={url}
-                          title="PDF Document"
-                          width="100%"
-                          height="500px"
-                          style={{ border: "1px solid #ccc", borderRadius: 8 }}
-                        />
-                      );
-                    } else {
-                      return (
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          คลิกเพื่อเปิดเอกสาร
-                        </a>
-                      );
                     }
+
+                    return (
+                      <iframe
+                        src={url}
+                        title="Verification Document"
+                        width="100%"
+                        height="500px"
+                        style={{
+                          border: "1px solid #ccc",
+                          borderRadius: 8,
+                        }}
+                      />
+                    );
                   })()}
+
                   <Radio.Group
                     onChange={(e) => {
                       setSelectedStatus(e.target.value);
