@@ -56,6 +56,7 @@ func main() {
 	r.GET("/getpost/:id", controller.GetInternshipPostById)
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
+	r.GET("/get-all-post-all-status", controller.GetAllIntershipPostsAllStatus)
 
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")

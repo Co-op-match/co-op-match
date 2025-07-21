@@ -21,7 +21,7 @@ import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
 import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
-
+import AdminPostManagement from "./pages/Admin/post/post";
 
 
 function App() {
@@ -173,7 +173,7 @@ function App() {
             path="/admin/post"
             element={
               <ProtectedRoute allowedRoles={[1]}>
-                <AdminDashboard />
+                <AdminPostManagement />
               </ProtectedRoute>
             }
           />

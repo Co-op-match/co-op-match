@@ -19,7 +19,7 @@ import {
 } from '../../../../services/https';
 
 import './AddCompanyForm.css';
-import CompanyHeaderDefault from '../../../component/CompanyHeaderDefault';
+import CompanyHeaderDefault from '../../../component/CoopMatchHeaderDefault';
 import StepCompanyContact1 from './CompanyFormSteps/StepCompanyContact copy';
 
 const { Content } = Layout;
