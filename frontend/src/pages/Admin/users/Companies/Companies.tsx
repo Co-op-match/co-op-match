@@ -1,0 +1,543 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Layout,
+  Input,
+  Row,
+  Col,
+  Button,
+  Flex,
+  Table,
+  Modal,
+  Avatar,
+  Form,
+  Popconfirm,
+  message,
+  Select,
+  Radio,
+  Tabs,
+} from "antd";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+import Title from "antd/es/typography/Title";
+import dayjs from "dayjs";
+import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
+import {
+  DeleteCompany,
+  GetAllActiveCompanies,
+  GetAllDeletedCompany,
+  GetAllStatusVerify,
+  UpdateVerifyStatus,
+} from "../../../../services/https/Admin";
+import type { CompanyInterface } from "../../../../interfaces/Company";
+import type { ColumnsType } from "antd/es/table";
+import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
+import type { VerifyInterface } from "../../../../interfaces/Verify";
+import "../users.css";
+import EditCompanyModal from "./EditCompanyModal";
+import { SendEmailVerify } from "../../../../services/https";
+
+const CompanyManagement: React.FC = () => {
+  const [verifyForm] = Form.useForm();
+  const [editForm] = Form.useForm();
+
+  const [activeCompanies, setActiveCompanies] = useState<CompanyInterface[]>(
+    []
+  );
+  const [deletedCompanies, setDeletedCompanies] = useState<CompanyInterface[]>(
+    []
+  );
+  const [currentCompany, setCurrentCompany] = useState<CompanyInterface | null>(
+    null
+  );
+
+  const [statusList, setStatusList] = useState<StatusVerifyInterface[]>([]);
+  const [statusFilterOptions, setStatusFilterOptions] = useState<string[]>([]);
+  const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<
+    string[]
+  >([]);
+
+  const [tabKey, setTabKey] = useState("active");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedVerifyStatus, setSelectedVerifyStatus] = useState<string>("");
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [reload, setReload] = useState<boolean>(true);
+
+  const totalActive = activeCompanies.length;
+  const totalDeleted = deletedCompanies.length;
+
+  useEffect(() => {
+    fetchData();
+  }, [reload, currentCompany]);
+
+  const fetchData = async () => {
+    try {
+      const [resActive, resDeleted, resStatuses] = await Promise.all([
+        GetAllActiveCompanies(),
+        GetAllDeletedCompany(),
+        GetAllStatusVerify(),
+      ]);
+
+      if (resActive.status === 200) setActiveCompanies(resActive.data);
+      if (resDeleted.status === 200) setDeletedCompanies(resDeleted.data);
+      if (resStatuses.status === 200) {
+        const names = resStatuses.data.map((s: any) => s.status_verify);
+        setStatusList(resStatuses.data);
+        setStatusFilterOptions(["ทั้งหมด", ...names]);
+      }
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      message.error("เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท");
+    }
+  };
+
+  const getCompanyLatestStatus = (company: CompanyInterface) => {
+    const verifications = company.User?.Verifications || [];
+    const latest = verifications.sort(
+      (a, b) =>
+        new Date(b.CreatedAt || "").getTime() -
+        new Date(a.CreatedAt || "").getTime()
+    )[0];
+    return latest?.StatusVerify?.status_verify || "ยังไม่ได้ส่งคำขอ";
+  };
+
+  const getCompanyLatestVerification = (company: CompanyInterface) => {
+    if (!company?.User?.Verifications?.length) return null;
+    return [...company.User.Verifications].sort(
+      (a, b) =>
+        new Date(b.CreatedAt || "").getTime() -
+        new Date(a.CreatedAt || "").getTime()
+    )[0];
+  };
+
+  const latestVerification = currentCompany
+    ? getCompanyLatestVerification(currentCompany)
+    : null;
+  const isReadOnlyStatus =
+    latestVerification?.StatusVerify?.status_verify !== "รอรับรอง";
+
+  const submitVerificationDecision = async (reason: string) => {
+    const latest = getCompanyLatestVerification(currentCompany!);
+    if (!latest) return;
+    const selectedStatusObj = statusList.find(
+      (s) => s.status_verify === selectedVerifyStatus
+    );
+    if (!selectedStatusObj) return;
+
+    const updateData: VerifyInterface = {
+      StatusVerifyID: selectedStatusObj.ID,
+      AdminID: 1,
+      reason: selectedVerifyStatus === "ปฏิเสธ" ? reason : "",
+    };
+
+    try {
+      await UpdateVerifyStatus(latest.ID!, updateData);
+      await SendEmailVerify(latest.UserID!);
+      message.success(`${selectedVerifyStatus} บริษัทเรียบร้อยแล้ว`);
+      setIsDetailModalVisible(false);
+      const res = await GetAllActiveCompanies();
+      if (res.status === 200) setActiveCompanies(res.data);
+    } catch (err) {
+      console.error(err);
+      message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+    }
+  };
+
+  const showVerificationModal = (company: CompanyInterface) => {
+    const latest = getCompanyLatestVerification(company);
+    setCurrentCompany(company);
+    setIsDetailModalVisible(true);
+    setSelectedVerifyStatus(latest?.StatusVerify?.status_verify || "");
+
+    if (latest?.StatusVerify?.status_verify === "ปฏิเสธ") {
+      verifyForm.setFieldsValue({ rejectReason: latest.reason || "" });
+    } else {
+      verifyForm.resetFields(["rejectReason"]);
+    }
+  };
+
+  const showEditCompanyModal = (company: CompanyInterface) => {
+    setCurrentCompany(company);
+    console.log("company: ", company);
+    editForm.setFieldsValue(company);
+    setIsEditModalVisible(true);
+  };
+
+  const removeCompany = async (companyId: number) => {
+    const res = await DeleteCompany(companyId);
+    if (res.status === 200) {
+      message.success("ลบบัญชีบริษัทเรียบร้อยแล้ว");
+      setReload(!reload);
+    } else {
+      message.error("เกิดข้อผิดพลาดในการระงับบัญชี");
+    }
+  };
+
+  const filteredCompanies = useMemo(() => {
+    const source = tabKey === "active" ? activeCompanies : deletedCompanies;
+    const filtered = selectedFilterStatuses.length
+      ? source.filter((c) =>
+          selectedFilterStatuses.includes(getCompanyLatestStatus(c))
+        )
+      : source;
+
+    const searched = searchKeyword
+      ? filtered.filter((c) =>
+          c.company_name?.toLowerCase().includes(searchKeyword.toLowerCase())
+        )
+      : filtered;
+
+    return searched.sort((a, b) => {
+      const aStatus = getCompanyLatestStatus(a);
+      const bStatus = getCompanyLatestStatus(b);
+      return aStatus === "รอรับรอง" ? -1 : bStatus === "รอรับรอง" ? 1 : 0;
+    });
+  }, [
+    tabKey,
+    activeCompanies,
+    deletedCompanies,
+    selectedFilterStatuses,
+    searchKeyword,
+  ]);
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "รับรอง":
+        return { bgColor: "#52c41a", textColor: "#fff", border: "none" };
+      case "ปฏิเสธ":
+        return { bgColor: "#ff4d4f", textColor: "#fff", border: "none" };
+      case "รอรับรอง":
+        return { bgColor: "#faad14", textColor: "#fff", border: "none" };
+      default:
+        return {
+          bgColor: "#fff",
+          textColor: "#000",
+          border: "1px solid rgba(0,0,0,0.2)",
+        };
+    }
+  };
+
+  const statusCounts = useMemo(() => {
+    const source = tabKey === "active" ? activeCompanies : deletedCompanies;
+    const allStatuses = statusFilterOptions.filter((s) => s !== "ทั้งหมด");
+
+    // เริ่มด้วยทุกสถานะ = 0
+    const counts: Record<string, number> = {};
+    allStatuses.forEach((status) => {
+      counts[status] = 0;
+    });
+
+    // นับจริง
+    for (const c of source) {
+      const status = getCompanyLatestStatus(c);
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      }
+    }
+
+    return counts;
+  }, [tabKey, activeCompanies, deletedCompanies, statusFilterOptions]);
+
+  /*=========================   จัดการตาราง   ================================*/
+  const columns: ColumnsType<CompanyInterface> = [
+    { title: "ID", dataIndex: "ID", key: "ID" },
+    {
+      title: "วันที่สมัคร",
+      dataIndex: "CreatedAt",
+      key: "CreatedAt",
+      render: (val: string) => dayjs(val).format("DD/MM/YYYY"),
+    },
+    {
+      title: "โลโก้",
+      key: "logo",
+      render: (_, record) => (
+        <Avatar shape="square" size="large" src={record.logo || undefined}>
+          {record.company_name?.charAt(0)}
+        </Avatar>
+      ),
+    },
+    {
+      title: "บริษัท",
+      key: "company",
+      render: (_, record) => (
+        <a href={`/company/${record.ID}`} style={{ color: "#1677ff" }}>
+          {record.company_name}
+        </a>
+      ),
+    },
+    {
+      title: "การรับรอง",
+      key: "status",
+      align: "center",
+      fixed: "right" as const,
+      filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
+      onFilter: (val, rec) => getCompanyLatestStatus(rec) === val,
+      filterMode: "tree",
+      render: (_, rec) => {
+        const status = getCompanyLatestStatus(rec);
+        const { bgColor, textColor, border } = getStatusStyle(status);
+        return (
+          <Button
+            onClick={() => showVerificationModal(rec)}
+            style={{
+              width: 110,
+              borderRadius: 12,
+              backgroundColor: bgColor,
+              color: textColor,
+              border,
+            }}
+          >
+            {status}
+          </Button>
+        );
+      },
+    },
+    {
+      title: "การจัดการ",
+      key: "action",
+      fixed: "right" as const,
+      render: (_, rec) => (
+        <Flex gap={16}>
+          <EditOutlined
+            style={{ fontSize: 18, cursor: "pointer" }}
+            onClick={() => showEditCompanyModal(rec)}
+          />
+          <Popconfirm
+            title="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
+            onConfirm={() => removeCompany(rec.ID || 0)}
+          >
+            <DeleteOutlined style={{ cursor: "pointer", color: "red" }} />
+          </Popconfirm>
+        </Flex>
+      ),
+    },
+  ];
+
+  return (
+    <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+      <AdminHeader />
+      <Layout style={{ margin: "2rem" }}>
+        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
+          <Col>
+            <Title level={3}>บริษัท (Companies)</Title>
+          </Col>
+          <Col>
+          </Col>
+          {/* <Col>
+            <Flex align="center" gap={16}>
+              จำนวน
+              <Card
+                size="small"
+                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
+              >
+                <div style={{ fontSize: 18, fontWeight: "bold" }}>
+                  {tabKey == "active" ? totalActive : totalDeleted}
+                </div>
+              </Card>
+            </Flex>
+          </Col> */}
+        </Row>
+
+        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }} wrap>
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <Col key={status}>
+              <div className="custom-summary-box">
+                <div className="summary-title">{status}</div>
+                <div className="summary-count">{count}</div>
+              </div>
+            </Col>
+          ))}
+          <Col>
+            <div className="custom-summary-box highlight-box">
+              <div className="summary-title">จำนวนบริษัททั้งหมด</div>
+              <div className="summary-count">
+                {tabKey === "active" ? totalActive : totalDeleted}
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        <Tabs
+          defaultActiveKey="active"
+          onChange={(key) => setTabKey(key)}
+          items={[
+            { label: "บริษัททั้งหมด", key: "active" },
+            { label: "บริษัทที่ถูกลบ", key: "deleted" },
+          ]}
+          style={{ marginTop: "1rem" }}
+        />
+        <Flex
+          justify="center"
+          align="center"
+          gap="5vw"
+          style={{ margin: "1rem 0" }}
+        >
+          <Select
+            mode="multiple"
+            value={selectedFilterStatuses}
+            onChange={(values) => {
+              if (values.includes("ทั้งหมด")) {
+                const allStatuses = statusFilterOptions.filter(
+                  (s) => s !== "ทั้งหมด"
+                );
+                const isAllSelected =
+                  selectedFilterStatuses.length === allStatuses.length &&
+                  allStatuses.every((s) => selectedFilterStatuses.includes(s));
+
+                if (isAllSelected) {
+                  setSelectedFilterStatuses([]); // unselect all
+                } else {
+                  setSelectedFilterStatuses(allStatuses); // select all
+                }
+              } else {
+                setSelectedFilterStatuses(values);
+              }
+            }}
+            style={{ width: "40vw" }}
+            options={statusFilterOptions.map((s) => ({ label: s, value: s }))}
+            placeholder="เลือกสถานะ"
+            allowClear
+          />
+          <Input
+            placeholder="ค้นหา..."
+            suffix={<SearchOutlined style={{ color: "#999" }} />}
+            className="searchInput"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+          />
+          <Col>
+          </Col>
+        </Flex>
+
+        <Table
+          className="custom-table"
+          columns={columns}
+          dataSource={filteredCompanies}
+          pagination={{ pageSize: 6 }}
+          size="middle"
+        />
+
+        <Modal
+          open={isDetailModalVisible}
+          title="รายละเอียดการรับรอง"
+          onCancel={() => {
+            setIsDetailModalVisible(false);
+            verifyForm.resetFields();
+            setSelectedVerifyStatus("");
+          }}
+          onOk={async () => {
+            if (isReadOnlyStatus) return;
+            try {
+              if (selectedVerifyStatus === "ปฏิเสธ") {
+                await verifyForm.validateFields();
+              }
+              const reason = verifyForm.getFieldValue("rejectReason") || "";
+              await submitVerificationDecision(reason);
+            } catch (err) {}
+          }}
+          okText="ยืนยัน"
+          cancelText="ยกเลิก"
+          footer={isReadOnlyStatus ? null : undefined}
+        >
+          <Form form={verifyForm} layout="vertical">
+            <p>
+              <strong>บริษัท:</strong> {currentCompany?.company_name}
+            </p>
+            {(() => {
+              const latest = getCompanyLatestVerification(currentCompany!);
+              if (!latest) return <p>ยังไม่มีการส่งคำขอรับรอง</p>;
+              return (
+                <>
+                  <p>
+                    <strong>สถานะ:</strong>{" "}
+                    {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
+                  </p>
+                  <p>
+                    <strong>วันที่ส่งคำขอ:</strong>{" "}
+                    {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
+                  </p>
+                  <p>
+                    <strong>วันที่ยืนยัน:</strong>{" "}
+                    {latest?.UpdatedAt
+                      ? dayjs(latest?.UpdatedAt).format("DD/MM/YYYY HH:mm")
+                      : "-"}
+                  </p>
+                  <p>
+                    <strong>เอกสารการยืนยัน:</strong>
+                  </p>
+                  {(() => {
+                    const url = latest.verification_document
+                      ? `http://localhost:8000${latest.verification_document}`
+                      : undefined;
+
+                    if (!url) {
+                      return <p style={{ color: "gray" }}>ไม่มีเอกสาร</p>;
+                    }
+
+                    return (
+                      <iframe
+                        src={url}
+                        title="Verification Document"
+                        width="100%"
+                        height="500px"
+                        style={{
+                          border: "1px solid #ccc",
+                          borderRadius: 8,
+                        }}
+                      />
+                    );
+                  })()}
+
+                  <Radio.Group
+                    onChange={(e) => {
+                      setSelectedVerifyStatus(e.target.value);
+                      if (e.target.value !== "ปฏิเสธ")
+                        verifyForm.resetFields(["rejectReason"]);
+                    }}
+                    value={selectedVerifyStatus}
+                    style={{ marginTop: 16 }}
+                    disabled={isReadOnlyStatus}
+                  >
+                    <Radio value="รับรอง">รับรอง</Radio>
+                    <Radio value="ปฏิเสธ">ปฏิเสธ</Radio>
+                  </Radio.Group>
+                  {selectedVerifyStatus === "ปฏิเสธ" && (
+                    <Form.Item
+                      name="rejectReason"
+                      rules={[
+                        {
+                          required: true,
+                          message: "กรุณาระบุเหตุผลในการปฏิเสธ",
+                        },
+                      ]}
+                    >
+                      <Input.TextArea
+                        rows={4}
+                        placeholder="กรุณาระบุเหตุผลในการปฏิเสธ"
+                        disabled={isReadOnlyStatus}
+                      />
+                    </Form.Item>
+                  )}
+                </>
+              );
+            })()}
+          </Form>
+        </Modal>
+
+        <EditCompanyModal
+          isEditModalVisible={isEditModalVisible}
+          setIsEditModalVisible={setIsEditModalVisible}
+          editForm={editForm}
+          currentCompany={currentCompany}
+          setReload={setReload}
+          reload={reload}
+        />
+      </Layout>
+    </Layout>
+  );
+};
+
+export default CompanyManagement;

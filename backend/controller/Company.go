@@ -148,3 +148,150 @@ func GetVerifyByUserId(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, verify)
 }
+
+func GetAllActiveCompanies(c *gin.Context) {
+	var companies []entity.Company
+
+	err := config.DB().
+		Preload("Address.Province").
+		Preload("Address.District").
+		Preload("Address.SubDistrict").
+		Preload("Address.Postcode").
+		Preload("Admin").
+		Preload("Contact").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Reviews").
+		Preload("User.Verifications.StatusVerify").
+		Where("deleted_at IS NULL").
+		Find(&companies).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch companies",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, companies)
+}
+
+func GetAllDeletedCompany(c *gin.Context) {
+	var companies []entity.Company
+	if err := config.DB().
+		Unscoped(). // ดึงรวม soft deleted
+		Where("deleted_at IS NOT NULL").
+		Preload("Address.Province").
+		Preload("Address.District").
+		Preload("Address.SubDistrict").
+		Preload("Address.Postcode").
+		Preload("Contact").
+		Preload("IntershipPosts").
+		Preload("InterviewAppointments").
+		Preload("Reviews").
+		Preload("User.Verifications.StatusVerify").
+		Find(&companies).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get companies"})
+		return
+	}
+
+	c.JSON(http.StatusOK, companies)
+}
+
+func DeleteCompany(c *gin.Context) {
+	id := c.Param("id")
+
+	// Step 1: หา company ตาม id
+	var company entity.Company
+	if err := config.DB().First(&company, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "company not found"})
+		return
+	}
+
+	// Step 2: ลบ company
+	if err := config.DB().Delete(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete company"})
+		return
+	}
+
+	// Step 3: ลบ user ที่เกี่ยวข้อง
+	if err := config.DB().Delete(&entity.User{}, company.UserID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "soft deleted"})
+}
+
+func UpdateCompany(c *gin.Context) {
+	// รับ company id จาก path param
+	idStr := c.Param("id")
+	companyID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company ID"})
+		return
+	}
+
+	var input struct {
+		CompanyName string `json:"company_name"`
+		Logo        string `json:"logo"`
+		Address     struct {
+			HouseNumber  string `json:"house_number"`
+			Village      string `json:"village"`
+			Street       string `json:"street"`
+			SubStreet    string `json:"sub_street"`
+			Province     uint   `json:"Province"`
+			District     uint   `json:"District"`
+			SubDistrict  uint   `json:"SubDistrict"`
+			Postcode     uint   `json:"Postcode"`
+		} `json:"Address"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+
+	db := config.DB()
+
+	var company entity.Company
+	if err := db.Preload("Address").First(&company, companyID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		}
+		return
+	}
+
+	// อัปเดต company field
+	company.CompanyName = input.CompanyName
+	company.Logo = input.Logo
+
+	// อัปเดต address field
+	if company.Address.ID != 0 {
+		company.Address.HouseNumber = input.Address.HouseNumber
+		company.Address.Village = input.Address.Village
+		company.Address.Street = input.Address.Street
+		company.Address.SubStreet = input.Address.SubStreet
+		company.Address.ProvinceID = input.Address.Province
+		company.Address.DistrictID = input.Address.District
+		company.Address.SubDistrictID = input.Address.SubDistrict
+		company.Address.PostcodeID = input.Address.Postcode
+	}
+
+	// บันทึกลงฐานข้อมูล
+	if err := db.Save(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update company"})
+		return
+	}
+
+	// Save address ด้วย (หากจำเป็น)
+	if err := db.Save(&company.Address).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
+		return
+	}
+
+	c.JSON(http.StatusOK, company)
+}

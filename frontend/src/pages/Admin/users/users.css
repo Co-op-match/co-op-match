@@ -1,0 +1,92 @@
+.custom-summary-box {
+  /* width: 200px; */
+  flex: 1 1 200px; /* ✅ ยืดได้หดได้: เริ่มจาก 160px */
+  max-width: 200px; /* ✅ ไม่เกิน 200px */
+  min-width: 150px; /* ✅ ไม่ต่ำกว่า 120px */
+  height: 100px;
+  /* background-color: #afd5f4; */
+  background: #fff;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.summary-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(124, 124, 124, 0.2); /* เส้นคั่น */
+}
+
+.summary-count {
+  font-size: 24px;
+  font-weight: bold;
+  color: #000;
+}
+
+.highlight-box {
+  background-color: #f0f5ff;
+  border: 2px solid #f0f5ff;
+}
+
+.searchInput {
+  width: 20vw;
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 0.4rem 1rem;
+  border: 0.5px solid #e3e3e3;
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  transition: transform 0.3s ease;
+}
+
+.custom-table .ant-table-container {
+  /* background-color: #afd5f4 !important; */
+  /* border: 1px solid #afd5f4; */
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  transition: transform 0.3s ease;
+}
+
+/* ✅ สีพื้นหลังของหัวตาราง */
+.custom-table .ant-table-thead > tr > th {
+  /* background-color: #afd5f4 !important; */
+}
+
+/* ✅ แถวปกติใน tbody */
+.custom-table .ant-table-tbody > tr > td {
+  /* background-color: #e7edf3  !important; */
+  transition: background-color 0.3s ease;
+}
+
+/* ✅ ถ้าเป็นแถวถูกระงับ เพิ่มความเฉพาะเจาะจงให้ override ได้ */
+.custom-table .ant-table-tbody > tr.suspended-row > td {
+  /* background-color: #d9d9d9 !important; */
+  color: #888 !important;
+  font-style: italic;
+}
+
+/* ปิด hover สำหรับแถวถูกระงับ */
+.custom-table .ant-table-tbody > tr.suspended-row:hover > td {
+  background-color: #d9d9d9 !important;
+}
+
+.fade-in-card:hover {
+  transform: translateY(-4px); /* ยกการ์ดขึ้นเล็กน้อยตอน hover */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

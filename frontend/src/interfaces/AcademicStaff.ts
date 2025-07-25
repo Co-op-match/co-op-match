@@ -21,4 +21,10 @@ export interface AcademicStaffInterface {
   address?: AddressInterface;
   admin?: AdminInterface;
   gender?: GenderInterface;
+
+  ID: number;
+  User?: UserInterface;
+  Address?: AddressInterface;
+  Admin?: AdminInterface;
+  Gender?: GenderInterface;
 }

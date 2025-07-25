@@ -168,6 +168,12 @@ async function GetIntershipPost() {
     .then((res) => res)
     .catch((e) => e.response);
 }
+export async function GetAllIntershipPostsAllStatus() {
+  return await axios
+    .get(`${apiUrl}/get-all-post-all-status`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 //=======================================Student============================================
 async function GetStudentById(data: UsersInterface) {
   const id = data.ID; 

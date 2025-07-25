@@ -21,6 +21,11 @@ import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
 import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
+import CompaniesInAdmin from "./pages/Admin/users/Companies/Companies";
+import SubCompanyInAdmin from "./pages/Admin/users/Companies/SubCompany";
+import StudentsInAdmin from "./pages/Admin/users/Students/Students";
+import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
+import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 
 
 
@@ -161,11 +166,52 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/*-------------------------   Admin   -------------------------*/}
           <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/companies"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <CompaniesInAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:id"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <SubCompanyInAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/students"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <StudentsInAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/lecturers"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <LecturersInAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admins"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminsInAdmin />
               </ProtectedRoute>
             }
           />

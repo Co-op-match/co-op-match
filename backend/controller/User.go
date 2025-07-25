@@ -205,31 +205,31 @@ func UpdateProfileImage(c *gin.Context) {
 }
 
 func GetProfileImage(c *gin.Context) {
-    userIDStr := c.Query("user_id")
-    if userIDStr == "" {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "UserID is required"})
-        return
-    }
+	userIDStr := c.Query("user_id")
+	if userIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "UserID is required"})
+		return
+	}
 
-    userID, err := strconv.ParseUint(userIDStr, 10, 64)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UserID"})
-        return
-    }
+	userID, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UserID"})
+		return
+	}
 
-    var image entity.ProfileImage
-    err = config.DB().Where("user_id = ?", userID).First(&image).Error
-    if err != nil {
-        // ถ้าไม่เจอ record หรือ error อื่น ๆ ก็ส่ง Not Found
-        c.JSON(http.StatusNotFound, gin.H{"error": "Profile image not found"})
-        return
-    }
+	var image entity.ProfileImage
+	err = config.DB().Where("user_id = ?", userID).First(&image).Error
+	if err != nil {
+		// ถ้าไม่เจอ record หรือ error อื่น ๆ ก็ส่ง Not Found
+		c.JSON(http.StatusNotFound, gin.H{"error": "Profile image not found"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "status":  "success",
-        "message": "Profile image found",
-        "data":    image,
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Profile image found",
+		"data":    image,
+	})
 }
 func GetProfileImageByUserID(c *gin.Context) {
 	userIDStr := c.Param("id")

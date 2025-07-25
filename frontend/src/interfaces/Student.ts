@@ -26,4 +26,6 @@ export interface StudentInterface {
   Address?: AddressInterface;
   Admin?: AdminInterface;
   Education?: EducationInterface[];
+
+  ID?: number;
 }

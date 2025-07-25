@@ -71,7 +71,9 @@ func main() {
 			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
-
+			studentGroup.GET("/all-active", controller.GetAllActiveStudents)
+			studentGroup.GET("/all-deleted", controller.GetAllDeletedStudents)
+			studentGroup.DELETE("/delete/:id", controller.DeleteStudent)
 		}
 		addressGroup := router.Group("/address")
 		{
@@ -129,6 +131,10 @@ func main() {
 			companyGroup.POST("", controller.CreateCompany)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
+			companyGroup.GET("/all-active", controller.GetAllActiveCompanies)
+			companyGroup.GET("/all-deleted", controller.GetAllDeletedCompany)
+			companyGroup.DELETE("/delete/:id", controller.DeleteCompany)
+			companyGroup.PATCH("/patch-company/:id", controller.UpdateCompany)
 		}
 		contactGroup := router.Group("/contact")
 		{
@@ -140,7 +146,17 @@ func main() {
 			adminGroup.GET("/all", controller.GetAllAdmin)
 			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 			adminGroup.GET("/:id", controller.GetAdminByID)
+			adminGroup.GET("/all-active", controller.GetAllActiveAdmins)
+			adminGroup.GET("/all-deleted", controller.GetAllDeletedAdmins)
+			adminGroup.DELETE("/delete/:id", controller.DeleteAdmin)		
 		}
+		academicStaffGroup := r.Group("/academic-staff")
+		{
+			academicStaffGroup.GET("/all-active", controller.GetAllActiveAcademicStaffs)
+			academicStaffGroup.GET("/all-deleted", controller.GetAllDeletedAcademicStaffs)
+			academicStaffGroup.DELETE("/delete/:id", controller.DeleteAcademicStaff)
+			academicStaffGroup.PATCH("/update/:id", controller.UpdateAcademicStaff)
+		}		
 	}
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
