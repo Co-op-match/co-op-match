@@ -27,6 +27,7 @@ func main() {
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
 	r.POST("/reset-password", users.SimpleResetPassword)
+	r.POST("/logout", users.Logout)
 
 	r.GET("/roles", role.GetAll)
 	r.GET("/provinces", searchjob.GetAllProvinces)
@@ -44,6 +45,14 @@ func main() {
 	r.GET("/getpost/:id", controller.GetInternshipPostById)
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
+	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
+	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
+	r.GET("/student/user/:user_id", controller.GetStudentByUserID)
+	r.GET("/application/:id", controller.GetApplicationByID)
+	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
+	r.PUT("/applications/post/:id", controller.UpdateApplication)
+
+	r.Static("/public", "./public")
 
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
@@ -54,6 +63,7 @@ func main() {
 		router.Use(middlewares.Authorizes())
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
+		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
 
 		studentGroup := router.Group("/students")
 		{

@@ -12,16 +12,15 @@ const { Header, Content } = Layout;
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate(); // ใช้งาน hook
+
   const { logout } = useContext(UserContext);
 
-  const handleLogout = () => {
-    // เคลียร์ทุกอย่างที่เกี่ยวข้องกับ session
-    logout();
-    // redirect กลับไปหน้า login
-    navigate("/sign-in");
-  };
-  
-  
+const handleLogout = async () => {
+  await logout();
+  navigate("/sign-in");
+};
+
+
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       <CoopMatchHeaderDefault />

@@ -16,7 +16,7 @@ import {
 } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { GetPostById, CreateApplication } from '../../../services/https/Application';
-import { GetStudentByUserId } from '../../../services/https/index'; // ✅ แก้ตรงนี้
+import { GetStudentByUserId } from '../../../services/https/index';
 import type { InternshipPostInterface } from '../../../interface/IIntershipPost';
 import type { StudentInterface } from '../../../interfaces/Student';
 
@@ -35,18 +35,20 @@ const AddApplication: React.FC = () => {
 
     useEffect(() => {
         const userId = localStorage.getItem('id');
-        if (!userId) return;
+        const postIdNumber = Number(postId);
+
+        // 🔒 ตรวจสอบก่อนเรียก API
+        if (!userId || !postId || isNaN(postIdNumber)) return;
 
         const fetchData = async () => {
             try {
                 const [postRes, studentRes] = await Promise.all([
-                    GetPostById(Number(postId)),
+                    GetPostById(postIdNumber),
                     GetStudentByUserId(Number(userId)),
                 ]);
                 setPost(postRes);
                 setStudent(studentRes);
 
-                // ✅ Console log education
                 console.log("✅ student.Education:", studentRes.Education);
                 console.log("✅ student.Education[0]:", studentRes.Education?.[0]);
             } catch (error) {
@@ -54,9 +56,8 @@ const AddApplication: React.FC = () => {
             }
         };
 
-        if (postId) fetchData();
+        fetchData();
     }, [postId]);
-
 
     const handleSubmit = async () => {
         try {
@@ -66,31 +67,38 @@ const AddApplication: React.FC = () => {
                 return;
             }
 
+            const postIdNumber = Number(postId);
+            if (isNaN(postIdNumber)) {
+                messageApi.error({ content: 'Post ID ไม่ถูกต้อง', style: { marginTop: '20vh' } });
+                return;
+            }
+
             const formData = new FormData();
             formData.append('resume', resumeFile);
             formData.append('transcript', transcriptFile);
-            formData.append('status', 'Pending Interview'); // หรือค่าจริง
+            formData.append('status', 'กำลังพิจารณา');
             formData.append('submit_at', new Date().toISOString());
             formData.append('student_id', localStorage.getItem('id')!);
+            formData.append('company_note', values.company_note || '');
 
             for (const [key, value] of formData.entries()) {
                 console.log(`${key}:`, value);
             }
-            const res = await CreateApplication(Number(postId), formData);
-            console.log(res)
+
+            setLoading(true);
+            const res = await CreateApplication(postIdNumber, formData);
 
             if (res.status === 200 || res.status === 201) {
                 messageApi.success({ content: 'ส่งใบสมัครเรียบร้อยแล้ว', style: { marginTop: '20vh' } });
-                navigate('/student/dashboard');
+                navigate('/student/applications/history');
             } else {
-
+                console.log("❌ Response not successful:", res);
                 messageApi.error({ content: 'ส่งใบสมัครไม่สำเร็จ', style: { marginTop: '20vh' } });
-
             }
+
         } catch (error) {
             messageApi.error({ content: 'เกิดข้อผิดพลาด', style: { marginTop: '20vh' } });
         } finally {
-
             setLoading(false);
         }
     };
@@ -102,8 +110,17 @@ const AddApplication: React.FC = () => {
     );
 
     return (
+
         <div style={{ padding: 32 }}>
+            <Button
+                type="link"
+                onClick={() => navigate(-1)}
+                style={{ marginBottom: 16, paddingLeft: 0 }}
+            >
+                ← ย้อนกลับ
+            </Button>
             {contextHolder}
+
             <Card style={{ maxWidth: 900, margin: 'auto' }}>
                 <Title level={3}>โปรดกรอกข้อมูลเรซูเม่ของคุณ</Title>
 
@@ -151,7 +168,6 @@ const AddApplication: React.FC = () => {
                             <Col span={12}>{renderReadOnlyInput('ระดับการศึกษา', student.Education?.[0]?.EducationLevel?.name || '')}</Col>
                         </Row>
 
-
                         <Divider orientation="left">ทักษะและความสามารถ</Divider>
                         <Row gutter={16}>
                             <Col span={12}>
@@ -173,7 +189,6 @@ const AddApplication: React.FC = () => {
                                 </Form.Item>
                             </Col>
                         </Row>
-
                     </>
                 )}
 

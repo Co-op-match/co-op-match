@@ -1,5 +1,6 @@
 
 import { type ApplicationInterface } from '../../../interface/IApplication';
+import { type StudentInterface } from "../../../interfaces/Student"; 
 import axios from "axios";
 
 const apiUrl = "http://localhost:8000"; // เปลี่ยน URL ให้ตรงกับเซิร์ฟเวอร์ของคุณ
@@ -39,10 +40,26 @@ async function GetApplications() {
 // ฟังก์ชันสำหรับดึงข้อมูล Application ตาม ID
 async function GetApplicationById(id: number) {
   return await axios
-    .get(`${apiUrl}/applications/${id}`, requestOptions)
+    .get(`${apiUrl}/application/${id}`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
+async function GetApplicationsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/application_details/student/${studentId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetStudentByUserId(userId: number): Promise<StudentInterface | null> {
+  return await axios
+    .get(`${apiUrl}/student/user/${userId}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ Error fetching student:", e);
+      return null;
+    });
+}
+
 
 // ฟังก์ชันสำหรับอัพเดตข้อมูล Application
 async function UpdateApplication(id: number, data: ApplicationInterface) {
@@ -81,6 +98,25 @@ async function GetPostById(id: number) {
     .then((res) => res)
     .catch((e) => e.response);
 }
+
+// ✅ ฟังก์ชันสำหรับดึงใบสมัครจาก InternshipPostID
+async function GetApplicationsByPostId(postId: number) {
+  return await axios
+    .get(`${apiUrl}/applications/post/${postId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+async function UpdateApplicationStatus(id: number, status: string, companyNote?: string) {
+  return await axios
+    .put(`${apiUrl}/applications/post/${id}`, { status, company_note: companyNote }, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+
+
+
 export {
   CreateApplication,
   GetApplications,
@@ -90,4 +126,8 @@ export {
   CreatePost,
   GetAllInternshipPosts,
   GetPostById,
+  GetApplicationsByStudentID,
+  GetStudentByUserId,
+  GetApplicationsByPostId,
+  UpdateApplicationStatus,
 };

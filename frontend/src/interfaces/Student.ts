@@ -7,6 +7,7 @@ import type { StudentSkillInterface } from "../interfaces/StudentSkill";
 import type { StudentInterestInterface } from "../interfaces/StudentInterest";
 
 export interface StudentInterface {
+  ID?: number;
   id?: number;
   first_name?: string;
   last_name?: string;

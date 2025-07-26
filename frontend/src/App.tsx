@@ -20,7 +20,10 @@ import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
+import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
 import AddApplication from './pages/Student/Application/AddApplication';
+import ApplicationHistory from "./pages/Student/Application/History";
+import ApplicationByCompany from "../src/pages/company/application/application";
 
 
 
@@ -54,6 +57,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <SearchJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/recommendations"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <StudentRecommendedPosts />
               </ProtectedRoute>
             }
           />
@@ -119,6 +130,14 @@ function App() {
             }
           />
 
+          <Route
+            path="/student/applications/history"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <ApplicationHistory />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/company/dashboard"
@@ -142,6 +161,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/applications/post/:postId"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <ApplicationByCompany />
               </ProtectedRoute>
             }
           />
