@@ -95,7 +95,7 @@ const CompanyDashboard: React.FC = () => {
       dataIndex: 'post_name',
       key: 'post_name',
       render: (text: string, record: InternshipPostInterface) => (
-        <Button type="link" onClick={() => navigate(`/post  /${record.ID}`)}>{text}</Button>
+        <Button type="link" onClick={() => navigate(`/post/${record.ID}`)}>{text}</Button>
       ),
     },
     {
@@ -138,7 +138,7 @@ const CompanyDashboard: React.FC = () => {
         return (
           <Button
             type="primary"
-            onClick={() => navigate(`/post/${record.ID}`)}
+            onClick={() => navigate(`/applications/post/${record.ID}`)}
           >
             ดูใบสมัคร
           </Button>
@@ -222,6 +222,8 @@ const CompanyDashboard: React.FC = () => {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
     }
+
+    // values.StatusPostID = 1;
   
     values.StatusPostID = 3;
     values.CompanyID = Number(companyId);

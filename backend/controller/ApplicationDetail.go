@@ -65,3 +65,37 @@ func ListApplicationDetails(c *gin.Context) {
 	// Return the results as JSON
 	c.JSON(http.StatusOK, applicationDetails)
 }
+
+// GET /application_details/student/:id - Get application details by student ID
+func GetApplicationDetailsByStudentID(c *gin.Context) {
+	studentID := c.Param("id")
+
+	db := config.DB()
+
+	var applications []entity.Application
+
+	if err := db.Preload("IntershipPost.Company").
+		Joins("JOIN application_details ON application_details.application_id = applications.id").
+		Where("application_details.student_id = ?", studentID).
+		Find(&applications).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	var response []map[string]interface{}
+	for _, app := range applications {
+		response = append(response, map[string]interface{}{
+			"id":           app.ID,
+			"position":     app.IntershipPost.PostName,
+			"company":      app.IntershipPost.Company.CompanyName,
+			"company_name": app.IntershipPost.Company.CompanyName,
+			"status":       app.Status,
+			"date":         app.SubmitAt.Format("2006-01-02"),
+			"resume":       app.ResumeUrl,
+			"transcript":   app.TranscriptUrl,
+			"companyNote":  app.CompanyNote,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}

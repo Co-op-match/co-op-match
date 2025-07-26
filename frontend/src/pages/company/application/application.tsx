@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-// import { GetApplications, UpdateApplication } from '../../../services/https/Application/index';
-// เปลี่ยนเป็น
-import CompanyHeader from '../../Component/CompanyHeader';
-
+import { useEffect, useState, type ReactNode } from 'react';
+import CoopMatchHeader from '../../Component/CoopMatchHeader';
+import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../services/https/Application/index';
+import { useParams } from 'react-router-dom';
 
 interface ApplicationInterface {
+    post_name: ReactNode;
     id?: number;
     name: string;
     position: string;
@@ -17,12 +17,8 @@ interface ApplicationInterface {
 }
 
 const Dashboard = () => {
-    const [applications, setApplications] = useState<ApplicationInterface[]>([
-        { id: 1, name: 'มลฤดี มั่นคง', position: 'นักพัฒนาซอฟต์แวร์', status: 'กำลังพิจารณา', submit_at: '2025-06-17' },
-        { id: 2, name: 'นภัสสร สุขใจ', position: 'นักออกแบบ UI/UX', status: 'กำลังพิจารณา', submit_at: '2025-06-16' },
-        { id: 3, name: 'วิภาดา พงศ์วัฒน์', position: 'นักวิเคราะห์ข้อมูล', status: 'รอการนัดสมัภาษณ์', submit_at: '2025-06-15' },
-        { id: 4, name: 'สุภัทรา พิชัย', position: 'นักพัฒนาระบบ', status: 'ไม่ได้รับเลือก', submit_at: '2025-06-14' },
-    ]);
+    const { postId } = useParams();
+    const [applications, setApplications] = useState<ApplicationInterface[]>([]);
     const [approvedApplications, setApprovedApplications] = useState<ApplicationInterface[]>([]);
     const [rejectedApplications, setRejectedApplications] = useState<ApplicationInterface[]>([]);
     const [approvalStats, setApprovalStats] = useState({ approved: 0, pending: 0, rejected: 0 });
@@ -30,14 +26,73 @@ const Dashboard = () => {
     const [selectedApplication, setSelectedApplication] = useState<ApplicationInterface | null>(null);
     const [newStatus, setNewStatus] = useState<ApplicationInterface['status'] | null>(null);
     const [note, setNote] = useState('');
-    const [searchTerm, setSearchTerm] = useState<string>(''); // ค้นหาชื่อผู้สมัครหรือตำแหน่ง
-    const [searchStatus, setSearchStatus] = useState<string>(''); // ค้นหาสถานะ
-    const [searchDate, setSearchDate] = useState<string>(''); // ค้นหาวันที่
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [searchStatus, setSearchStatus] = useState<string>('');
+    const [searchDate, setSearchDate] = useState<string>('');
+
+
 
     useEffect(() => {
-        filterApplicationsByStatus(applications);
-        calculateStats(applications);
-    }, [applications]);
+        const handleNewApplication = (event: any) => {
+            if (Number(event.detail.postId) === Number(postId)) {
+                fetchApplications();
+                console.log("🧾 Post ID from URL:", postId);
+
+            }
+        };
+        window.addEventListener("application-submitted", handleNewApplication);
+        return () => {
+            window.removeEventListener("application-submitted", handleNewApplication);
+        };
+    }, [postId]);
+
+    useEffect(() => {
+        fetchApplications();
+    }, [postId]);
+
+    const handleScheduleInterview = (application: ApplicationInterface) => {
+        // ตัวอย่าง: ใช้ alert หรือเปิด modal นัดสัมภาษณ์จริงก็ได้
+        alert(`คุณกำลังนัดสัมภาษณ์กับ ${application.name}`);
+        // TODO: สามารถเปลี่ยนเป็นการเปิด modal หรือไปหน้า schedule ได้
+    };
+
+
+    const fetchApplications = async () => {
+        if (!postId) return;
+        const res = await GetApplicationsByPostId(Number(postId));
+        console.log("📦 API Response:", res);
+        const realApplications = res?.data?.data || [];
+
+        // ตรวจสอบว่าข้อมูลที่ได้มีจริงหรือไม่
+        if (!Array.isArray(realApplications)) {
+            console.error("❌ ข้อมูลที่ได้จาก API ไม่ใช่ array:", realApplications);
+            return;
+        }
+
+        const mappedApps: ApplicationInterface[] = realApplications.map((app: any) => ({
+            id: app.id,
+            name: app.student_name,
+            post_name: app.post_name, // ✅ ใส่เข้าไปใน mappedApps
+            position: app.post_name, // ✅ ต้องใส่ฟิลด์นี้ เพราะ type บังคับ
+            status: app.status,
+            companyNote: app.company_note,
+            resume: app.resume,
+            transcript: app.transcript,
+            submit_at: app.date,
+            internship_post_id: Number(postId),
+        }));
+
+
+        console.log("✅ mappedApps:", mappedApps);
+        setApplications(mappedApps);
+    };
+
+
+    useEffect(() => {
+        filterApplicationsByStatus(applications); // << ถ้าต้องการใช้ต่อ
+        calculateStats(applications);             // ✅ ถูกต้อง
+      }, [applications]);
+      
 
     const calculateStats = (data: ApplicationInterface[]) => {
         const stats = { approved: 0, pending: 0, rejected: 0 };
@@ -46,8 +101,9 @@ const Dashboard = () => {
             else if (application.status === 'กำลังพิจารณา') stats.pending++;
             else stats.rejected++;
         });
-        setApprovalStats(stats);
+        setApprovalStats(stats); // ✅ << ตรงนี้แหละ
     };
+
 
     const filterApplicationsByStatus = (data: ApplicationInterface[]) => {
         const approved = data.filter(application => application.status === 'รอการนัดสมัภาษณ์');
@@ -56,50 +112,50 @@ const Dashboard = () => {
         setRejectedApplications(rejected);
     };
 
-    // ฟังก์ชันกรองข้อมูลตามคำค้นหาทั้งหมด
-    const filteredApplications = applications.filter(application => {
-        const matchesSearchTerm = application.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            application.position.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesSearchDate = searchDate ? application.submit_at === searchDate : true;
-        const matchesSearchStatus = searchStatus ? application.status === searchStatus : true;
-
-        return matchesSearchTerm && matchesSearchDate && matchesSearchStatus;
-    });
 
     const handleApproval = (
         application: ApplicationInterface,
-        status: 'ผ่านการคัดเลือก' | 'ไม่ได้รับเลือก'
-      ) => {
+        status: 'รอการนัดสมัภาษณ์' | 'ไม่ได้รับเลือก'
+    ) => {
         setSelectedApplication(application);
         setNewStatus(status);
         setShowModal(true);
-      };
-      
+    };
 
-    const confirmApproval = () => {
+    const confirmApproval = async () => {
         if (selectedApplication && newStatus) {
-          const updatedApplications = applications.map(application =>
-            application.id === selectedApplication.id
-              ? {
-                  ...application,
-                  status: newStatus,
-                  companyNote: note,
-                }
-              : application
-          );
-          setApplications(updatedApplications);
-          setShowModal(false);
-          setNote('');
+            try {
+                await UpdateApplicationStatus(selectedApplication.id!, newStatus, note); // เรียก API
+
+                // อัปเดตใน frontend state
+                const updatedApplications = applications.map(app =>
+                    app.id === selectedApplication.id
+                        ? { ...app, status: newStatus, companyNote: note }
+                        : app
+                );
+
+                setApplications(updatedApplications);
+                setSelectedApplication(null);
+                setNewStatus(null);
+                setShowModal(false);
+                setNote('');
+            } catch (error) {
+                alert("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+            }
         }
-      };
-      
+    };
+
+
+
+    const fileBaseURL = 'http://localhost:8000'; // ✅ ปรับตาม backend จริงของคุณ
+
+
 
     return (
-        
         <div style={containerStyle}>
-            <CompanyHeader  />
-            {/* สรุปผลทั้งหมด */}
+            <CoopMatchHeader />
+
             <div style={summaryCardStyle}>
                 <h3 style={headingStyle}>สรุปผลคำขอ</h3>
                 <div style={summaryFieldsStyle}>
@@ -119,35 +175,22 @@ const Dashboard = () => {
                         <h4>ไม่อนุมัติ</h4>
                         <p>{approvalStats.rejected}</p>
                     </div>
+
                 </div>
             </div>
 
-            {/* คำขอร้องการอนุมัติ */}
             <div style={summaryCardStyle}>
                 <h3 style={headingStyle}>คำขอร้องการอนุมัติ</h3>
-                {/* ช่องค้นหาทั้งหมด */}
                 <div style={searchBoxContainerStyle}>
                     <div style={searchInputWrapperStyle}>
                         <label style={searchLabelStyle}>ค้นหาชื่อผู้สมัครหรือตำแหน่ง</label>
-                        <input
-                            type="text"
-                            placeholder="กรอกคำค้นหา..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={smallSearchInputStyle} // เปลี่ยนเป็นสไตล์ที่เล็กลง
-                        />
+                        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={smallSearchInputStyle} />
                     </div>
                     <div style={searchInputWrapperStyle}>
                         <label style={searchLabelStyle}>ค้นหาวันที่</label>
-                        <input
-                            type="date"
-                            value={searchDate}
-                            onChange={(e) => setSearchDate(e.target.value)}
-                            style={smallSearchInputStyle} // เปลี่ยนเป็นสไตล์ที่เล็กลง
-                        />
+                        <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} style={smallSearchInputStyle} />
                     </div>
                 </div>
-
 
                 <div style={requestBoxStyle}>
                     <table style={tableStyle}>
@@ -156,52 +199,60 @@ const Dashboard = () => {
                                 <th>ชื่อผู้สมัคร</th>
                                 <th>ตำแหน่ง</th>
                                 <th>วันที่ส่ง</th>
+                                <th>Resume</th>
+                                <th>Transcript</th>
                                 <th>สถานะ</th>
+                                <th>หมายเหตุ</th>
                                 <th>การจัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {/* แสดงเฉพาะคำขอที่สถานะเป็น "กำลังพิจารณา" */}
-                            {filteredApplications.filter(application => application.status === 'กำลังพิจารณา').map((application) => (
-                                <tr key={application.id} style={tableRowStyle}>
-                                    <td>{application.name}</td>
-                                    <td>{application.position}</td>
-                                    <td>{application.submit_at}</td>
-                                    <td>{application.status}</td>
-                                    <td>
-                                        <button
-                                            style={buttonStyle}
-                                            onClick={() => handleApproval(application, 'ผ่านการคัดเลือก')}
-                                        >
-                                            อนุมัติ
-                                        </button>
-                                        <button
-                                            style={buttonStyle}
-                                            onClick={() => handleApproval(application, 'ไม่ได้รับเลือก')}
-                                        >
-                                            ไม่อนุมัติ
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {applications
+                                .filter(app => app.status === 'กำลังพิจารณา')
+                                .filter(app =>
+                                    app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    app.position.toLowerCase().includes(searchTerm.toLowerCase())
+                                )
+                                .filter(app => searchDate ? app.submit_at?.startsWith(searchDate) : true)
+                                .map(application => (
+                                    <tr key={application.id}>
+                                        <td>{application.name}</td>
+                                        <td>{application.post_name}</td>
+                                        <td>{application.submit_at}</td>
+                                        <td>
+                                            {application.resume ? (
+                                                <a href={`${fileBaseURL}${application.resume}`} target="_blank" rel="noopener noreferrer">ดู</a>
+                                            ) : "-"}
+                                        </td>
+                                        <td>
+                                            {application.transcript ? (
+                                                <a href={`${fileBaseURL}${application.transcript}`} target="_blank" rel="noopener noreferrer">ดู</a>
+                                            ) : "-"}
+                                        </td>
+                                        <td>{application.status}</td>
+                                        <td>
+                                            <button style={buttonStyle} onClick={() => handleApproval(application, 'รอการนัดสมัภาษณ์')}>
+                                                อนุมัติ
+                                            </button>
+                                            <button style={buttonStyle} onClick={() => handleApproval(application, 'ไม่ได้รับเลือก')}>
+                                                ไม่อนุมัติ
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
+
                     </table>
                 </div>
             </div>
 
             <div style={summaryCardStyle}>
                 <h3 style={headingStyle}>ประวัติคำขอทั้งหมด</h3>
-
-                {/* ช่องค้นหาสถานะในมุมขวา */}
                 <div style={searchStatusContainerStyle}>
                     <label style={searchLabelStyle}>ค้นหาสถานะ</label>
-                    <select
-                        value={searchStatus}
-                        onChange={(e) => setSearchStatus(e.target.value)}
-                        style={dropdownStyle}
-                    >
+                    <select value={searchStatus} onChange={(e) => setSearchStatus(e.target.value)} style={dropdownStyle}>
                         <option value="">เลือกสถานะ</option>
-                        <option value="รอการนัดสมัภาษณ์">ผ่านการคัดเลือก</option>
+                        <option value="รอการนัดสมัภาษณ์">รอการนัดสมัภาษณ์</option>
                         <option value="ไม่ได้รับเลือก">ไม่ได้รับเลือก</option>
                     </select>
                 </div>
@@ -215,31 +266,39 @@ const Dashboard = () => {
                                 <th>วันที่ส่ง</th>
                                 <th>สถานะ</th>
                                 <th>หมายเหตุ</th>
+                                <th>จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredApplications.map((application) => (
-                                <tr key={application.id} style={tableRowStyle}>
-                                    <td>{application.name}</td>
-                                    <td>{application.position}</td>
-                                    <td>{application.submit_at}</td>
-                                    <td>{application.status}</td>
-                                    <td>{application.companyNote || '-'}</td>
+                            {applications.map(app => (
+                                <tr key={app.id} style={tableRowStyle}>
+                                    <td style={thTdStyle}>{app.name}</td>
+                                    <td style={thTdStyle}>{app.post_name}</td>
+                                    <td style={thTdStyle}>{app.submit_at}</td>
+                                    <td style={thTdStyle}>{app.status}</td>
+                                    <td style={thTdStyle}>{app.companyNote || '-'}</td>
+                                    <td style={thTdStyle}>
+                                        {app.status === 'รอการนัดสมัภาษณ์' && (
+                                            <button onClick={() => handleScheduleInterview(app)} style={buttonStyle}>
+                                                นัดสัมภาษณ์
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
+
+
                     </table>
                 </div>
             </div>
 
-
-            {/* Confirmation Modal */}
             {showModal && selectedApplication && (
                 <div style={modalOverlayStyle}>
                     <div style={modalStyle}>
                         <div style={modalHeadingBoxStyle}>
                             <h3 style={modalHeadingStyle}>
-                                {newStatus === 'ผ่านการคัดเลือก' ? 'คุณแน่ใจหรือไม่ที่จะอนุมัติคำขอนี้?' : 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติคำขอนี้?'}
+                                {newStatus === 'รอการนัดสมัภาษณ์' ? 'คุณแน่ใจหรือไม่ที่จะอนุมัติคำขอนี้?' : 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติคำขอนี้?'}
                             </h3>
                         </div>
                         <p>ชื่อ: {selectedApplication.name}</p>
@@ -263,9 +322,6 @@ const Dashboard = () => {
     );
 };
 
-// ส่วนของสไตล์ต่างๆ ตามที่ได้มีการจัดรูปแบบไว้แล้ว
-
-
 const containerStyle = {
     backgroundColor: '#e6f7ff',
     padding: '20px',
@@ -284,10 +340,12 @@ const buttonStyle = {
     backgroundColor: '#0066cc',
     color: 'white',
     borderRadius: '6px',
-    padding: '10px 20px',
+    padding: '5px 10px',
     fontWeight: 'bold',
     margin: '5px',
     cursor: 'pointer',
+    // width: '5px',
+
 };
 
 const summaryCardStyle = {
@@ -311,21 +369,31 @@ const summaryItemStyle: React.CSSProperties = {
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     textAlign: 'center', // ✅ ใช้ CSSProperties เพื่อให้ถูกต้อง
     flex: 1,
-  };
-  
+};
 
-  const tableStyle: React.CSSProperties = {
+
+const tableStyle: React.CSSProperties = {
     width: '100%',
     borderCollapse: 'collapse',
-    textAlign: 'left',
+    textAlign: 'center',
     marginLeft: '0',
-  };
-  
 
-const tableRowStyle = {
-    borderBottom: '1px solid #ddd',
-    padding: '8px',
 };
+
+const thTdStyle: React.CSSProperties = {
+    padding: '12px 20px', // ✅ เพิ่มช่องไฟซ้าย-ขวาเยอะขึ้น
+    // verticalAlign: 'top',
+    textAlign: 'center',
+};
+
+
+
+const tableRowStyle: React.CSSProperties = {
+    borderBottom: '1px solid #ddd',
+    padding: '12px',
+    textAlign: 'center',
+};
+
 
 const modalOverlayStyle: React.CSSProperties = {
     position: 'fixed' as const,
@@ -337,10 +405,10 @@ const modalOverlayStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-  };
-  
+};
 
-  const modalStyle: React.CSSProperties = {
+
+const modalStyle: React.CSSProperties = {
     backgroundColor: '#ffffff',
     padding: '25px',
     borderRadius: '12px',
@@ -348,17 +416,17 @@ const modalOverlayStyle: React.CSSProperties = {
     width: '400px',
     display: 'flex',
     flexDirection: 'column' as const,
-  };
-  
+};
 
-  const modalHeadingBoxStyle: React.CSSProperties = {
+
+const modalHeadingBoxStyle: React.CSSProperties = {
     backgroundColor: '#ADD8E6',
     padding: '15px',
     borderRadius: '8px',
     textAlign: 'center' as const,
     marginBottom: '15px',
-  };
-  
+};
+
 
 const modalHeadingStyle = {
     fontSize: '20px',
@@ -427,8 +495,8 @@ const searchInputWrapperStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column' as const,
     marginRight: '10px',
-  };
-  
+};
+
 
 // สไตล์สำหรับ label
 const searchLabelStyle = {
@@ -439,16 +507,16 @@ const searchLabelStyle = {
 };
 
 // สไตล์สำหรับช่องค้นหา
-const searchInputStyle = {
-    width: '100%',
-    padding: '8px 12px', // ขนาดเล็กลง
-    borderRadius: '12px', // ทำให้มุมกลม
-    border: '1px solid #ccc',
-    fontSize: '14px', // ลดขนาดตัวอักษร
-    backgroundColor: '#f0f8ff', // พื้นหลังสีฟ้าอ่อน
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // เพิ่มเงาให้ดูน่ารัก
-    transition: 'all 0.3s ease-in-out', // เพิ่มการเปลี่ยนแปลงเมื่อ hover
-};
+// const searchInputStyle = {
+//     width: '100%',
+//     padding: '8px 12px', // ขนาดเล็กลง
+//     borderRadius: '12px', // ทำให้มุมกลม
+//     border: '1px solid #ccc',
+//     fontSize: '14px', // ลดขนาดตัวอักษร
+//     backgroundColor: '#f0f8ff', // พื้นหลังสีฟ้าอ่อน
+//     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // เพิ่มเงาให้ดูน่ารัก
+//     transition: 'all 0.3s ease-in-out', // เพิ่มการเปลี่ยนแปลงเมื่อ hover
+// };
 
 // สไตล์สำหรับ dropdown (ค้นหาสถานะ)
 const dropdownStyle = {
