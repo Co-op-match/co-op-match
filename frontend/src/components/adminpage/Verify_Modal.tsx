@@ -1,5 +1,4 @@
-// components/shared/Verify_Modal.tsx
-import { Modal, Form, Card, Row, Col, Radio, Input } from "antd";
+import { Modal, Form, Card, Row, Col, Radio, Input, Spin } from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import type { CompanyInterface } from "../../interfaces/Company";
@@ -18,6 +17,7 @@ interface Props {
   isReadOnlyStatus: boolean;
   setIsDetailModalVisible: (visible: boolean) => void;
   submitVerificationDecision: (reason: string) => Promise<void>;
+  isSubmitting?: boolean; // Add loading prop
 }
 
 const Verify_Modal: React.FC<Props> = ({
@@ -30,6 +30,7 @@ const Verify_Modal: React.FC<Props> = ({
   isReadOnlyStatus,
   setIsDetailModalVisible,
   submitVerificationDecision,
+  isSubmitting = false, // Default to false
 }) => {
   const latest: VerifyInterface | undefined =
     entity?.User?.Verifications?.slice()?.sort(
@@ -37,7 +38,7 @@ const Verify_Modal: React.FC<Props> = ({
     )[0];
 
   const getDisplayName = () => {
-    if (!role) return "-"; 
+    if (!role) return "-";
     if (role.RoleName === "Company") {
       return (entity as CompanyInterface).company_name ?? "-";
     } else if (role.RoleName === "AcademicStaff") {
@@ -53,12 +54,13 @@ const Verify_Modal: React.FC<Props> = ({
       open={open}
       title={<div className="verify-modal-title">รายละเอียดการรับรอง</div>}
       onCancel={() => {
+        if (isSubmitting) return; // Prevent closing while submitting
         setIsDetailModalVisible(false);
         verifyForm.resetFields();
         setSelectedVerifyStatus("");
       }}
       onOk={async () => {
-        if (isReadOnlyStatus) return;
+        if (isReadOnlyStatus || isSubmitting) return; // Prevent submission while loading
         try {
           if (selectedVerifyStatus === "ปฏิเสธ") {
             await verifyForm.validateFields();
@@ -67,164 +69,197 @@ const Verify_Modal: React.FC<Props> = ({
           await submitVerificationDecision(reason);
         } catch (err) {}
       }}
-      okText="ยืนยัน"
+      okText={isSubmitting ? "กำลังดำเนินการ..." : "ยืนยัน"}
       cancelText="ยกเลิก"
       footer={isReadOnlyStatus ? null : undefined}
       width={500}
       className="adminpage-modal"
-      okButtonProps={{ className: "verify-modal-ok-button" }}
-      cancelButtonProps={{ className: "verify-modal-cancel-button" }}
+      okButtonProps={{
+        className: "verify-modal-ok-button",
+        loading: isSubmitting,
+        disabled: isSubmitting,
+      }}
+      cancelButtonProps={{
+        className: "verify-modal-cancel-button",
+        disabled: isSubmitting,
+      }}
+      closable={!isSubmitting} // Disable close button while submitting
+      maskClosable={!isSubmitting} // Disable mask click while submitting
     >
-      <Form form={verifyForm} layout="vertical">
-        <Card
-          className="company-info-card"
-          styles={{ body: { padding: "20px" } }}
-        >
-          <div className="verify-section-label">
-            ข้อมูล{role?.RoleNameTH ?? "ผู้ใช้"}
-          </div>
-          <div
-            style={{ fontSize: "18px", color: "#1677ff", fontWeight: "500" }}
+      <Spin spinning={isSubmitting} tip="กำลังส่งอีเมลและอัปเดตสถานะ...">
+        <Form form={verifyForm} layout="vertical">
+          <Card
+            className="company-info-card"
+            styles={{ body: { padding: "20px" } }}
           >
-            {getDisplayName()}
-          </div>
-        </Card>
-
-        {!latest ? (
-          <Card style={{ textAlign: "center", padding: "40px" }}>
-            <div style={{ fontSize: "16px", color: "#999" }}>
-              ยังไม่มีการส่งคำขอรับรอง
+            <div className="verify-section-label">
+              ข้อมูล{role?.RoleNameTH ?? "ผู้ใช้"}
+            </div>
+            <div
+              style={{ fontSize: "18px", color: "#1677ff", fontWeight: "500" }}
+            >
+              {getDisplayName()}
             </div>
           </Card>
-        ) : (
-          <>
-            <Row gutter={[16, 16]} style={{ marginBottom: "20px" }}>
-              <Col span={12}>
-                <Card size="small" style={{ borderRadius: "8px" }}>
-                  <div className="verify-status-title">สถานะ</div>
-                  <div style={{ fontSize: "16px", fontWeight: "600" }}>
-                    {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
-                  </div>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small" style={{ borderRadius: "8px" }}>
-                  <div className="verify-status-title">วันที่ส่งคำขอ</div>
-                  <div style={{ fontSize: "16px", fontWeight: "600" }}>
-                    {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
-                  </div>
-                </Card>
-              </Col>
-            </Row>
 
-            <Card
-              title={`เอกสารการยืนยันของ${role?.RoleNameTH ?? "ผู้ใช้"}`}
-              style={{ borderRadius: "12px", marginBottom: "20px" }}
-            >
-              {latest.verification_document ? (
-                <iframe
-                  title="Verification Document"
-                  src={`http://localhost:8000${latest.verification_document}`}
-                  className="verify-doc-iframe"
-                />
-              ) : (
-                <div className="verify-no-doc">ไม่มีเอกสาร</div>
-              )}
+          {!latest ? (
+            <Card style={{ textAlign: "center", padding: "40px" }}>
+              <div style={{ fontSize: "16px", color: "#999" }}>
+                ยังไม่มีการส่งคำขอรับรอง
+              </div>
             </Card>
+          ) : (
+            <>
+              <Row gutter={[16, 16]} style={{ marginBottom: "20px" }}>
+                <Col span={12}>
+                  <Card size="small" style={{ borderRadius: "8px" }}>
+                    <div className="verify-status-title">สถานะ</div>
+                    <div style={{ fontSize: "16px", fontWeight: "600" }}>
+                      {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
+                    </div>
+                  </Card>
+                </Col>
+                <Col span={12}>
+                  <Card size="small" style={{ borderRadius: "8px" }}>
+                    <div className="verify-status-title">วันที่ส่งคำขอ</div>
+                    <div style={{ fontSize: "16px", fontWeight: "600" }}>
+                      {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
+                    </div>
+                  </Card>
+                </Col>
+              </Row>
 
-            <Card title="การตัดสินใจ" style={{ borderRadius: "12px" }}>
-              <Radio.Group
-                onChange={(e) => {
-                  setSelectedVerifyStatus(e.target.value);
-                  if (e.target.value !== "ปฏิเสธ") {
-                    verifyForm.resetFields(["rejectReason"]);
-                  }
-                }}
-                value={selectedVerifyStatus}
-                disabled={isReadOnlyStatus}
-                style={{ width: "100%" }}
+              <Card
+                title={`เอกสารการยืนยันของ${role?.RoleNameTH ?? "ผู้ใช้"}`}
+                style={{ borderRadius: "12px", marginBottom: "20px" }}
               >
-                <Row gutter={[16, 16]}>
-                  <Col span={12}>
-                    <Card
-                      style={{
-                        cursor: isReadOnlyStatus ? "not-allowed" : "pointer",
-                        border:
-                          selectedVerifyStatus === "รับรอง"
-                            ? "2px solid #1677ff"
-                            : "1px solid #d9d9d9",
-                        borderRadius: "8px",
-                      }}
-                      onClick={() =>
-                        !isReadOnlyStatus && setSelectedVerifyStatus("รับรอง")
-                      }
-                      styles={{
-                        body: { padding: "16px", textAlign: "center" },
-                      }}
-                    >
-                      <Radio value="รับรอง" style={{ fontSize: "16px" }}>
-                        รับรอง
-                      </Radio>
-                    </Card>
-                  </Col>
-                  <Col span={12}>
-                    <Card
-                      style={{
-                        cursor: isReadOnlyStatus ? "not-allowed" : "pointer",
-                        border:
-                          selectedVerifyStatus === "ปฏิเสธ"
-                            ? "2px solid #ff4d4f"
-                            : "1px solid #d9d9d9",
-                        borderRadius: "8px",
-                      }}
-                      onClick={() =>
-                        !isReadOnlyStatus && setSelectedVerifyStatus("ปฏิเสธ")
-                      }
-                      styles={{
-                        body: { padding: "16px", textAlign: "center" },
-                      }}
-                    >
-                      <Radio
-                        value="ปฏิเสธ"
-                        className={
-                          selectedVerifyStatus === "ปฏิเสธ"
-                            ? "radio-danger"
-                            : undefined
-                        }
-                        style={{ fontSize: "16px" }}
-                      >
-                        ปฏิเสธ
-                      </Radio>
-                    </Card>
-                  </Col>
-                </Row>
-              </Radio.Group>
-
-              {selectedVerifyStatus === "ปฏิเสธ" && (
-                <Form.Item
-                  name="rejectReason"
-                  label="เหตุผลในการปฏิเสธ"
-                  rules={[
-                    { required: true, message: "กรุณาระบุเหตุผลในการปฏิเสธ" },
-                  ]}
-                  style={{ marginTop: "20px" }}
-                >
-                  <Input.TextArea
-                    rows={4}
-                    placeholder="กรุณาระบุเหตุผลในการปฏิเสธอย่างชัดเจน..."
-                    disabled={isReadOnlyStatus}
-                    style={{
-                      borderRadius: "8px",
-                      border: "2px solid #ffebe6",
-                      resize: "none",
-                    }}
+                {latest.verification_document ? (
+                  <iframe
+                    title="Verification Document"
+                    src={`http://localhost:8000${latest.verification_document}`}
+                    className="verify-doc-iframe"
                   />
-                </Form.Item>
-              )}
-            </Card>
-          </>
-        )}
-      </Form>
+                ) : (
+                  <div className="verify-no-doc">ไม่มีเอกสาร</div>
+                )}
+              </Card>
+
+              <Card title="การตัดสินใจ" style={{ borderRadius: "12px" }}>
+                <Radio.Group
+                  onChange={(e) => {
+                    if (isSubmitting) return; // Prevent changes while submitting
+                    setSelectedVerifyStatus(e.target.value);
+                    if (e.target.value !== "ปฏิเสธ") {
+                      verifyForm.resetFields(["rejectReason"]);
+                    }
+                  }}
+                  value={selectedVerifyStatus}
+                  disabled={isReadOnlyStatus || isSubmitting}
+                  style={{ width: "100%" }}
+                >
+                  <Row gutter={[16, 16]}>
+                    <Col span={12}>
+                      <Card
+                        style={{
+                          cursor:
+                            isReadOnlyStatus || isSubmitting
+                              ? "not-allowed"
+                              : "pointer",
+                          border:
+                            selectedVerifyStatus === "รับรอง"
+                              ? "2px solid #1677ff"
+                              : "1px solid #d9d9d9",
+                          borderRadius: "8px",
+                          opacity: isSubmitting ? 0.6 : 1,
+                        }}
+                        onClick={() =>
+                          !isReadOnlyStatus &&
+                          !isSubmitting &&
+                          setSelectedVerifyStatus("รับรอง")
+                        }
+                        styles={{
+                          body: { padding: "16px", textAlign: "center" },
+                        }}
+                      >
+                        <Radio
+                          value="รับรอง"
+                          className={
+                            selectedVerifyStatus === "รับรอง"
+                              ? "radio-ok"
+                              : undefined
+                          }
+                          style={{ fontSize: "16px" }}
+                        >
+                          รับรอง
+                        </Radio>
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                      <Card
+                        style={{
+                          cursor:
+                            isReadOnlyStatus || isSubmitting
+                              ? "not-allowed"
+                              : "pointer",
+                          border:
+                            selectedVerifyStatus === "ปฏิเสธ"
+                              ? "2px solid #ff4d4f"
+                              : "1px solid #d9d9d9",
+                          borderRadius: "8px",
+                          opacity: isSubmitting ? 0.6 : 1,
+                        }}
+                        onClick={() =>
+                          !isReadOnlyStatus &&
+                          !isSubmitting &&
+                          setSelectedVerifyStatus("ปฏิเสธ")
+                        }
+                        styles={{
+                          body: { padding: "16px", textAlign: "center" },
+                        }}
+                      >
+                        <Radio
+                          value="ปฏิเสธ"
+                          className={
+                            selectedVerifyStatus === "ปฏิเสธ"
+                              ? "radio-danger"
+                              : undefined
+                          }
+                          style={{ fontSize: "16px" }}
+                        >
+                          ปฏิเสธ
+                        </Radio>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Radio.Group>
+
+                {selectedVerifyStatus === "ปฏิเสธ" && (
+                  <Form.Item
+                    name="rejectReason"
+                    label="เหตุผลในการปฏิเสธ"
+                    rules={[
+                      { required: true, message: "กรุณาระบุเหตุผลในการปฏิเสธ" },
+                    ]}
+                    style={{ marginTop: "20px" }}
+                  >
+                    <Input.TextArea
+                      rows={4}
+                      placeholder="กรุณาระบุเหตุผลในการปฏิเสธอย่างชัดเจน..."
+                      disabled={isReadOnlyStatus || isSubmitting}
+                      style={{
+                        borderRadius: "8px",
+                        border: "2px solid #ffebe6",
+                        resize: "none",
+                        opacity: isSubmitting ? 0.6 : 1,
+                      }}
+                    />
+                  </Form.Item>
+                )}
+              </Card>
+            </>
+          )}
+        </Form>
+      </Spin>
     </Modal>
   );
 };

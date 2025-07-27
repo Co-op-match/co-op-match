@@ -13,16 +13,16 @@ import {
   Space,
   Button,
   Typography,
+  Avatar,
 } from "antd";
 import {
   UserOutlined,
-  HomeOutlined,
   EnvironmentOutlined,
   SaveOutlined,
   CloseOutlined,
   IdcardOutlined,
   BankOutlined,
-  NumberOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import {
   GetAllProvinces,
@@ -30,8 +30,9 @@ import {
 } from "../../../../services/https/index";
 import type { AcademicStaffInterface } from "../../../../interfaces/AcademicStaff";
 import { UpdateAcademicStaff } from "../../../../services/https/Admin";
+import dayjs from "dayjs";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface LecturersEditModalProps {
   isEditModalVisible: boolean;
@@ -92,7 +93,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
       const gendersRes = await GetAllGender();
       if (Array.isArray(gendersRes)) {
         setGenderOptions(
-          gendersRes.map((g) => ({ label: g.name, value: g.ID }))
+          gendersRes.map((g) => ({ label: g.name_th, value: g.ID }))
         );
       }
 
@@ -205,11 +206,20 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
   return (
     <Modal
       title={
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <UserOutlined style={{ color: "#1890ff", fontSize: "18px" }} />
-          <span style={{ fontSize: "18px", fontWeight: "600" }}>
-            แก้ไขข้อมูลอาจารย์
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Avatar
+            size={40}
+            icon={<UserOutlined />}
+            style={{ backgroundColor: "#1890ff" }}
+          />
+          <div>
+            <Title level={4} style={{ margin: 0, color: "#262626" }}>
+              แก้ไขข้อมูลอาจารย์
+            </Title>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              ID: #{selectedStaff?.ID}
+            </Text>
+          </div>
         </div>
       }
       open={isEditModalVisible}
@@ -261,6 +271,9 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               Postcode: selectedStaff?.Address?.Postcode?.ID,
             },
             gender_id: selectedStaff?.Gender?.ID,
+            created_at_formatted: dayjs(selectedStaff?.CreatedAt).format(
+              "DD/MM/YYYY HH:mm"
+            ),
           }}
           key={selectedStaff?.ID}
         >
@@ -284,14 +297,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Col span={12}>
                 <Form.Item
                   name="academic_position"
-                  label={
-                    <span>
-                      <UserOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      ตำแหน่งทางวิชาการ
-                    </span>
-                  }
+                  label={<span>ตำแหน่งทางวิชาการ</span>}
                   rules={[
                     { required: true, message: "กรุณากรอกตำแหน่งทางวิชาการ" },
                   ]}
@@ -304,17 +310,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="age"
-                  label={
-                    <span>
-                      <NumberOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      อายุ
-                    </span>
-                  }
-                >
+                <Form.Item name="age" label={<span>อายุ</span>}>
                   <Input
                     type="number"
                     placeholder="กรอกอายุ"
@@ -326,14 +322,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Col span={24}>
                 <Form.Item
                   name="gender_id"
-                  label={
-                    <span>
-                      <UserOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      เพศ
-                    </span>
-                  }
+                  label={<span>เพศ</span>}
                   rules={[{ required: true, message: "กรุณาเลือกเพศ" }]}
                 >
                   <Select
@@ -365,17 +354,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
           >
             <Row gutter={24}>
               <Col span={24}>
-                <Form.Item
-                  name="university"
-                  label={
-                    <span>
-                      <BankOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      มหาวิทยาลัย
-                    </span>
-                  }
-                >
+                <Form.Item name="university" label={<span>มหาวิทยาลัย</span>}>
                   <Input
                     placeholder="กรอกชื่อมหาวิทยาลัย"
                     size="large"
@@ -384,17 +363,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="faculty"
-                  label={
-                    <span>
-                      <BankOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      คณะ
-                    </span>
-                  }
-                >
+                <Form.Item name="faculty" label={<span>คณะ</span>}>
                   <Input
                     placeholder="กรอกชื่อคณะ"
                     size="large"
@@ -403,17 +372,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="department"
-                  label={
-                    <span>
-                      <BankOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      ภาควิชา
-                    </span>
-                  }
-                >
+                <Form.Item name="department" label={<span>ภาควิชา</span>}>
                   <Input
                     placeholder="กรอกชื่อภาควิชา"
                     size="large"
@@ -432,6 +391,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
                 <span>ข้อมูลที่อยู่</span>
               </Space>
             }
+            style={{ marginBottom: "20px" }}
             styles={{
               header: {
                 backgroundColor: "#fafafa",
@@ -443,14 +403,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Col span={12}>
                 <Form.Item
                   name={["Address", "house_number"]}
-                  label={
-                    <span>
-                      <HomeOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      บ้านเลขที่
-                    </span>
-                  }
+                  label={<span>บ้านเลขที่</span>}
                   rules={[{ required: true, message: "กรุณากรอกบ้านเลขที่" }]}
                 >
                   <Input
@@ -463,14 +416,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Col span={12}>
                 <Form.Item
                   name={["Address", "village"]}
-                  label={
-                    <span>
-                      <HomeOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      หมู่บ้าน
-                    </span>
-                  }
+                  label={<span>หมู่บ้าน</span>}
                 >
                   <Input
                     placeholder="กรอกชื่อหมู่บ้าน"
@@ -482,14 +428,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Col span={12}>
                 <Form.Item
                   name={["Address", "street"]}
-                  label={
-                    <span>
-                      <EnvironmentOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      ถนน
-                    </span>
-                  }
+                  label={<span>ถนน</span>}
                 >
                   <Input
                     placeholder="กรอกชื่อถนน"
@@ -501,14 +440,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Col span={12}>
                 <Form.Item
                   name={["Address", "sub_street"]}
-                  label={
-                    <span>
-                      <EnvironmentOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      ซอย
-                    </span>
-                  }
+                  label={<span>ซอย</span>}
                 >
                   <Input
                     placeholder="กรอกชื่อซอย"
@@ -520,22 +452,16 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
             </Row>
 
             <Divider orientation="left">
-              <span style={{ color: "#1890ff", fontWeight: "500" }}>
-                ข้อมูลการปกครอง
-              </span>
+              <Space>
+                <EnvironmentOutlined style={{ color: "#1890ff" }} />
+                <span>ข้อมูลพื้นที่</span>
+              </Space>
             </Divider>
 
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
-                  label={
-                    <span>
-                      <EnvironmentOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      จังหวัด
-                    </span>
-                  }
+                  label={<span>จังหวัด</span>}
                   name={["Address", "Province"]}
                   rules={[{ required: true, message: "กรุณาเลือกจังหวัด" }]}
                 >
@@ -556,14 +482,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label={
-                    <span>
-                      <EnvironmentOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      อำเภอ / เขต
-                    </span>
-                  }
+                  label={<span>อำเภอ / เขต</span>}
                   name={["Address", "District"]}
                   rules={[{ required: true, message: "กรุณาเลือกอำเภอ / เขต" }]}
                 >
@@ -585,14 +504,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label={
-                    <span>
-                      <EnvironmentOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      ตำบล / แขวง
-                    </span>
-                  }
+                  label={<span>ตำบล / แขวง</span>}
                   name={["Address", "SubDistrict"]}
                   rules={[{ required: true, message: "กรุณาเลือกตำบล / แขวง" }]}
                 >
@@ -614,14 +526,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label={
-                    <span>
-                      <EnvironmentOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
-                      รหัสไปรษณีย์
-                    </span>
-                  }
+                  label={<span>รหัสไปรษณีย์</span>}
                   name={["Address", "Postcode"]}
                   rules={[
                     { required: true, message: "กรุณาเลือกรหัสไปรษณีย์" },
@@ -646,6 +551,30 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
                 </Form.Item>
               </Col>
             </Row>
+          </Card>
+          {/* Registration Information */}
+          <Card
+            title={
+              <Space>
+                <CalendarOutlined style={{ color: "#1890ff" }} />
+                <span>ข้อมูลการสมัคร</span>
+              </Space>
+            }
+            styles={{
+              header: {
+                backgroundColor: "#fafafa",
+                borderBottom: "2px solid #1890ff",
+              },
+            }}
+          >
+            <Form.Item name="created_at_formatted" label="วันที่สมัครสมาชิก">
+              <Input
+                disabled
+                size="large"
+                className="input-disabled"
+                prefix={<CalendarOutlined style={{ color: "#1890ff" }} />}
+              />
+            </Form.Item>
           </Card>
         </Form>
       </div>

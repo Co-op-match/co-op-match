@@ -121,19 +121,19 @@
 }
 
 /* Gradient title text */
-.admin-header-title {
+/* .admin-header-title {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
+} */
 
 /* Subtitle */
-.admin-subtitle {
+/* .admin-subtitle {
   color: #666;
   margin: 8px 0 0 0;
   font-size: 14px;
-}
+} */
 
 /* Main content card */
 .admin-main-card {
@@ -198,10 +198,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.adminpage-tabs .ant-tabs-tab {
-  border-radius: 12px 12px 0 0;
 }
 
 .adminpage-table .ant-table-thead > tr > th {

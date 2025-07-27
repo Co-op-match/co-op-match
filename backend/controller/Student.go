@@ -185,7 +185,7 @@ func GetAllActiveStudents(c *gin.Context) {
 
 	err := config.DB().
 		Preload("Gender").
-		Preload("User").
+		Preload("User.Role").
 		Preload("Address.Province").
 		Preload("Address.District").
 		Preload("Address.SubDistrict").
@@ -223,7 +223,7 @@ func GetAllDeletedStudents(c *gin.Context) {
 		Unscoped(). // ดึง soft deleted ด้วย
 		Where("students.deleted_at IS NOT NULL").
 		Preload("Gender").
-		Preload("User").
+		Preload("User.Role").
 		Preload("Address.Province").
 		Preload("Address.District").
 		Preload("Address.SubDistrict").

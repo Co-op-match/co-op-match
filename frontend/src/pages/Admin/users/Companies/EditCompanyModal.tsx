@@ -304,24 +304,6 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
       ]}
     >
       <Spin spinning={loading} tip="กำลังบันทึกข้อมูล...">
-        <style>
-          {`
-            .logo-uploader .ant-upload {
-              width: 100px !important;
-              height: 100px !important;
-              border-radius: 8px !important;
-              border: 2px dashed #d9d9d9 !important;
-              transition: all 0.3s ease !important;
-            }
-            .logo-uploader .ant-upload:hover {
-              border-color: #1890ff !important;
-              background-color: #f0f8ff !important;
-            }
-            .upload-hover-overlay:hover {
-              opacity: 1 !important;
-            }
-          `}
-        </style>
         <Form
           form={editForm}
           layout="vertical"
@@ -362,9 +344,6 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                   name="company_name"
                   label={
                     <span>
-                      <BuildOutlined
-                        style={{ marginRight: "8px", color: "#1890ff" }}
-                      />
                       ชื่อบริษัท
                     </span>
                   }
@@ -389,9 +368,6 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                       display: "block",
                     }}
                   >
-                    <PictureOutlined
-                      style={{ color: "#1890ff", marginRight: 8 }}
-                    />
                     โลโก้บริษัท
                   </label>
                   <Upload
@@ -448,53 +424,13 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 </div>
               </Col>
             </Row>
-
-            {/* Logo Preview */}
- {/*            {logoPreview && (
-              <Card
-                size="small"
-                title={
-                  <Space>
-                    <PictureOutlined style={{ color: "#1890ff" }} />
-                    <span>ตัวอย่างโลโก้</span>
-                    <Button
-                      type="link"
-                      size="small"
-                      danger
-                      onClick={() => {
-                        setLogoPreview("");
-                        setLogoFile(null);
-                        editForm.setFieldsValue({ logo: "" });
-                      }}
-                    >
-                      ลบรูป
-                    </Button>
-                  </Space>
-                }
-                className="logo-preview-card"
-              >
-                <div style={{ textAlign: "center", padding: "20px" }}>
-                  <Image
-                    src={logoPreview}
-                    alt="โลโก้บริษัท"
-                    width={120}
-                    height={120}
-                    className="logo-preview-image"
-                    fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADNCOEHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFHElEQVR4nO3dQW7jMAyFYd8gt+gtuoq"
-                  />
-                  <div className="logo-preview-text">
-                    {logoFile ? `ไฟล์: ${logoFile.name}` : "โลโก้ปัจจุบัน"}
-                  </div>
-                </div>
-              </Card>
-            )} */}
           </Card>
 
           {/* Address Information Section */}
           <Card
             title={
               <Space>
-                <HomeOutlined style={{ color: "#52c41a" }} />
+                <HomeOutlined style={{ color: "#1890ff" }} />
                 <span>ที่อยู่บริษัท</span>
               </Space>
             }
@@ -502,7 +438,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
             styles={{
               header: {
                 backgroundColor: "#fafafa",
-                borderBottom: "2px solid #52c41a",
+                borderBottom: "2px solid #1890ff",
               },
             }}
           >
@@ -555,7 +491,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
 
             <Divider orientation="left">
               <Space>
-                <EnvironmentOutlined style={{ color: "#52c41a" }} />
+                <EnvironmentOutlined style={{ color: "#1890ff" }} />
                 <span>ข้อมูลพื้นที่</span>
               </Space>
             </Divider>
@@ -672,14 +608,14 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
           <Card
             title={
               <Space>
-                <CalendarOutlined style={{ color: "#fa8c16" }} />
+                <CalendarOutlined style={{ color: "#1890ff" }} />
                 <span>ข้อมูลการสมัคร</span>
               </Space>
             }
             styles={{
               header: {
                 backgroundColor: "#fafafa",
-                borderBottom: "2px solid #fa8c16",
+                borderBottom: "2px solid #1890ff",
               },
             }}
           >
@@ -688,7 +624,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                 disabled
                 size="large"
                 className="input-disabled"
-                prefix={<CalendarOutlined style={{ color: "#fa8c16" }} />}
+                prefix={<CalendarOutlined style={{ color: "#1890ff" }} />}
               />
             </Form.Item>
           </Card>

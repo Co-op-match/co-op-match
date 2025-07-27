@@ -64,6 +64,18 @@
   resize: none;
 }
 
+.radio-ok .ant-radio-inner {
+  border-color: #1677ff !important;
+}
+
+.radio-ok .ant-radio-checked .ant-radio-inner {
+  background-color: #1677ff !important;
+}
+
+.radio-ok span {
+  color: #1677ff !important;
+}
+
 .radio-danger .ant-radio-inner {
   border-color: #ff4d4f !important;
 }
@@ -74,4 +86,8 @@
 
 .radio-danger span {
   color: #ff4d4f !important;
+}
+
+.adminpage-tabs .ant-tabs-tab {
+  border-radius: 12px 12px 0 0;
 }

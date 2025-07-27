@@ -1,3 +1,5 @@
+import type { UserInterface } from "./User";
+
 export interface AdminInterface {
   id: number;
   first_name: string;
@@ -5,4 +7,6 @@ export interface AdminInterface {
 
   ID?: number;
   birthday: string;
+
+  User?: UserInterface;
 }

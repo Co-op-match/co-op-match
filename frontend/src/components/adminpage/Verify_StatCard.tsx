@@ -15,9 +15,15 @@ const Verify_StatCard: React.FC<StatCardProps> = ({
   tabKey,
 }) => {
   // สีเดียวกันสำหรับทุกสถานะ
-  const sharedStatusColor = {
+  /*   const sharedStatusColor = {
     bg: "linear-gradient(135deg, #d2f3ffff 0%, #9fd1fcff 100%)",
     shadow: "rgba(79, 172, 254, 0.3)",
+  }; */
+  const sharedStatusColor = {
+    bg: "#e6f7ff", // พื้นหลังฟ้าอ่อน (Antd สี success light)
+    border: "1px solid #91d5ff", // กรอบสีฟ้า
+    shadow: "rgba(145, 213, 255, 0.4)", // เงาอ่อนๆ สีฟ้า
+    text: "#000c17", // สีตัวอักษรเข้ม อ่านง่าย
   };
 
   return (
@@ -32,21 +38,20 @@ const Verify_StatCard: React.FC<StatCardProps> = ({
             <Card
               style={{
                 background: sharedStatusColor.bg,
-                border: "none",
-                borderRadius: "16px",
-                boxShadow: `0 8px 32px ${sharedStatusColor.shadow}`,
+                border: sharedStatusColor.border,
+                borderRadius: "12px",
+                boxShadow: `0 2px 12px ${sharedStatusColor.shadow}`,
                 transition: "all 0.3s ease",
-                cursor: "pointer",
               }}
               styles={{ body: { padding: "20px", textAlign: "center" } }}
-              onMouseEnter={(e) => {
+/*               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = `0 12px 40px ${sharedStatusColor.shadow}`;
+                e.currentTarget.style.boxShadow = `0 4px 40px ${sharedStatusColor.shadow}`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = `0 8px 32px ${sharedStatusColor.shadow}`;
-              }}
+                e.currentTarget.style.boxShadow = `0 4px 32px ${sharedStatusColor.shadow}`;
+              }} */
             >
               <div style={{ color: "#031662ff" }}>
                 <div
@@ -71,15 +76,15 @@ const Verify_StatCard: React.FC<StatCardProps> = ({
         <Col xs={12} sm={12} md={12} lg={6} xl={4}>
           <Card
             style={{
-              background: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
-              border: "none",
+              background: "#fff1f0", // พื้นหลังชมพูอ่อน
+              border: "1px solid #ffa39e", // กรอบสีชมพู
               borderRadius: "16px",
-              boxShadow: "0 8px 32px rgba(252, 182, 159, 0.3)",
+              boxShadow: "0 4px 12px rgba(255, 163, 158, 0.25)", // เงาสีชมพูเบาๆ
               transition: "all 0.3s ease",
               cursor: "pointer",
             }}
             styles={{ body: { padding: "20px", textAlign: "center" } }}
-            onMouseEnter={(e) => {
+/*             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-4px)";
               e.currentTarget.style.boxShadow =
                 "0 12px 40px rgba(252, 182, 159, 0.4)";
@@ -88,7 +93,7 @@ const Verify_StatCard: React.FC<StatCardProps> = ({
               e.currentTarget.style.transform = "translateY(0)";
               e.currentTarget.style.boxShadow =
                 "0 8px 32px rgba(252, 182, 159, 0.3)";
-            }}
+            }} */
           >
             <div style={{ color: "#823c0aff" }}>
               <div

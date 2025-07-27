@@ -16,13 +16,14 @@ import {
   Radio,
   Tabs,
   Card,
+  Typography,
 } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
-import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import {
@@ -42,6 +43,9 @@ import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
 import VerifyCompanyModal from "./VerifyCompanyModal";
 import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
 import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
+
+const { Title, Text } = Typography;
+
 
 const CompanyManagement: React.FC = () => {
   const [verifyForm] = Form.useForm();
@@ -68,6 +72,8 @@ const CompanyManagement: React.FC = () => {
   const [tabKey, setTabKey] = useState("active");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedVerifyStatus, setSelectedVerifyStatus] = useState<string>("");
+  const [isSubmittingVerify, setIsSubmittingVerify] = useState(false);
+
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [reload, setReload] = useState<boolean>(true);
@@ -139,6 +145,7 @@ const CompanyManagement: React.FC = () => {
       reason: selectedVerifyStatus === "ปฏิเสธ" ? reason : "",
     };
 
+    setIsSubmittingVerify(true); // Start loading
     try {
       await UpdateVerifyStatus(latest.ID!, updateData);
       await SendEmailVerify(latest.UserID!);
@@ -149,6 +156,8 @@ const CompanyManagement: React.FC = () => {
     } catch (err) {
       console.error(err);
       message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+    } finally {
+      setIsSubmittingVerify(false); // Stop loading
     }
   };
 
@@ -184,6 +193,7 @@ const CompanyManagement: React.FC = () => {
 
   const filteredCompanies = useMemo(() => {
     const source = tabKey === "active" ? activeCompanies : deletedCompanies;
+
     const filtered = selectedFilterStatuses.length
       ? source.filter((c) =>
           selectedFilterStatuses.includes(getCompanyLatestStatus(c))
@@ -191,9 +201,21 @@ const CompanyManagement: React.FC = () => {
       : source;
 
     const searched = searchKeyword
-      ? filtered.filter((c) =>
-          c.company_name?.toLowerCase().includes(searchKeyword.toLowerCase())
-        )
+      ? filtered.filter((c) => {
+          const keyword = searchKeyword.toLowerCase();
+          const companyName = c.company_name?.toLowerCase() || "";
+          const companyId = String(c.ID);
+          const latest = getCompanyLatestVerification(c);
+          const createdAt = latest?.CreatedAt
+            ? dayjs(latest.CreatedAt).format("DD/MM/YYYY HH:mm")
+            : "";
+
+          return (
+            companyName.includes(keyword) ||
+            companyId.includes(keyword) ||
+            createdAt.includes(keyword)
+          );
+        })
       : filtered;
 
     return searched.sort((a, b) => {
@@ -299,6 +321,7 @@ const CompanyManagement: React.FC = () => {
       key: "status",
       align: "center",
       width: 140,
+      fixed: "right" as const,
       filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
       onFilter: (val, rec) => getCompanyLatestStatus(rec) === val,
       filterMode: "tree",
@@ -327,6 +350,7 @@ const CompanyManagement: React.FC = () => {
       key: "action",
       width: 120,
       align: "center",
+      fixed: "right" as const,
       render: (_, rec) => (
         <Flex justify="center">
           <Button
@@ -356,22 +380,17 @@ const CompanyManagement: React.FC = () => {
   ];
 
   return (
-    <Layout
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-      }}
-    >
+    <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
-      <Layout style={{ margin: "2rem", background: "transparent" }}>
-        {/* Header Section */}
+      <Layout style={{ margin: "2rem" }}>
         <div className="admin-header-box">
           <Row justify="space-between" align="middle">
             <Col>
-              <Title level={2} style={{ margin: 0, color: "#2c3e50" }}>
-                <span className="admin-header-title">จัดการบริษัท</span>
+              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+                <TeamOutlined style={{ marginRight: "12px" }} />
+               จัดการบริษัท
               </Title>
-              <p className="admin-subtitle">ระบบจัดการและตรวจสอบสถานะบริษัท</p>
+              <Text type="secondary">ระบบจัดการและตรวจสอบสถานะบริษัท</Text>
             </Col>
           </Row>
         </div>
@@ -498,7 +517,6 @@ const CompanyManagement: React.FC = () => {
           </div>
         </Card>
 
-  
         <Verify_Modal
           open={isDetailModalVisible}
           entity={currentCompany!}
@@ -509,6 +527,7 @@ const CompanyManagement: React.FC = () => {
           isReadOnlyStatus={isReadOnlyStatus}
           setIsDetailModalVisible={setIsDetailModalVisible}
           submitVerificationDecision={submitVerificationDecision}
+          isSubmitting={isSubmittingVerify}
         />
 
         <EditCompanyModal

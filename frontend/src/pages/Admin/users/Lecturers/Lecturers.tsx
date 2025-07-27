@@ -14,13 +14,15 @@ import {
   Flex,
   Tabs,
   Popconfirm,
+  Card,
+  Typography,
 } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   SearchOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
-import Title from "antd/es/typography/Title";
 import "../users.css";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import {
@@ -39,6 +41,9 @@ import EditLecturersModal from "./EditLecturersModal";
 import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
 import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
 import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
+import { SendEmailVerify } from "../../../../services/https";
+
+const { Title, Text } = Typography;
 
 const AcademicStaffManagement: React.FC = () => {
   const [form] = Form.useForm();
@@ -63,6 +68,8 @@ const AcademicStaffManagement: React.FC = () => {
   >([]);
   const [tabKey, setTabKey] = useState("active");
   const [searchKeyword, setSearchKeyword] = useState("");
+
+  const [isSubmittingVerify, setIsSubmittingVerify] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -124,7 +131,7 @@ const AcademicStaffManagement: React.FC = () => {
     return counts;
   }, [tabKey, activeStaffs, deletedStaffs, statusFilterOptions]);
 
-  const handleSubmitStatus = async () => {
+  const submitVerificationDecision = async () => {
     const latest = getLatestVerification(selectedStaff!);
     const selectedStatusObj = statusList.find(
       (s) => s.status_verify === selectedStatus
@@ -138,13 +145,17 @@ const AcademicStaffManagement: React.FC = () => {
       reason: selectedStatus === "ปฏิเสธ" ? reason : "",
     };
 
+    setIsSubmittingVerify(true); // Start loading
     try {
       await UpdateVerifyStatus(latest.ID!, updateData);
+      await SendEmailVerify(latest.UserID!);
       message.success("อัปเดตสถานะเรียบร้อยแล้ว");
       setIsModalVisible(false);
       fetchData();
     } catch (err) {
       message.error("เกิดข้อผิดพลาด");
+    } finally {
+      setIsSubmittingVerify(false); // Stop loading
     }
   };
 
@@ -182,8 +193,54 @@ const AcademicStaffManagement: React.FC = () => {
     setIsEditModalVisible(true);
   };
 
+    const filteredStaffs = useMemo(() => {
+    const base = tabKey === "active" ? activeStaffs : deletedStaffs;
+
+    const filtered = selectedFilterStatuses.length
+      ? base.filter((s) =>
+          selectedFilterStatuses.includes(getStaffLatestStatus(s))
+        )
+      : base;
+
+    return filtered.filter((s) => {
+      const keyword = searchKeyword.toLowerCase();
+
+      return (
+        (s.User?.Email || "").toLowerCase().includes(keyword) ||
+        (s.university || "").toLowerCase().includes(keyword) ||
+        (s.faculty || "").toLowerCase().includes(keyword) ||
+        (s.department || "").toLowerCase().includes(keyword) ||
+        (s.academic_position || "").toLowerCase().includes(keyword)
+      );
+    });
+  }, [
+    activeStaffs,
+    deletedStaffs,
+    tabKey,
+    selectedFilterStatuses,
+    searchKeyword,
+  ]);
+  
   const columns: ColumnsType<AcademicStaffInterface> = [
-    { title: "ID", dataIndex: "ID", key: "ID" },
+    {
+      title: "ID",
+      dataIndex: "ID",
+      key: "ID",
+      width: 80,
+      sorter: (a, b) => (a.ID || 0) - (b.ID || 0),
+    },
+    {
+      title: "วันที่สมัคร",
+      dataIndex: "CreatedAt",
+      key: "CreatedAt",
+      width: 120,
+      render: (val: string) => (
+        <div style={{ fontSize: "13px", color: "#666" }}>
+          {dayjs(val).format("DD/MM/YYYY")}
+        </div>
+      ),
+      sorter: (a, b) => dayjs(a.CreatedAt).unix() - dayjs(b.CreatedAt).unix(),
+    },
     {
       title: "อีเมล",
       key: "Email",
@@ -203,6 +260,7 @@ const AcademicStaffManagement: React.FC = () => {
       key: "status",
       align: "center",
       width: 140,
+      fixed: "right" as const,
       filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
       onFilter: (val, rec) => getStaffLatestStatus(rec) === val,
       filterMode: "tree",
@@ -231,6 +289,7 @@ const AcademicStaffManagement: React.FC = () => {
       key: "action",
       width: 120,
       align: "center",
+      fixed: "right" as const,
       render: (_, rec) => (
         <Flex justify="center">
           <Button
@@ -259,25 +318,6 @@ const AcademicStaffManagement: React.FC = () => {
     },
   ];
 
-  const filteredStaffs = useMemo(() => {
-    const base = tabKey === "active" ? activeStaffs : deletedStaffs;
-    const filtered = selectedFilterStatuses.length
-      ? base.filter((s) =>
-          selectedFilterStatuses.includes(getStaffLatestStatus(s))
-        )
-      : base;
-    return filtered.filter((s) => {
-      const name = `${s.User?.Email || ""}`.toLowerCase();
-      return name.includes(searchKeyword.toLowerCase());
-    });
-  }, [
-    activeStaffs,
-    deletedStaffs,
-    tabKey,
-    selectedFilterStatuses,
-    searchKeyword,
-  ]);
-
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
@@ -285,10 +325,11 @@ const AcademicStaffManagement: React.FC = () => {
         <div className="admin-header-box">
           <Row justify="space-between" align="middle">
             <Col>
-              <Title level={2} style={{ margin: 0, color: "#2c3e50" }}>
-                <span className="admin-header-title">จัดการอาจารย์</span>
+              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+                <TeamOutlined style={{ marginRight: "12px" }} />
+                จัดการอาจารย์
               </Title>
-              <p className="admin-subtitle">ระบบจัดการและตรวจสอบสถานะอาจารย์</p>
+              <Text type="secondary">ระบบจัดการและตรวจสอบสถานะอาจารย์</Text>
             </Col>
           </Row>
         </div>
@@ -300,66 +341,117 @@ const AcademicStaffManagement: React.FC = () => {
           tabKey={tabKey}
         />
 
-        <Tabs
-          defaultActiveKey="active"
-          onChange={(key) => setTabKey(key)}
-          items={[
-            { label: "อาจารย์ทั้งหมด", key: "active" },
-            { label: "อาจารย์ที่ถูกลบ", key: "deleted" },
-          ]}
-          style={{ marginTop: "1rem" }}
-        />
+        {/* Main Content */}
+        <Card className="admin-main-card" styles={{ body: { padding: 0 } }}>
+          {/* Tabs */}
+          <div style={{ padding: "24px 24px 0 24px" }}>
+            <Tabs
+              defaultActiveKey="active"
+              onChange={(key) => setTabKey(key)}
+              items={[
+                {
+                  label: (
+                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
+                      อาจารย์ทั้งหมด
+                    </span>
+                  ),
+                  key: "active",
+                },
+                {
+                  label: (
+                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
+                      อาจารย์ที่ถูกลบ
+                    </span>
+                  ),
+                  key: "deleted",
+                },
+              ]}
+              size="large"
+              className="adminpage-tabs"
+            />
+          </div>
 
-        <Flex
-          justify="center"
-          align="center"
-          gap="5vw"
-          style={{ margin: "1rem 0" }}
-        >
-          <Select
-            mode="multiple"
-            value={selectedFilterStatuses}
-            onChange={(values) => {
-              if (values.includes("ทั้งหมด")) {
-                const allStatuses = statusFilterOptions.filter(
-                  (s) => s !== "ทั้งหมด"
-                );
-                const isAllSelected =
-                  selectedFilterStatuses.length === allStatuses.length &&
-                  allStatuses.every((s) => selectedFilterStatuses.includes(s));
-                if (isAllSelected) {
-                  setSelectedFilterStatuses([]);
-                } else {
-                  setSelectedFilterStatuses(allStatuses);
-                }
-              } else {
-                setSelectedFilterStatuses(values);
-              }
-            }}
-            style={{ width: "40vw" }}
-            options={statusFilterOptions.map((s) => ({ label: s, value: s }))}
-            placeholder="เลือกสถานะ"
-            allowClear
-          />
-          <Input
-            placeholder="ค้นหา..."
-            suffix={<SearchOutlined style={{ color: "#999" }} />}
-            className="searchInput"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-          />
-          <Col></Col>
-        </Flex>
+          {/* Filters */}
+          <div style={{ padding: "0 24px 24px 24px" }}>
+            <Card
+              className="admin-filter-card"
+              styles={{ body: { padding: 20 } }}
+            >
+              <Row gutter={[16, 16]} align="middle">
+                <Col xs={24} md={12}>
+                  <div className="admin-filter-label">กรองตามสถานะ</div>
+                  <Select
+                    mode="multiple"
+                    value={selectedFilterStatuses}
+                    onChange={(values) => {
+                      if (values.includes("ทั้งหมด")) {
+                        const allStatuses = statusFilterOptions.filter(
+                          (s) => s !== "ทั้งหมด"
+                        );
+                        const isAllSelected =
+                          selectedFilterStatuses.length ===
+                            allStatuses.length &&
+                          allStatuses.every((s) =>
+                            selectedFilterStatuses.includes(s)
+                          );
+                        setSelectedFilterStatuses(
+                          isAllSelected ? [] : allStatuses
+                        );
+                      } else {
+                        setSelectedFilterStatuses(values);
+                      }
+                    }}
+                    style={{ width: "100%" }}
+                    size="large"
+                    options={statusFilterOptions.map((s) => ({
+                      label: s,
+                      value: s,
+                    }))}
+                    placeholder="เลือกสถานะที่ต้องการแสดง"
+                    allowClear
+                    maxTagCount="responsive"
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <div className="admin-filter-label">ค้นหาอาจารย์</div>
+                  <Input
+                    placeholder="ค้นหาอีเมล, มหาวิทยาลัย หรือข้อมูลอื่นๆ..."
+                    suffix={
+                      <SearchOutlined
+                        style={{ color: "#bfbfbf", fontSize: "16px" }}
+                      />
+                    }
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    size="large"
+                    className="admin-search-input"
+                  />
+                </Col>
+              </Row>
+            </Card>
+          </div>
 
-        <Table
-          className="adminpage-table"
-          columns={columns}
-          dataSource={filteredStaffs}
-          rowKey="ID"
-          pagination={{ pageSize: 6 }}
-          size="middle"
-          scroll={{ x: "max-content" }}
-        />
+          {/* Table */}
+          <div style={{ padding: "0 24px 24px 24px" }}>
+            <Table
+              columns={columns}
+              dataSource={filteredStaffs.map((s) => ({ ...s, key: s.ID }))}
+              pagination={{
+                pageSize: 8,
+                showSizeChanger: true,
+                pageSizeOptions: ["8", "16", "32", "50"],
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `แสดง ${range[0]}-${range[1]} จาก ${total} รายการ`,
+                style: { marginTop: "16px" },
+              }}
+              size="middle"
+              scroll={{ x: 800 }}
+              className="adminpage-table"
+              bordered={false}
+            />
+          </div>
+        </Card>
 
         <Modal
           open={isModalVisible}
@@ -369,7 +461,7 @@ const AcademicStaffManagement: React.FC = () => {
             form.resetFields();
             setSelectedStatus("");
           }}
-          onOk={handleSubmitStatus}
+          onOk={submitVerificationDecision}
           okText="ยืนยัน"
           cancelText="ยกเลิก"
           footer={
@@ -476,7 +568,8 @@ const AcademicStaffManagement: React.FC = () => {
           setSelectedVerifyStatus={setSelectedStatus}
           isReadOnlyStatus={getStaffLatestStatus(selectedStaff) !== "รอรับรอง"}
           setIsDetailModalVisible={setIsModalVisible}
-          submitVerificationDecision={handleSubmitStatus}
+          submitVerificationDecision={submitVerificationDecision}
+          isSubmitting={isSubmittingVerify}
         />
 
         <EditLecturersModal

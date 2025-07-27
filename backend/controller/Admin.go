@@ -89,7 +89,7 @@ func GetAllActiveAdmins(c *gin.Context) {
 		Preload("Permission").
 		Preload("IntershipPost").
 		Preload("Company").
-		Preload("User").
+		Preload("User.Role").
 		Preload("AcademicStaff").
 		Preload("Student").
 		Where("deleted_at IS NULL").
@@ -108,7 +108,7 @@ func GetAllDeletedAdmins(c *gin.Context) {
 		Preload("Permission").
 		Preload("IntershipPost").
 		Preload("Company").
-		Preload("User").
+		Preload("User.Role").
 		Preload("AcademicStaff").
 		Preload("Student").
 		Find(&admins).Error; err != nil {

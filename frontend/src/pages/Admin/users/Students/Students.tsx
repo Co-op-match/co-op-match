@@ -13,11 +13,19 @@ import {
   Popconfirm,
   message,
   Card,
+  Badge,
+  Space,
+  Tooltip,
+  Avatar,
 } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   SearchOutlined,
+  UserOutlined,
+  PlusOutlined,
+  TeamOutlined,
+  DeleteFilled,
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import "../users.css";
@@ -29,8 +37,9 @@ import {
 } from "../../../../services/https/Admin";
 import type { ColumnsType } from "antd/es/table";
 import EditStudentForm from "./EditStudentModal";
+import RoleTabs from "../../../../components/adminpage/Verify_RoleTabs";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const StudentManagementPage: React.FC = () => {
   const [tabKey, setTabKey] = useState("active");
@@ -57,57 +66,115 @@ const StudentManagementPage: React.FC = () => {
     if (resDeleted.status === 200) setDeletedStudents(resDeleted.data);
   };
 
-  const columns: ColumnsType<StudentInterface> = [
-    { title: "ID", dataIndex: "ID", key: "ID" },
+  const role = activeStudents[0]?.User?.Role;
 
-    { title: "ชื่อ", dataIndex: "first_name", key: "first_name" },
-    { title: "นามสกุล", dataIndex: "last_name", key: "last_name" },
-    { title: "อีเมล", dataIndex: ["User", "Email"], key: "email" },
-    { title: "เพศ", dataIndex: ["Gender", "name"], key: "gender" },
-    { title: "เบอร์โทรศัพท์", dataIndex: "phone_number", key: "phone_number" },
-    { title: "สัญชาติ", dataIndex: "nationality", key: "nationality" },
-    { title: "ศาสนา", dataIndex: "religion", key: "religion" },
-    { title: "อายุ", dataIndex: "age", key: "age" },
-    { title: "วันเกิด", dataIndex: "birthday", key: "birthday" },
-    { title: "ส่วนสูง", dataIndex: "height", key: "height" },
-    { title: "น้ำหนัก", dataIndex: "weight", key: "weight" },
+  const columns: ColumnsType<StudentInterface> = [
     {
-      title: "จังหวัด",
-      dataIndex: ["Address", "Province", "name_th"],
-      key: "province",
+      title: "นักศึกษา",
+      key: "student",
+      width: 200,
+      fixed: "left" as const,
+      render: (_: any, record: StudentInterface) => (
+        <Space>
+          <Avatar size={40} icon={<UserOutlined />} />
+          <div>
+            <div style={{ fontWeight: 600, fontSize: "14px" }}>
+              {record.first_name} {record.last_name}
+            </div>
+            <Text type="secondary" style={{ fontSize: "14px" }}>
+              ID: {record.ID}
+            </Text>
+          </div>
+        </Space>
+      ),
     },
     {
-      title: "อำเภอ",
-      dataIndex: ["Address", "District", "name_th"],
-      key: "district",
+      title: "ข้อมูลติดต่อ",
+      key: "contact",
+      width: 180,
+      render: (_: any, record: StudentInterface) => (
+        <div>
+          <div style={{ fontSize: "14px", marginBottom: "4px" }}>
+            📧 {record.User?.Email}
+          </div>
+          <div style={{ fontSize: "14px" }}>📱 {record.phone_number}</div>
+        </div>
+      ),
     },
     {
-      title: "ตำบล",
-      dataIndex: ["Address", "SubDistrict", "name_th"],
-      key: "subdistrict",
+      title: "ข้อมูลส่วนตัว",
+      key: "personal",
+      width: 150,
+      render: (_: any, record: StudentInterface) => (
+        <div>
+          <div style={{ fontSize: "14px", marginBottom: "2px" }}>
+            {record.Gender?.name_th}
+          </div>
+          <div style={{ fontSize: "14px" }}>อายุ {record.age} ปี</div>
+          <div style={{ fontSize: "14px" }}>{record.nationality}</div>
+        </div>
+      ),
     },
     {
-      title: "รหัสไปรษณีย์",
-      dataIndex: ["Address", "Postcode", "post_code"],
-      key: "postcode",
+      title: "ข้อมูลทางกาย",
+      key: "physical",
+      width: 120,
+      render: (_: any, record: StudentInterface) => (
+        <div>
+          <div style={{ fontSize: "14px" }}>ส่วนสูง: {record.height} ซม.</div>
+          <div style={{ fontSize: "14px" }}>น้ำหนัก: {record.weight} กก.</div>
+        </div>
+      ),
+    },
+    {
+      title: "ที่อยู่",
+      key: "address",
+      width: 200,
+      render: (_: any, record: StudentInterface) => (
+        <div style={{ fontSize: "14px", lineHeight: "1.4" }}>
+          <div>{record.Address?.SubDistrict?.name_th}</div>
+          <div>{record.Address?.District?.name_th}</div>
+          <div>{record.Address?.Province?.name_th}</div>
+          <div style={{ color: "#666" }}>
+            {record.Address?.Postcode?.post_code}
+          </div>
+        </div>
+      ),
     },
     {
       title: "การจัดการ",
       key: "action",
+      width: 100,
       fixed: "right" as const,
       render: (_: any, rec: StudentInterface) => (
-        <Flex gap={16}>
-          <EditOutlined
-            style={{ fontSize: 18, cursor: "pointer" }}
-            onClick={() => showEditStudentModal(rec)}
-          />
-          <Popconfirm
-            title="คุณแน่ใจหรือไม่ที่จะลบนักศึกษาคนนี้?"
-            onConfirm={() => handleDeleteStudent(rec.ID!)}
-          >
-            <DeleteOutlined style={{ cursor: "pointer", color: "red" }} />
-          </Popconfirm>
-        </Flex>
+        <Space size="small">
+          <Tooltip title="แก้ไข">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => showEditStudentModal(rec)}
+              style={{ color: "#1890ff" }}
+            />
+          </Tooltip>
+          <Tooltip title="ลบ">
+            <Popconfirm
+              title="ลบนักศึกษา"
+              description="คุณแน่ใจหรือไม่ที่จะลบนักศึกษาคนนี้?"
+              onConfirm={() => handleDeleteStudent(rec.ID!)}
+              okText="ลบ"
+              cancelText="ยกเลิก"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                size="small"
+                danger
+              />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
       ),
     },
   ];
@@ -136,74 +203,165 @@ const StudentManagementPage: React.FC = () => {
   ).filter((student) => {
     const matchesSearch =
       student.first_name?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      student.last_name?.toLowerCase().includes(searchKeyword.toLowerCase());
+      student.last_name?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      student.User?.Email?.toLowerCase().includes(searchKeyword.toLowerCase());
     return matchesSearch;
   });
+
+  const statsCards = [
+    {
+      title: "นักศึกษาทั้งหมด",
+      value: activeStudents.length,
+      icon: <TeamOutlined style={{ fontSize: 24, color: "#1890ff" }} />,
+      color: "#e6f7ff",
+      borderColor: "#91d5ff",
+    },
+    {
+      title: "นักศึกษาที่ถูกลบ",
+      value: deletedStudents.length,
+      icon: <DeleteFilled style={{ fontSize: 24, color: "#ff4d4f" }} />,
+      color: "#fff2f0",
+      borderColor: "#ffadd2",
+    },
+  ];
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
-          <Col>
-            <Title level={3}>นักศึกษา (Student)</Title>
-          </Col>{" "}
-          <Col>
-            <Flex align="center" gap={16}>
-              จำนวน
-              <Card
-                size="small"
-                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
+        <div className="admin-header-box">
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+                <TeamOutlined style={{ marginRight: "12px" }} />
+                จัดการนักศึกษา
+              </Title>
+              <Text type="secondary">จัดการข้อมูลนักศึกษาในระบบ CoopMatch</Text>
+            </Col>
+            <Col>
+              <Button
+                type="primary"
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={() => setIsAddModalVisible(true)}
+                style={{
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
+                }}
               >
-                <div style={{ fontSize: 18, fontWeight: "bold" }}>
-                  {tabKey == "active"
-                    ? activeStudents.length
-                    : deletedStudents.length}
-                </div>
+                เพิ่มนักศึกษา
+              </Button>
+            </Col>
+          </Row>
+        </div>
+
+        {/* Stats Cards */}
+        <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
+          {statsCards.map((card, index) => (
+            <Col xs={24} sm={12} md={6} key={index}>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  border: `1px solid ${card.borderColor}`,
+                  background: card.color,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                }}
+                styles={{
+                  body: { padding: "20px" },
+                }}
+              >
+                <Flex align="center" justify="space-between">
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "32px",
+                        fontWeight: "bold",
+                        color: "#262626",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {card.value}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#666",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {card.title}
+                    </div>
+                  </div>
+                  <div>{card.icon}</div>
+                </Flex>
               </Card>
-            </Flex>
-          </Col>
+            </Col>
+          ))}
         </Row>
 
-        <Tabs
-          defaultActiveKey="active"
-          onChange={(key) => setTabKey(key)}
-          items={[
-            { label: "นักศึกษาทั้งหมด", key: "active" },
-            { label: "นักศึกษาที่ถูกลบ", key: "deleted" },
-          ]}
-          style={{ marginTop: "1rem" }}
-        />
-
-        <Flex
-          justify="center"
-          align="center"
-          gap="5vw"
-          style={{ margin: "1rem 0" }}
+        {/* Main Content */}
+        <Card
+          style={{
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          }}
+          styles={{
+            body: { padding: "24px" },
+          }}
         >
-          <Input
-            placeholder="ค้นหา..."
-            suffix={<SearchOutlined style={{ color: "#999" }} />}
-            className="searchInput"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-          />
-          <Col>
-            <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
-              เพิ่มนักศึกษา
-            </Button>
-          </Col>
-        </Flex>
+          {role && (
+            <RoleTabs tabKey={tabKey} setTabKey={setTabKey} role={role} />
+          )}
 
-        <Table
-          className="adminpage-table"
-          columns={columns}
-          dataSource={filteredStudents}
-          rowKey="ID"
-          pagination={{ pageSize: 6 }}
-          size="middle"
-          scroll={{ x: "max-content" }}
-        />
+          {/* Search Bar */}
+          <Row
+            gutter={[16, 16]}
+            style={{ marginBottom: "24px", alignItems: "center" }}
+          >
+            <Col xs={24} sm={16} md={12} lg={8}>
+              <Input
+                placeholder="ค้นหาชื่อ นามสกุล หรือ อีเมล..."
+                prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                size="large"
+                style={{
+                  borderRadius: "8px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                }}
+              />
+            </Col>
+            <Col>
+              <Text type="secondary">
+                แสดง {filteredStudents.length} รายการ
+              </Text>
+            </Col>
+          </Row>
+
+          {/* Table */}
+
+          <Table
+            columns={columns}
+            dataSource={filteredStudents}
+            rowKey="ID"
+            className="adminpage-table"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} จาก ${total} รายการ`,
+              pageSizeOptions: ["10", "20", "50"],
+            }}
+            scroll={{ x: 1200 }}
+            size="middle"
+            style={{
+              background: "#fff",
+              borderRadius: "8px",
+            }}
+            rowClassName="hover-row"
+          />
+        </Card>
 
         {/* Modal แก้ไขนักศึกษา */}
         {selectedStudent && (

@@ -27,4 +27,7 @@ export interface AcademicStaffInterface {
   Address?: AddressInterface;
   Admin?: AdminInterface;
   Gender?: GenderInterface;
+
+  UserID?: number;
+  CreatedAt?: string;
 }
