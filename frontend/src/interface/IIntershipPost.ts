@@ -1,4 +1,6 @@
+import type { CompanyInterface } from "../interfaces/Company";
 export interface InternshipPostInterface {
+  status_post: string;
   ID?: number;
   post_name: string;
   post_description: string;
@@ -24,4 +26,6 @@ export interface InternshipPostInterface {
   StatusPost?: {
     status_post: string;
   };
+
+  Company?: CompanyInterface;
 }

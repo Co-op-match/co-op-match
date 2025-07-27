@@ -26,6 +26,9 @@ import SubCompanyInAdmin from "./pages/Admin/users/Companies/SubCompany";
 import StudentsInAdmin from "./pages/Admin/users/Students/Students";
 import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
 import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
+import AddApplication from './pages/Student/Application/AddApplication';
+import ApplicationHistory from "./pages/Student/Application/History";
+import ApplicationByCompany from "../src/pages/company/application/application";
 
 
 
@@ -98,7 +101,7 @@ function App() {
               </ProtectedRoute>
             }
           /> */}
-           <Route
+          <Route
             path="/company/add-company"
             element={
               <ProtectedRoute allowedRoles={[2]}>
@@ -115,10 +118,28 @@ function App() {
             }
           />
           <Route
-            path="/student/post-student"
+            path="/student/post-student/:id"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <PostDetailsStudent />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/applications/:postId"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AddApplication />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/applications/history"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <ApplicationHistory />
               </ProtectedRoute>
             }
           />
@@ -145,6 +166,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/applications/post/:postId"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <ApplicationByCompany />
               </ProtectedRoute>
             }
           />

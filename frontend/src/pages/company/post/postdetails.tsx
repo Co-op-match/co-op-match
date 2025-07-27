@@ -18,13 +18,14 @@ const PostDetails = () => {
   useEffect(() => {
     if (id) {
       GetPostById(Number(id)).then((res) => {
-        if (res?.data) setPost(res.data);
-
-
+        if (res?.data) {
+          console.log("👉 post from API:", res.data);
+          setPost(res.data);
+        }
       });
-
     }
   }, [id]);
+  
 
   if (!post) return <div className="text-center p-8">Loading...</div>;
 

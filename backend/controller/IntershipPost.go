@@ -122,12 +122,11 @@ func CreateInternshipPost(c *gin.Context) {
 }
 
 // GET /internship_posts - List all internship posts
-func ListInternshipPosts(c *gin.Context) {
-	var internshipPosts []struct {
+func ListIntershipPosts(c *gin.Context) {
+	var intershipPosts []struct {
 		ID              uint      `json:"id"`
 		PostName        string    `json:"post_name"`
 		PostDescription string    `json:"post_description"`
-		Qualifications  string    `json:"qualifications"`
 		Quantity        int32     `json:"quantity"`
 		MinGpa          string    `json:"min_gpa"`
 		CreatedAt       time.Time `json:"created_at"`
@@ -142,7 +141,7 @@ func ListInternshipPosts(c *gin.Context) {
 		StatusPostID    uint      `json:"StatusPostID"`
 		StatusPostName  string    `json:"status_post"`
 		BenefitID       uint      `json:"benefit_id"`
-		BenefitName     string    `json:"benefit_name"`
+		BenefitName     string    `json:"benefit"`
 		// ✅ ฟิลด์ที่เพิ่มใหม่
 		LocationDetail string `json:"location_detail"`
 		Subdistrict    string `json:"subdistrict"`
@@ -156,8 +155,7 @@ func ListInternshipPosts(c *gin.Context) {
 		Select(`
             intership_posts.id, 
             intership_posts.post_name, 
-            intership_posts.post_description, 
-            intership_posts.qualifications, 
+            intership_posts.post_description,  
             intership_posts.quantity, 
             intership_posts.min_gpa, 
             intership_posts.created_at,
@@ -172,7 +170,7 @@ func ListInternshipPosts(c *gin.Context) {
             status_posts.id as status_post_id, 
             status_posts.status_post as status_post_name,
             benefits.id as benefit_id, 
-            benefits.benefit_name as benefit_name,
+            benefits.benefit as benefit,
 
 			 
             intership_posts.location_detail,
@@ -186,14 +184,14 @@ func ListInternshipPosts(c *gin.Context) {
 		Joins("left join work_modes on work_modes.id = intership_posts.work_mode_id").
 		Joins("left join status_posts on status_posts.id = intership_posts.status_post_id").
 		Joins("left join benefits on benefits.id = intership_posts.benefit_id").
-		Scan(&internshipPosts)
+		Scan(&intershipPosts)
 
 	if results.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": results.Error.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, internshipPosts)
+	c.JSON(http.StatusOK, intershipPosts)
 }
 
 // / GET /internship_posts/:id - Get details of a specific internship post
