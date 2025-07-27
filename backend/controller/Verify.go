@@ -48,7 +48,9 @@ func UpdateVerifyStatus(c *gin.Context) {
 	verify.StatusVerifyID = updateData.StatusVerifyID
 	verify.AdminID = updateData.AdminID
 	verify.Reason = updateData.Reason
-	verify.UpdatedAt = time.Now()
+
+	now := time.Now()
+	verify.VerifiedAt = &now
 
 	if err := config.DB().Save(&verify).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})

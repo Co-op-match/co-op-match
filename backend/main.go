@@ -57,6 +57,9 @@ func main() {
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 
+	r.GET("/status_verifies", controller.GetAllStatusVerify)
+	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
+
 	// Group routes (ตัวอย่าง)
 	router := r.Group("/")
 	{

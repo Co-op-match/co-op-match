@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { VerifyInterface } from "../../../interfaces/Verify";
 import api from "./api";
+import type { CompanyInterface } from "../../../interfaces/Company";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -108,24 +109,6 @@ export async function GetAllDeletedCompany() {
     .then((res) => res)
     .catch((e) => {
       console.error("Error fetching admin companies:", e);
-      return e.response;
-    });
-}
-export async function UpdateCompany(companyId: number, data: VerifyInterface) {
-  return await axios
-    .patch(`${apiUrl}/company/patch-company/${companyId}`, data, requestOptions)
-    .then((res) => res)
-    .catch((e) => {
-      console.error("Error updating verification status:", e);
-      return e.response;
-    });
-}
-export async function DeleteCompany(companyId: number) {
-  return await axios
-    .delete(`${apiUrl}/company/delete/${companyId}`, requestOptions)
-    .then((res) => res)
-    .catch((e) => {
-      console.error("Error deleting company:", e);
       return e.response;
     });
 }

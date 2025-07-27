@@ -36,6 +36,7 @@ import type { VerifyInterface } from "../../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import EditLecturersModal from "./EditLecturersModal";
+import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
 
 const AcademicStaffManagement: React.FC = () => {
   const [form] = Form.useForm();
@@ -233,26 +234,66 @@ const AcademicStaffManagement: React.FC = () => {
         );
       },
     },
-    {
-      title: "การจัดการ",
-      key: "action",
-      fixed: "right" as const,
-      render: (_: any, rec: AcademicStaffInterface) => (
-        <Flex gap={16}>
-          <EditOutlined
-            style={{ fontSize: 18, cursor: "pointer" }}
-            onClick={() => showEditStaffModal(rec)}
-          />
-          <Popconfirm
-            title="คุณแน่ใจหรือไม่ที่จะลบอาจารย์คนนี้?"
-            onConfirm={() => handleDeleteStaff(rec.ID)}
-          >
-            <DeleteOutlined style={{ cursor: "pointer", color: "red" }} />
-          </Popconfirm>
-        </Flex>
-      ),
-    },
-  ];
+     {
+         title: "การรับรอง",
+         key: "status",
+         align: "center",
+         width: 140,
+         filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
+         onFilter: (val, rec) => getStaffLatestStatus(rec) === val,
+         filterMode: "tree",
+         render: (_, rec) => {
+           const status = getStaffLatestStatus(rec);
+           const { bgColor, textColor, border, boxShadow } =
+             getStatusStyle(status);
+           return (
+             <Button
+               onClick={() => showVerificationModal(rec)}
+               className="status-button"
+               style={{
+                 background: bgColor,
+                 color: textColor,
+                 border,
+                 boxShadow,
+               }}
+             >
+               {status}
+             </Button>
+           );
+         },
+       },
+       {
+         title: "การจัดการ",
+         key: "action",
+         width: 120,
+         align: "center",
+         render: (_, rec) => (
+           <Flex justify="center">
+             <Button
+               type="text"
+               icon={<EditOutlined />}
+               onClick={() => showEditStaffModal(rec)}
+               className="action-edit-btn"
+             />
+             <Popconfirm
+               title="ยืนยันการลบ"
+               description="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
+               onConfirm={() => handleDeleteStaff(rec.ID)}
+               okText="ลบ"
+               cancelText="ยกเลิก"
+               okButtonProps={{ danger: true }}
+             >
+               <Button
+                 type="text"
+                 danger
+                 icon={<DeleteOutlined />}
+                 className="action-delete-btn"
+               />
+             </Popconfirm>
+           </Flex>
+         ),
+       },
+     ];
 
   const filteredStaffs = useMemo(() => {
     const base = tabKey === "active" ? activeStaffs : deletedStaffs;
@@ -277,33 +318,25 @@ const AcademicStaffManagement: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
-          <Col>
-            <Title level={3}>อาจารย์ (Academic Staff)</Title>
-          </Col>
-        </Row>
-
-        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }} wrap>
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <Col key={status}>
-              <div className="custom-summary-box">
-                <div className="summary-title">{status}</div>
-                <div className="summary-count">{count}</div>
-              </div>
+        <div className="admin-header-box">
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={2} style={{ margin: 0, color: "#2c3e50" }}>
+                <span className="admin-header-title">จัดการอาจารย์</span>
+              </Title>
+              <p className="admin-subtitle">ระบบจัดการและตรวจสอบสถานะอาจารย์</p>
             </Col>
-          ))}
-          <Col>
-            <div className="custom-summary-box highlight-box">
-              <div className="summary-title">จำนวนอาจารย์ทั้งหมด</div>
-              <div className="summary-count">
-                {tabKey === "active"
-                  ? activeStaffs.length
-                  : deletedStaffs.length}
-              </div>
-            </div>
-          </Col>
-        </Row>
+          </Row>
+        </div>
 
+        <Verify_StatCard
+          statusCounts={statusCounts}
+          totalActive={activeStaffs.length}
+          totalDeleted={deletedStaffs.length}
+          tabKey={tabKey}
+        />
+
+        
         <Tabs
           defaultActiveKey="active"
           onChange={(key) => setTabKey(key)}
@@ -352,12 +385,11 @@ const AcademicStaffManagement: React.FC = () => {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
           />
-          <Col>
-          </Col>
+          <Col></Col>
         </Flex>
 
         <Table
-          className="custom-table"
+          className="adminpage-table"
           columns={columns}
           dataSource={filteredStaffs}
           rowKey="ID"

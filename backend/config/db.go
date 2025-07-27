@@ -87,10 +87,10 @@ func SetupDatabase() {
 func createSeedData(db *gorm.DB) {
 	// สร้าง Role
 	roles := []entity.Role{
-		{RoleName: "Admin"},
-		{RoleName: "Company"},
-		{RoleName: "Student"},
-		{RoleName: "AcademicStaff"},
+		{RoleName: "Admin", RoleNameTH: "แอดมิน"},
+		{RoleName: "Company", RoleNameTH: "บริษัท"},
+		{RoleName: "Student", RoleNameTH: "นักเรียน"},
+		{RoleName: "AcademicStaff", RoleNameTH: "อาจารย์"},
 	}
 	for _, role := range roles {
 		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})

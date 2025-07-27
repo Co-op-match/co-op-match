@@ -1,10 +1,11 @@
-.custom-summary-box {
-  /* width: 200px; */
-  flex: 1 1 200px; /* ✅ ยืดได้หดได้: เริ่มจาก 160px */
-  max-width: 200px; /* ✅ ไม่เกิน 200px */
-  min-width: 150px; /* ✅ ไม่ต่ำกว่า 120px */
+.ant-message {
+  z-index: 3000 !important;
+}
+/* .adminpage-summary-box {
+  flex: 1 1 200px; 
+  max-width: 200px; 
+  min-width: 150px; 
   height: 100px;
-  /* background-color: #afd5f4; */
   background: #fff;
   border-radius: 8px;
   text-align: center;
@@ -20,7 +21,7 @@
   font-weight: 600;
   margin-bottom: 8px;
   padding-bottom: 4px;
-  border-bottom: 1px solid rgba(124, 124, 124, 0.2); /* เส้นคั่น */
+  border-bottom: 1px solid rgba(124, 124, 124, 0.2); 
 }
 
 .summary-count {
@@ -41,43 +42,151 @@
   padding: 0.4rem 1rem;
   border: 0.5px solid #e3e3e3;
   animation: fadeIn 0.5s ease-in-out;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); 
   transition: transform 0.3s ease;
 }
 
-.custom-table .ant-table-container {
-  /* background-color: #afd5f4 !important; */
-  /* border: 1px solid #afd5f4; */
+
+
+.adminpage-modal .ant-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+ */
+
+
+/* ชื่อบริษัท (ลิงก์) */
+.company-name-link {
+  color: #1677ff;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.company-name-link:hover {
+  color: #4096ff;
+  text-decoration: underline;
+}
+
+/* ปุ่มสถานะ */
+.status-button {
+  width: 120px;
+  height: 36px;
+  border-radius: 18px;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.status-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ปุ่มแก้ไข */
+.action-edit-btn {
+  color: #1677ff;
+  border-radius: 8px;
+  padding: 4px 8px;
+  height: 32px;
+  transition: all 0.2s;
+}
+.action-edit-btn:hover {
+  background-color: #e6f4ff;
+  transform: scale(1.05);
+}
+
+/* ปุ่มลบ */
+.action-delete-btn {
+  border-radius: 8px;
+  padding: 4px 8px;
+  height: 32px;
+  transition: all 0.2s;
+}
+.action-delete-btn:hover {
+  background-color: #fff2f0;
+  transform: scale(1.05);
+}
+
+/* Header box */
+.admin-header-box {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient title text */
+.admin-header-title {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtitle */
+.admin-subtitle {
+  color: #666;
+  margin: 8px 0 0 0;
+  font-size: 14px;
+}
+
+/* Main content card */
+.admin-main-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Filter card */
+.admin-filter-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border: 1px solid #e6f0ff;
+  border-radius: 16px;
+}
+
+/* Filter label */
+.admin-filter-label {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* Search input */
+.admin-search-input {
+  border-radius: 12px;
+  border: 2px solid #e6f0ff;
+  transition: all 0.2s;
+}
+
+.adminpage-table .ant-table-container {
   animation: fadeIn 0.5s ease-in-out;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* เงา */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); 
   transition: transform 0.3s ease;
 }
 
-/* ✅ สีพื้นหลังของหัวตาราง */
-.custom-table .ant-table-thead > tr > th {
-  /* background-color: #afd5f4 !important; */
-}
-
-/* ✅ แถวปกติใน tbody */
-.custom-table .ant-table-tbody > tr > td {
-  /* background-color: #e7edf3  !important; */
+.adminpage-table .ant-table-tbody > tr > td {
   transition: background-color 0.3s ease;
 }
 
-/* ✅ ถ้าเป็นแถวถูกระงับ เพิ่มความเฉพาะเจาะจงให้ override ได้ */
-.custom-table .ant-table-tbody > tr.suspended-row > td {
-  /* background-color: #d9d9d9 !important; */
+.adminpage-table .ant-table-tbody > tr.suspended-row > td {
   color: #888 !important;
   font-style: italic;
 }
 
-/* ปิด hover สำหรับแถวถูกระงับ */
-.custom-table .ant-table-tbody > tr.suspended-row:hover > td {
+.adminpage-table .ant-table-tbody > tr.suspended-row:hover > td {
   background-color: #d9d9d9 !important;
 }
 
 .fade-in-card:hover {
-  transform: translateY(-4px); /* ยกการ์ดขึ้นเล็กน้อยตอน hover */
+  transform: translateY(-4px); 
 }
 
 @keyframes fadeIn {
@@ -89,4 +198,85 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.adminpage-tabs .ant-tabs-tab {
+  border-radius: 12px 12px 0 0;
+}
+
+.adminpage-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border-bottom: 2px solid #e6f0ff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.adminpage-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 12px;
+}
+
+.adminpage-table .ant-table-tbody > tr:hover > td {
+  background: rgba(22, 119, 255, 0.02);
+}
+
+/******************************** edit modal ***************************/
+.responsive-modal .ant-modal {
+  max-width: 900px; /* ขนาดสูงสุด */
+  width: 95%;       /* จอเล็กจะยืดหยุ่น */
+}
+
+.logo-preview-card {
+  margin-top: 16px;
+  background-color: #fafafa;
+  border: 2px solid #e6f7ff;
+}
+
+.logo-preview-image {
+  object-fit: contain;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 8px;
+  background-color: white;
+}
+
+.logo-preview-text {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+}
+
+.upload-overlay:hover {
+  opacity: 1 !important;
+}
+
+.upload-card-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+}
+
+.input-disabled {
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  color: #666;
 }

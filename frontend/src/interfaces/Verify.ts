@@ -6,6 +6,7 @@ export interface VerifyInterface {
   ID?: number;
   verification_document?: string;
   reason?: string;
+  verified_at?: string;
 
   StatusVerifyID?: number;
   StatusVerify?: StatusVerifyInterface;

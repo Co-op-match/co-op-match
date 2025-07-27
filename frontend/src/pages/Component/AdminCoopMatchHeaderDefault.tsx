@@ -90,7 +90,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   const fullMenu = [
     { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
     {
-     key: "users",
+      key: "users",
       label: (
         <Dropdown menu={menuProps} trigger={["hover"]}>
           <Space>
@@ -154,7 +154,16 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
         />
 
         <Dropdown
-          overlay={logoutMenu}
+          menu={{
+            items: [
+              {
+                key: "logout",
+                danger: true,
+                label: "ออกจากระบบ",
+                onClick: handleLogout,
+              },
+            ],
+          }}
           placement="bottomRight"
           trigger={["click"]}
         >

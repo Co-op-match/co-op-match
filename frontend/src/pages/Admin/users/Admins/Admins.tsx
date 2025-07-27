@@ -169,7 +169,7 @@ const AdminManagementPage: React.FC = () => {
         </Flex>
 
         <Table
-          className="custom-table"
+          className="adminpage-table"
           columns={columns}
           dataSource={filteredAdmins}
           rowKey="ID"

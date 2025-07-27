@@ -5,6 +5,7 @@ import type { ContactInterface } from "./Contact";
 import type { IntershipPostInterface } from "./IntershipPost";
 import type { InterviewAppointmentInterface } from "./InterviewAppointment";
 import type { ReviewInterface } from "./Review";
+import type { VerifyInterface } from "./Verify";
 
 export interface CompanyInterface {
   data: CompanyInterface | PromiseLike<CompanyInterface>;
@@ -27,4 +28,5 @@ export interface CompanyInterface {
   Reviews?: ReviewInterface[];
 
   CreatedAt?: string;
+  Verifications?: VerifyInterface[];
 }

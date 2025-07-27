@@ -1,0 +1,77 @@
+
+/******************************** verify modal ***************************/
+.verify-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.verify-doc-iframe {
+  width: 100%;
+  height: 600px;
+  border: 1px solid #e6f0ff;
+  border-radius: 8px;
+  background-color: white;
+  display: block;
+}
+
+.verify-modal-ok-button {
+  background: linear-gradient(135deg, #1677ff, #69b1ff);
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+}
+
+.verify-modal-cancel-button {
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+}
+
+.company-info-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border: 1px solid #e6f0ff;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.verify-section-label {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #2c3e50;
+}
+
+.verify-status-title {
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.verify-no-doc {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.reject-textarea {
+  border-radius: 8px;
+  border: 2px solid #ffebe6;
+  resize: none;
+}
+
+.radio-danger .ant-radio-inner {
+  border-color: #ff4d4f !important;
+}
+
+.radio-danger .ant-radio-checked .ant-radio-inner {
+  background-color: #ff4d4f !important;
+}
+
+.radio-danger span {
+  color: #ff4d4f !important;
+}

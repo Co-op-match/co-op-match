@@ -15,6 +15,7 @@ import {
   Select,
   Radio,
   Tabs,
+  Card,
 } from "antd";
 import {
   SearchOutlined,
@@ -25,7 +26,6 @@ import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import {
-  DeleteCompany,
   GetAllActiveCompanies,
   GetAllDeletedCompany,
   GetAllStatusVerify,
@@ -37,11 +37,17 @@ import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify"
 import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
 import EditCompanyModal from "./EditCompanyModal";
-import { SendEmailVerify } from "../../../../services/https";
+import { DeleteCompany, SendEmailVerify } from "../../../../services/https";
+import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
+import VerifyCompanyModal from "./VerifyCompanyModal";
+import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
+import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
 
 const CompanyManagement: React.FC = () => {
   const [verifyForm] = Form.useForm();
   const [editForm] = Form.useForm();
+
+  const [roleTabKey, setRoleTabKey] = useState("company");
 
   const [activeCompanies, setActiveCompanies] = useState<CompanyInterface[]>(
     []
@@ -203,23 +209,6 @@ const CompanyManagement: React.FC = () => {
     searchKeyword,
   ]);
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "รับรอง":
-        return { bgColor: "#52c41a", textColor: "#fff", border: "none" };
-      case "ปฏิเสธ":
-        return { bgColor: "#ff4d4f", textColor: "#fff", border: "none" };
-      case "รอรับรอง":
-        return { bgColor: "#faad14", textColor: "#fff", border: "none" };
-      default:
-        return {
-          bgColor: "#fff",
-          textColor: "#000",
-          border: "1px solid rgba(0,0,0,0.2)",
-        };
-    }
-  };
-
   const statusCounts = useMemo(() => {
     const source = tabKey === "active" ? activeCompanies : deletedCompanies;
     const allStatuses = statusFilterOptions.filter((s) => s !== "ทั้งหมด");
@@ -243,51 +232,89 @@ const CompanyManagement: React.FC = () => {
 
   /*=========================   จัดการตาราง   ================================*/
   const columns: ColumnsType<CompanyInterface> = [
-    { title: "ID", dataIndex: "ID", key: "ID" },
+    {
+      title: "ID",
+      dataIndex: "ID",
+      key: "ID",
+      width: 80,
+      sorter: (a, b) => (a.ID || 0) - (b.ID || 0),
+    },
     {
       title: "วันที่สมัคร",
       dataIndex: "CreatedAt",
       key: "CreatedAt",
-      render: (val: string) => dayjs(val).format("DD/MM/YYYY"),
+      width: 120,
+      render: (val: string) => (
+        <div style={{ fontSize: "13px", color: "#666" }}>
+          {dayjs(val).format("DD/MM/YYYY")}
+        </div>
+      ),
+      sorter: (a, b) => dayjs(a.CreatedAt).unix() - dayjs(b.CreatedAt).unix(),
     },
     {
       title: "โลโก้",
       key: "logo",
-      render: (_, record) => (
-        <Avatar shape="square" size="large" src={record.logo || undefined}>
-          {record.company_name?.charAt(0)}
-        </Avatar>
-      ),
+      width: 80,
+      align: "center",
+      render: (_, record) => {
+        const logoSrc =
+          record.logo?.startsWith("http") || record.logo?.startsWith("https")
+            ? record.logo
+            : record.logo
+            ? `http://localhost:8000${record.logo}`
+            : "";
+
+        return (
+          <div style={{ textAlign: "center" }}>
+            <Avatar
+              shape="square"
+              size={50}
+              src={logoSrc}
+              style={{
+                border: "2px solid #f0f0f0",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+            >
+              <span style={{ fontSize: "18px", fontWeight: "bold" }}>
+                {record.company_name?.charAt(0)}
+              </span>
+            </Avatar>
+          </div>
+        );
+      },
     },
     {
       title: "บริษัท",
       key: "company",
       render: (_, record) => (
-        <a href={`/company/${record.ID}`} style={{ color: "#1677ff" }}>
-          {record.company_name}
-        </a>
+        <div>
+          <a href={`/company/${record.ID}`} className="company-name-link">
+            {record.company_name}
+          </a>
+        </div>
       ),
     },
     {
       title: "การรับรอง",
       key: "status",
       align: "center",
-      fixed: "right" as const,
+      width: 140,
       filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
       onFilter: (val, rec) => getCompanyLatestStatus(rec) === val,
       filterMode: "tree",
       render: (_, rec) => {
         const status = getCompanyLatestStatus(rec);
-        const { bgColor, textColor, border } = getStatusStyle(status);
+        const { bgColor, textColor, border, boxShadow } =
+          getStatusStyle(status);
         return (
           <Button
             onClick={() => showVerificationModal(rec)}
+            className="status-button"
             style={{
-              width: 110,
-              borderRadius: 12,
-              backgroundColor: bgColor,
+              background: bgColor,
               color: textColor,
               border,
+              boxShadow,
             }}
           >
             {status}
@@ -298,18 +325,30 @@ const CompanyManagement: React.FC = () => {
     {
       title: "การจัดการ",
       key: "action",
-      fixed: "right" as const,
+      width: 120,
+      align: "center",
       render: (_, rec) => (
-        <Flex gap={16}>
-          <EditOutlined
-            style={{ fontSize: 18, cursor: "pointer" }}
+        <Flex justify="center">
+          <Button
+            type="text"
+            icon={<EditOutlined />}
             onClick={() => showEditCompanyModal(rec)}
+            className="action-edit-btn"
           />
           <Popconfirm
-            title="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
+            title="ยืนยันการลบ"
+            description="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
             onConfirm={() => removeCompany(rec.ID || 0)}
+            okText="ลบ"
+            cancelText="ยกเลิก"
+            okButtonProps={{ danger: true }}
           >
-            <DeleteOutlined style={{ cursor: "pointer", color: "red" }} />
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              className="action-delete-btn"
+            />
           </Popconfirm>
         </Flex>
       ),
@@ -317,215 +356,170 @@ const CompanyManagement: React.FC = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+    <Layout
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+      }}
+    >
       <AdminHeader />
-      <Layout style={{ margin: "2rem" }}>
-        <Row justify="space-between" style={{ marginBottom: "1rem" }}>
-          <Col>
-            <Title level={3}>บริษัท (Companies)</Title>
-          </Col>
-          <Col>
-          </Col>
-          {/* <Col>
-            <Flex align="center" gap={16}>
-              จำนวน
-              <Card
-                size="small"
-                style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
-              >
-                <div style={{ fontSize: 18, fontWeight: "bold" }}>
-                  {tabKey == "active" ? totalActive : totalDeleted}
-                </div>
-              </Card>
-            </Flex>
-          </Col> */}
-        </Row>
-
-        <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12 }} wrap>
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <Col key={status}>
-              <div className="custom-summary-box">
-                <div className="summary-title">{status}</div>
-                <div className="summary-count">{count}</div>
-              </div>
+      <Layout style={{ margin: "2rem", background: "transparent" }}>
+        {/* Header Section */}
+        <div className="admin-header-box">
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={2} style={{ margin: 0, color: "#2c3e50" }}>
+                <span className="admin-header-title">จัดการบริษัท</span>
+              </Title>
+              <p className="admin-subtitle">ระบบจัดการและตรวจสอบสถานะบริษัท</p>
             </Col>
-          ))}
-          <Col>
-            <div className="custom-summary-box highlight-box">
-              <div className="summary-title">จำนวนบริษัททั้งหมด</div>
-              <div className="summary-count">
-                {tabKey === "active" ? totalActive : totalDeleted}
-              </div>
-            </div>
-          </Col>
-        </Row>
+          </Row>
+        </div>
 
-        <Tabs
-          defaultActiveKey="active"
-          onChange={(key) => setTabKey(key)}
-          items={[
-            { label: "บริษัททั้งหมด", key: "active" },
-            { label: "บริษัทที่ถูกลบ", key: "deleted" },
-          ]}
-          style={{ marginTop: "1rem" }}
-        />
-        <Flex
-          justify="center"
-          align="center"
-          gap="5vw"
-          style={{ margin: "1rem 0" }}
-        >
-          <Select
-            mode="multiple"
-            value={selectedFilterStatuses}
-            onChange={(values) => {
-              if (values.includes("ทั้งหมด")) {
-                const allStatuses = statusFilterOptions.filter(
-                  (s) => s !== "ทั้งหมด"
-                );
-                const isAllSelected =
-                  selectedFilterStatuses.length === allStatuses.length &&
-                  allStatuses.every((s) => selectedFilterStatuses.includes(s));
-
-                if (isAllSelected) {
-                  setSelectedFilterStatuses([]); // unselect all
-                } else {
-                  setSelectedFilterStatuses(allStatuses); // select all
-                }
-              } else {
-                setSelectedFilterStatuses(values);
-              }
-            }}
-            style={{ width: "40vw" }}
-            options={statusFilterOptions.map((s) => ({ label: s, value: s }))}
-            placeholder="เลือกสถานะ"
-            allowClear
-          />
-          <Input
-            placeholder="ค้นหา..."
-            suffix={<SearchOutlined style={{ color: "#999" }} />}
-            className="searchInput"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-          />
-          <Col>
-          </Col>
-        </Flex>
-
-        <Table
-          className="custom-table"
-          columns={columns}
-          dataSource={filteredCompanies}
-          pagination={{ pageSize: 6 }}
-          size="middle"
+        <Verify_StatCard
+          statusCounts={statusCounts}
+          totalActive={activeCompanies.length}
+          totalDeleted={deletedCompanies.length}
+          tabKey={tabKey}
         />
 
-        <Modal
-          open={isDetailModalVisible}
-          title="รายละเอียดการรับรอง"
-          onCancel={() => {
-            setIsDetailModalVisible(false);
-            verifyForm.resetFields();
-            setSelectedVerifyStatus("");
-          }}
-          onOk={async () => {
-            if (isReadOnlyStatus) return;
-            try {
-              if (selectedVerifyStatus === "ปฏิเสธ") {
-                await verifyForm.validateFields();
-              }
-              const reason = verifyForm.getFieldValue("rejectReason") || "";
-              await submitVerificationDecision(reason);
-            } catch (err) {}
-          }}
-          okText="ยืนยัน"
-          cancelText="ยกเลิก"
-          footer={isReadOnlyStatus ? null : undefined}
-        >
-          <Form form={verifyForm} layout="vertical">
-            <p>
-              <strong>บริษัท:</strong> {currentCompany?.company_name}
-            </p>
-            {(() => {
-              const latest = getCompanyLatestVerification(currentCompany!);
-              if (!latest) return <p>ยังไม่มีการส่งคำขอรับรอง</p>;
-              return (
-                <>
-                  <p>
-                    <strong>สถานะ:</strong>{" "}
-                    {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
-                  </p>
-                  <p>
-                    <strong>วันที่ส่งคำขอ:</strong>{" "}
-                    {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
-                  </p>
-                  <p>
-                    <strong>วันที่ยืนยัน:</strong>{" "}
-                    {latest?.UpdatedAt
-                      ? dayjs(latest?.UpdatedAt).format("DD/MM/YYYY HH:mm")
-                      : "-"}
-                  </p>
-                  <p>
-                    <strong>เอกสารการยืนยัน:</strong>
-                  </p>
-                  {(() => {
-                    const url = latest.verification_document
-                      ? `http://localhost:8000${latest.verification_document}`
-                      : undefined;
+        {/* Main Content */}
+        <Card className="admin-main-card" styles={{ body: { padding: 0 } }}>
+          {/* Tabs */}
+          <div style={{ padding: "24px 24px 0 24px" }}>
+            <Tabs
+              defaultActiveKey="active"
+              onChange={(key) => setTabKey(key)}
+              items={[
+                {
+                  label: (
+                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
+                      บริษัททั้งหมด
+                    </span>
+                  ),
+                  key: "active",
+                },
+                {
+                  label: (
+                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
+                      บริษัทที่ถูกลบ
+                    </span>
+                  ),
+                  key: "deleted",
+                },
+              ]}
+              size="large"
+              className="adminpage-tabs"
+            />
+          </div>
 
-                    if (!url) {
-                      return <p style={{ color: "gray" }}>ไม่มีเอกสาร</p>;
-                    }
+          {/* Filters */}
+          <div style={{ padding: "0 24px 24px 24px" }}>
+            <Card
+              className="admin-filter-card"
+              styles={{ body: { padding: 20 } }}
+            >
+              <Row gutter={[16, 16]} align="middle">
+                <Col xs={24} md={12}>
+                  <div className="admin-filter-label"> กรองตามสถานะ</div>
+                  <Select
+                    mode="multiple"
+                    value={selectedFilterStatuses}
+                    onChange={(values) => {
+                      if (values.includes("ทั้งหมด")) {
+                        const allStatuses = statusFilterOptions.filter(
+                          (s) => s !== "ทั้งหมด"
+                        );
+                        const isAllSelected =
+                          selectedFilterStatuses.length ===
+                            allStatuses.length &&
+                          allStatuses.every((s) =>
+                            selectedFilterStatuses.includes(s)
+                          );
 
-                    return (
-                      <iframe
-                        src={url}
-                        title="Verification Document"
-                        width="100%"
-                        height="500px"
-                        style={{
-                          border: "1px solid #ccc",
-                          borderRadius: 8,
-                        }}
-                      />
-                    );
-                  })()}
-
-                  <Radio.Group
-                    onChange={(e) => {
-                      setSelectedVerifyStatus(e.target.value);
-                      if (e.target.value !== "ปฏิเสธ")
-                        verifyForm.resetFields(["rejectReason"]);
+                        if (isAllSelected) {
+                          setSelectedFilterStatuses([]); // unselect all
+                        } else {
+                          setSelectedFilterStatuses(allStatuses); // select all
+                        }
+                      } else {
+                        setSelectedFilterStatuses(values);
+                      }
                     }}
-                    value={selectedVerifyStatus}
-                    style={{ marginTop: 16 }}
-                    disabled={isReadOnlyStatus}
-                  >
-                    <Radio value="รับรอง">รับรอง</Radio>
-                    <Radio value="ปฏิเสธ">ปฏิเสธ</Radio>
-                  </Radio.Group>
-                  {selectedVerifyStatus === "ปฏิเสธ" && (
-                    <Form.Item
-                      name="rejectReason"
-                      rules={[
-                        {
-                          required: true,
-                          message: "กรุณาระบุเหตุผลในการปฏิเสธ",
-                        },
-                      ]}
-                    >
-                      <Input.TextArea
-                        rows={4}
-                        placeholder="กรุณาระบุเหตุผลในการปฏิเสธ"
-                        disabled={isReadOnlyStatus}
+                    style={{ width: "100%" }}
+                    size="large"
+                    options={statusFilterOptions.map((s) => ({
+                      label: s,
+                      value: s,
+                    }))}
+                    placeholder="เลือกสถานะที่ต้องการแสดง"
+                    allowClear
+                    maxTagCount="responsive"
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <div className="admin-filter-label">ค้นหาบริษัท</div>
+                  <Input
+                    placeholder="ค้นหาชื่อบริษัท, ID หรือข้อมูลอื่นๆ..."
+                    suffix={
+                      <SearchOutlined
+                        style={{ color: "#bfbfbf", fontSize: "16px" }}
                       />
-                    </Form.Item>
-                  )}
-                </>
-              );
-            })()}
-          </Form>
-        </Modal>
+                    }
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    size="large"
+                    className="admin-search-input"
+                  />
+                </Col>
+              </Row>
+            </Card>
+          </div>
+
+          {/* Table */}
+          <div style={{ padding: "0 24px 24px 24px" }}>
+            <Table
+              columns={columns}
+              dataSource={filteredCompanies.map((c) => ({ ...c, key: c.ID }))}
+              pagination={{
+                pageSize: 8,
+                showSizeChanger: true,
+                pageSizeOptions: ["8", "16", "32", "50"],
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `แสดง ${range[0]}-${range[1]} จาก ${total} รายการ`,
+                style: { marginTop: "16px" },
+              }}
+              size="middle"
+              scroll={{ x: 800 }}
+              className="adminpage-table"
+              bordered={false}
+            />
+          </div>
+        </Card>
+
+        {/* Modals */}
+        {/* <VerifyCompanyModal
+          open={isDetailModalVisible}
+          currentCompany={currentCompany!}
+          verifyForm={verifyForm}
+          selectedVerifyStatus={selectedVerifyStatus}
+          setSelectedVerifyStatus={setSelectedVerifyStatus}
+          isReadOnlyStatus={isReadOnlyStatus}
+          setIsDetailModalVisible={setIsDetailModalVisible}
+          submitVerificationDecision={submitVerificationDecision}
+        /> */}
+        <Verify_Modal
+          open={isDetailModalVisible}
+          entityType="company"
+          entity={currentCompany!}
+          verifyForm={verifyForm}
+          selectedVerifyStatus={selectedVerifyStatus}
+          setSelectedVerifyStatus={setSelectedVerifyStatus}
+          isReadOnlyStatus={isReadOnlyStatus}
+          setIsDetailModalVisible={setIsDetailModalVisible}
+          submitVerificationDecision={submitVerificationDecision}
+        />
 
         <EditCompanyModal
           isEditModalVisible={isEditModalVisible}

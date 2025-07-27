@@ -196,7 +196,7 @@ const StudentManagementPage: React.FC = () => {
         </Flex>
 
         <Table
-          className="custom-table"
+          className="adminpage-table"
           columns={columns}
           dataSource={filteredStudents}
           rowKey="ID"

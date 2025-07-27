@@ -248,6 +248,31 @@ async function GetVerifyByUserId(user_id: number) {
     throw e.response || e;
   }
 }
+export async function UpdateCompany(companyId: number, data: FormData) {
+  return await axios
+    .patch(`${apiUrl}/company/patch-company/${companyId}`, data, {
+      headers: {
+        // ❗️อย่ากำหนด Content-Type เอง ให้ browser จัดการ multipart boundary
+        Authorization: `${localStorage.getItem("token_type")} ${localStorage.getItem("token")}`,
+      },
+    })
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error updating company:", e);
+      return e.response;
+    });
+}
+
+export async function DeleteCompany(companyId: number) {
+  return await axios
+    .delete(`${apiUrl}/company/delete/${companyId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error deleting company:", e);
+      return e.response;
+    });
+}
+
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
   return await axios
@@ -399,15 +424,36 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
 }
 // ============================== Notifycation =================================== //
 
-async function SendEmailVerify(user_id:number) {
- return await axios
-    .post(`${apiUrl}/notificatio/email/verify-status/${user_id}`,requestOptions)
+async function SendEmailVerify(user_id: number) {
+  const Authorization = localStorage.getItem("token");
+  const Bearer = localStorage.getItem("token_type");
+
+  const requestOptions = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  };
+
+  return await axios
+    .post(`${apiUrl}/notification/email/verify-status/${user_id}`, {}, requestOptions)
     .then(res => res)
     .catch(e => e.response);
 }
-async function SendEmailinterview(id:number) {
- return await axios
-    .post(`${apiUrl}/interview/send-email/${id}`,requestOptions)
+
+async function SendEmailinterview(id: number) {
+  const Authorization = localStorage.getItem("token");
+  const Bearer = localStorage.getItem("token_type");
+
+  const requestOptions = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  };
+
+  return await axios
+    .post(`${apiUrl}/notification/interview/send-email/${id}`, {}, requestOptions)
     .then(res => res)
     .catch(e => e.response);
 }

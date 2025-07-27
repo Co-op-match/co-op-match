@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -225,51 +226,63 @@ func DeleteCompany(c *gin.Context) {
 }
 
 func UpdateCompany(c *gin.Context) {
-	// รับ company id จาก path param
 	idStr := c.Param("id")
-	companyID, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company ID"})
-		return
-	}
+	companyID, _ := strconv.ParseUint(idStr, 10, 64)
 
+	// 1. รับ json_data จาก form-data แล้ว parse
 	var input struct {
 		CompanyName string `json:"company_name"`
-		Logo        string `json:"logo"`
+		Logo        string `json:"logo"` // override ทีหลัง
 		Address     struct {
-			HouseNumber  string `json:"house_number"`
-			Village      string `json:"village"`
-			Street       string `json:"street"`
-			SubStreet    string `json:"sub_street"`
-			Province     uint   `json:"Province"`
-			District     uint   `json:"District"`
-			SubDistrict  uint   `json:"SubDistrict"`
-			Postcode     uint   `json:"Postcode"`
+			HouseNumber string `json:"house_number"`
+			Village     string `json:"village"`
+			Street      string `json:"street"`
+			SubStreet   string `json:"sub_street"`
+			Province    uint   `json:"Province"`
+			District    uint   `json:"District"`
+			SubDistrict uint   `json:"SubDistrict"`
+			Postcode    uint   `json:"Postcode"`
 		} `json:"Address"`
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+	jsonData := c.PostForm("json_data")
+	fmt.Println("📦 RAW json_data =", jsonData)
+
+	if err := json.Unmarshal([]byte(jsonData), &input); err != nil {
+		fmt.Println("❌ JSON parse error:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json_data"})
 		return
 	}
 
-	db := config.DB()
+	// 2. รับไฟล์โลโก้จาก form-data
+	file, err := c.FormFile("logo")
+	if err == nil {
+		uploadDir := "public/uploads/companyLogo"
+		os.MkdirAll(uploadDir, os.ModePerm)
 
-	var company entity.Company
-	if err := db.Preload("Address").First(&company, companyID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		filename := fmt.Sprintf("%s-%s", time.Now().Format("20060102-150405"), file.Filename)
+		filePath := filepath.Join(uploadDir, filename)
+		if err := c.SaveUploadedFile(file, filePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save logo"})
+			return
 		}
+
+		input.Logo = fmt.Sprintf("/uploads/companyLogo/%s", filename)
+	}
+
+	// 3. ดึง company จาก DB
+	var company entity.Company
+	if err := config.DB().Preload("Address").First(&company, companyID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
 		return
 	}
 
-	// อัปเดต company field
+	// 4. อัปเดตฟิลด์
 	company.CompanyName = input.CompanyName
-	company.Logo = input.Logo
+	if input.Logo != "" {
+		company.Logo = input.Logo
+	}
 
-	// อัปเดต address field
 	if company.Address.ID != 0 {
 		company.Address.HouseNumber = input.Address.HouseNumber
 		company.Address.Village = input.Address.Village
@@ -281,17 +294,19 @@ func UpdateCompany(c *gin.Context) {
 		company.Address.PostcodeID = input.Address.Postcode
 	}
 
-	// บันทึกลงฐานข้อมูล
-	if err := db.Save(&company).Error; err != nil {
+	// 5. Save ทั้ง company และ address
+	if err := config.DB().Save(&company).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update company"})
 		return
 	}
-
-	// Save address ด้วย (หากจำเป็น)
-	if err := db.Save(&company.Address).Error; err != nil {
+	if err := config.DB().Save(&company.Address).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
 		return
 	}
 
-	c.JSON(http.StatusOK, company)
+	// 6. ตอบกลับ
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Company updated successfully",
+		"data":    company,
+	})
 }
