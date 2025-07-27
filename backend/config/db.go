@@ -98,8 +98,8 @@ func createSeedData(db *gorm.DB) {
 
 	// สร้าง Gender
 	genders := []entity.Gender{
-		{Name: "Male"},
-		{Name: "Female"},
+		{Name: "Male", NameTH: "ชาย"},
+		{Name: "Female", NameTH: "หญิง"},
 	}
 	for _, gender := range genders {
 		db.FirstOrCreate(&gender, entity.Gender{Name: gender.Name})
