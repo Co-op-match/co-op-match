@@ -41,6 +41,7 @@ import {
   GetAllActiveAdmins,
   GetAllDeletedAdmins,
 } from "../../../../services/https/Admin";
+import EditAdminsModal from "./EditAdminsModal";
 
 const { Title, Text } = Typography;
 
@@ -66,6 +67,23 @@ const AdminManagementPage: React.FC = () => {
     ]);
     if (resActive.status === 200) setActiveAdmins(resActive.data);
     if (resDeleted.status === 200) setDeletedAdmins(resDeleted.data);
+  };
+
+  const handleUpdateAdmin = async (data: any) => {
+    try {
+      // TODO: เรียก API อัปเดต admin ตรงนี้ เช่น:
+      // const res = await UpdateAdmin(selectedAdmin?.ID!, data);
+      // if (res.status === 200) {
+      message.success("แก้ไขข้อมูลผู้ดูแลระบบสำเร็จ");
+      setIsEditModalVisible(false);
+      fetchData();
+      // } else {
+      //   message.error("เกิดข้อผิดพลาดในการอัปเดต");
+      // }
+    } catch (error) {
+      console.error("Update error:", error);
+      message.error("ไม่สามารถอัปเดตข้อมูลได้");
+    }
   };
 
   const columns: ColumnsType<AdminInterface> = [
@@ -380,7 +398,10 @@ const AdminManagementPage: React.FC = () => {
           />
 
           {/* Search Bar */}
-          <Row gutter={[16, 16]} style={{ marginBottom: "24px", alignItems: "center" }}>
+          <Row
+            gutter={[16, 16]}
+            style={{ marginBottom: "24px", alignItems: "center" }}
+          >
             <Col xs={24} sm={16} md={12} lg={8}>
               <Input
                 placeholder="ค้นหาชื่อ นามสกุล หรือ อีเมล..."
@@ -439,6 +460,13 @@ const AdminManagementPage: React.FC = () => {
             }}
           />
         </Card>
+
+        <EditAdminsModal
+          visible={isEditModalVisible}
+          onCancel={() => setIsEditModalVisible(false)}
+          adminData={selectedAdmin}
+          onSave={handleUpdateAdmin}
+        />
       </Layout>
     </Layout>
   );

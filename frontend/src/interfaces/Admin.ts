@@ -6,7 +6,7 @@ export interface AdminInterface {
   last_name: string;
 
   ID?: number;
-  birthday: string;
+  birthday?: string;
 
   User?: UserInterface;
 }
