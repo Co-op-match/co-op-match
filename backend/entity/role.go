@@ -8,6 +8,6 @@ type Role struct {
 	gorm.Model
 	RoleName string `gorm:"unique;not null"`
 	RoleNameTH string `gorm:"unique;not null"`
-
+	
 	Users    []User `gorm:"foreignKey:RoleID"`
 }
