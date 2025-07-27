@@ -393,15 +393,36 @@ async function UpdateEducation(user_id: number, data: EducationInterface) {
 }
 // ============================== Notifycation =================================== //
 
-async function SendEmailVerify(user_id:number) {
- return await axios
-    .post(`${apiUrl}/notificatio/email/verify-status/${user_id}`,requestOptions)
+async function SendEmailVerify(user_id: number) {
+  const Authorization = localStorage.getItem("token");
+  const Bearer = localStorage.getItem("token_type");
+
+  const requestOptions = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  };
+
+  return await axios
+    .post(`${apiUrl}/notification/email/verify-status/${user_id}`, {}, requestOptions)
     .then(res => res)
     .catch(e => e.response);
 }
-async function SendEmailinterview(id:number) {
- return await axios
-    .post(`${apiUrl}/interview/send-email/${id}`,requestOptions)
+
+async function SendEmailinterview(id: number) {
+  const Authorization = localStorage.getItem("token");
+  const Bearer = localStorage.getItem("token_type");
+
+  const requestOptions = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  };
+
+  return await axios
+    .post(`${apiUrl}/notification/interview/send-email/${id}`, {}, requestOptions)
     .then(res => res)
     .catch(e => e.response);
 }
