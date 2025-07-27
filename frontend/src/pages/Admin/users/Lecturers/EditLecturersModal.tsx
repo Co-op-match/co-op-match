@@ -8,14 +8,30 @@ import {
   Select,
   type FormInstance,
   message,
+  Card,
+  Divider,
+  Space,
+  Button,
+  Typography,
 } from "antd";
-import Title from "antd/es/typography/Title";
+import {
+  UserOutlined,
+  HomeOutlined,
+  EnvironmentOutlined,
+  SaveOutlined,
+  CloseOutlined,
+  IdcardOutlined,
+  BankOutlined,
+  NumberOutlined,
+} from "@ant-design/icons";
 import {
   GetAllProvinces,
   GetAllGender,
 } from "../../../../services/https/index";
 import type { AcademicStaffInterface } from "../../../../interfaces/AcademicStaff";
 import { UpdateAcademicStaff } from "../../../../services/https/Admin";
+
+const { Title } = Typography;
 
 interface LecturersEditModalProps {
   isEditModalVisible: boolean;
@@ -40,12 +56,14 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
   const [subdistrictOptions, setSubdistrictOptions] = useState<any[]>([]);
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<any>(null);
   const [genderOptions, setGenderOptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadProvincesAndGenders();
   }, [selectedStaff]);
 
   const updateStaffData = async (values: any) => {
+    setLoading(true);
     try {
       const res = await UpdateAcademicStaff(selectedStaff?.ID!, {
         ...values,
@@ -61,6 +79,8 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
     } catch (err) {
       message.error("เกิดข้อผิดพลาดในการอัปเดต");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -184,165 +204,451 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
 
   return (
     <Modal
-      title="แก้ไขข้อมูลอาจารย์"
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <UserOutlined style={{ color: "#1890ff", fontSize: "18px" }} />
+          <span style={{ fontSize: "18px", fontWeight: "600" }}>
+            แก้ไขข้อมูลอาจารย์
+          </span>
+        </div>
+      }
       open={isEditModalVisible}
-      onOk={() => editForm.submit()}
       onCancel={() => setIsEditModalVisible(false)}
-      okText="บันทึก"
-      cancelText="ยกเลิก"
-      width={800}
+      width={900}
+      footer={
+        <div style={{ textAlign: "right", padding: "16px 0" }}>
+          <Space>
+            <Button
+              icon={<CloseOutlined />}
+              onClick={() => setIsEditModalVisible(false)}
+              size="large"
+              style={{ borderRadius: "8px" }}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={() => editForm.submit()}
+              loading={loading}
+              size="large"
+              style={{ borderRadius: "8px" }}
+            >
+              บันทึกการแก้ไข
+            </Button>
+          </Space>
+        </div>
+      }
+      styles={{
+        header: {
+          backgroundColor: "#fafafa",
+          borderBottom: "1px solid #e8e8e8",
+        },
+        body: { padding: "24px" },
+      }}
     >
-      <Form
-        form={editForm}
-        layout="vertical"
-        onFinish={updateStaffData}
-        initialValues={{
-          ...selectedStaff,
-          Address: {
-            Province: selectedStaff?.Address?.Province?.ID,
-            District: selectedStaff?.Address?.District?.ID,
-            SubDistrict: selectedStaff?.Address?.SubDistrict?.ID,
-            Postcode: selectedStaff?.Address?.Postcode?.ID,
-          },
-          gender_id: selectedStaff?.Gender?.ID,
-        }}
-        key={selectedStaff?.ID}
-      >
-        <Row gutter={24}>
-          <Col span={12}>
-            <Form.Item
-              name="academic_position"
-              label="ตำแหน่งทางวิชาการ"
-              rules={[{ required: true }]}
-            >
-              <Input placeholder="ตำแหน่งทางวิชาการ" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="age" label="อายุ">
-              <Input type="number" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="faculty" label="คณะ">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="department" label="ภาควิชา">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={24}>
-            <Form.Item name="university" label="มหาวิทยาลัย">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={24}>
-            <Form.Item
-              name="gender_id"
-              label="เพศ"
-              rules={[{ required: true }]}
-            >
-              <Select options={genderOptions} placeholder="เลือกเพศ" />
-            </Form.Item>
-          </Col>
-        </Row>
+      <div style={{ padding: "20px 0" }}>
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={updateStaffData}
+          initialValues={{
+            ...selectedStaff,
+            Address: {
+              Province: selectedStaff?.Address?.Province?.ID,
+              District: selectedStaff?.Address?.District?.ID,
+              SubDistrict: selectedStaff?.Address?.SubDistrict?.ID,
+              Postcode: selectedStaff?.Address?.Postcode?.ID,
+            },
+            gender_id: selectedStaff?.Gender?.ID,
+          }}
+          key={selectedStaff?.ID}
+        >
+          {/* Personal Information Card */}
+          <Card
+            title={
+              <Space>
+                <IdcardOutlined style={{ color: "#1890ff" }} />
+                <span>ข้อมูลส่วนตัว</span>
+              </Space>
+            }
+            style={{ marginBottom: "20px" }}
+            styles={{
+              header: {
+                backgroundColor: "#fafafa",
+                borderBottom: "2px solid #1890ff",
+              },
+            }}
+          >
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item
+                  name="academic_position"
+                  label={
+                    <span>
+                      <UserOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      ตำแหน่งทางวิชาการ
+                    </span>
+                  }
+                  rules={[
+                    { required: true, message: "กรุณากรอกตำแหน่งทางวิชาการ" },
+                  ]}
+                >
+                  <Input
+                    placeholder="กรอกตำแหน่งทางวิชาการ"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="age"
+                  label={
+                    <span>
+                      <NumberOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      อายุ
+                    </span>
+                  }
+                >
+                  <Input
+                    type="number"
+                    placeholder="กรอกอายุ"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item
+                  name="gender_id"
+                  label={
+                    <span>
+                      <UserOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      เพศ
+                    </span>
+                  }
+                  rules={[{ required: true, message: "กรุณาเลือกเพศ" }]}
+                >
+                  <Select
+                    options={genderOptions}
+                    placeholder="เลือกเพศ"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
 
-        <Title level={5}>ที่อยู่</Title>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name={["Address", "house_number"]}
-              label="บ้านเลขที่"
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name={["Address", "village"]} label="หมู่บ้าน">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name={["Address", "street"]} label="ถนน">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name={["Address", "sub_street"]} label="ซอย">
-              <Input />
-            </Form.Item>
-          </Col>
+          {/* University Information Card */}
+          <Card
+            title={
+              <Space>
+                <BankOutlined style={{ color: "#1890ff" }} />
+                <span>ข้อมูลสถาบัน</span>
+              </Space>
+            }
+            style={{ marginBottom: "20px" }}
+            styles={{
+              header: {
+                backgroundColor: "#fafafa",
+                borderBottom: "2px solid #1890ff",
+              },
+            }}
+          >
+            <Row gutter={24}>
+              <Col span={24}>
+                <Form.Item
+                  name="university"
+                  label={
+                    <span>
+                      <BankOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      มหาวิทยาลัย
+                    </span>
+                  }
+                >
+                  <Input
+                    placeholder="กรอกชื่อมหาวิทยาลัย"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="faculty"
+                  label={
+                    <span>
+                      <BankOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      คณะ
+                    </span>
+                  }
+                >
+                  <Input
+                    placeholder="กรอกชื่อคณะ"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="department"
+                  label={
+                    <span>
+                      <BankOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      ภาควิชา
+                    </span>
+                  }
+                >
+                  <Input
+                    placeholder="กรอกชื่อภาควิชา"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
 
-          <Col span={12}>
-            <Form.Item
-              label="จังหวัด"
-              name={["Address", "Province"]}
-              rules={[{ required: true }]}
-            >
-              <Select
-                showSearch
-                options={provinceOptions}
-                onChange={handleProvinceChange}
-                placeholder="เลือกจังหวัด"
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="อำเภอ / เขต"
-              name={["Address", "District"]}
-              rules={[{ required: true }]}
-            >
-              <Select
-                showSearch
-                options={districtOptions}
-                onChange={handleDistrictChange}
-                placeholder="เลือกอำเภอ / เขต"
-                disabled={!districtOptions.length}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="ตำบล / แขวง"
-              name={["Address", "SubDistrict"]}
-              rules={[{ required: true }]}
-            >
-              <Select
-                showSearch
-                options={subdistrictOptions}
-                onChange={handleSubdistrictChange}
-                placeholder="เลือกตำบล / แขวง"
-                disabled={!subdistrictOptions.length}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="รหัสไปรษณีย์"
-              name={["Address", "Postcode"]}
-              rules={[{ required: true }]}
-            >
-              <Select
-                disabled={!selectedSubdistrict?.Postcode}
-                options={
-                  selectedSubdistrict?.Postcode
-                    ? [
-                        {
-                          label: selectedSubdistrict.Postcode.post_code,
-                          value: selectedSubdistrict.Postcode.ID,
-                        },
-                      ]
-                    : []
-                }
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
+          {/* Address Information Card */}
+          <Card
+            title={
+              <Space>
+                <EnvironmentOutlined style={{ color: "#1890ff" }} />
+                <span>ข้อมูลที่อยู่</span>
+              </Space>
+            }
+            styles={{
+              header: {
+                backgroundColor: "#fafafa",
+                borderBottom: "2px solid #1890ff",
+              },
+            }}
+          >
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item
+                  name={["Address", "house_number"]}
+                  label={
+                    <span>
+                      <HomeOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      บ้านเลขที่
+                    </span>
+                  }
+                  rules={[{ required: true, message: "กรุณากรอกบ้านเลขที่" }]}
+                >
+                  <Input
+                    placeholder="กรอกบ้านเลขที่"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name={["Address", "village"]}
+                  label={
+                    <span>
+                      <HomeOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      หมู่บ้าน
+                    </span>
+                  }
+                >
+                  <Input
+                    placeholder="กรอกชื่อหมู่บ้าน"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name={["Address", "street"]}
+                  label={
+                    <span>
+                      <EnvironmentOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      ถนน
+                    </span>
+                  }
+                >
+                  <Input
+                    placeholder="กรอกชื่อถนน"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name={["Address", "sub_street"]}
+                  label={
+                    <span>
+                      <EnvironmentOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      ซอย
+                    </span>
+                  }
+                >
+                  <Input
+                    placeholder="กรอกชื่อซอย"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Divider orientation="left">
+              <span style={{ color: "#1890ff", fontWeight: "500" }}>
+                ข้อมูลการปกครอง
+              </span>
+            </Divider>
+
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <span>
+                      <EnvironmentOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      จังหวัด
+                    </span>
+                  }
+                  name={["Address", "Province"]}
+                  rules={[{ required: true, message: "กรุณาเลือกจังหวัด" }]}
+                >
+                  <Select
+                    showSearch
+                    options={provinceOptions}
+                    onChange={handleProvinceChange}
+                    placeholder="เลือกจังหวัด"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                    filterOption={(input, option) =>
+                      (option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <span>
+                      <EnvironmentOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      อำเภอ / เขต
+                    </span>
+                  }
+                  name={["Address", "District"]}
+                  rules={[{ required: true, message: "กรุณาเลือกอำเภอ / เขต" }]}
+                >
+                  <Select
+                    showSearch
+                    options={districtOptions}
+                    onChange={handleDistrictChange}
+                    placeholder="เลือกอำเภอ / เขต"
+                    disabled={!districtOptions.length}
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                    filterOption={(input, option) =>
+                      (option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <span>
+                      <EnvironmentOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      ตำบล / แขวง
+                    </span>
+                  }
+                  name={["Address", "SubDistrict"]}
+                  rules={[{ required: true, message: "กรุณาเลือกตำบล / แขวง" }]}
+                >
+                  <Select
+                    showSearch
+                    options={subdistrictOptions}
+                    onChange={handleSubdistrictChange}
+                    placeholder="เลือกตำบล / แขวง"
+                    disabled={!subdistrictOptions.length}
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                    filterOption={(input, option) =>
+                      (option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label={
+                    <span>
+                      <EnvironmentOutlined
+                        style={{ marginRight: "8px", color: "#1890ff" }}
+                      />
+                      รหัสไปรษณีย์
+                    </span>
+                  }
+                  name={["Address", "Postcode"]}
+                  rules={[
+                    { required: true, message: "กรุณาเลือกรหัสไปรษณีย์" },
+                  ]}
+                >
+                  <Select
+                    disabled={!selectedSubdistrict?.Postcode}
+                    options={
+                      selectedSubdistrict?.Postcode
+                        ? [
+                            {
+                              label: selectedSubdistrict.Postcode.post_code,
+                              value: selectedSubdistrict.Postcode.ID,
+                            },
+                          ]
+                        : []
+                    }
+                    placeholder="รหัสไปรษณีย์จะแสดงอัตโนมัติ"
+                    size="large"
+                    style={{ borderRadius: "8px" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+        </Form>
+      </div>
     </Modal>
   );
 };

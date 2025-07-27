@@ -42,6 +42,7 @@ func GetAllActiveAcademicStaffs(c *gin.Context) {
 		Preload("Contact").
 		Preload("Gender").
 		Preload("Admin").
+		Preload("User.Role").
 		Where("deleted_at IS NULL").
 		Find(&staffs).Error
 
@@ -70,6 +71,7 @@ func GetAllDeletedAcademicStaffs(c *gin.Context) {
 		Preload("Contact").
 		Preload("Gender").
 		Preload("Admin").
+		Preload("User.Role").
 		Find(&staffs).Error
 
 	if err != nil {

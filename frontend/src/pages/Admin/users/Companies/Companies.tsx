@@ -498,21 +498,11 @@ const CompanyManagement: React.FC = () => {
           </div>
         </Card>
 
-        {/* Modals */}
-        {/* <VerifyCompanyModal
-          open={isDetailModalVisible}
-          currentCompany={currentCompany!}
-          verifyForm={verifyForm}
-          selectedVerifyStatus={selectedVerifyStatus}
-          setSelectedVerifyStatus={setSelectedVerifyStatus}
-          isReadOnlyStatus={isReadOnlyStatus}
-          setIsDetailModalVisible={setIsDetailModalVisible}
-          submitVerificationDecision={submitVerificationDecision}
-        /> */}
+  
         <Verify_Modal
           open={isDetailModalVisible}
-          entityType="company"
           entity={currentCompany!}
+          role={currentCompany?.User?.Role!}
           verifyForm={verifyForm}
           selectedVerifyStatus={selectedVerifyStatus}
           setSelectedVerifyStatus={setSelectedVerifyStatus}

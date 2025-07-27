@@ -37,6 +37,8 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import EditLecturersModal from "./EditLecturersModal";
 import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
+import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
+import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
 
 const AcademicStaffManagement: React.FC = () => {
   const [form] = Form.useForm();
@@ -106,23 +108,6 @@ const AcademicStaffManagement: React.FC = () => {
     return latest?.StatusVerify?.status_verify || "ยังไม่ได้ส่งคำขอ";
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "รับรอง":
-        return { bgColor: "#52c41a", textColor: "#fff", border: "none" };
-      case "ปฏิเสธ":
-        return { bgColor: "#ff4d4f", textColor: "#fff", border: "none" };
-      case "รอรับรอง":
-        return { bgColor: "#faad14", textColor: "#fff", border: "none" };
-      default:
-        return {
-          bgColor: "#fff",
-          textColor: "#000",
-          border: "1px solid rgba(0,0,0,0.2)",
-        };
-    }
-  };
-
   const statusCounts = useMemo(() => {
     const source = tabKey === "active" ? activeStaffs : deletedStaffs;
     const allStatuses = statusFilterOptions.filter((s) => s !== "ทั้งหมด");
@@ -177,6 +162,19 @@ const AcademicStaffManagement: React.FC = () => {
     }
   };
 
+  const showVerificationModal = (staff: AcademicStaffInterface) => {
+    const latest = getLatestVerification(staff);
+    setSelectedStaff(staff);
+    setIsModalVisible(true);
+    setSelectedStatus(latest?.StatusVerify?.status_verify || "");
+
+    if (latest?.StatusVerify?.status_verify === "ปฏิเสธ") {
+      form.setFieldsValue({ rejectReason: latest.reason || "" });
+    } else {
+      form.resetFields(["rejectReason"]);
+    }
+  };
+
   const showEditStaffModal = (staff: AcademicStaffInterface) => {
     setSelectedStaff(staff);
     console.log("staff: ", staff);
@@ -203,30 +201,24 @@ const AcademicStaffManagement: React.FC = () => {
     {
       title: "การรับรอง",
       key: "status",
-      fixed: "right" as const,
-      align: "center" as const,
+      align: "center",
+      width: 140,
       filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
-      onFilter: (val: any, rec: any) => getStaffLatestStatus(rec) === val,
-      filterMode: "tree" as const,
-      render: (_: any, rec: AcademicStaffInterface) => {
+      onFilter: (val, rec) => getStaffLatestStatus(rec) === val,
+      filterMode: "tree",
+      render: (_, rec) => {
         const status = getStaffLatestStatus(rec);
-        const { bgColor, textColor, border } = getStatusStyle(status);
+        const { bgColor, textColor, border, boxShadow } =
+          getStatusStyle(status);
         return (
           <Button
-            onClick={() => {
-              setSelectedStaff(rec);
-              setIsModalVisible(true);
-              setSelectedStatus(status);
-              form.setFieldsValue({
-                rejectReason: getLatestVerification(rec)?.reason,
-              });
-            }}
+            onClick={() => showVerificationModal(rec)}
+            className="status-button"
             style={{
-              width: 110,
-              borderRadius: 12,
-              backgroundColor: bgColor,
+              background: bgColor,
               color: textColor,
               border,
+              boxShadow,
             }}
           >
             {status}
@@ -234,66 +226,38 @@ const AcademicStaffManagement: React.FC = () => {
         );
       },
     },
-     {
-         title: "การรับรอง",
-         key: "status",
-         align: "center",
-         width: 140,
-         filters: statusFilterOptions.map((s) => ({ text: s, value: s })),
-         onFilter: (val, rec) => getStaffLatestStatus(rec) === val,
-         filterMode: "tree",
-         render: (_, rec) => {
-           const status = getStaffLatestStatus(rec);
-           const { bgColor, textColor, border, boxShadow } =
-             getStatusStyle(status);
-           return (
-             <Button
-               onClick={() => showVerificationModal(rec)}
-               className="status-button"
-               style={{
-                 background: bgColor,
-                 color: textColor,
-                 border,
-                 boxShadow,
-               }}
-             >
-               {status}
-             </Button>
-           );
-         },
-       },
-       {
-         title: "การจัดการ",
-         key: "action",
-         width: 120,
-         align: "center",
-         render: (_, rec) => (
-           <Flex justify="center">
-             <Button
-               type="text"
-               icon={<EditOutlined />}
-               onClick={() => showEditStaffModal(rec)}
-               className="action-edit-btn"
-             />
-             <Popconfirm
-               title="ยืนยันการลบ"
-               description="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
-               onConfirm={() => handleDeleteStaff(rec.ID)}
-               okText="ลบ"
-               cancelText="ยกเลิก"
-               okButtonProps={{ danger: true }}
-             >
-               <Button
-                 type="text"
-                 danger
-                 icon={<DeleteOutlined />}
-                 className="action-delete-btn"
-               />
-             </Popconfirm>
-           </Flex>
-         ),
-       },
-     ];
+    {
+      title: "การจัดการ",
+      key: "action",
+      width: 120,
+      align: "center",
+      render: (_, rec) => (
+        <Flex justify="center">
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => showEditStaffModal(rec)}
+            className="action-edit-btn"
+          />
+          <Popconfirm
+            title="ยืนยันการลบ"
+            description="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
+            onConfirm={() => handleDeleteStaff(rec.ID)}
+            okText="ลบ"
+            cancelText="ยกเลิก"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              className="action-delete-btn"
+            />
+          </Popconfirm>
+        </Flex>
+      ),
+    },
+  ];
 
   const filteredStaffs = useMemo(() => {
     const base = tabKey === "active" ? activeStaffs : deletedStaffs;
@@ -336,7 +300,6 @@ const AcademicStaffManagement: React.FC = () => {
           tabKey={tabKey}
         />
 
-        
         <Tabs
           defaultActiveKey="active"
           onChange={(key) => setTabKey(key)}
@@ -503,6 +466,18 @@ const AcademicStaffManagement: React.FC = () => {
             })()}
           </Form>
         </Modal>
+
+        <Verify_Modal
+          open={isModalVisible}
+          entity={selectedStaff}
+          role={selectedStaff.User?.Role!}
+          verifyForm={form}
+          selectedVerifyStatus={selectedStatus}
+          setSelectedVerifyStatus={setSelectedStatus}
+          isReadOnlyStatus={getStaffLatestStatus(selectedStaff) !== "รอรับรอง"}
+          setIsDetailModalVisible={setIsModalVisible}
+          submitVerificationDecision={handleSubmitStatus}
+        />
 
         <EditLecturersModal
           isEditModalVisible={isEditModalVisible}

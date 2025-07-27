@@ -164,6 +164,7 @@ func GetAllActiveCompanies(c *gin.Context) {
 		Preload("InterviewAppointments").
 		Preload("Reviews").
 		Preload("User.Verifications.StatusVerify").
+		Preload("User.Role").
 		Where("deleted_at IS NULL").
 		Find(&companies).Error
 
@@ -191,6 +192,7 @@ func GetAllDeletedCompany(c *gin.Context) {
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
 		Preload("Reviews").
+		Preload("User.Role").
 		Preload("User.Verifications.StatusVerify").
 		Find(&companies).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get companies"})

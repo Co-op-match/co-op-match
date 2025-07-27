@@ -1,16 +1,17 @@
-// components/shared/VerifyEntityModal.tsx
-import React from "react";
+// components/shared/Verify_Modal.tsx
 import { Modal, Form, Card, Row, Col, Radio, Input } from "antd";
 import dayjs from "dayjs";
+import React from "react";
 import type { CompanyInterface } from "../../interfaces/Company";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
 import type { VerifyInterface } from "../../interfaces/Verify";
+import type { RoleInterface } from "../../interfaces/Role";
 import "./Verify.css";
 
 interface Props {
   open: boolean;
-  entityType: "company" | "lecturer";
   entity: CompanyInterface | AcademicStaffInterface;
+  role: RoleInterface;
   verifyForm: any;
   selectedVerifyStatus: string;
   setSelectedVerifyStatus: (value: string) => void;
@@ -21,8 +22,8 @@ interface Props {
 
 const Verify_Modal: React.FC<Props> = ({
   open,
-  entityType,
   entity,
+  role,
   verifyForm,
   selectedVerifyStatus,
   setSelectedVerifyStatus,
@@ -36,12 +37,16 @@ const Verify_Modal: React.FC<Props> = ({
     )[0];
 
   const getDisplayName = () => {
-    if (entityType === "company") {
-      return (entity as CompanyInterface).company_name;
-    } else {
-      return (entity as AcademicStaffInterface).User?.Email;
+    if (!role) return "-"; 
+    if (role.RoleName === "Company") {
+      return (entity as CompanyInterface).company_name ?? "-";
+    } else if (role.RoleName === "AcademicStaff") {
+      return (entity as AcademicStaffInterface).User?.Email ?? "-";
     }
+    return "-";
   };
+
+  if (!entity) return null;
 
   return (
     <Modal
@@ -71,18 +76,25 @@ const Verify_Modal: React.FC<Props> = ({
       cancelButtonProps={{ className: "verify-modal-cancel-button" }}
     >
       <Form form={verifyForm} layout="vertical">
-        <Card className="company-info-card" styles={{ body: { padding: "20px" } }}>
+        <Card
+          className="company-info-card"
+          styles={{ body: { padding: "20px" } }}
+        >
           <div className="verify-section-label">
-            {entityType === "company" ? "ข้อมูลบริษัท" : "ข้อมูลอาจารย์"}
+            ข้อมูล{role?.RoleNameTH ?? "ผู้ใช้"}
           </div>
-          <div style={{ fontSize: "18px", color: "#1677ff", fontWeight: "500" }}>
+          <div
+            style={{ fontSize: "18px", color: "#1677ff", fontWeight: "500" }}
+          >
             {getDisplayName()}
           </div>
         </Card>
 
         {!latest ? (
           <Card style={{ textAlign: "center", padding: "40px" }}>
-            <div style={{ fontSize: "16px", color: "#999" }}>ยังไม่มีการส่งคำขอรับรอง</div>
+            <div style={{ fontSize: "16px", color: "#999" }}>
+              ยังไม่มีการส่งคำขอรับรอง
+            </div>
           </Card>
         ) : (
           <>
@@ -106,11 +118,7 @@ const Verify_Modal: React.FC<Props> = ({
             </Row>
 
             <Card
-              title={
-                entityType === "company"
-                  ? "เอกสารการยืนยันของบริษัท"
-                  : "เอกสารการยืนยันของอาจารย์"
-              }
+              title={`เอกสารการยืนยันของ${role?.RoleNameTH ?? "ผู้ใช้"}`}
               style={{ borderRadius: "12px", marginBottom: "20px" }}
             >
               {latest.verification_document ? (
@@ -150,7 +158,9 @@ const Verify_Modal: React.FC<Props> = ({
                       onClick={() =>
                         !isReadOnlyStatus && setSelectedVerifyStatus("รับรอง")
                       }
-                      styles={{ body: { padding: "16px", textAlign: "center" } }}
+                      styles={{
+                        body: { padding: "16px", textAlign: "center" },
+                      }}
                     >
                       <Radio value="รับรอง" style={{ fontSize: "16px" }}>
                         รับรอง
@@ -170,12 +180,16 @@ const Verify_Modal: React.FC<Props> = ({
                       onClick={() =>
                         !isReadOnlyStatus && setSelectedVerifyStatus("ปฏิเสธ")
                       }
-                      styles={{ body: { padding: "16px", textAlign: "center" } }}
+                      styles={{
+                        body: { padding: "16px", textAlign: "center" },
+                      }}
                     >
                       <Radio
                         value="ปฏิเสธ"
                         className={
-                          selectedVerifyStatus === "ปฏิเสธ" ? "radio-danger" : undefined
+                          selectedVerifyStatus === "ปฏิเสธ"
+                            ? "radio-danger"
+                            : undefined
                         }
                         style={{ fontSize: "16px" }}
                       >
@@ -190,7 +204,9 @@ const Verify_Modal: React.FC<Props> = ({
                 <Form.Item
                   name="rejectReason"
                   label="เหตุผลในการปฏิเสธ"
-                  rules={[{ required: true, message: "กรุณาระบุเหตุผลในการปฏิเสธ" }]}
+                  rules={[
+                    { required: true, message: "กรุณาระบุเหตุผลในการปฏิเสธ" },
+                  ]}
                   style={{ marginTop: "20px" }}
                 >
                   <Input.TextArea
