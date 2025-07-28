@@ -9,6 +9,7 @@ type User struct {
 	Email           string `gorm:"unique;not null"`
 	Password        string `gorm:"not null"`
 	IsActive        bool   `json:"is_active"`
+	IsLoggedIn      bool   `json:"is_logged_in"` // ใช้ตรวจสอบสถานะออนไลน์
 	ConfirmPassword string `gorm:"-"`
 	RoleID          uint
 	Role            Role

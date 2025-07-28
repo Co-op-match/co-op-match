@@ -25,7 +25,6 @@ type SignInInput struct {
 }
 
 func SignUp(c *gin.Context) {
-
 	var input SignUpInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -41,9 +40,11 @@ func SignUp(c *gin.Context) {
 
 	hashedPassword, _ := config.HashPassword(input.Password)
 	user := entity.User{
-		Email:    input.Email,
-		Password: hashedPassword,
-		RoleID:   role.ID,
+		Email:      input.Email,
+		Password:   hashedPassword,
+		RoleID:     role.ID,
+		IsActive:   true,  // เปิดบัญชีทันที
+		IsLoggedIn: false, // ยังไม่ได้ล็อกอิน
 	}
 
 	if err := db.Create(&user).Error; err != nil {
@@ -67,21 +68,20 @@ func SignIn(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "กรุณาสมัครสมาชิกก่อนเข้าสู่ระบบ"})
 		return
 	}
+
 	if !user.IsActive {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "บัญชีนี้ยังไม่ได้เปิดใช้งาน"})
 		return
 	}
-	// ค้นหา user ด้วย Username ที่ผู้ใช้กรอกเข้ามา
-	//if err := config.DB().Raw("SELECT * FROM users WHERE email = ?", input.Email).Scan(&user).Error; err != nil {
-	//c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//return
-	//}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "อีเมลหรือรหัสผ่านไม่ถูกต้อง"})
 		return
 	}
+
+	// ตั้งสถานะออนไลน์
+	db.Model(&user).Update("is_logged_in", true)
 
 	jwtWrapper := services.JwtWrapper{
 		SecretKey:       "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
@@ -93,15 +93,38 @@ func SignIn(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Login successful",
 		"token_type": "Bearer",
 		"token":      signedToken,
 		"role":       user.Role.RoleName,
-		"roleId":     user.RoleID, // เพิ่ม roleId
-		"id":         user.ID,     // เพิ่ม user ID ถ้ายังไม่มี
+		"roleId":     user.RoleID,
+		"id":         user.ID,
 	})
+}
 
+func Logout(c *gin.Context) {
+	var request struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ข้อมูลไม่ถูกต้อง"})
+		return
+	}
+
+	db := config.DB()
+	var user entity.User
+	if err := db.Where("email = ?", request.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบัญชีผู้ใช้"})
+		return
+	}
+
+	// ตั้งสถานะออนไลน์เป็น false
+	db.Model(&user).Update("is_logged_in", false)
+
+	c.JSON(http.StatusOK, gin.H{"message": "ออกจากระบบเรียบร้อยแล้ว"})
 }
 
 func SimpleResetPassword(c *gin.Context) {
