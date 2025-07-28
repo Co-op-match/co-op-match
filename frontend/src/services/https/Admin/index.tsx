@@ -33,7 +33,7 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
 }
 
 export async function GetAllInternshipPostsByAdmin() {
-  return await axios
+  return await api
     .get(`${apiUrl}/get-all-post-by-admin`)
     .then((res) => res)
     .catch((e) => e.response);

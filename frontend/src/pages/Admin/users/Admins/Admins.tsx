@@ -33,6 +33,7 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import "../users.css";
+import "../../main.css";
 import type { AdminInterface } from "../../../../interfaces/Admin";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";

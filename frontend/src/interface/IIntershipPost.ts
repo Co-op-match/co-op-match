@@ -1,8 +1,4 @@
 import type { CompanyInterface } from "../interfaces/Company";
-import type { ApplicationInterface } from "./IApplication";
-import type { JobTypeInterface } from "./IJobType";
-import type { StatusPostInterface } from "./IStatusPost";
-
 export interface InternshipPostInterface {
   status_post: string;
   ID?: number;
@@ -32,6 +28,4 @@ export interface InternshipPostInterface {
   };
 
   Company?: CompanyInterface;
-  JobType?: JobTypeInterface;
-  Applications?: ApplicationInterface[];
 }

@@ -30,7 +30,7 @@ import AddApplication from './pages/Student/Application/AddApplication';
 import ApplicationHistory from "./pages/Student/Application/History";
 import ApplicationByCompany from "../src/pages/company/application/application";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
-import AdminPostManagement from "./pages/Admin/post/post";
+import AdminPostManagement from "./pages/Admin/post/Post";
 
 
 

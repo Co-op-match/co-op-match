@@ -14,11 +14,6 @@ const User_StatCard: React.FC<StatCardProps> = ({
   totalDeleted,
   tabKey,
 }) => {
-  // สีเดียวกันสำหรับทุกสถานะ
-  /*   const sharedStatusColor = {
-    bg: "linear-gradient(135deg, #d2f3ffff 0%, #9fd1fcff 100%)",
-    shadow: "rgba(79, 172, 254, 0.3)",
-  }; */
   const sharedStatusColor = {
     bg: "#e6f7ff", // พื้นหลังฟ้าอ่อน (Antd สี success light)
     border: "1px solid #91d5ff", // กรอบสีฟ้า

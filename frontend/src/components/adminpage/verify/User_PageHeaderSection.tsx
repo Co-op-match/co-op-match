@@ -8,7 +8,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import React from "react";
-import type { RoleInterface } from "../../interfaces/Role";
+import type { RoleInterface } from "../../../interfaces/Role";
 
 const { Title, Text } = Typography;
 

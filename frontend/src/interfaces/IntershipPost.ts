@@ -1,3 +1,6 @@
+import type { ApplicationInterface } from "../interface/IApplication";
+import type { StatusPostInterface } from "../interface/IStatusPost";
+
 export interface IntershipPostInterface {
   WorkModeID?: number;
   WorkDayID?: number;
@@ -37,6 +40,14 @@ export interface IntershipPostInterface {
   BenefitID?: number;
   Benefit?: {
     benefit: string;
-    };
+  };
 
+  StatusPost?: StatusPostInterface;
+  Applications?: ApplicationInterface[];
+
+  location_detail: string;
+  subdistrict: string;
+  district: string;
+  province: string;
+  
 }

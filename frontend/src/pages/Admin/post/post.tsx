@@ -5,197 +5,241 @@ import {
   Button,
   Space,
   Tag,
-  Modal,
-  Form,
   Input,
-  InputNumber,
-  Select,
-  DatePicker,
   message,
   Popconfirm,
   Row,
   Col,
-  Statistic,
   Typography,
-  Avatar,
   Tooltip,
-  Badge,
-  Divider,
   Layout,
+  Tabs,
+  Empty,
 } from "antd";
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
   EyeOutlined,
   FileTextOutlined,
   TeamOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import dayjs from "dayjs";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
-import { GetAllInternshipPosts } from "../../../services/https/Application";
-import type { InternshipPostInterface } from "../../../interface/IIntershipPost";
+import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 import { GetAllInternshipPostsByAdmin } from "../../../services/https/Admin";
-import "./post.css";
-import EditPostModal from "./EditPostModal";
+import type { ColumnsType } from "antd/es/table";
+import "./Post.css";
+import "../main.css";
+import { getStatusStyle } from "../../../components/adminpage/verify/statusStyle";
+import Post_StatCard from "../../../components/adminpage/verify/Post_StatCard";
+import { GetStatusPosts } from "../../../services/https/post";
+import type { StatusPostInterface } from "../../../interface/IStatusPost";
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
-const { Option } = Select;
 
-const ManagePostsPage: React.FC = () => {
-  const [posts, setPosts] = useState<InternshipPostInterface[]>([]);
+const ManagePostsPage = () => {
+  const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<IntershipPostInterface[]>(
+    []
+  );
+
+  const [status, setStatus] = useState<StatusPostInterface[]>([]);
+
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingPost, setEditingPost] =
-    useState<InternshipPostInterface | null>(null);
-
-  const [form] = Form.useForm();
+  const [actionLoading, setActionLoading] = useState<Record<number, boolean>>(
+    {}
+  );
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchText, setSearchText] = useState("");
 
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 6,
+    pageSize: 8,
   });
 
+  // โหลดโพสต์จาก API
   useEffect(() => {
+    const loadPosts = async () => {
+      setLoading(true);
+      try {
+        const res_post = await GetAllInternshipPostsByAdmin();
+        const res_status = await GetStatusPosts();
+        setPosts(res_post.data);
+        setStatus(res_status);
+      } catch (error) {
+        message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadPosts();
   }, []);
 
-  const loadPosts = async () => {
-    setLoading(true);
-    try {
-      const response = await GetAllInternshipPostsByAdmin();
-      console.log(response.data);
-      setPosts(response.data);
-    } catch (error) {
-      message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    filterPosts();
+  }, [posts, searchText, activeTab]);
+
+  const filterPosts = () => {
+    let filtered = posts;
+
+    // Filter by tab
+    switch (activeTab) {
+      case "pending":
+        filtered = posts.filter(
+          (post) => post.StatusPost?.status_post === "Pending Approval"
+        );
+        break;
+      case "approved":
+        filtered = posts.filter(
+          (post) => post.StatusPost?.status_post === "Open"
+        );
+        break;
+      case "rejected":
+        filtered = posts.filter(
+          (post) => post.StatusPost?.status_post === "Closed"
+        );
+        break;
+      default:
+        filtered = posts;
+    }
+
+    // Filter by search text
+    if (searchText) {
+      filtered = filtered.filter(
+        (post) =>
+          (post.post_name || "")
+            .toLowerCase()
+            .includes(searchText.toLowerCase()) ||
+          post.Company?.company_name
+            .toLowerCase()
+            .includes(searchText.toLowerCase()) ||
+          post.JobType?.job_type
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
+      );
+    }
+
+    setFilteredPosts(filtered);
+  };
+
+  const getCurrentTabCount = () => {
+    switch (activeTab) {
+      case "pending":
+        return pendingPosts;
+      case "approved":
+        return approvedPosts;
+      case "rejected":
+        return rejectedPosts;
+      case "all":
+      default:
+        return totalPosts;
     }
   };
 
-  const handleCreate = () => {
-    setEditingPost(null);
-    form.resetFields();
-    setModalVisible(true);
-  };
+  const handleApprove = async (post: IntershipPostInterface) => {
+    if (!post.ID) return;
 
-  const handleEdit = (post: InternshipPostInterface) => {
-    setEditingPost(post);
-    form.setFieldsValue({
-      PostName: post.post_name,
-      PostDescription: post.post_description,
-      Quantity: post.quantity,
-      MinGpa: post.min_gpa,
-      LocationDetail: post.location_detail,
-      Subdistrict: post.subdistrict,
-      District: post.district,
-      Province: post.province,
-    });
-    setModalVisible(true);
-  };
-
-  const handleDelete = async (id: number) => {
+    setActionLoading((prev) => ({ ...prev, [post.ID!]: true }));
     try {
-      // Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setPosts(posts.filter((post) => post.ID !== id));
-      message.success("ลบโพสต์สำเร็จ");
-    } catch (error) {
-      message.error("ไม่สามารถลบโพสต์ได้");
-    }
-  };
-
-  const handleSubmit = async (values: any) => {
-    try {
-      setLoading(true);
-      // Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      if (editingPost) {
-        // Update existing post
-        setPosts(
-          posts.map((post) =>
-            post.ID === editingPost.ID ? { ...post, ...values } : post
-          )
-        );
-        message.success("แก้ไขโพสต์สำเร็จ");
-      } else {
-        // Create new post
-        const newPost: InternshipPostInterface = {
-          ID: Date.now(),
-          ...values,
-          CreatedAt: new Date().toISOString(),
-          CompanyID: 1,
-          Company: {
-            CompanyName: "Tech Solutions Co., Ltd.",
-            Logo: "/api/placeholder/40/40",
-          },
-          JobType: { ID: 1, TypeName: "Development" },
-          Stipend: { ID: 1, Amount: 15000 },
-          WorkDay: { ID: 1, DayName: "จันทร์-ศุกร์" },
-          WorkMode: { ID: 1, ModeName: "ออนไซต์" },
-          StatusPost: { ID: 1, StatusName: "เปิดรับสมัคร" },
-          Applications: [],
-        };
-        setPosts([newPost, ...posts]);
-        message.success("สร้างโพสต์สำเร็จ");
-      }
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.ID === post.ID
+            ? {
+                ...p,
+                StatusPost: {
+                  ...p.StatusPost,
+                  status_post: "Open",
+                  status_post_th: "เปิดรับสมัคร",
+                },
+              }
+            : p
+        )
+      );
 
-      setModalVisible(false);
-      form.resetFields();
+      message.success(`อนุมัติโพสต์ "${post.post_name}" เรียบร้อยแล้ว`);
     } catch (error) {
-      message.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      message.error("ไม่สามารถอนุมัติโพสต์ได้");
     } finally {
-      setLoading(false);
+      setActionLoading((prev) => ({ ...prev, [post.ID!]: false }));
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "เปิดรับสมัคร":
-        return "success";
-      case "ปิดรับสมัคร":
-        return "default";
-      case "ยกเลิก":
-        return "error";
-      default:
-        return "processing";
+  const handleReject = async (post: IntershipPostInterface) => {
+    if (!post.ID) return;
+
+    setActionLoading((prev) => ({ ...prev, [post.ID!]: true }));
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.ID === post.ID
+            ? {
+                ...p,
+                StatusPost: {
+                  ...p.StatusPost,
+                  status_post: "Closed",
+                  status_post_th: "ปิดรับสมัคร",
+                },
+              }
+            : p
+        )
+      );
+
+      message.success(`ปฏิเสธโพสต์ "${post.post_name}" เรียบร้อยแล้ว`);
+    } catch (error) {
+      message.error("ไม่สามารถปฏิเสธโพสต์ได้");
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [post.ID!]: false }));
     }
   };
 
-  const getApplicationStatusColor = (status: string) => {
-    switch (status) {
-      case "ผ่านการพิจารณา":
-        return "success";
-      case "ไม่ผ่านการพิจารณา":
-        return "error";
-      case "รอพิจารณา":
-        return "processing";
-      default:
-        return "default";
-    }
-  };
-
-  const columns: ColumnsType<InternshipPostInterface> = [
+  const columns: ColumnsType<IntershipPostInterface> = [
     {
       title: "ชื่อตำแหน่ง",
       dataIndex: "post_name",
       key: "post_name",
-      width: 200,
-      render: (text: string, record: InternshipPostInterface) => (
-        <div>
-          <Text strong style={{ color: "#1890ff" }}>
+      width: 280,
+      render: (text: any, record: any) => (
+        <div style={{ padding: "8px 0" }}>
+          <div
+            style={{
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#1890ff", // Blue theme
+              marginBottom: "4px",
+              lineHeight: "1.4",
+            }}
+          >
             {text}
-          </Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: "14px" }}>
-            {record.JobType?.job_type}
-          </Text>
+          </div>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#666",
+              marginBottom: "2px",
+            }}
+          >
+            <TeamOutlined style={{ marginRight: "4px", color: "#1890ff" }} />
+            {record.Company?.company_name || "ไม่ระบุบริษัท"}
+          </div>
+          <Tag
+            style={{
+              backgroundColor: "#e6f7ff",
+              border: "1px solid #91d5ff",
+              color: "#096dd9",
+              fontSize: "11px",
+            }}
+          >
+            {record.JobType?.job_type || "ไม่ระบุประเภทงาน"}
+          </Tag>
         </div>
       ),
     },
@@ -203,249 +247,451 @@ const ManagePostsPage: React.FC = () => {
       title: "รายละเอียด",
       dataIndex: "post_description",
       key: "post_description",
-      width: 250,
-      render: (text: string) => (
-        <Tooltip title={text}>
-          <Text ellipsis style={{ maxWidth: 200, display: "block" }}>
-            {text}
+      width: 300,
+      render: (text: any) => (
+        <div
+          style={{
+            maxWidth: "280px",
+            lineHeight: "1.5",
+            color: "#595959",
+          }}
+        >
+          <Text ellipsis={{ tooltip: text }} style={{ fontSize: "13px" }}>
+            {text || "ไม่มีรายละเอียด"}
           </Text>
-        </Tooltip>
+        </div>
       ),
     },
     {
-      title: "จำนวนที่รับ",
-      dataIndex: "quantity",
-      key: "quantity",
-      width: 100,
+      title: "จำนวน/GPA",
+      key: "quantity_gpa",
+      width: 120,
       align: "center",
-      render: (quantity: number) => (
-        <Badge count={quantity} showZero color="#1890ff" />
+      render: (record: IntershipPostInterface) => (
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              backgroundColor: "#1890ff", // Blue theme
+              color: "white",
+              borderRadius: "50%",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "14px",
+              fontWeight: "600",
+              margin: "0 auto 8px",
+            }}
+          >
+            {record.quantity || 0}
+          </div>
+          <Tag color="blue" style={{ fontSize: "11px" }}>
+            GPA
+            {record.min_gpa !== undefined
+              ? Number(record.min_gpa).toFixed(1)
+              : "-"}
+          </Tag>
+        </div>
       ),
-    },
-    {
-      title: "GPA ขั้นต่ำ",
-      dataIndex: "min_gpa",
-      key: "min_gpa",
-      width: 100,
-      align: "center",
-      render: (gpa: any) =>
-        gpa !== undefined && !isNaN(Number(gpa)) ? (
-          <Tag color="blue">{Number(gpa).toFixed(1)}</Tag>
-        ) : (
-          <Tag color="default">-</Tag>
-        ),
     },
     {
       title: "สถานที่",
       key: "location",
-      width: 180,
-      render: (_, record: InternshipPostInterface) => {
+      width: 200,
+      render: (record: IntershipPostInterface) => {
         const parts = [
           record.location_detail?.trim(),
           record.subdistrict?.trim(),
           record.district?.trim(),
           record.province?.trim(),
-        ].filter(Boolean); // ตัด field ที่เป็น "" หรือ undefined ออก
+        ].filter(Boolean);
 
-        const locationText = parts.length > 0 ? parts.join(", ") : "-";
+        const locationText =
+          parts.length > 0 ? parts.join(", ") : "ไม่ระบุสถานที่";
 
-        return <Text style={{ fontSize: "14px" }}>{locationText}</Text>;
+        return (
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#595959",
+              lineHeight: "1.4",
+            }}
+          >
+            {locationText}
+          </div>
+        );
       },
     },
     {
       title: "ผู้สมัคร",
       key: "Applications",
-      width: 100,
+      width: 90,
       align: "center",
-      render: (_, record: InternshipPostInterface) => (
-        <div>
-          <TeamOutlined style={{ color: "#1890ff", marginRight: 4 }} />
-          <Text strong>{record.Applications?.length}</Text>
+      render: (record) => (
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "15px",
+              fontWeight: 600,
+              color: "#1677ff",
+            }}
+          >
+            {record.Applications?.length || 0}
+          </div>
+          <div style={{ fontSize: "12px", color: "#888" }}>ใบสมัคร</div>
         </div>
       ),
     },
     {
       title: "สถานะ",
-      dataIndex: ["StatusPost", "status_post_th"],
       key: "status",
-      width: 120,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
+      width: 160,
+      align: "center",
+      render: (record) => {
+        const statusTh = record.StatusPost?.status_post_th || "ไม่ระบุสถานะ";
+        const style = getStatusStyle(statusTh);
+
+        const iconMap: Record<string, React.ReactNode> = {
+          เปิดรับสมัคร: <CheckCircleOutlined style={{ marginRight: 6 }} />,
+          ปิดรับสมัคร: <CloseOutlined style={{ marginRight: 6 }} />,
+          รอตรวจสอบ: <ClockCircleOutlined style={{ marginRight: 6 }} />,
+        };
+
+        const icon = iconMap[statusTh] || (
+          <ExclamationCircleOutlined style={{ marginRight: 6 }} />
+        );
+
+        return (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "6px 16px",
+              borderRadius: "999px",
+              background: style.bgColor,
+              color: style.textColor,
+              fontWeight: 600,
+              fontSize: "13px",
+              border: style.border,
+              boxShadow: style.boxShadow,
+            }}
+          >
+            {icon}
+            {statusTh}
+          </div>
+        );
+      },
     },
     {
       title: "วันที่สร้าง",
       dataIndex: "CreatedAt",
       key: "CreatedAt",
       width: 120,
-      render: (date: string) => (
-        <Text style={{ fontSize: "14px" }}>
-          {dayjs(date).format("DD/MM/YYYY")}
+      align: "center",
+      render: (date: any) => (
+        <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
+          {date ? new Date(date).toLocaleDateString("th-TH") : "-"}
         </Text>
       ),
     },
     {
       title: "การดำเนินการ",
       key: "actions",
-      width: 150,
+      width: 180,
       fixed: "right",
-      render: (_, record: InternshipPostInterface) => (
-        <Space size="small">
-          <Tooltip title="ดูรายละเอียด">
-            <Button
-              type="text"
-              icon={<EyeOutlined />}
-              size="small"
-              style={{ color: "#1890ff" }}
-            />
-          </Tooltip>
-          <Tooltip title="แก้ไข">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleEdit(record)}
-              style={{ color: "#52c41a" }}
-            />
-          </Tooltip>
-          <Tooltip title="ลบ">
-            <Popconfirm
-              title="คุณแน่ใจว่าต้องการลบโพสต์นี้?"
-              onConfirm={() => handleDelete(record.ID || 0)}
-              okText="ลบ"
-              cancelText="ยกเลิก"
-            >
+      align: "center",
+      render: (record: IntershipPostInterface) => {
+        const isPending = record.StatusPost?.status_post === "Pending Approval";
+        const isApproved = record.StatusPost?.status_post === "Open";
+        const isRejected = record.StatusPost?.status_post === "Closed";
+        const isLoading = actionLoading[record.ID || 0];
+
+        return (
+          <div
+            style={{ display: "flex", gap: "6px", justifyContent: "center" }}
+          >
+            <Tooltip title="ดูรายละเอียด">
               <Button
                 type="text"
-                icon={<DeleteOutlined />}
+                icon={<EyeOutlined />}
                 size="small"
-                danger
+                style={{
+                  color: "#1890ff", // Blue theme
+                  backgroundColor: "#e6f7ff",
+                  border: "1px solid #91d5ff",
+                  borderRadius: "6px",
+                }}
               />
-            </Popconfirm>
-          </Tooltip>
-        </Space>
-      ),
+            </Tooltip>
+
+            {isPending && (
+              <>
+                <Tooltip title="อนุมัติโพสต์">
+                  <Popconfirm
+                    title="คุณต้องการอนุมัติโพสต์นี้หรือไม่?"
+                    onConfirm={() => handleApprove(record)}
+                    okText="อนุมัติ"
+                    cancelText="ยกเลิก"
+                    okButtonProps={{
+                      style: {
+                        background: "#52c41a",
+                        borderColor: "#52c41a",
+                        fontWeight: "500",
+                      },
+                    }}
+                  >
+                    <Button
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      size="small"
+                      loading={isLoading}
+                      style={{
+                        backgroundColor: "#52c41a",
+                        borderColor: "#52c41a",
+                        borderRadius: "6px",
+                        fontWeight: "500",
+                        boxShadow: "0 2px 4px rgba(82, 196, 26, 0.3)",
+                      }}
+                    >
+                      อนุมัติ
+                    </Button>
+                  </Popconfirm>
+                </Tooltip>
+
+                <Tooltip title="ปฏิเสธโพสต์">
+                  <Popconfirm
+                    title="คุณต้องการปฏิเสธโพสต์นี้หรือไม่?"
+                    onConfirm={() => handleReject(record)}
+                    okText="ปฏิเสธ"
+                    cancelText="ยกเลิก"
+                    okButtonProps={{
+                      danger: true,
+                      style: { fontWeight: "500" },
+                    }}
+                  >
+                    <Button
+                      danger
+                      icon={<CloseOutlined />}
+                      size="small"
+                      loading={isLoading}
+                      style={{
+                        borderRadius: "6px",
+                        fontWeight: "500",
+                        boxShadow: "0 2px 4px rgba(255, 77, 79, 0.3)",
+                      }}
+                    >
+                      ปฏิเสธ
+                    </Button>
+                  </Popconfirm>
+                </Tooltip>
+              </>
+            )}
+
+            {isApproved && (
+              <Tag
+                icon={<CheckCircleOutlined />}
+                color="success"
+                style={{
+                  borderRadius: "6px",
+                  padding: "4px 8px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  border: "none",
+                }}
+              >
+                อนุมัติแล้ว
+              </Tag>
+            )}
+
+            {isRejected && (
+              <Tag
+                icon={<CloseOutlined />}
+                color="error"
+                style={{
+                  borderRadius: "6px",
+                  padding: "4px 8px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  border: "none",
+                }}
+              >
+                ปฏิเสธแล้ว
+              </Tag>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
   // Calculate statistics
   const totalPosts = posts.length;
-
-  const activePosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "เปิดรับสมัคร"
+  const pendingPosts = posts.filter(
+    (p) => p.StatusPost?.status_post === "Pending Approval"
+  ).length;
+  const approvedPosts = posts.filter(
+    (p) => p.StatusPost?.status_post === "Open"
+  ).length;
+  const rejectedPosts = posts.filter(
+    (p) => p.StatusPost?.status_post === "Closed"
   ).length;
 
-  const totalApplications = posts.reduce(
-    (sum, post) => sum + (post.Applications?.length || 0),
-    0
-  );
-
-  const pendingApplications = posts.reduce(
-    (sum, post) =>
-      sum +
-      (post.Applications?.filter((app) => app.status === "กำลังพิจารณา")
-        .length || 0),
-    0
-  );
-
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+    <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        {/* Header */}
         <div className="admin-header-box">
           <Row justify="space-between" align="middle">
             <Col>
-              <Space direction="vertical" size={0}>
-                <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-                  <span style={{ marginRight: 12 }}>
-                    <FileTextOutlined />
-                  </span>
-                  การจัดการโพสต์ฝึกงาน
-                </Title>
-                <Text type="secondary">
-                  จัดการและติดตามโพสต์ฝึกงานของบริษัท
-                </Text>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "16px" }}
+              >
+                <div
+                  style={{
+                    backgroundColor: "#e6f4ff",
+                    borderRadius: "12px",
+                    padding: "12px",
+                  }}
+                >
+                  <FileTextOutlined
+                    style={{ fontSize: "32px", color: "#1677ff" }}
+                  />
+                </div>
+                <div>
+                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>
+                    การจัดการโพสต์ฝึกงาน
+                  </Title>
+                  <Text style={{ color: "#555", fontSize: "16px" }}>
+                    อนุมัติและปฏิเสธโพสต์ฝึกงานจากบริษัทต่างๆ
+                  </Text>
+                </div>
+              </div>
+            </Col>
+            <Col>
+              <Space>
+                <Button
+                  icon={<ReloadOutlined />}
+                  style={{
+                    backgroundColor: "#e6f4ff",
+                    border: "1px solid #91caff",
+                    color: "#1677ff",
+                    borderRadius: "8px",
+                  }}
+                  loading={loading}
+                  onClick={() => setLoading(true)}
+                >
+                  รีเฟรช
+                </Button>
+                <Button
+                  icon={<DownloadOutlined />}
+                  style={{
+                    backgroundColor: "#e6f4ff",
+                    border: "1px solid #91caff",
+                    color: "#1677ff",
+                    borderRadius: "8px",
+                  }}
+                >
+                  ส่งออกข้อมูล
+                </Button>
               </Space>
             </Col>
           </Row>
         </div>
 
-        {/* Statistics Cards */}
-        <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="โพสต์ทั้งหมด"
-                value={totalPosts}
-                prefix={<FileTextOutlined style={{ color: "#1890ff" }} />}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="โพสต์ที่เปิดรับ"
-                value={activePosts}
-                prefix={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
-                valueStyle={{ color: "#52c41a" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="ผู้สมัครทั้งหมด"
-                value={totalApplications}
-                prefix={<TeamOutlined style={{ color: "#722ed1" }} />}
-                valueStyle={{ color: "#722ed1" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="รอพิจารณา"
-                value={pendingApplications}
-                prefix={<ClockCircleOutlined style={{ color: "#fa8c16" }} />}
-                valueStyle={{ color: "#fa8c16" }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <Post_StatCard
+          statusList={status}
+          totalPosts={totalPosts}
+          pendingPosts={pendingPosts}
+          approvedPosts={approvedPosts}
+          rejectedPosts={rejectedPosts}
+        />
 
         {/* Main Content */}
         <Card
-          title={
-            <Space>
-              <FileTextOutlined style={{ color: "#1890ff" }} />
-              <span>รายการโพสต์ฝึกงาน</span>
-            </Space>
-          }
-          extra={
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-              style={{
-                background: "linear-gradient(135deg, #1890ff 0%, #36cfc9 100%)",
-                border: "none",
-              }}
-            >
-              สร้างโพสต์ใหม่
-            </Button>
-          }
           style={{
-            boxShadow: "0 4px 14px rgba(0,0,0,0.05)",
-            borderRadius: "8px",
+            borderRadius: "16px",
+            border: "none",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+            background: "white",
           }}
         >
+          {/* Search and Filters */}
+          <div style={{ marginBottom: "24px" }}>
+            <Row justify="space-between" align="middle">
+              <Col xs={24} md={12}>
+                <Input
+                  placeholder="ค้นหาตำแหน่งงาน, บริษัท, หรือประเภทงาน..."
+                  prefix={<SearchOutlined style={{ color: "#1890ff" }} />}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  style={{
+                    borderRadius: "8px",
+                    border: "2px solid #e6f7ff", // Blue border
+                    fontSize: "14px",
+                  }}
+                  size="large"
+                />
+              </Col>
+            </Row>
+          </div>
+
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            size="large"
+            items={[
+              {
+                key: "all",
+                label: (
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    <FileTextOutlined /> ทั้งหมด
+                  </span>
+                ),
+              },
+              {
+                key: "pending",
+                label: (
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    <ClockCircleOutlined style={{ color: "#faad14" }} />{" "}
+                    รอตรวจสอบ
+                  </span>
+                ),
+              },
+              {
+                key: "approved",
+                label: (
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    <CheckCircleOutlined style={{ color: "#52c41a" }} />{" "}
+                    อนุมัติแล้ว
+                  </span>
+                ),
+              },
+              {
+                key: "rejected",
+                label: (
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    <CloseOutlined style={{ color: "#ff4d4f" }} /> ปฏิเสธแล้ว
+                  </span>
+                ),
+              },
+            ]}
+          />
+
+          <Text
+            type="secondary"
+            style={{ fontSize: "14px", marginTop: "10px" }}
+          >
+            แสดง {getCurrentTabCount()} รายการ
+          </Text>
+
           <Table
             columns={columns}
-            dataSource={posts}
+            dataSource={filteredPosts}
             rowKey="ID"
             loading={loading}
+            className="adminpage-table"
             pagination={{
               ...pagination,
               showSizeChanger: true,
@@ -455,20 +701,30 @@ const ManagePostsPage: React.FC = () => {
               onChange: (page, pageSize) => {
                 setPagination({ current: page, pageSize });
               },
+              style: { marginTop: "24px" },
             }}
-            scroll={{ x: 1200 }}
-            style={{ marginTop: "16px" }}
+            scroll={{ x: 1400 }}
+            style={{
+              borderRadius: "12px",
+              overflow: "hidden",
+            }}
+            rowClassName={(record, index) => {
+              const status = record.StatusPost?.status_post;
+              let baseClass = index % 2 === 0 ? "even-row" : "odd-row";
+              if (status === "Pending Approval")
+                baseClass += " pending-highlight";
+              return baseClass;
+            }}
+            locale={{
+              emptyText: (
+                <Empty
+                  description="ไม่พบข้อมูลโพสต์"
+                  style={{ padding: "40px" }}
+                />
+              ),
+            }}
           />
         </Card>
-
-        <EditPostModal
-          modalVisible={modalVisible}
-          setModalVisible={setModalVisible}
-          form={form}
-          handleSubmit={handleSubmit}
-          editingPost={editingPost}
-          loading={loading}
-        />
       </Layout>
     </Layout>
   );

@@ -29,6 +29,7 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import "../users.css";
+import "../../main.css";
 import type { StudentInterface } from "../../../../interfaces/Student";
 import {
   GetAllActiveStudents,

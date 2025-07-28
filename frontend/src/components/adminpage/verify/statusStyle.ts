@@ -8,6 +8,7 @@ export interface StatusStyle {
 export const getStatusStyle = (status: string): StatusStyle => {
   switch (status) {
     case "รับรอง":
+    case "เปิดรับสมัคร":
       return {
         bgColor: "linear-gradient(135deg, #52c41a, #73d13d)",
         textColor: "#fff",
@@ -21,6 +22,7 @@ export const getStatusStyle = (status: string): StatusStyle => {
         border: "none",
         boxShadow: "0 2px 8px rgba(255, 77, 79, 0.3)",
       };
+    case "รอตรวจสอบ":
     case "รอรับรอง":
       return {
         bgColor: "linear-gradient(135deg, #faad14, #ffc53d)",

@@ -24,6 +24,7 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import "../users.css";
+import "../../main.css";
 import AdminHeader from "../../../Component/AdminCoopMatchHeaderDefault";
 import {
   GetAllStatusVerify,

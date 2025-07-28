@@ -37,6 +37,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { StatusVerifyInterface } from "../../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
+import "../../main.css";
 import EditCompanyModal from "./EditCompanyModal";
 import { DeleteCompany, SendEmailVerify } from "../../../../services/https";
 import User_StatCard from "../../../../components/adminpage/verify/User_StatCard";
