@@ -125,7 +125,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "s5@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "B6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
 
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},

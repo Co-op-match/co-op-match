@@ -32,6 +32,7 @@ import {
     GetCompanyByUserID,
     UpdateApplicationStatus,
 } from "../../../services/https/Application/index";
+import { SendEmailinterview } from "../../../services/https";
 
 const { Title, Text } = Typography;
 
@@ -225,7 +226,7 @@ const InterviewDashboard: React.FC = () => {
     
             const payload = {
                 AppointmentDate: datetime.toISOString(),
-                Status: "รอนัดสัมภาษณ์",
+                Status: "นัดสัมภาษณ์แล้ว",
                 Mode: values.mode,
                 Details: values.note || "",
                 CompanyID: Number(companyId),
@@ -237,13 +238,22 @@ const InterviewDashboard: React.FC = () => {
             if (res.status === 201) {
                 const updateRes = await UpdateApplicationStatus(selectedApplicant.ID, "นัดสัมภาษณ์แล้ว");
     
-                if (updateRes.status === 200) {
-                    message.success("ส่งนัดหมายและอัปเดตสถานะเรียบร้อยแล้ว");
+                if (updateRes.status === 200 || updateRes.status === 201) {
+                    // ✅ เรียกส่งอีเมล
+                    const emailRes = await SendEmailinterview(selectedApplicant.StudentID);
+    
+                    if (emailRes.status === 200) {
+                        message.success("ส่งนัดหมาย อัปเดตสถานะ และส่งอีเมลเรียบร้อยแล้ว");
+                    } else {
+                        message.warning("ส่งนัดหมายสำเร็จ และอัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ");
+                    }
+    
                     setIsModalOpen(false);
                     form.resetFields();
-                    
-                    // Remove the scheduled applicant from the list
-                    setApplications(prev => prev.filter(app => app.ID !== selectedApplicant.ID));
+    
+                    setApplications(prev =>
+                        prev.filter(app => app.ID !== selectedApplicant.ID)
+                    );
                 } else {
                     message.warning("สร้างนัดหมายสำเร็จ แต่ไม่สามารถอัปเดตสถานะใบสมัครได้");
                 }
