@@ -52,6 +52,10 @@ func main() {
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
 
+	r.POST("/interview_appointments", controller.CreateInterviewAppointment)
+	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
+	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
+
 	r.Static("/public", "./public")
 
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()

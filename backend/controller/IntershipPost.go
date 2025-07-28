@@ -10,7 +10,6 @@ import (
 )
 
 // POST /internship_posts - Create a new internship post entry
-// POST /internship_posts - Create a new internship post entry
 func CreateInternshipPost(c *gin.Context) {
 	var internshipPost entity.IntershipPost
 

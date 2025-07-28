@@ -88,6 +88,7 @@ func CreateApplication(c *gin.Context) {
 		TranscriptUrl:   "/" + transcriptPath,
 		SubmitAt:        submitAt,
 		IntershipPostID: internshipPost.ID,
+		StudentID:       student.ID,
 	}
 	if err := config.DB().Create(&application).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create application"})
