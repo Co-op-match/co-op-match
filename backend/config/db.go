@@ -87,10 +87,10 @@ func SetupDatabase() {
 func createSeedData(db *gorm.DB) {
 	// สร้าง Role
 	roles := []entity.Role{
-		{RoleName: "Admin"},
-		{RoleName: "Company"},
-		{RoleName: "Student"},
-		{RoleName: "AcademicStaff"},
+		{RoleName: "Admin", RoleNameTH: "แอดมิน"},
+		{RoleName: "Company", RoleNameTH: "บริษัท"},
+		{RoleName: "Student", RoleNameTH: "นักเรียน"},
+		{RoleName: "AcademicStaff", RoleNameTH: "อาจารย์"},
 	}
 	for _, role := range roles {
 		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})
@@ -98,8 +98,8 @@ func createSeedData(db *gorm.DB) {
 
 	// สร้าง Gender
 	genders := []entity.Gender{
-		{Name: "Male"},
-		{Name: "Female"},
+		{Name: "Male", NameTH: "ชาย"},
+		{Name: "Female", NameTH: "หญิง"},
 	}
 	for _, gender := range genders {
 		db.FirstOrCreate(&gender, entity.Gender{Name: gender.Name})
@@ -384,9 +384,9 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Status Posts
 	StatusPosts := []entity.StatusPost{
-		{StatusPost: "Open"},
-		{StatusPost: "Closed"},
-		{StatusPost: "Pending Approval"},
+		{StatusPost: "Open", StatusPostTH: "เปิดรับสมัคร"},
+		{StatusPost: "Closed", StatusPostTH: "ปิดรับสมัคร"},
+		{StatusPost: "Pending Approval", StatusPostTH: "รอตรวจสอบ"},
 	}
 	for _, pkg := range StatusPosts {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
