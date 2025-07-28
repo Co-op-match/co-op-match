@@ -108,15 +108,16 @@ import (
 // }
 
 func SendInterviewEmail(c *gin.Context) {
-	studentID := c.Param("id")
+	studentID := c.Param("student_id")
+	companyID := c.Param("company_id")
 
 	var appointment entity.InterviewAppointment
 	if err := config.DB().
 		Preload("Company.User").
 		Preload("Student.User").
-		Where("student_id = ?", studentID).
+		Where("student_id = ? AND company_id = ?", studentID, companyID).
 		First(&appointment).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนัดสัมภาษณ์"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนัดสัมภาษณ์ที่ตรงกับ student_id และ company_id"})
 		return
 	}
 
@@ -138,28 +139,29 @@ func SendInterviewEmail(c *gin.Context) {
 		return
 	}
 
-c.JSON(http.StatusOK, gin.H{
-	"message": "ส่งอีเมลแจ้งเตือนนัดสัมภาษณ์เรียบร้อยแล้ว",
-	"appointment": gin.H{
-		"id":              appointment.ID,
-		"appointment_date": appointment.AppointmentDate.Format("2006-01-02 15:04"),
-		"status":          appointment.Status,
-		"mode":            appointment.Mode,
-		"details":         appointment.Details,
-	},
-	"student": gin.H{
-		"id":         appointment.Student.ID,
-		"first_name": appointment.Student.FirstName,
-		"last_name":  appointment.Student.LastName,
-		"email":      appointment.Student.User.Email,
-	},
-	"company": gin.H{
-		"id":           appointment.Company.ID,
-		"company_name": appointment.Company.CompanyName,
-		"email":        appointment.Company.User.Email,
-	},
-})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ส่งอีเมลแจ้งเตือนนัดสัมภาษณ์เรียบร้อยแล้ว",
+		"appointment": gin.H{
+			"id":               appointment.ID,
+			"appointment_date": appointment.AppointmentDate.Format("2006-01-02 15:04"),
+			"status":           appointment.Status,
+			"mode":             appointment.Mode,
+			"details":          appointment.Details,
+		},
+		"student": gin.H{
+			"id":         appointment.Student.ID,
+			"first_name": appointment.Student.FirstName,
+			"last_name":  appointment.Student.LastName,
+			"email":      appointment.Student.User.Email,
+		},
+		"company": gin.H{
+			"id":           appointment.Company.ID,
+			"company_name": appointment.Company.CompanyName,
+			"email":        appointment.Company.User.Email,
+		},
+	})
 }
+
 
 // ฟังก์ชันย่อย: สร้างเนื้อหาอีเมลจาก template
 func buildEmailBody(appointment entity.InterviewAppointment, logoBase64 string) (string, error) {

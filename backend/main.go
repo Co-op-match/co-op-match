@@ -115,7 +115,7 @@ func main() {
 		}
 		notificationGroup := router.Group("/notification")
 		{
-			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail) // <-- ครอบคลุมทั้งสร้าง notification + ส่ง email ในตัว
+			notificationGroup.POST("/interview/send-email/:student_id/:company_id", controller.SendInterviewEmail)
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
