@@ -19,8 +19,7 @@ import {
 } from '../../../../services/https';
 
 import './AddCompanyForm.css';
-import CompanyHeaderDefault from '../../../component/CompanyHeaderDefault';
-import StepCompanyContact1 from './CompanyFormSteps/StepCompanyContact copy';
+import CompanyHeaderDefault from '../../../component/CoopMatchHeaderDefault';
 
 const { Content } = Layout;
 
@@ -99,6 +98,7 @@ const handleBack = () => {
       subdistrict_id: Number(finalData.subdistrict_id),
       postcode_id: Number(finalData.post_code),
     };
+
     const addressRes = await CreateAddress(roleId, userId, addressPayload);
     const addressId = addressRes?.data?.address?.ID;
     console.log('add',addressId)

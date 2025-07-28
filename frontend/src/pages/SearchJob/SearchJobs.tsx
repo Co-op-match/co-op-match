@@ -20,7 +20,7 @@ import {
   UserOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
+import CoopMatchHeaderDefault from '../component/Coop_MatchHeader';
 import type { BenefitInterface } from '../../interfaces/Benefit';
 import type { JobTypeInterface } from '../../interfaces/JobType';
 import type { StipendInterface } from '../../interfaces/Stipend';

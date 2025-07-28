@@ -18,7 +18,7 @@ interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
 }
 
-const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
+const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
@@ -113,4 +113,4 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
   );
 };
 
-export default CoopMatchHeaderDefault;
+export default CoopMatchHeader;

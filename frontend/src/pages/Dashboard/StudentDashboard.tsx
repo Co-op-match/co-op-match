@@ -6,7 +6,7 @@ import {
 } from 'antd';
 import { useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate
 //import CoopMatchHeaderDefault from '../component/CoopMatchHeader';
-import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
+import CoopMatchHeaderDefault from '../component/Coop_MatchHeader';
 import { UserContext } from '../../components/UserContext';
 const { Header, Content } = Layout;
 

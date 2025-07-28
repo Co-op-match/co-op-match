@@ -1,25 +1,58 @@
 .student-layout {
   display: flex;
-  padding: 30px;             /* กำหนดช่องว่างภายใน 20px รอบๆ เนื้อหา */
-  background: #E3F2FD;       /* กำหนดสีพื้นหลังเป็นสีฟ้าอ่อน */
-  min-height: 100vh;         /* กำหนดความสูงขั้นต่ำเท่ากับความสูงของหน้าจอ */
-  min-width: 100vw;        
+  flex-direction: column;
+  padding: 30px;
+  min-height: 100vh;
+  min-width: 100vw;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 1) 0%, rgba(207, 234, 250, 1) 50%, rgba(159, 218, 252, 1) 100%);
 }
+
+.student-profile-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.student-profile-text {
+  font-weight: 700;
+  font-size: 28px;
+  color: #0d47a1;
+  white-space: nowrap;
+  margin-right: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.student-profile-line {
+  flex: 1;
+  height: 3px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
 .student-profile-container {
   display: flex;
   gap: 40px;
   align-items: stretch;
+  padding: 24px;
+  flex-wrap: wrap;
 }
 
 .student-profile-left {
   text-align: center;
-  padding: 50px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 300px;
 }
 
 .student-avatar-container {
   position: relative;
   display: inline-block;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .student-avatar-edit-icon {
@@ -35,13 +68,13 @@
   justify-content: center;
   color: #fff;
   box-shadow: 0 0 0 2px white;
+  cursor: pointer;
 }
-
 
 .student-name {
   font-size: 20px;
   font-weight: bold;
-  color: #111;
+  color: #0d47a1;
   margin-bottom: 6px;
 }
 
@@ -62,60 +95,85 @@
   flex: 1;
 }
 
-.student-job-calendar-section {
-  display: flex;
-  gap: 20px;
-}
-
-.student-calendar-card {
-  width: 400px;
-  text-align: center;
-  margin-top: 10px;
-}
-
-.studdent-divider {
+.student-divider {
   height: 1px;
-  background-color: #D9D9D9;
+  background-color: #d9d9d9;
   border: none;
-  border-radius: 4px; /* มุมโค้งเล็กน้อย */
+  border-radius: 4px;
   margin: 16px 0;
-  filter: blur(2px);
+  filter: blur(0.5px);
 }
 
-.studdent-vertical-divider {
+.student-vertical-divider {
   width: 1px;
-  height: auto; /* จะยืดตาม container */
-  background-color: #D9D9D9;
+  background-color: #d9d9d9;
   border: none;
   border-radius: 4px;
   margin: 0 16px;
-  filter: blur(1px); /* เบลอเล็กน้อยพอเหมาะ */
-  align-self: stretch; /* ใช้กับ flex ให้เต็มความสูง */
+  align-self: stretch;
+  filter: blur(0.5px);
 }
 
-.student-divider-section {
-  margin-top: 10px;
+.student-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08);
+  padding: 20px;
+  width: 100%;
+  margin-top: 16px;
 }
-.student-profile-title {
+
+.student-profile-card {
+  padding: 16px;
+  max-width: 1950px;
+  margin: 0 auto 30px auto; /* 👈 margin-bottom 30px */
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+@media (max-width: 768px) {
+  .student-profile-card {
+    padding: 12px;
+    max-width: 100%;
+  }
+
+  .student-profile-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .student-profile-left {
+    max-width: 100%;
+  }
+
+  .student-profile-details .ant-descriptions-item {
+    flex: 1 1 100% !important;
+  }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.edit-profile-button {
+  background-color: #1890ff;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 6px;
+  transition: background-color 0.3s;
 }
 
-.student-profile-text {
-  font-weight: bold;
-  font-size: 24px;
-  white-space: nowrap;
-  margin-right: 12px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  text-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
+.edit-profile-button:hover {
+  background-color: #40a9ff;
 }
 
-.student-profile-line {
-  flex: 1;
-  height: 2px;
-  margin-top: 9px;
-  background-color: rgba(153, 153, 153, 0.6);
-  border-radius: 2px;
-}
