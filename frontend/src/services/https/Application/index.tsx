@@ -115,6 +115,64 @@ async function UpdateApplicationStatus(id: number, status: string, companyNote?:
 }
 
 
+// POST นัดสัมภาษณ์ใหม่
+export async function CreateInterviewAppointment(data: any) {
+  return await axios
+    .post(`${apiUrl}/interview_appointments`, data, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// PUT แก้ไข
+export async function UpdateInterviewAppointment(id: number, data: any) {
+  return await axios
+    .put(`${apiUrl}/interview_appointments/${id}`, data, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// GET ทั้งหมด
+export async function GetAllInterviewAppointments() {
+  return await axios
+    .get(`${apiUrl}/interview_appointments`, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// GET รายตัว
+export async function GetInterviewAppointmentById(id: number) {
+  return await axios
+    .get(`${apiUrl}/interview_appointments/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// DELETE รายตัว
+export async function DeleteInterviewAppointment(id: number) {
+  return await axios
+    .delete(`${apiUrl}/interview_appointments/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+async function GetApplicationsByCompanyID(companyId: number) {
+  return await axios
+    .get(`${apiUrl}/applications/company/${companyId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+export async function GetCompanyByUserID(userId: number) {
+  return await axios
+    .get(`${apiUrl}/company/user/${userId}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ GetCompanyByUserID error:", e);
+      return null;
+    });
+}
+
+
 
 
 export {
@@ -130,4 +188,5 @@ export {
   GetStudentByUserId,
   GetApplicationsByPostId,
   UpdateApplicationStatus,
+  GetApplicationsByCompanyID,
 };

@@ -117,32 +117,38 @@ func GetInterviewAppointmentById(c *gin.Context) {
 	c.JSON(http.StatusOK, appointment)
 }
 
-// PUT /interview_appointments/:id - Update a specific interview appointment entry
+// PUT /interview_appointments/:id
 func UpdateInterviewAppointment(c *gin.Context) {
 	appointmentID := c.Param("id")
-	var appointment entity.InterviewAppointment
+	var existing entity.InterviewAppointment
+	var input entity.InterviewAppointment
 
 	db := config.DB()
 
-	// Find the existing interview appointment entry
-	if err := db.First(&appointment, appointmentID).Error; err != nil {
+	// หา record เดิมก่อน
+	if err := db.First(&existing, appointmentID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Interview appointment not found"})
 		return
 	}
 
-	// Bind the incoming JSON data to the InterviewAppointment struct
-	if err := c.ShouldBindJSON(&appointment); err != nil {
+	// รับ input ใหม่
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Update the interview appointment entry in the database
-	if err := db.Save(&appointment).Error; err != nil {
+	// อัปเดตเฉพาะฟิลด์
+	existing.AppointmentDate = input.AppointmentDate
+	existing.Status = input.Status
+	existing.Mode = input.Mode
+	existing.Details = input.Details
+
+	if err := db.Save(&existing).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update interview appointment"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Interview appointment updated successfully", "data": appointment})
+	c.JSON(http.StatusOK, gin.H{"message": "Interview appointment updated successfully", "data": existing})
 }
 
 // DELETE /interview_appointments/:id - Delete a specific interview appointment entry
@@ -157,4 +163,24 @@ func DeleteInterviewAppointment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Interview appointment deleted successfully"})
+}
+
+func GetPendingInterviewApplicationsByCompanyID(c *gin.Context) {
+	companyID := c.Param("id") // รับ company_id จากพารามิเตอร์ URL
+	var applications []entity.Application
+
+	db := config.DB()
+
+	err := db.Preload("Student").
+		Preload("IntershipPost").
+		Joins("JOIN intership_posts ON intership_posts.id = applications.intership_post_id").
+		Where("intership_posts.company_id = ? AND applications.status LIKE ?", companyID, "%รอการนัดสัมภาษณ์%").
+		Find(&applications).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": applications})
 }

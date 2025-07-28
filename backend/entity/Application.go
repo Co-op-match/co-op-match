@@ -17,5 +17,8 @@ type Application struct {
 	IntershipPostID uint          // FK to Intership_post
 	IntershipPost   IntershipPost `gorm:"foreignKey:IntershipPostID"`
 
+	StudentID uint
+	Student   Student `gorm:"foreignKey:StudentID"`
+
 	ApplicationDetails []ApplicationDetails `gorm:"foreignKey:ApplicationID"` // one-to-many
 }
