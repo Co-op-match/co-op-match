@@ -2,12 +2,12 @@ import { Modal, Form, Card, Row, Col, Radio, Input, Spin } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import React from "react";
-import type { CompanyInterface } from "../../interfaces/Company";
-import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
-import type { VerifyInterface } from "../../interfaces/Verify";
-import type { RoleInterface } from "../../interfaces/Role";
+import type { CompanyInterface } from "../../../interfaces/Company";
+import type { AcademicStaffInterface } from "../../../interfaces/AcademicStaff";
+import type { VerifyInterface } from "../../../interfaces/Verify";
+import type { RoleInterface } from "../../../interfaces/Role";
 import "./Verify.css";
-import SendingEmailProgress from "../SendingEmailProgress";
+import SendingEmailProgress from "../../SendingEmailProgress";
 
 interface Props {
   open: boolean;

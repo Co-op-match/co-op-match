@@ -44,7 +44,7 @@ const User_StatCard: React.FC<StatCardProps> = ({
                 transition: "all 0.3s ease",
               }}
               styles={{ body: { padding: "20px", textAlign: "center" } }}
-/*               onMouseEnter={(e) => {
+              /*               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
                 e.currentTarget.style.boxShadow = `0 4px 40px ${sharedStatusColor.shadow}`;
               }}
@@ -84,16 +84,6 @@ const User_StatCard: React.FC<StatCardProps> = ({
               cursor: "pointer",
             }}
             styles={{ body: { padding: "20px", textAlign: "center" } }}
-/*             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow =
-                "0 12px 40px rgba(252, 182, 159, 0.4)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 8px 32px rgba(252, 182, 159, 0.3)";
-            }} */
           >
             <div style={{ color: "#823c0aff" }}>
               <div

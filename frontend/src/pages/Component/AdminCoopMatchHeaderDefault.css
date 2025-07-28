@@ -1,0 +1,79 @@
+.admin-header-menu .ant-menu-item {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 8px !important;
+  margin: 0 4px !important;
+  transition: all 0.3s ease !important;
+}
+
+.admin-header-menu .ant-menu-item:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.admin-header-menu .ant-menu-item-selected {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+}
+
+.admin-header-menu .ant-menu-item-selected:after {
+  display: none !important;
+}
+
+.admin-header-menu .ant-menu-submenu-title {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 8px !important;
+  margin: 0 4px !important;
+}
+
+.admin-header-menu .ant-menu-submenu-title:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/*****************************   *****************************/
+.header-logo-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 70px;
+  padding: 0 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.header-logo-container:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.logo-text {
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.logo-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.logo-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ ซ่อนข้อความบนจอเล็ก */
+@media (max-width: 768px) {
+  .logo-text {
+    display: none;
+  }
+}

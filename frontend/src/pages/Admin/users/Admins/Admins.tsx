@@ -42,8 +42,8 @@ import {
   GetAllDeletedAdmins,
 } from "../../../../services/https/Admin";
 import EditAdminsModal from "./EditAdminsModal";
-import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
-import PageHeaderSection from "../../../../components/adminpage/User_PageHeaderSection";
+import RoleTabs from "../../../../components/adminpage/verify/User_RoleTabs";
+import PageHeaderSection from "../../../../components/adminpage/verify/User_PageHeaderSection";
 
 const { Title, Text } = Typography;
 
@@ -57,6 +57,11 @@ const AdminManagementPage: React.FC = () => {
     null
   );
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
 
   useEffect(() => {
     fetchData();
@@ -371,12 +376,14 @@ const AdminManagementPage: React.FC = () => {
             dataSource={filteredAdmins}
             rowKey="ID"
             pagination={{
-              pageSize: 10,
+              ...pagination,
               showSizeChanger: true,
               showQuickJumper: true,
               showTotal: (total, range) =>
                 `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              pageSizeOptions: ["10", "20", "50"],
+              onChange: (page, pageSize) => {
+                setPagination({ current: page, pageSize });
+              },
             }}
             scroll={{ x: 1000 }}
             size="middle"

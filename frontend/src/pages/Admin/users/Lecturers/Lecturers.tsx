@@ -38,13 +38,12 @@ import type { VerifyInterface } from "../../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import EditLecturersModal from "./EditLecturersModal";
-import User_StatCard from "../../../../components/adminpage/User_StatCard";
-import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
-import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
+import User_StatCard from "../../../../components/adminpage/verify/User_StatCard";
+import { getStatusStyle } from "../../../../components/adminpage/verify/statusStyle";
+import Verify_Modal from "../../../../components/adminpage/verify/Verify_Modal";
 import { SendEmailVerify } from "../../../../services/https";
-import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
-
-const { Title, Text } = Typography;
+import RoleTabs from "../../../../components/adminpage/verify/User_RoleTabs";
+import PageHeaderSection from "../../../../components/adminpage/verify/User_PageHeaderSection";
 
 const AcademicStaffManagement: React.FC = () => {
   const [form] = Form.useForm();
@@ -74,6 +73,12 @@ const AcademicStaffManagement: React.FC = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
 
   useEffect(() => {
     fetchData();
@@ -325,17 +330,10 @@ const AcademicStaffManagement: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <div className="admin-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-                <TeamOutlined style={{ marginRight: "12px" }} />
-                จัดการอาจารย์
-              </Title>
-              <Text type="secondary">ระบบจัดการและตรวจสอบสถานะอาจารย์</Text>
-            </Col>
-          </Row>
-        </div>
+        <PageHeaderSection
+          role={role!}
+          onAddClick={() => setIsAddModalVisible(true)}
+        />
 
         <User_StatCard
           statusCounts={statusCounts}
@@ -419,13 +417,14 @@ const AcademicStaffManagement: React.FC = () => {
               columns={columns}
               dataSource={filteredStaffs.map((s) => ({ ...s, key: s.ID }))}
               pagination={{
-                pageSize: 8,
+                ...pagination,
                 showSizeChanger: true,
-                pageSizeOptions: ["8", "16", "32", "50"],
                 showQuickJumper: true,
                 showTotal: (total, range) =>
-                  `แสดง ${range[0]}-${range[1]} จาก ${total} รายการ`,
-                style: { marginTop: "16px" },
+                  `${range[0]}-${range[1]} จาก ${total} รายการ`,
+                onChange: (page, pageSize) => {
+                  setPagination({ current: page, pageSize });
+                },
               }}
               size="middle"
               scroll={{ x: 800 }}

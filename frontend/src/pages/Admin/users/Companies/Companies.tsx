@@ -39,13 +39,11 @@ import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
 import EditCompanyModal from "./EditCompanyModal";
 import { DeleteCompany, SendEmailVerify } from "../../../../services/https";
-import User_StatCard from "../../../../components/adminpage/User_StatCard";
-import VerifyCompanyModal from "./VerifyCompanyModal";
-import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
-import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
-import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
-
-const { Title, Text } = Typography;
+import User_StatCard from "../../../../components/adminpage/verify/User_StatCard";
+import { getStatusStyle } from "../../../../components/adminpage/verify/statusStyle";
+import Verify_Modal from "../../../../components/adminpage/verify/Verify_Modal";
+import RoleTabs from "../../../../components/adminpage/verify/User_RoleTabs";
+import PageHeaderSection from "../../../../components/adminpage/verify/User_PageHeaderSection";
 
 const CompanyManagement: React.FC = () => {
   const [verifyForm] = Form.useForm();
@@ -74,12 +72,15 @@ const CompanyManagement: React.FC = () => {
   const [selectedVerifyStatus, setSelectedVerifyStatus] = useState<string>("");
   const [isSubmittingVerify, setIsSubmittingVerify] = useState(false);
 
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [reload, setReload] = useState<boolean>(true);
 
-  const totalActive = activeCompanies.length;
-  const totalDeleted = deletedCompanies.length;
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
 
   useEffect(() => {
     fetchData();
@@ -385,17 +386,10 @@ const CompanyManagement: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <div className="admin-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-                <TeamOutlined style={{ marginRight: "12px" }} />
-                จัดการบริษัท
-              </Title>
-              <Text type="secondary">ระบบจัดการและตรวจสอบสถานะบริษัท</Text>
-            </Col>
-          </Row>
-        </div>
+        <PageHeaderSection
+          role={role!}
+          onAddClick={() => setIsAddModalVisible(true)}
+        />
 
         <User_StatCard
           statusCounts={statusCounts}
@@ -482,13 +476,14 @@ const CompanyManagement: React.FC = () => {
               columns={columns}
               dataSource={filteredCompanies.map((c) => ({ ...c, key: c.ID }))}
               pagination={{
-                pageSize: 8,
+                ...pagination,
                 showSizeChanger: true,
-                pageSizeOptions: ["8", "16", "32", "50"],
                 showQuickJumper: true,
                 showTotal: (total, range) =>
-                  `แสดง ${range[0]}-${range[1]} จาก ${total} รายการ`,
-                style: { marginTop: "16px" },
+                  `${range[0]}-${range[1]} จาก ${total} รายการ`,
+                onChange: (page, pageSize) => {
+                  setPagination({ current: page, pageSize });
+                },
               }}
               size="middle"
               scroll={{ x: 800 }}

@@ -32,6 +32,13 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
     });
 }
 
+export async function GetAllInternshipPostsByAdmin() {
+  return await axios
+    .get(`${apiUrl}/get-all-post-by-admin`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 /* ============================ student  ============================ */
 // สำหรับ student, student => ไม่เห็นข้อมูลบริษัทที่โดนลบ
 export async function GetAllActiveStudents() {

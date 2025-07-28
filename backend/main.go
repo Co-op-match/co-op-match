@@ -46,8 +46,6 @@ func main() {
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 
-	r.GET("/status_verifies", controller.GetAllStatusVerify)
-	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
 	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
 	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
 	r.GET("/student/user/:user_id", controller.GetStudentByUserID)
@@ -63,6 +61,11 @@ func main() {
 
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
+
+		
+	r.GET("/get-all-post-by-admin", controller.GetAllInternshipPostsByAdmin)
+	r.GET("/status_verifies", controller.GetAllStatusVerify)
+	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
 
 	// Protected Routes
 	router := r.Group("/")

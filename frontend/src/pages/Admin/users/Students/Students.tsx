@@ -37,7 +37,8 @@ import {
 } from "../../../../services/https/Admin";
 import type { ColumnsType } from "antd/es/table";
 import EditStudentForm from "./EditStudentModal";
-import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
+import RoleTabs from "../../../../components/adminpage/verify/User_RoleTabs";
+import PageHeaderSection from "../../../../components/adminpage/verify/User_PageHeaderSection";
 
 const { Title, Text } = Typography;
 
@@ -52,6 +53,11 @@ const StudentManagementPage: React.FC = () => {
   const [selectedStudent, setSelectedStudent] =
     useState<StudentInterface | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
 
   useEffect(() => {
     fetchData();
@@ -229,31 +235,10 @@ const StudentManagementPage: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <div className="admin-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-                <TeamOutlined style={{ marginRight: "12px" }} />
-                จัดการนักศึกษา
-              </Title>
-              <Text type="secondary">จัดการข้อมูลนักศึกษาในระบบ CoopMatch</Text>
-            </Col>
-            <Col>
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={() => setIsAddModalVisible(true)}
-                style={{
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
-                }}
-              >
-                เพิ่มนักศึกษา
-              </Button>
-            </Col>
-          </Row>
-        </div>
+        <PageHeaderSection
+          role={role!}
+          onAddClick={() => setIsAddModalVisible(true)}
+        />
 
         {/* Stats Cards */}
         <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
@@ -346,12 +331,14 @@ const StudentManagementPage: React.FC = () => {
             rowKey="ID"
             className="adminpage-table"
             pagination={{
-              pageSize: 10,
+              ...pagination,
               showSizeChanger: true,
               showQuickJumper: true,
               showTotal: (total, range) =>
                 `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              pageSizeOptions: ["10", "20", "50"],
+              onChange: (page, pageSize) => {
+                setPagination({ current: page, pageSize });
+              },
             }}
             scroll={{ x: 1200 }}
             size="middle"
