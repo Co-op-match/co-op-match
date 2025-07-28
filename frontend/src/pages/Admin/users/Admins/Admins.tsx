@@ -98,15 +98,6 @@ const AdminManagementPage: React.FC = () => {
       fixed: "left" as const,
       render: (_: any, record: AdminInterface) => (
         <Space>
-          <Avatar
-            size={45}
-            style={{
-              backgroundColor: "#1890ff",
-              border: "2px solid #f0f2f5",
-            }}
-          >
-            <CrownOutlined style={{ fontSize: "20px" }} />
-          </Avatar>
           <div>
             <div
               style={{
@@ -291,7 +282,6 @@ const AdminManagementPage: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        
         <PageHeaderSection
           role={role!}
           onAddClick={() => setIsAddModalVisible(true)}
