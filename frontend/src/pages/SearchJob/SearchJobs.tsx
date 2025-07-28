@@ -64,7 +64,7 @@ const WORK_MODE_COLORS = {
   default: '#d9d9d9'
 } as const;
 
-const SearchJobs: React.FC = () => {
+function SearchJobs(){
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [searchTerm, setSearchTerm] = useState('');
@@ -162,7 +162,7 @@ const SearchJobs: React.FC = () => {
     // Search term filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.post_name?.toLowerCase().includes(searchLower) ||
         post.Company?.company_name?.toLowerCase().includes(searchLower) ||
         post.post_description?.toLowerCase().includes(searchLower)
@@ -258,14 +258,27 @@ const SearchJobs: React.FC = () => {
           justifyContent: 'center'
         }}>
           <img
-            src={job.Company?.logo}
-            alt={job.Company?.company_name}
+            //src={job.Company?.logo}
+            src={
+              job.Company?.logo?.startsWith('http')
+                ? job.Company.logo 
+                : job.Company?.logo
+                  ? `http://localhost:8000${job.Company.logo}` 
+                  : undefined
+            }
+            //alt={job.Company?.company_name}
             style={{ height: '80px', objectFit: 'contain' }}
           />
         </div>
       }
       actions={[
-        <Button type="primary">สมัครงาน</Button>
+        <Button
+          type="primary"
+          size="large"
+          onClick={() => navigate(`/student/post-student/${job.ID}`)}
+        >
+          สมัครฝึกงาน
+        </Button>
       ]}
     >
       <Card.Meta
@@ -283,11 +296,8 @@ const SearchJobs: React.FC = () => {
         description={
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Space>
-              <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
-            </Space>
-            <Space>
               <EnvironmentOutlined />
-              <Text style={{ color: '#434343' }}>{job.Company?.Address?.Province?.name_th}</Text>
+              <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
             </Space>
             <Space>
               <CalendarOutlined />
@@ -454,6 +464,7 @@ const SearchJobs: React.FC = () => {
               </Col>
             ))}
           </Row>
+
 
           {filteredPosts.length === 0 && (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>

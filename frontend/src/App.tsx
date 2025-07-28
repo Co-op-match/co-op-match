@@ -20,7 +20,11 @@ import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
 import PostDetailsStudent from './pages/Student/Application/Post';
-
+import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
+import AddApplication from './pages/Student/Application/AddApplication';
+import ApplicationHistory from "./pages/Student/Application/History";
+import ApplicationByCompany from "../src/pages/company/application/application";
+import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 
 
 
@@ -58,6 +62,14 @@ function App() {
             }
           />
           <Route
+            path="/student/recommendations"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <StudentRecommendedPosts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/profile"
             element={
               <ProtectedRoute allowedRoles={[3]}>
@@ -85,7 +97,7 @@ function App() {
               </ProtectedRoute>
             }
           /> */}
-           <Route
+          <Route
             path="/company/add-company"
             element={
               <ProtectedRoute allowedRoles={[2]}>
@@ -102,10 +114,28 @@ function App() {
             }
           />
           <Route
-            path="/student/post-student"
+            path="/student/post-student/:id"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <PostDetailsStudent />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/applications/:postId"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <AddApplication />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/applications/history"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <ApplicationHistory />
               </ProtectedRoute>
             }
           />
@@ -137,6 +167,15 @@ function App() {
           />
 
           <Route
+            path="/applications/post/:postId"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <ApplicationByCompany />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/company/post"
             element={
               <ProtectedRoute allowedRoles={[2]}>
@@ -144,6 +183,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/interview_appointments"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CreateInterviewAppointment />
+              </ProtectedRoute>
+            }
+          />
+
 
           <Route
             path="/lecturer/dashboard"

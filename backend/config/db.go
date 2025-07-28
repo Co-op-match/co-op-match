@@ -87,10 +87,10 @@ func SetupDatabase() {
 func createSeedData(db *gorm.DB) {
 	// สร้าง Role
 	roles := []entity.Role{
-		{RoleName: "Admin"},
-		{RoleName: "Company"},
-		{RoleName: "Student"},
-		{RoleName: "AcademicStaff"},
+		{RoleName: "Admin", RoleNameTH: "แอดมิน"},
+		{RoleName: "Company", RoleNameTH: "บริษัท"},
+		{RoleName: "Student", RoleNameTH: "นักเรียน"},
+		{RoleName: "AcademicStaff", RoleNameTH: "อาจารย์"},
 	}
 	for _, role := range roles {
 		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})
@@ -98,8 +98,8 @@ func createSeedData(db *gorm.DB) {
 
 	// สร้าง Gender
 	genders := []entity.Gender{
-		{Name: "Male"},
-		{Name: "Female"},
+		{Name: "Male", NameTH: "ชาย"},
+		{Name: "Female", NameTH: "หญิง"},
 	}
 	for _, gender := range genders {
 		db.FirstOrCreate(&gender, entity.Gender{Name: gender.Name})
@@ -125,7 +125,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "s5@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "B6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
 
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
@@ -133,7 +133,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 	}
 	for _, pkg := range User {
-		db.FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
+		db.Unscoped().FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
 	}
 
 	// Seed Profile Images
@@ -207,48 +207,22 @@ func createSeedData(db *gorm.DB) {
 
 	// ที่อยู่ (Address)
 	addresses := []entity.Address{
-		{
-			HouseNumber:   "123",
-			Village:       "หมู่บ้าน ABC",
-			Street:        "ถนนหลัก",
-			SubStreet:     "ซอยรอง",
-			SubDistrictID: 1,
-			DistrictID:    1,
-			ProvinceID:    1,
-			PostcodeID:    1,
-		},
-		{
-			HouseNumber:   "456",
-			Village:       "หมู่บ้าน XYZ",
-			Street:        "ถนนรอง",
-			SubStreet:     "ซอยรอง",
-			SubDistrictID: 1,
-			DistrictID:    1,
-			ProvinceID:    1,
-			PostcodeID:    1,
-		},
-		{
-			HouseNumber:   "789",
-			Village:       "หมู่บ้าน QWE",
-			Street:        "ถนนใหญ่",
-			SubStreet:     "ซอยรอง",
-			SubDistrictID: 1,
-			DistrictID:    1,
-			ProvinceID:    1,
-			PostcodeID:    1,
-		},
-		{
-			HouseNumber:   "101",
-			Village:       "หมู่บ้าน ASD",
-			Street:        "ถนนซอย",
-			SubStreet:     "ซอยรอง",
-			SubDistrictID: 1,
-			DistrictID:    1,
-			ProvinceID:    1,
-			PostcodeID:    1,
-		},
+		{HouseNumber: "123", Village: "หมู่บ้าน ABC", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "456", Village: "หมู่บ้าน XYZ", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "789", Village: "หมู่บ้าน QWE", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "101", Village: "หมู่บ้าน ASD", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "256", Village: "หมู่บ้าน EFG", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "452", Village: "หมู่บ้าน FRT", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "198", Village: "หมู่บ้าน GLR", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "257", Village: "หมู่บ้าน HTE", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "258", Village: "หมู่บ้าน ITY", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "147", Village: "หมู่บ้าน JFT", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "369", Village: "หมู่บ้าน KNM", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "987", Village: "หมู่บ้าน LPD", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "654", Village: "หมู่บ้าน MNO", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "321", Village: "หมู่บ้าน NRE", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
+		{HouseNumber: "159", Village: "หมู่บ้าน OWN", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 	}
-
 	for _, addr := range addresses {
 		db.FirstOrCreate(&addr, entity.Address{
 			HouseNumber:   addr.HouseNumber,
@@ -265,7 +239,7 @@ func createSeedData(db *gorm.DB) {
 		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 5},
 	}
 	for _, admin := range admins {
-		db.FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
+		db.Unscoped().FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
 	}
 
 	// Seed Permission
@@ -281,13 +255,13 @@ func createSeedData(db *gorm.DB) {
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
 		{AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A", UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B", UserID: 14, AddressID: 1, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C", UserID: 15, AddressID: 1, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D", UserID: 16, AddressID: 1, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 1, AdminID: 1, GenderID: 1},
+		{AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B", UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2},
+		{AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C", UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1},
+		{AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D", UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2},
+		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1},
 	}
 	for _, staff := range staffs {
-		db.FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
+		db.Unscoped().FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
 	}
 
 	students := []entity.Student{
@@ -303,7 +277,7 @@ func createSeedData(db *gorm.DB) {
 			Weight:      65.0,
 			GenderID:    1,
 			UserID:      3,
-			AddressID:   2,
+			AddressID:   6,
 			AdminID:     1,
 		},
 		{
@@ -318,7 +292,7 @@ func createSeedData(db *gorm.DB) {
 			Weight:      50.0,
 			GenderID:    2,
 			UserID:      10,
-			AddressID:   3,
+			AddressID:   7,
 			AdminID:     1,
 		},
 		{
@@ -333,7 +307,7 @@ func createSeedData(db *gorm.DB) {
 			Weight:      50.0,
 			GenderID:    2,
 			UserID:      11,
-			AddressID:   3,
+			AddressID:   8,
 			AdminID:     1,
 		},
 		{
@@ -348,7 +322,7 @@ func createSeedData(db *gorm.DB) {
 			Weight:      50.0,
 			GenderID:    2,
 			UserID:      12,
-			AddressID:   3,
+			AddressID:   9,
 			AdminID:     1,
 		},
 		{
@@ -363,24 +337,38 @@ func createSeedData(db *gorm.DB) {
 			Weight:      48.0,
 			GenderID:    2,
 			UserID:      13,
+			AddressID:   10,
+			AdminID:     1,
+		},
+		{
+			FirstName:   "วิชญ์",
+			LastName:    "เทคโน",
+			Birthday:    time.Date(2002, 10, 20, 0, 0, 0, 0, time.UTC),
+			Age:         22,
+			Nationality: "ไทย",
+			Religion:    "พุทธ",
+			PhoneNumber: "0891234567",
+			Height:      158.0,
+			Weight:      48.0,
+			GenderID:    1,
+			UserID:      5,
 			AddressID:   4,
 			AdminID:     1,
 		},
 	}
 	for _, s := range students {
-		db.FirstOrCreate(&s, entity.Student{FirstName: s.FirstName})
+		db.Unscoped().FirstOrCreate(&s, entity.Student{UserID: s.UserID})
 	}
 
 	companies := []entity.Company{
-		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 2, AddressID: 1},
-		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 6, AddressID: 1},
-		{CompanyName: "Gamma Innovations Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 7, AddressID: 1},
-		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 1},
-		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 1},
+		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 2, AddressID: 11},
+		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 6, AddressID: 12},
+		{CompanyName: "Gamma Innovations Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 7, AddressID: 13},
+		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 14},
+		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 15},
 	}
-	// ค้นหาจาก company_name ถ้าไม่มีให้สร้างใหม่
 	for _, company := range companies {
-		db.FirstOrCreate(&company, entity.Company{CompanyName: company.CompanyName})
+		db.Unscoped().FirstOrCreate(&company, entity.Company{UserID: company.UserID})
 	}
 
 	// สิทธิประโยชน์ (Benefit)
@@ -396,9 +384,9 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Status Posts
 	StatusPosts := []entity.StatusPost{
-		{StatusPost: "Open"},
-		{StatusPost: "Closed"},
-		{StatusPost: "Pending Approval"},
+		{StatusPost: "Open", StatusPostTH: "เปิดรับสมัคร"},
+		{StatusPost: "Closed", StatusPostTH: "ปิดรับสมัคร"},
+		{StatusPost: "Pending Approval", StatusPostTH: "รอตรวจสอบ"},
 	}
 	for _, pkg := range StatusPosts {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
@@ -409,7 +397,7 @@ func createSeedData(db *gorm.DB) {
 			PostName:        "Software Development Intern",
 			PostDescription: "Join our team as a software development intern",
 			Quantity:        2,
-			MinGpa:          3.0,
+			MinGpa:          2.0,
 			CreatedAt:       time.Now(),
 			CompanyID:       1,
 			StatusPostID:    1,
@@ -424,7 +412,7 @@ func createSeedData(db *gorm.DB) {
 			PostName:        "Data Science Intern",
 			PostDescription: "Opportunity to work with real-world datasets",
 			Quantity:        1,
-			MinGpa:          3.2,
+			MinGpa:          2.2,
 			CreatedAt:       time.Now(),
 			CompanyID:       2,
 			StatusPostID:    1,
@@ -434,6 +422,36 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       2,
 			StipendID:       3,
 			JobTypeID:       4,
+		},
+		{
+			PostName:        "AI/ML Intern",
+			PostDescription: "Explore artificial intelligence projects",
+			Quantity:        1,
+			MinGpa:          2.5,
+			CreatedAt:       time.Now(),
+			CompanyID:       3,
+			StatusPostID:    1,
+			AdminID:         1,
+			WorkModeID:      1,
+			BenefitID:       2,
+			WorkDayID:       3,
+			StipendID:       2,
+			JobTypeID:       4,
+		},
+		{
+			PostName:        "Frontend Developer Intern",
+			PostDescription: "Build beautiful UIs with React",
+			Quantity:        1,
+			MinGpa:          2.8,
+			CreatedAt:       time.Now(),
+			CompanyID:       1,
+			StatusPostID:    1,
+			AdminID:         1,
+			WorkModeID:      1,
+			BenefitID:       1,
+			WorkDayID:       1,
+			StipendID:       2,
+			JobTypeID:       1,
 		},
 	}
 
@@ -455,6 +473,12 @@ func createSeedData(db *gorm.DB) {
 			SkillID:         4,
 			IntershipPostID: intershipPosts[1].ID,
 		})
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 1, IntershipPostID: 3}) // Python
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 5, IntershipPostID: 3}) // Data Analysis
+
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 3, IntershipPostID: 4}) // JavaScript
+		db.Create(&entity.CompanyRequiredSkill{SkillID: 4, IntershipPostID: 4}) // SQL
+
 	}
 	// Seed Skills
 	skills := []entity.Skill{
@@ -483,6 +507,8 @@ func createSeedData(db *gorm.DB) {
 		{SkillID: 1, StudentID: 1}, // Python
 		{SkillID: 2, StudentID: 1}, // Java
 		{SkillID: 4, StudentID: 1}, // SQL
+		{SkillID: 1, StudentID: 2}, // Python
+		{SkillID: 5, StudentID: 2}, // Data Analysis
 	}
 	for _, pkg := range studentSkills {
 		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
@@ -501,6 +527,20 @@ func createSeedData(db *gorm.DB) {
 			IntershipPostID: pkg.IntershipPostID,
 		})
 	}
+	studentInterests := []entity.StudentInterest{
+		{StudentID: 1, InterestID: 1}, // Web Development
+		{StudentID: 1, InterestID: 3}, // Data Science
+		{StudentID: 2, InterestID: 4}, // AI/ML
+		{StudentID: 3, InterestID: 2}, // Mobile Development
+	}
+
+	for _, si := range studentInterests {
+		db.FirstOrCreate(&si, entity.StudentInterest{
+			StudentID:  si.StudentID,
+			InterestID: si.InterestID,
+		})
+	}
+
 	// Seed Educational Background
 	EducationLevels := []entity.EducationLevel{
 		{Name: "ปริญญาตรี"},
@@ -587,27 +627,28 @@ func createSeedData(db *gorm.DB) {
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
 	verifies := []entity.Verify{
 		{
-			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
-			StatusVerifyID:       1,
+			VerificationDocument: "/uploads/verifyDocument/001.png",
+			StatusVerifyID:       2,
 			UserID:               2,
 		},
 		{
-			VerificationDocument: "https://www.pngmart.com/files/13/Chibi-Anime-Boy-PNG-Transparent-Picture.png",
+			VerificationDocument: "/uploads/verifyDocument/002.pdf",
 			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
-			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
-			StatusVerifyID:       3,
+			VerificationDocument: "/uploads/verifyDocument/001.png",
+			StatusVerifyID:       2,
 			UserID:               4,
 		},
 		{
-			VerificationDocument: "https://mondaymandala.com/wp-content/uploads/Kawaii-Chibi-Girl-In-Pigtails-Coloring-Sheet.pdf",
-			StatusVerifyID:       4,
+			VerificationDocument: "/uploads/verifyDocument/002.pdf",
+			StatusVerifyID:       2,
 			UserID:               14,
 		},
 	}
 	for _, v := range verifies {
+		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
 }

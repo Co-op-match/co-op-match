@@ -20,7 +20,6 @@ import {
 
 import './AddCompanyForm.css';
 import CompanyHeaderDefault from '../../../component/CoopMatchHeaderDefault';
-
 const { Content } = Layout;
 
 const AddCompanyForm: React.FC = () => {
@@ -122,6 +121,7 @@ const handleBack = () => {
     formDataToSend.append('address_id', addressId.toString());
     formDataToSend.append('admin_id', '0');
     formDataToSend.append('contact_id', contactId.toString());
+    console.log(formDataToSend)
     if (imageFile) {
       formDataToSend.append('logo', imageFile);
     }
