@@ -335,21 +335,29 @@ const Dashboard = () => {
                                     <td style={tdStyle}>{app.companyNote || <span style={noDataStyle}>-</span>}</td>
                                     <td style={tdStyle}>
                                         {app.status === 'รอการนัดสัมภาษณ์' && (
-                                            <button 
-                                                onClick={() => handleScheduleInterview(app)} 
-                                                style={interviewButtonStyle}
-                                                onMouseEnter={(e) => {
-                                                    const target = e.target as HTMLButtonElement;
+                                            <button
+                                            onClick={() => handleScheduleInterview(app)}
+                                            style={{
+                                                ...interviewButtonStyle,
+                                                backgroundColor: app.status === 'รอการนัดสัมภาษณ์' ? '#2196f3' : '#cccccc',
+                                                cursor: app.status === 'รอการนัดสัมภาษณ์' ? 'pointer' : 'not-allowed',
+                                                opacity: app.status === 'รอการนัดสัมภาษณ์' ? 1 : 0.5,
+                                            }}
+                                            disabled={app.status !== 'รอการนัดสัมภาษณ์'}
+                                            onMouseEnter={(e) => {
+                                                const target = e.target as HTMLButtonElement;
+                                                if (app.status === 'รอการนัดสัมภาษณ์') {
                                                     target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                  }}
-                                                  onMouseLeave={(e) => {
-                                                    const target = e.target as HTMLButtonElement;
-                                                    target.style.transform = 'translateY(0) scale(1)';
-                                                  }}
-                                                  
-                                            >
-                                                🗓️ นัดสัมภาษณ์
-                                            </button>
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                const target = e.target as HTMLButtonElement;
+                                                target.style.transform = 'translateY(0) scale(1)';
+                                            }}
+                                        >
+                                            🗓️ นัดสัมภาษณ์
+                                        </button>
+                                        
                                         )}
                                     </td>
                                 </tr>
@@ -598,10 +606,10 @@ const thStyle: React.CSSProperties = {
 };
 
 const tableRowStyle: React.CSSProperties = {
-    ':hover': {
-        backgroundColor: '#f8f9fa',
-    }
-};
+    transition: 'background-color 0.2s ease',
+    cursor: 'pointer',
+  };
+  
 
 const tdStyle: React.CSSProperties = {
     padding: '12px 16px',
