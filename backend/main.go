@@ -55,6 +55,10 @@ func main() {
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
 
+	r.POST("/interview_appointments", controller.CreateInterviewAppointment)
+	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
+	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
+
 	r.Static("/public", "./public")
 
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
@@ -128,7 +132,7 @@ func main() {
 
 		notificationGroup := router.Group("/notification")
 		{
-			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail)
+			notificationGroup.POST("/interview/send-email/:student_id/:company_id", controller.SendInterviewEmail)
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)

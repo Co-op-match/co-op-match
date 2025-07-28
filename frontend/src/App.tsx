@@ -29,6 +29,7 @@ import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 import AddApplication from './pages/Student/Application/AddApplication';
 import ApplicationHistory from "./pages/Student/Application/History";
 import ApplicationByCompany from "../src/pages/company/application/application";
+import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 
 
 
@@ -187,6 +188,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/interview_appointments"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CreateInterviewAppointment />
+              </ProtectedRoute>
+            }
+          />
+
 
           <Route
             path="/lecturer/dashboard"
