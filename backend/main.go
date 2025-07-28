@@ -126,7 +126,7 @@ func main() {
 
 		notificationGroup := router.Group("/notification")
 		{
-			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail)
+			notificationGroup.POST("/interview/send-email/:student_id/:company_id", controller.SendInterviewEmail)
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
