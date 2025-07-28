@@ -137,12 +137,12 @@ const EditAdminsModal: React.FC<AdminEditModalProps> = ({
         </Button>
       ]}
       styles={{ body: { padding: '24px' } }}
-      destroyOnClose
+      destroyOnHidden
       maskClosable={false}
     >
       <Spin spinning={loading} tip="กำลังบันทึกข้อมูล...">
         <Form form={form} layout="vertical">
-          <Card title="ข้อมูลส่วนตัว" style={{ marginBottom: 20 }} bodyStyle={{ padding: 20 }}>
+          <Card title="ข้อมูลส่วนตัว" style={{ marginBottom: 20 }} styles={{ body: { padding: 20 },}}>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
@@ -177,7 +177,7 @@ const EditAdminsModal: React.FC<AdminEditModalProps> = ({
             </Form.Item>
           </Card>
 
-          <Card title="ข้อมูลบัญชี" bodyStyle={{ padding: 20 }}>
+          <Card title="ข้อมูลบัญชี" styles={{ body: { padding: 20 },}}>
             <Form.Item
               name="email"
               label="อีเมล"

@@ -39,13 +39,13 @@ import type { VerifyInterface } from "../../../../interfaces/Verify";
 import "../users.css";
 import EditCompanyModal from "./EditCompanyModal";
 import { DeleteCompany, SendEmailVerify } from "../../../../services/https";
-import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
+import User_StatCard from "../../../../components/adminpage/User_StatCard";
 import VerifyCompanyModal from "./VerifyCompanyModal";
 import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
 import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
+import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
 
 const { Title, Text } = Typography;
-
 
 const CompanyManagement: React.FC = () => {
   const [verifyForm] = Form.useForm();
@@ -252,6 +252,8 @@ const CompanyManagement: React.FC = () => {
     return counts;
   }, [tabKey, activeCompanies, deletedCompanies, statusFilterOptions]);
 
+  const role = activeCompanies[0]?.User?.Role;
+
   /*=========================   จัดการตาราง   ================================*/
   const columns: ColumnsType<CompanyInterface> = [
     {
@@ -388,14 +390,14 @@ const CompanyManagement: React.FC = () => {
             <Col>
               <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
                 <TeamOutlined style={{ marginRight: "12px" }} />
-               จัดการบริษัท
+                จัดการบริษัท
               </Title>
               <Text type="secondary">ระบบจัดการและตรวจสอบสถานะบริษัท</Text>
             </Col>
           </Row>
         </div>
 
-        <Verify_StatCard
+        <User_StatCard
           statusCounts={statusCounts}
           totalActive={activeCompanies.length}
           totalDeleted={deletedCompanies.length}
@@ -406,30 +408,9 @@ const CompanyManagement: React.FC = () => {
         <Card className="admin-main-card" styles={{ body: { padding: 0 } }}>
           {/* Tabs */}
           <div style={{ padding: "24px 24px 0 24px" }}>
-            <Tabs
-              defaultActiveKey="active"
-              onChange={(key) => setTabKey(key)}
-              items={[
-                {
-                  label: (
-                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
-                      บริษัททั้งหมด
-                    </span>
-                  ),
-                  key: "active",
-                },
-                {
-                  label: (
-                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
-                      บริษัทที่ถูกลบ
-                    </span>
-                  ),
-                  key: "deleted",
-                },
-              ]}
-              size="large"
-              className="adminpage-tabs"
-            />
+            {role && (
+              <RoleTabs tabKey={tabKey} setTabKey={setTabKey} role={role} />
+            )}
           </div>
 
           {/* Filters */}

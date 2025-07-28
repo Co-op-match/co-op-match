@@ -38,10 +38,11 @@ import type { VerifyInterface } from "../../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import EditLecturersModal from "./EditLecturersModal";
-import Verify_StatCard from "../../../../components/adminpage/Verify_StatCard";
+import User_StatCard from "../../../../components/adminpage/User_StatCard";
 import { getStatusStyle } from "../../../../components/adminpage/statusStyle";
 import Verify_Modal from "../../../../components/adminpage/Verify_Modal";
 import { SendEmailVerify } from "../../../../services/https";
+import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
 
 const { Title, Text } = Typography;
 
@@ -193,7 +194,7 @@ const AcademicStaffManagement: React.FC = () => {
     setIsEditModalVisible(true);
   };
 
-    const filteredStaffs = useMemo(() => {
+  const filteredStaffs = useMemo(() => {
     const base = tabKey === "active" ? activeStaffs : deletedStaffs;
 
     const filtered = selectedFilterStatuses.length
@@ -220,7 +221,9 @@ const AcademicStaffManagement: React.FC = () => {
     selectedFilterStatuses,
     searchKeyword,
   ]);
-  
+
+  const role = activeStaffs[0]?.User?.Role;
+
   const columns: ColumnsType<AcademicStaffInterface> = [
     {
       title: "ID",
@@ -334,7 +337,7 @@ const AcademicStaffManagement: React.FC = () => {
           </Row>
         </div>
 
-        <Verify_StatCard
+        <User_StatCard
           statusCounts={statusCounts}
           totalActive={activeStaffs.length}
           totalDeleted={deletedStaffs.length}
@@ -345,30 +348,9 @@ const AcademicStaffManagement: React.FC = () => {
         <Card className="admin-main-card" styles={{ body: { padding: 0 } }}>
           {/* Tabs */}
           <div style={{ padding: "24px 24px 0 24px" }}>
-            <Tabs
-              defaultActiveKey="active"
-              onChange={(key) => setTabKey(key)}
-              items={[
-                {
-                  label: (
-                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
-                      อาจารย์ทั้งหมด
-                    </span>
-                  ),
-                  key: "active",
-                },
-                {
-                  label: (
-                    <span style={{ fontSize: "16px", padding: "8px 16px" }}>
-                      อาจารย์ที่ถูกลบ
-                    </span>
-                  ),
-                  key: "deleted",
-                },
-              ]}
-              size="large"
-              className="adminpage-tabs"
-            />
+            {role && (
+              <RoleTabs tabKey={tabKey} setTabKey={setTabKey} role={role} />
+            )}
           </div>
 
           {/* Filters */}

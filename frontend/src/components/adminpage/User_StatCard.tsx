@@ -8,7 +8,7 @@ interface StatCardProps {
   tabKey: string;
 }
 
-const Verify_StatCard: React.FC<StatCardProps> = ({
+const User_StatCard: React.FC<StatCardProps> = ({
   statusCounts,
   totalActive,
   totalDeleted,
@@ -119,4 +119,4 @@ const Verify_StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-export default Verify_StatCard;
+export default User_StatCard;

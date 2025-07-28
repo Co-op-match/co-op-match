@@ -37,7 +37,7 @@ import {
 } from "../../../../services/https/Admin";
 import type { ColumnsType } from "antd/es/table";
 import EditStudentForm from "./EditStudentModal";
-import RoleTabs from "../../../../components/adminpage/Verify_RoleTabs";
+import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
 
 const { Title, Text } = Typography;
 

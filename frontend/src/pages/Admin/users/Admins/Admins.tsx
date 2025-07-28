@@ -42,6 +42,8 @@ import {
   GetAllDeletedAdmins,
 } from "../../../../services/https/Admin";
 import EditAdminsModal from "./EditAdminsModal";
+import RoleTabs from "../../../../components/adminpage/User_RoleTabs";
+import PageHeaderSection from "../../../../components/adminpage/User_PageHeaderSection";
 
 const { Title, Text } = Typography;
 
@@ -85,6 +87,8 @@ const AdminManagementPage: React.FC = () => {
       message.error("ไม่สามารถอัปเดตข้อมูลได้");
     }
   };
+
+  const role = activeAdmins[0]?.User?.Role;
 
   const columns: ColumnsType<AdminInterface> = [
     {
@@ -287,33 +291,11 @@ const AdminManagementPage: React.FC = () => {
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <div className="admin-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-                <TeamOutlined style={{ marginRight: "12px" }} />
-                จัดการผู้ดูแลระบบ
-              </Title>
-              <Text type="secondary">จัดการข้อมูลผู้ดูแลระบบ CoopMatch</Text>
-            </Col>
-            <Col>
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={() => setIsAddModalVisible(true)}
-                style={{
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 12px rgba(114, 46, 209, 0.3)",
-                  background: "#1890ff",
-                  borderColor: "#1890ff",
-                }}
-              >
-                เพิ่มผู้ดูแลระบบ
-              </Button>
-            </Col>
-          </Row>
-        </div>
+        
+        <PageHeaderSection
+          role={role!}
+          onAddClick={() => setIsAddModalVisible(true)}
+        />
 
         {/* Stats Cards */}
         <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
@@ -326,7 +308,7 @@ const AdminManagementPage: React.FC = () => {
                   background: card.color,
                   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 }}
-                bodyStyle={{ padding: "20px" }}
+                styles={{ body: { padding: "20px" } }}
               >
                 <Flex align="center" justify="space-between">
                   <div>
@@ -363,39 +345,12 @@ const AdminManagementPage: React.FC = () => {
             borderRadius: "12px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           }}
-          bodyStyle={{ padding: "24px" }}
+          styles={{ body: { padding: "24px" } }}
         >
           {/* Tabs */}
-          <Tabs
-            activeKey={tabKey}
-            onChange={(key) => setTabKey(key)}
-            size="large"
-            items={[
-              {
-                label: (
-                  <Space>
-                    <SettingOutlined />
-                    ผู้ดูแลทั้งหมด
-                  </Space>
-                ),
-                key: "active",
-              },
-              {
-                label: (
-                  <Space>
-                    <DeleteFilled />
-                    ผู้ดูแลที่ถูกลบ
-                    <Badge
-                      count={deletedAdmins.length}
-                      style={{ backgroundColor: "#ff4d4f" }}
-                    />
-                  </Space>
-                ),
-                key: "deleted",
-              },
-            ]}
-            style={{ marginBottom: "24px" }}
-          />
+          {role && (
+            <RoleTabs tabKey={tabKey} setTabKey={setTabKey} role={role} />
+          )}
 
           {/* Search Bar */}
           <Row

@@ -1,4 +1,5 @@
 import { Modal, Form, Card, Row, Col, Radio, Input, Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import React from "react";
 import type { CompanyInterface } from "../../interfaces/Company";
@@ -6,6 +7,7 @@ import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { RoleInterface } from "../../interfaces/Role";
 import "./Verify.css";
+import SendingEmailProgress from "../SendingEmailProgress";
 
 interface Props {
   open: boolean;
@@ -17,7 +19,7 @@ interface Props {
   isReadOnlyStatus: boolean;
   setIsDetailModalVisible: (visible: boolean) => void;
   submitVerificationDecision: (reason: string) => Promise<void>;
-  isSubmitting?: boolean; // Add loading prop
+  isSubmitting?: boolean;
 }
 
 const Verify_Modal: React.FC<Props> = ({
@@ -30,7 +32,7 @@ const Verify_Modal: React.FC<Props> = ({
   isReadOnlyStatus,
   setIsDetailModalVisible,
   submitVerificationDecision,
-  isSubmitting = false, // Default to false
+  isSubmitting = false,
 }) => {
   const latest: VerifyInterface | undefined =
     entity?.User?.Verifications?.slice()?.sort(
@@ -47,6 +49,18 @@ const Verify_Modal: React.FC<Props> = ({
     return "-";
   };
 
+  // Custom loading indicator
+  const customLoadingIcon = (
+    <LoadingOutlined
+      style={{
+        fontSize: 32,
+        color: "#1677ff",
+        filter: "drop-shadow(0 0 8px rgba(22, 119, 255, 0.3))",
+      }}
+      spin
+    />
+  );
+
   if (!entity) return null;
 
   return (
@@ -54,13 +68,13 @@ const Verify_Modal: React.FC<Props> = ({
       open={open}
       title={<div className="verify-modal-title">รายละเอียดการรับรอง</div>}
       onCancel={() => {
-        if (isSubmitting) return; // Prevent closing while submitting
+        if (isSubmitting) return;
         setIsDetailModalVisible(false);
         verifyForm.resetFields();
         setSelectedVerifyStatus("");
       }}
       onOk={async () => {
-        if (isReadOnlyStatus || isSubmitting) return; // Prevent submission while loading
+        if (isReadOnlyStatus || isSubmitting) return;
         try {
           if (selectedVerifyStatus === "ปฏิเสธ") {
             await verifyForm.validateFields();
@@ -83,10 +97,20 @@ const Verify_Modal: React.FC<Props> = ({
         className: "verify-modal-cancel-button",
         disabled: isSubmitting,
       }}
-      closable={!isSubmitting} // Disable close button while submitting
-      maskClosable={!isSubmitting} // Disable mask click while submitting
+      closable={!isSubmitting}
+      maskClosable={!isSubmitting}
     >
-      <Spin spinning={isSubmitting} tip="กำลังส่งอีเมลและอัปเดตสถานะ...">
+      {/* Fixed Loading Overlay - ติดกับ Modal */}
+      {isSubmitting && <SendingEmailProgress />}
+
+      {/* Top Loading Bar */}
+      {isSubmitting && (
+        <div className="verify-loading-bar">
+          <div className="verify-loading-bar-progress"></div>
+        </div>
+      )}
+
+      <div style={{ position: "relative" }}>
         <Form form={verifyForm} layout="vertical">
           <Card
             className="company-info-card"
@@ -147,7 +171,7 @@ const Verify_Modal: React.FC<Props> = ({
               <Card title="การตัดสินใจ" style={{ borderRadius: "12px" }}>
                 <Radio.Group
                   onChange={(e) => {
-                    if (isSubmitting) return; // Prevent changes while submitting
+                    if (isSubmitting) return;
                     setSelectedVerifyStatus(e.target.value);
                     if (e.target.value !== "ปฏิเสธ") {
                       verifyForm.resetFields(["rejectReason"]);
@@ -259,7 +283,7 @@ const Verify_Modal: React.FC<Props> = ({
             </>
           )}
         </Form>
-      </Spin>
+      </div>
     </Modal>
   );
 };
