@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การแจ้งเตือนจากระบบ Co-op Match</title>
+    <style>
+        body {
+            font-family: 'Sarabun', 'Tahoma', sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #0056b3;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .content {
+            padding: 25px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777777;
+            border-top: 1px solid #eeeeee;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #003d7a;
+        }
+        .notification-box {
+            background-color: #f8f9fa;
+            padding: 18px;
+            border-left: 4px solid #0056b3;
+            margin: 25px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .notification-box h3 {
+            margin-top: 0;
+        }
+        .details-list {
+            padding-left: 20px;
+        }
+        .details-list li {
+            margin-bottom: 8px;
+        }
+        .signature {
+            margin-top: 25px;
+            border-top: 1px solid #eeeeee;
+            padding-top: 15px;
+        }
+        .footer-links {
+            margin: 10px 0;
+        }
+        .footer-links a {
+            color: #0056b3;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>ระบบ Co-op Match</h1>
+    </div>
+    <div class="content">
+        <p>เรียน คุณ{{.RecipientName}}</p>
+
+        <p>ระบบ Co-op Match ขอแจ้งสถานะการยืนยันบัญชี:</p>
+
+        <div class="notification-box">
+            {{ if eq .Status "ยังไม่ได้ส่งคำขอ" }}
+                <h3 style="color: #6c757d;">📭 ยังไม่ได้ส่งคำขอ</h3>
+                <p>ขณะนี้คุณยังไม่ได้ยื่นคำขอรับรองบริษัท กรุณาดำเนินการในระบบ</p>
+            {{ else if eq .Status "รอรับรอง" }}
+                <h3 style="color: #ffc107;">⏳ อยู่ระหว่างตรวจสอบ</h3>
+                <p>คำขอของคุณอยู่ระหว่างการตรวจสอบ กรุณารอผลการพิจารณา</p>
+            {{ else if eq .Status "รับรอง" }}
+                <h3 style="color: #28a745;">✅ บริษัทของคุณได้รับการรับรองเรียบร้อยแล้ว</h3>
+                <p>บริษัทของคุณผ่านการตรวจสอบและได้รับการรับรองเรียบร้อยแล้ว</p>
+            {{ else if eq .Status "ปฏิเสธ" }}
+                <h3 style="color: #dc3545;">❌ บริษัทของคุณไม่ได้รับการรับรอง</h3>
+                {{ if .Reason }}
+                    <p>เหตุผล: {{.Reason}}</p>
+                {{ else }}
+                    <p>บริษัทของคุณไม่ผ่านการรับรอง กรุณาตรวจสอบข้อมูลและส่งคำขอใหม่อีกครั้ง</p>
+                {{ end }}
+            {{ else }}
+                <h3>🔔 สถานะไม่ทราบแน่ชัด</h3>
+                <p>ไม่สามารถระบุสถานะการรับรองได้ในขณะนี้</p>
+            {{ end }}
+        </div>
+
+        <p><strong>รายละเอียดเพิ่มเติม:</strong></p>
+        <ul class="details-list">
+            <li><strong>บริษัท:</strong> {{.Company}}</li>
+        </ul>
+
+        {{ if .ActionURL }}
+        <p>กรุณาคลิกปุ่มด้านล่างเพื่อเข้าสู่ลิงก์ที่เกี่ยวข้อง:</p>
+        <div style="text-align: center;">
+            <a href="{{.ActionURL}}" class="button">ดูรายละเอียดเพิ่มเติม</a>
+        </div>
+        {{ end }}
+
+        <p>หากมีข้อสงสัยหรือต้องการความช่วยเหลือเพิ่มเติม กรุณาติดต่อทีมงานได้ที่<br>
+            <a href="mailto:Coopmatch4@gmail.com">Coopmatch4@gmail.com</a></p>
+
+        <div class="signature">
+            <p>ขอแสดงความนับถือ</p>
+            <p><strong>ทีมงานระบบ Co-op Match</strong></p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-links">
+            <a href="{{.PrivacyURL}}">นโยบายความเป็นส่วนตัว</a>
+            <a href="{{.TermsURL}}">ข้อกำหนดการใช้บริการ</a>
+            <a href="{{.UnsubscribeURL}}">ยกเลิกการรับอีเมล</a>
+        </div>
+        <p>© 2025 ระบบ Co-op Match สงวนลิขสิทธิ์</p>
+        <p>อีเมลนี้ถูกส่งถึงคุณเนื่องจากคุณเป็นผู้ใช้งานระบบ Co-op Match</p>
+    </div>
+</div>
+</body>
+</html>

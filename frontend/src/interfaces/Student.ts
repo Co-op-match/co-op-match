@@ -3,10 +3,11 @@ import type { UserInterface } from "./User";
 import type { AddressInterface } from "./Address";
 import type { AdminInterface } from "./Admin";
 import type { EducationInterface } from "./Education";
+import type { StudentSkillInterface } from "../interfaces/StudentSkill";
+import type { StudentInterestInterface } from "../interfaces/StudentInterest";
 
 export interface StudentInterface {
   ID?: number;
-  //data: any;
   id?: number;
   first_name?: string;
   last_name?: string;
@@ -28,4 +29,7 @@ export interface StudentInterface {
   Address?: AddressInterface;
   Admin?: AdminInterface;
   Education?: EducationInterface[];
+
+  StudentSkill?: StudentSkillInterface[];  // ✅ ต้องตรงกับ key ที่ backend ส่ง
+  StudentInterest?: StudentInterestInterface[];  // ✅ เช่นกัน
 }

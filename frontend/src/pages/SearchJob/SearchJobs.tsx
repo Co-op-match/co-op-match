@@ -162,7 +162,7 @@ function SearchJobs(){
     // Search term filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(post => 
+      filtered = filtered.filter(post =>
         post.post_name?.toLowerCase().includes(searchLower) ||
         post.Company?.company_name?.toLowerCase().includes(searchLower) ||
         post.post_description?.toLowerCase().includes(searchLower)
@@ -272,7 +272,13 @@ function SearchJobs(){
         </div>
       }
       actions={[
-        <Button type="primary">สมัครงาน</Button>
+        <Button
+          type="primary"
+          size="large"
+          onClick={() => navigate(`/student/post-student/${job.ID}`)}
+        >
+          สมัครฝึกงาน
+        </Button>
       ]}
     >
       <Card.Meta
@@ -290,11 +296,8 @@ function SearchJobs(){
         description={
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Space>
-              <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
-            </Space>
-            <Space>
               <EnvironmentOutlined />
-              <Text style={{ color: '#434343' }}>{job.Company?.Address?.Province?.name_th}</Text>
+              <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
             </Space>
             <Space>
               <CalendarOutlined />
@@ -461,6 +464,7 @@ function SearchJobs(){
               </Col>
             ))}
           </Row>
+
 
           {filteredPosts.length === 0 && (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
