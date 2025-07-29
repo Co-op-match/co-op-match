@@ -5,6 +5,8 @@ import type { AdminInterface } from "./Admin";
 import type { EducationInterface } from "./Education";
 
 export interface StudentInterface {
+  ID?: number;
+  //data: any;
   id?: number;
   first_name?: string;
   last_name?: string;
