@@ -16,19 +16,14 @@ import (
 const PORT = "8000"
 
 func main() {
-	// เปิดการเชื่อมต่อฐานข้อมูล
 	config.ConnectionDB()
-
-	// สร้างตารางและ seed ข้อมูล (ถ้ามี)
 	config.SetupDatabase()
 
-	// สร้าง Gin engine
 	r := gin.Default()
-
-	// เพิ่ม CORS Middleware
 	r.Use(CORSMiddleware())
 	r.Static("/uploads", "./public/uploads")
-	// Auth Route
+
+	// Public Routes
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
 	r.POST("/reset-password", users.SimpleResetPassword)
@@ -36,15 +31,9 @@ func main() {
 
 	r.GET("/roles", role.GetAll)
 	r.GET("/provinces", searchjob.GetAllProvinces)
-
 	r.GET("/universities", controller.GetUniversities)
 
-	//Application
-
-	r.POST("/applications", controller.CreateApplication)
 	r.POST("/post", controller.CreateInternshipPost)
-
-	// Route สำหรับดึงข้อมูล Work Mode, Work Day, Stipend, JobType, StatusPost
 
 	r.GET("/work_modes", controller.GetAllWorkModes)
 	r.GET("/work_days", controller.GetAllWorkDays)
@@ -52,15 +41,31 @@ func main() {
 	r.GET("/job_types", controller.GetAllJobTypes)
 	r.GET("/status_posts", controller.GetAllStatusPosts)
 	r.GET("/benefit", controller.GetAllBenefits)
-	r.GET("/getpost", controller.ListInternshipPosts)
+	r.GET("/getpost", controller.ListIntershipPosts)
 	r.GET("/getpost/:id", controller.GetInternshipPostById)
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
+	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
+	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
+	r.GET("/student/user/:user_id", controller.GetStudentByUserID)
+	r.GET("/application/:id", controller.GetApplicationByID)
+	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
+	r.PUT("/applications/post/:id", controller.UpdateApplication)
 
-	// Group routes (ตัวอย่าง)
+	r.POST("/interview_appointments", controller.CreateInterviewAppointment)
+	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
+	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
+
+	r.Static("/public", "./public")
+
+	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
+	r.POST("/applications/:id", controller.CreateApplication)
+
+	// Protected Routes
 	router := r.Group("/")
 	{
 		router.Use(middlewares.Authorizes())
+
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
 
@@ -71,8 +76,8 @@ func main() {
 			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
-
 		}
+
 		addressGroup := router.Group("/address")
 		{
 			addressGroup.GET("/", controller.GetAllAdress)
@@ -81,6 +86,7 @@ func main() {
 			addressGroup.POST("/:role_id/:user_id", controller.CreateAddressByRoleIDAndUserID)
 			addressGroup.PUT("/:role_id/:user_id", controller.UpdateAddressByRoleIDAndUserID)
 		}
+
 		studentSkillGroup := router.Group("/skills")
 		{
 			studentSkillGroup.GET("/", controller.GetAllSkill)
@@ -88,11 +94,13 @@ func main() {
 			studentSkillGroup.POST("/:user_id", controller.CreateStudentSkillsAndInterestsByUserID)
 			studentSkillGroup.PUT("/:user_id", controller.UpdateStudentSkillsAndInterestsByUserID)
 		}
+
 		interestGroup := router.Group("/interests")
 		{
 			interestGroup.GET("/", controller.GetAllInterest)
 			interestGroup.GET("/:user_id", controller.GetStudentInterestsByUserID)
 		}
+
 		eduGroup := router.Group("/education")
 		{
 			eduGroup.GET("/", controller.GetAllEducation)
@@ -115,9 +123,10 @@ func main() {
 		{
 			chatGroup.POST("/room", controller.CreateChatRoom)
 		}
+
 		notificationGroup := router.Group("/notification")
 		{
-			notificationGroup.POST("/interview/send-email/:id", controller.SendInterviewEmail) // <-- ครอบคลุมทั้งสร้าง notification + ส่ง email ในตัว
+			notificationGroup.POST("/interview/send-email/:student_id/:company_id", controller.SendInterviewEmail)
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
@@ -130,46 +139,40 @@ func main() {
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 		}
+
 		contactGroup := router.Group("/contact")
 		{
 			contactGroup.POST("", controller.CreateContact)
 			contactGroup.GET("/:user_id", controller.GetContactByUserId)
 		}
-		adminGroup := r.Group("/admin")
-		{
-			adminGroup.GET("/all", controller.GetAllAdmin)
-			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
-			adminGroup.GET("/:id", controller.GetAdminByID)
-		}
 	}
+
+	adminGroup := r.Group("/admin")
+	{
+		adminGroup.GET("/all", controller.GetAllAdmin)
+		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
+		adminGroup.GET("/:id", controller.GetAdminByID)
+	}
+
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
 	})
-	// Run the server
+
 	r.Run("localhost:" + PORT)
 }
 
 func CORSMiddleware() gin.HandlerFunc {
-
 	return func(c *gin.Context) {
-
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
 		if c.Request.Method == "OPTIONS" {
-
 			c.AbortWithStatus(204)
-
 			return
-
 		}
 
 		c.Next()
-
 	}
 }

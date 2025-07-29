@@ -87,10 +87,10 @@ func SetupDatabase() {
 func createSeedData(db *gorm.DB) {
 	// สร้าง Role
 	roles := []entity.Role{
-		{RoleName: "Admin"},
-		{RoleName: "Company"},
-		{RoleName: "Student"},
-		{RoleName: "AcademicStaff"},
+		{RoleName: "Admin", RoleNameTH: "แอดมิน"},
+		{RoleName: "Company", RoleNameTH: "บริษัท"},
+		{RoleName: "Student", RoleNameTH: "นักเรียน"},
+		{RoleName: "AcademicStaff", RoleNameTH: "อาจารย์"},
 	}
 	for _, role := range roles {
 		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})
@@ -98,8 +98,8 @@ func createSeedData(db *gorm.DB) {
 
 	// สร้าง Gender
 	genders := []entity.Gender{
-		{Name: "Male"},
-		{Name: "Female"},
+		{Name: "Male", NameTH: "ชาย"},
+		{Name: "Female", NameTH: "หญิง"},
 	}
 	for _, gender := range genders {
 		db.FirstOrCreate(&gender, entity.Gender{Name: gender.Name})
@@ -125,7 +125,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "s5@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "B6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
 
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
@@ -384,9 +384,9 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Status Posts
 	StatusPosts := []entity.StatusPost{
-		{StatusPost: "Open"},
-		{StatusPost: "Closed"},
-		{StatusPost: "Pending Approval"},
+		{StatusPost: "Open", StatusPostTH: "เปิดรับสมัคร"},
+		{StatusPost: "Closed", StatusPostTH: "ปิดรับสมัคร"},
+		{StatusPost: "Pending Approval", StatusPostTH: "รอตรวจสอบ"},
 	}
 	for _, pkg := range StatusPosts {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})

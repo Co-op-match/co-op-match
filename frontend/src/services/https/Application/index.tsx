@@ -1,5 +1,6 @@
 
 import { type ApplicationInterface } from '../../../interface/IApplication';
+import { type StudentInterface } from "../../../interfaces/Student"; 
 import axios from "axios";
 
 const apiUrl = "http://localhost:8000"; // เปลี่ยน URL ให้ตรงกับเซิร์ฟเวอร์ของคุณ
@@ -15,9 +16,15 @@ const requestOptions = {
 };
 
 // ฟังก์ชันสำหรับสร้าง Application ใหม่
-async function CreateApplication(data: ApplicationInterface) {
+// ✅ ใหม่: ฟังก์ชันสำหรับสร้าง Application พร้อมแนบไฟล์ (resume, transcript)
+async function CreateApplication(postId: number, formData: FormData) {
   return await axios
-    .post(`${apiUrl}/applications`, data, requestOptions)
+    .post(`${apiUrl}/applications/${postId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `${Bearer} ${Authorization}`,
+      },
+    })
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -33,10 +40,26 @@ async function GetApplications() {
 // ฟังก์ชันสำหรับดึงข้อมูล Application ตาม ID
 async function GetApplicationById(id: number) {
   return await axios
-    .get(`${apiUrl}/applications/${id}`, requestOptions)
+    .get(`${apiUrl}/application/${id}`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
+async function GetApplicationsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/application_details/student/${studentId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetStudentByUserId(userId: number): Promise<StudentInterface | null> {
+  return await axios
+    .get(`${apiUrl}/student/user/${userId}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ Error fetching student:", e);
+      return null;
+    });
+}
+
 
 // ฟังก์ชันสำหรับอัพเดตข้อมูล Application
 async function UpdateApplication(id: number, data: ApplicationInterface) {
@@ -62,6 +85,96 @@ async function CreatePost(data: ApplicationInterface) {
     .catch((e) => e.response);
 }
 
+async function GetAllInternshipPosts() {
+  return await axios
+    .get(`${apiUrl}/getpost`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+async function GetPostById(id: number) {
+  return await axios
+    .get(`${apiUrl}/getpost/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+// ✅ ฟังก์ชันสำหรับดึงใบสมัครจาก InternshipPostID
+async function GetApplicationsByPostId(postId: number) {
+  return await axios
+    .get(`${apiUrl}/applications/post/${postId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+async function UpdateApplicationStatus(id: number, status: string, companyNote?: string) {
+  return await axios
+    .put(`${apiUrl}/applications/post/${id}`, { status, company_note: companyNote }, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+
+// POST นัดสัมภาษณ์ใหม่
+export async function CreateInterviewAppointment(data: any) {
+  return await axios
+    .post(`${apiUrl}/interview_appointments`, data, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// PUT แก้ไข
+export async function UpdateInterviewAppointment(id: number, data: any) {
+  return await axios
+    .put(`${apiUrl}/interview_appointments/${id}`, data, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// GET ทั้งหมด
+export async function GetAllInterviewAppointments() {
+  return await axios
+    .get(`${apiUrl}/interview_appointments`, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// GET รายตัว
+export async function GetInterviewAppointmentById(id: number) {
+  return await axios
+    .get(`${apiUrl}/interview_appointments/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+// DELETE รายตัว
+export async function DeleteInterviewAppointment(id: number) {
+  return await axios
+    .delete(`${apiUrl}/interview_appointments/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+async function GetApplicationsByCompanyID(companyId: number) {
+  return await axios
+    .get(`${apiUrl}/applications/company/${companyId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+export async function GetCompanyByUserID(userId: number) {
+  return await axios
+    .get(`${apiUrl}/company/user/${userId}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ GetCompanyByUserID error:", e);
+      return null;
+    });
+}
+
+
+
+
 export {
   CreateApplication,
   GetApplications,
@@ -69,4 +182,11 @@ export {
   UpdateApplication,
   DeleteApplication,
   CreatePost,
+  GetAllInternshipPosts,
+  GetPostById,
+  GetApplicationsByStudentID,
+  GetStudentByUserId,
+  GetApplicationsByPostId,
+  UpdateApplicationStatus,
+  GetApplicationsByCompanyID,
 };
