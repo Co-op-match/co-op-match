@@ -72,6 +72,7 @@ func GetStudentByUserID(c *gin.Context) {
 		Preload("User").
 		Preload("User.ProfileImage").
 		Preload("Admin").
+		Preload("Education").
 		Preload("Education.University").
 		Preload("Education.Faculty").
 		Preload("Education.Program").
