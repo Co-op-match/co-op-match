@@ -61,9 +61,7 @@ func main() {
 
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
-
 		
-	r.GET("/get-all-post-by-admin", controller.GetAllInternshipPostsByAdmin)
 	r.GET("/status_verifies", controller.GetAllStatusVerify)
 	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
 
@@ -165,7 +163,10 @@ func main() {
 			adminGroup.GET("/:id", controller.GetAdminByID)
 			adminGroup.GET("/all-active", controller.GetAllActiveAdmins)
 			adminGroup.GET("/all-deleted", controller.GetAllDeletedAdmins)
-			adminGroup.DELETE("/delete/:id", controller.DeleteAdmin)		
+			adminGroup.DELETE("/delete/:id", controller.DeleteAdmin)	
+			adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+			adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
+	
 		}
 		academicStaffGroup := r.Group("/academic-staff")
 		{

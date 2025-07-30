@@ -28,21 +28,84 @@ import {
   SearchOutlined,
   ReloadOutlined,
   DownloadOutlined,
+  LinkOutlined,
+  UserOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
-import { GetAllInternshipPostsByAdmin } from "../../../services/https/Admin";
+import { GetAllInternshipPostsInAdmin } from "../../../services/https/Admin";
 import type { ColumnsType } from "antd/es/table";
 import "./Post.css";
 import "../main.css";
 import { getStatusStyle } from "../../../components/adminpage/verify/statusStyle";
-import Post_StatCard from "../../../components/adminpage/verify/Post_StatCard";
+import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import { GetStatusPosts } from "../../../services/https/post";
 import type { StatusPostInterface } from "../../../interface/IStatusPost";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
+interface TabProps {
+  activeTab: string;
+  onChange: (key: string) => void;
+}
+
+const getStatusTabs = ({
+  activeTab,
+  onChange,
+}: {
+  activeTab: string;
+  onChange: (key: string) => void;
+}) => {
+  const items = [
+    {
+      key: "all",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <FileTextOutlined /> ทั้งหมด
+        </span>
+      ),
+    },
+    {
+      key: "pending",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <ClockCircleOutlined style={{ color: "#faad14" }} /> รอตรวจสอบ
+        </span>
+      ),
+    },
+    {
+      key: "approved",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <CheckCircleOutlined style={{ color: "#52c41a" }} /> เปิดรับสมัคร
+        </span>
+      ),
+    },
+    {
+      key: "rejected",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <CloseOutlined style={{ color: "#ff4d4f" }} /> ปิดรับสมัคร
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <Tabs
+      activeKey={activeTab}
+      onChange={onChange}
+      size="large"
+      items={items}
+    />
+  );
+};
+
 const ManagePostsPage = () => {
+  const navigate = useNavigate();
+
   const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<IntershipPostInterface[]>(
     []
@@ -67,7 +130,7 @@ const ManagePostsPage = () => {
     const loadPosts = async () => {
       setLoading(true);
       try {
-        const res_post = await GetAllInternshipPostsByAdmin();
+        const res_post = await GetAllInternshipPostsInAdmin();
         const res_status = await GetStatusPosts();
         setPosts(res_post.data);
         setStatus(res_status);
@@ -208,28 +271,37 @@ const ManagePostsPage = () => {
       key: "post_name",
       width: 280,
       render: (text: any, record: any) => (
-        <div style={{ padding: "8px 0" }}>
+        <div
+          style={{
+            padding: "8px 0",
+            cursor: "pointer",
+          }}
+          onClick={() => navigate(`/admin/manage-post/${record.ID}`)}
+        >
+          {/* ชื่อโพสต์ + ไอคอน */}
           <div
             style={{
               fontSize: "16px",
               fontWeight: "600",
-              color: "#1890ff", // Blue theme
+              color: "#1890ff",
               marginBottom: "4px",
               lineHeight: "1.4",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
             }}
           >
-            {text}
+            <span style={{ textDecoration: "underline" }}>{text}</span>
+            <LinkOutlined style={{ fontSize: "14px", color: "#1890ff" }} />
           </div>
-          <div
-            style={{
-              fontSize: "13px",
-              color: "#666",
-              marginBottom: "2px",
-            }}
-          >
+
+          {/* บริษัท */}
+          <div style={{ fontSize: "13px", color: "#666", marginBottom: "2px" }}>
             <TeamOutlined style={{ marginRight: "4px", color: "#1890ff" }} />
             {record.Company?.company_name || "ไม่ระบุบริษัท"}
           </div>
+
+          {/* ประเภทงาน */}
           <Tag
             style={{
               backgroundColor: "#e6f7ff",
@@ -263,42 +335,46 @@ const ManagePostsPage = () => {
       ),
     },
     {
-      title: "จำนวน/GPA",
+      title: "จำนวนรับสมัคร / เกรด",
       key: "quantity_gpa",
-      width: 120,
+      width: 150,
       align: "center",
       render: (record: IntershipPostInterface) => (
-        <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              backgroundColor: "#1890ff", // Blue theme
-              color: "white",
-              borderRadius: "50%",
-              width: "32px",
-              height: "32px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "14px",
-              fontWeight: "600",
-              margin: "0 auto 8px",
-            }}
-          >
-            {record.quantity || 0}
+        <div
+          style={{
+            fontSize: "13px",
+            color: "#4c4c4c",
+            lineHeight: "1.7",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          {/* จำนวน */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <UserOutlined style={{ fontSize: "13px", color: "#bfbfbf" }} />
+            <span style={{ minWidth: "50px", textAlign: "left" }}>
+              {record.quantity || 0} คน
+            </span>
           </div>
-          <Tag color="blue" style={{ fontSize: "11px" }}>
-            GPA
-            {record.min_gpa !== undefined
-              ? Number(record.min_gpa).toFixed(1)
-              : "-"}
-          </Tag>
+
+          {/* GPA */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <StarOutlined style={{ fontSize: "13px", color: "#bfbfbf" }} />
+            <span style={{ minWidth: "50px", textAlign: "left" }}>
+              GPA{" "}
+              {record.min_gpa !== undefined
+                ? Number(record.min_gpa).toFixed(1)
+                : "-"}
+            </span>
+          </div>
         </div>
       ),
     },
     {
       title: "สถานที่",
       key: "location",
-      width: 200,
       render: (record: IntershipPostInterface) => {
         const parts = [
           record.location_detail?.trim(),
@@ -307,8 +383,7 @@ const ManagePostsPage = () => {
           record.province?.trim(),
         ].filter(Boolean);
 
-        const locationText =
-          parts.length > 0 ? parts.join(", ") : "ไม่ระบุสถานที่";
+        const locationText = parts.length > 0 ? parts.join(", ") : "-";
 
         return (
           <div
@@ -329,24 +404,32 @@ const ManagePostsPage = () => {
       width: 90,
       align: "center",
       render: (record) => (
-        <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              fontSize: "15px",
-              fontWeight: 600,
-              color: "#1677ff",
-            }}
-          >
+        <div style={{ fontSize: "13px", color: "#4c4c4c" }}>
+          <span style={{ minWidth: "50px", textAlign: "left" }}>
             {record.Applications?.length || 0}
-          </div>
+          </span>
+
           <div style={{ fontSize: "12px", color: "#888" }}>ใบสมัคร</div>
         </div>
+      ),
+    },
+    {
+      title: "วันที่สร้าง",
+      dataIndex: "CreatedAt",
+      key: "CreatedAt",
+      width: 120,
+      align: "center",
+      render: (date: any) => (
+        <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
+          {date ? new Date(date).toLocaleDateString("th-TH") : "-"}
+        </Text>
       ),
     },
     {
       title: "สถานะ",
       key: "status",
       width: 160,
+      fixed: "right",
       align: "center",
       render: (record) => {
         const statusTh = record.StatusPost?.status_post_th || "ไม่ระบุสถานะ";
@@ -384,146 +467,6 @@ const ManagePostsPage = () => {
         );
       },
     },
-    {
-      title: "วันที่สร้าง",
-      dataIndex: "CreatedAt",
-      key: "CreatedAt",
-      width: 120,
-      align: "center",
-      render: (date: any) => (
-        <Text style={{ fontSize: "12px", color: "#8c8c8c" }}>
-          {date ? new Date(date).toLocaleDateString("th-TH") : "-"}
-        </Text>
-      ),
-    },
-    {
-      title: "การดำเนินการ",
-      key: "actions",
-      width: 180,
-      fixed: "right",
-      align: "center",
-      render: (record: IntershipPostInterface) => {
-        const isPending = record.StatusPost?.status_post === "Pending Approval";
-        const isApproved = record.StatusPost?.status_post === "Open";
-        const isRejected = record.StatusPost?.status_post === "Closed";
-        const isLoading = actionLoading[record.ID || 0];
-
-        return (
-          <div
-            style={{ display: "flex", gap: "6px", justifyContent: "center" }}
-          >
-            <Tooltip title="ดูรายละเอียด">
-              <Button
-                type="text"
-                icon={<EyeOutlined />}
-                size="small"
-                style={{
-                  color: "#1890ff", // Blue theme
-                  backgroundColor: "#e6f7ff",
-                  border: "1px solid #91d5ff",
-                  borderRadius: "6px",
-                }}
-              />
-            </Tooltip>
-
-            {isPending && (
-              <>
-                <Tooltip title="อนุมัติโพสต์">
-                  <Popconfirm
-                    title="คุณต้องการอนุมัติโพสต์นี้หรือไม่?"
-                    onConfirm={() => handleApprove(record)}
-                    okText="อนุมัติ"
-                    cancelText="ยกเลิก"
-                    okButtonProps={{
-                      style: {
-                        background: "#52c41a",
-                        borderColor: "#52c41a",
-                        fontWeight: "500",
-                      },
-                    }}
-                  >
-                    <Button
-                      type="primary"
-                      icon={<CheckOutlined />}
-                      size="small"
-                      loading={isLoading}
-                      style={{
-                        backgroundColor: "#52c41a",
-                        borderColor: "#52c41a",
-                        borderRadius: "6px",
-                        fontWeight: "500",
-                        boxShadow: "0 2px 4px rgba(82, 196, 26, 0.3)",
-                      }}
-                    >
-                      อนุมัติ
-                    </Button>
-                  </Popconfirm>
-                </Tooltip>
-
-                <Tooltip title="ปฏิเสธโพสต์">
-                  <Popconfirm
-                    title="คุณต้องการปฏิเสธโพสต์นี้หรือไม่?"
-                    onConfirm={() => handleReject(record)}
-                    okText="ปฏิเสธ"
-                    cancelText="ยกเลิก"
-                    okButtonProps={{
-                      danger: true,
-                      style: { fontWeight: "500" },
-                    }}
-                  >
-                    <Button
-                      danger
-                      icon={<CloseOutlined />}
-                      size="small"
-                      loading={isLoading}
-                      style={{
-                        borderRadius: "6px",
-                        fontWeight: "500",
-                        boxShadow: "0 2px 4px rgba(255, 77, 79, 0.3)",
-                      }}
-                    >
-                      ปฏิเสธ
-                    </Button>
-                  </Popconfirm>
-                </Tooltip>
-              </>
-            )}
-
-            {isApproved && (
-              <Tag
-                icon={<CheckCircleOutlined />}
-                color="success"
-                style={{
-                  borderRadius: "6px",
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  border: "none",
-                }}
-              >
-                อนุมัติแล้ว
-              </Tag>
-            )}
-
-            {isRejected && (
-              <Tag
-                icon={<CloseOutlined />}
-                color="error"
-                style={{
-                  borderRadius: "6px",
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  border: "none",
-                }}
-              >
-                ปฏิเสธแล้ว
-              </Tag>
-            )}
-          </div>
-        );
-      },
-    },
   ];
 
   // Calculate statistics
@@ -542,7 +485,7 @@ const ManagePostsPage = () => {
     <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <div className="admin-header-box">
+        <div className="adminpost--header-box">
           <Row justify="space-between" align="middle">
             <Col>
               <div
@@ -637,47 +580,7 @@ const ManagePostsPage = () => {
             </Row>
           </div>
 
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            size="large"
-            items={[
-              {
-                key: "all",
-                label: (
-                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                    <FileTextOutlined /> ทั้งหมด
-                  </span>
-                ),
-              },
-              {
-                key: "pending",
-                label: (
-                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                    <ClockCircleOutlined style={{ color: "#faad14" }} />{" "}
-                    รอตรวจสอบ
-                  </span>
-                ),
-              },
-              {
-                key: "approved",
-                label: (
-                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                    <CheckCircleOutlined style={{ color: "#52c41a" }} />{" "}
-                    อนุมัติแล้ว
-                  </span>
-                ),
-              },
-              {
-                key: "rejected",
-                label: (
-                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                    <CloseOutlined style={{ color: "#ff4d4f" }} /> ปฏิเสธแล้ว
-                  </span>
-                ),
-              },
-            ]}
-          />
+          {getStatusTabs({ activeTab, onChange: setActiveTab })}
 
           <Text
             type="secondary"

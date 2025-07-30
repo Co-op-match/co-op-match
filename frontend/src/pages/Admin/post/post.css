@@ -1,5 +1,5 @@
 /* Header box */
-.admin-header-box {
+.adminpost-header-box {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 16px;
@@ -9,29 +9,135 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.pending-row {
+.adminpost-pending-row {
   background-color: #fff7e6 !important;
 }
 
-.approved-row {
+.adminpost-approved-row {
   background-color: #f6ffed !important;
 }
 
-.rejected-row {
+.adminpost-rejected-row {
   background-color: #fff2f0 !important;
 }
 
-.pending-row:hover {
+.adminpost-pending-row:hover {
   background-color: #ffe7ba !important;
 }
 
-.approved-row:hover {
+.adminpost-approved-row:hover {
   background-color: #d9f7be !important;
 }
 
-.rejected-row:hover {
+.adminpost-rejected-row:hover {
   background-color: #ffccc7 !important;
 }
 
-/* 
- */
+/***************************** Post Detail *****************************/
+/* AdminPost Button Styles */
+.adminpost-btn-approve {
+  background-color: #52c41a !important;
+  border-color: #52c41a !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  height: 48px !important;
+  min-width: 120px !important;
+  box-shadow: 0 4px 16px rgba(82, 196, 26, 0.3) !important;
+  transition: all 0.3s ease !important;
+  color: white !important;
+}
+
+.adminpost-btn-approve:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(82, 196, 26, 0.4) !important;
+  background-color: #73d13d !important;
+  border-color: #73d13d !important;
+}
+
+.adminpost-btn-approve:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.4) !important;
+}
+
+.adminpost-btn-approve:focus {
+  box-shadow: 0 4px 16px rgba(82, 196, 26, 0.3), 0 0 0 2px rgba(82, 196, 26, 0.2) !important;
+}
+
+.adminpost-btn-reject {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: white !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  height: 48px !important;
+  min-width: 120px !important;
+  box-shadow: 0 4px 16px rgba(255, 77, 79, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.adminpost-btn-reject:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.4) !important;
+  background-color: #ff7875 !important;
+  border-color: #ff7875 !important;
+  color: white !important;
+}
+
+.adminpost-btn-reject:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4) !important;
+}
+
+.adminpost-btn-reject:focus {
+  box-shadow: 0 4px 16px rgba(255, 77, 79, 0.3), 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  color: white !important;
+}
+
+/* Loading state styles */
+.adminpost-btn-approve.ant-btn-loading,
+.adminpost-btn-reject.ant-btn-loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.adminpost-btn-approve.ant-btn-loading:hover,
+.adminpost-btn-reject.ant-btn-loading:hover {
+  transform: none !important;
+}
+
+/* Button container */
+.adminpost-btn-container {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .adminpost-btn-approve,
+  .adminpost-btn-reject {
+    min-width: 100px !important;
+    font-size: 14px !important;
+    height: 44px !important;
+  }
+  
+  .adminpost-btn-container {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminpost-btn-container {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .adminpost-btn-approve,
+  .adminpost-btn-reject {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+}

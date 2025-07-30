@@ -32,13 +32,19 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
     });
 }
 
-export async function GetAllInternshipPostsByAdmin() {
+export async function GetAllInternshipPostsInAdmin() {
   return await api
-    .get(`${apiUrl}/get-all-post-by-admin`)
+    .get(`${apiUrl}/admin/get-allpost`)
     .then((res) => res)
     .catch((e) => e.response);
 }
 
+export async function GetInternshipPostsInAdminByIPostID(id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/get-post-by-postid/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 /* ============================ student  ============================ */
 // สำหรับ student, student => ไม่เห็นข้อมูลบริษัทที่โดนลบ
 export async function GetAllActiveStudents() {

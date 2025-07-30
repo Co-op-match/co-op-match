@@ -1,5 +1,6 @@
 import type { ApplicationInterface } from "../interface/IApplication";
 import type { StatusPostInterface } from "../interface/IStatusPost";
+import type { CompanyInterface } from "./Company";
 
 export interface IntershipPostInterface {
   WorkModeID?: number;
@@ -13,16 +14,10 @@ export interface IntershipPostInterface {
   qualifications?: string;
   quantity?: number;
   min_gpa?: string;
-  Company?: {
-    company_name: string;
-    logo: string;
-    Address?: {
-      Province?: {
-        ID: number;
-        name_th: string; 
-      };
-    };
-  };
+
+  Company?: CompanyInterface;
+  CompanyID?: number;
+
   WorkMode?: {
     work_mode: string;
   };
@@ -50,4 +45,5 @@ export interface IntershipPostInterface {
   district: string;
   province: string;
   
+  CreatedAt: string;
 }

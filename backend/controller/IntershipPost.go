@@ -309,7 +309,7 @@ func GetPostsByCompanyID(c *gin.Context) {
 	c.JSON(http.StatusOK, posts)
 }
 
-func GetAllInternshipPostsByAdmin(c *gin.Context) {
+func GetAllInternshipPostsInAdmin(c *gin.Context) {
 	var posts []entity.IntershipPost
 
 	err := config.DB().
@@ -339,4 +339,38 @@ func GetAllInternshipPostsByAdmin(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, posts)
+}
+
+func GetInternshipPostsInAdminByIPostID(c *gin.Context) {
+	id := c.Param("id") // รับ post id จาก URL param
+
+	var post entity.IntershipPost
+
+	err := config.DB().
+		Preload("Company").
+		Preload("Company.User.Role").
+		Preload("Company.Address.Province").
+		Preload("Company.Address.District").
+		Preload("Company.Address.SubDistrict.Postcode").
+		Preload("Company.Contact").
+		Preload("Company.Admin").
+		Preload("JobType").
+		Preload("Stipend").
+		Preload("WorkDay").
+		Preload("WorkMode").
+		Preload("StatusPost").
+		Preload("Benefit").
+		Preload("Admin.User.Role").
+		Preload("Applications.Student").
+		First(&post, id).Error
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "ไม่พบโพสต์ฝึกงาน",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
 }

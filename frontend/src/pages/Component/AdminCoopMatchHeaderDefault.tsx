@@ -262,7 +262,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       <Drawer
         title={
           <div style={{ display: "flex", alignItems: "center" }}>
-            <img src={Logo} alt="Logo" style={{ height: 32, marginRight: 12 }} />
+            {/* <img src={Logo} alt="Logo" style={{ height: 32, marginRight: 12 }} /> */}
             <span>เมนู</span>
           </div>
         }

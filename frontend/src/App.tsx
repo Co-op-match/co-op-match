@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import LoginForm from "./pages/authentication/Login/LoginForm";
 import RegisterPage from "./pages/authentication/Register/RegisterForm";
 import RoleSelectionPage from "./pages/authentication/SelectRole/SelectRoleForm";
@@ -16,23 +22,24 @@ import AddStudentForm from "./pages/Profile/Student/AddStudent/AddStudentForm";
 import ResetPassword from "./pages/authentication/ResetPassword/ResetPassword";
 import AddCompanyForm from "./pages/Profile/Company/AddCompany/AddCompanyForm";
 import CompanyProfile from "./pages/Profile/Company/Company";
-import CompanyApplication from './pages/company/application/application';
-import PostDetails from './pages/company/post/postdetails';
-import CompanyPostPage from './pages/company/post/post';
-import PostDetailsStudent from './pages/Student/Application/Post';
+import CompanyApplication from "./pages/company/application/application";
+import PostDetails from "./pages/company/post/postdetails";
+import CompanyPostPage from "./pages/company/post/post";
+import PostDetailsStudent from "./pages/Student/Application/Post";
 import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
+
+import AddApplication from "./pages/Student/Application/AddApplication";
+import ApplicationHistory from "./pages/Student/Application/History";
+import ApplicationByCompany from "../src/pages/company/application/application";
+import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
+
 import CompaniesInAdmin from "./pages/Admin/users/Companies/Companies";
 import SubCompanyInAdmin from "./pages/Admin/users/Companies/SubCompany";
 import StudentsInAdmin from "./pages/Admin/users/Students/Students";
 import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
 import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
-import AddApplication from './pages/Student/Application/AddApplication';
-import ApplicationHistory from "./pages/Student/Application/History";
-import ApplicationByCompany from "../src/pages/company/application/application";
-import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 import AdminPostManagement from "./pages/Admin/post/Post";
-
-
+import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 
 function App() {
   return (
@@ -40,17 +47,19 @@ function App() {
       <UserProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/sign-in" replace />} />
-
           {/* Public Routes */}
-          <Route element={<UserProvider><Outlet /></UserProvider>}>
+          <Route
+            element={
+              <UserProvider>
+                <Outlet />
+              </UserProvider>
+            }
+          >
             <Route path="/sign-in" element={<LoginForm />} />
             <Route path="/sign-up" element={<RegisterPage />} />
             <Route path="/role-select" element={<RoleSelectionPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-
-
           </Route>
-
           {/* Protected Routes */}
           <Route
             path="/student/dashboard"
@@ -59,7 +68,8 @@ function App() {
                 <StudentDashboard />
               </ProtectedRoute>
             }
-          />  <Route
+          />{" "}
+          <Route
             path="/student/search"
             element={
               <ProtectedRoute allowedRoles={[3]}>
@@ -127,7 +137,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/student/applications/:postId"
             element={
@@ -136,7 +145,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/student/applications/history"
             element={
@@ -145,7 +153,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/company/dashboard"
             element={
@@ -162,7 +169,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/post/:id"
             element={
@@ -171,7 +177,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/applications/post/:postId"
             element={
@@ -180,7 +185,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/company/post"
             element={
@@ -189,7 +193,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/interview_appointments"
             element={
@@ -198,8 +201,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-
           <Route
             path="/lecturer/dashboard"
             element={
@@ -262,6 +263,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminPostManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-post/:id"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostDetailManagement />
               </ProtectedRoute>
             }
           />
