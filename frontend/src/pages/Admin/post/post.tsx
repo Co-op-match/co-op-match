@@ -204,66 +204,6 @@ const ManagePostsPage = () => {
     }
   };
 
-  const handleApprove = async (post: IntershipPostInterface) => {
-    if (!post.ID) return;
-
-    setActionLoading((prev) => ({ ...prev, [post.ID!]: true }));
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.ID === post.ID
-            ? {
-                ...p,
-                StatusPost: {
-                  ...p.StatusPost,
-                  status_post: "Open",
-                  status_post_th: "เปิดรับสมัคร",
-                },
-              }
-            : p
-        )
-      );
-
-      message.success(`อนุมัติโพสต์ "${post.post_name}" เรียบร้อยแล้ว`);
-    } catch (error) {
-      message.error("ไม่สามารถอนุมัติโพสต์ได้");
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [post.ID!]: false }));
-    }
-  };
-
-  const handleReject = async (post: IntershipPostInterface) => {
-    if (!post.ID) return;
-
-    setActionLoading((prev) => ({ ...prev, [post.ID!]: true }));
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.ID === post.ID
-            ? {
-                ...p,
-                StatusPost: {
-                  ...p.StatusPost,
-                  status_post: "Closed",
-                  status_post_th: "ปิดรับสมัคร",
-                },
-              }
-            : p
-        )
-      );
-
-      message.success(`ปฏิเสธโพสต์ "${post.post_name}" เรียบร้อยแล้ว`);
-    } catch (error) {
-      message.error("ไม่สามารถปฏิเสธโพสต์ได้");
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [post.ID!]: false }));
-    }
-  };
-
   const columns: ColumnsType<IntershipPostInterface> = [
     {
       title: "ชื่อตำแหน่ง",
@@ -485,7 +425,7 @@ const ManagePostsPage = () => {
     <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
       <AdminHeader />
       <Layout style={{ margin: "2rem" }}>
-        <div className="adminpost--header-box">
+        <div className="adminpost-header-box">
           <Row justify="space-between" align="middle">
             <Col>
               <div

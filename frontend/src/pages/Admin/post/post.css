@@ -1,36 +1,13 @@
 /* Header box */
 .adminpost-header-box {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgb(255, 255, 255);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.adminpost-pending-row {
-  background-color: #fff7e6 !important;
-}
-
-.adminpost-approved-row {
-  background-color: #f6ffed !important;
-}
-
-.adminpost-rejected-row {
-  background-color: #fff2f0 !important;
-}
-
-.adminpost-pending-row:hover {
-  background-color: #ffe7ba !important;
-}
-
-.adminpost-approved-row:hover {
-  background-color: #d9f7be !important;
-}
-
-.adminpost-rejected-row:hover {
-  background-color: #ffccc7 !important;
+  width: 100%;
 }
 
 /***************************** Post Detail *****************************/

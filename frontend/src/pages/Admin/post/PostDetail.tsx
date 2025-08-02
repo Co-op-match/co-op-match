@@ -43,7 +43,7 @@ import {
   CheckOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { GetInternshipPostsInAdminByIPostID } from "../../../services/https/Admin";
+import { GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/Admin";
 import { GetStatusPosts } from "../../../services/https/post";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
@@ -54,6 +54,7 @@ import QuickStatsCard from "../../../components/adminpage/post/PDetail_QuickStat
 import CompanyInfoCard from "../../../components/adminpage/post/PDetail_CompanyInfoCard";
 import ApplicationsCard from "../../../components/adminpage/post/PDetail_ApplicationsCard";
 import PostInfoCard from "../../../components/adminpage/post/PDetail_PostInfoCard";
+import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -121,21 +122,28 @@ const PostDetailPage = () => {
   };
 
   const handleApprove = async () => {
+    if (!post) return;
     setActionLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // หาค่า status_post_id ที่ตรงกับ "เปิดรับสมัคร"
+      const openStatus = status.find((s) => s.status_post === "Open");
+      if (!openStatus) throw new Error("ไม่พบสถานะ 'เปิดรับสมัคร'");
+
+      await UpdateStatusPost(post.ID!, openStatus.ID!);
+
       setPost((prev) =>
         prev
           ? {
               ...prev,
               StatusPost: {
                 ...prev.StatusPost,
-                status_post: "Open",
-                status_post_th: "เปิดรับสมัคร",
+                status_post: openStatus.status_post,
+                status_post_th: openStatus.status_post_th,
               },
             }
           : prev
       );
+
       message.success("อนุมัติโพสต์เรียบร้อยแล้ว");
     } catch (error) {
       message.error("ไม่สามารถอนุมัติโพสต์ได้");
@@ -145,22 +153,29 @@ const PostDetailPage = () => {
   };
 
   const handleReject = async () => {
+    if (!post) return;
     setActionLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // หาค่า status_post_id ที่ตรงกับ "ปิดรับสมัคร"
+      const closedStatus = status.find((s) => s.status_post === "Closed");
+      if (!closedStatus) throw new Error("ไม่พบสถานะ 'ปิดรับสมัคร'");
+
+      await UpdateStatusPost(post.ID!, closedStatus.ID!);
+
       setPost((prev) =>
         prev
           ? {
               ...prev,
               StatusPost: {
                 ...prev.StatusPost,
-                status_post: "Open",
-                status_post_th: "เปิดรับสมัคร",
+                status_post: closedStatus.status_post,
+                status_post_th: closedStatus.status_post_th,
               },
             }
           : prev
       );
-      message.success("ปฏิเสธโพสต์เรียบร้อยแล้ว");
+
+      message.success("ปิดรับสมัครเรียบร้อยแล้ว");
     } catch (error) {
       message.error("ไม่สามารถปฏิเสธโพสต์ได้");
     } finally {
@@ -235,6 +250,7 @@ const PostDetailPage = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
+      <AdminHeader />
       <div style={{ padding: "2rem" }}>
         {/* Header */}
         <Card
@@ -250,7 +266,7 @@ const PostDetailPage = () => {
               <Space>
                 <Button
                   icon={<ArrowLeftOutlined />}
-                  onClick={() => navigate("/admin/posts")}
+                  onClick={() => navigate("/admin/manage-posts")}
                   style={{ borderRadius: "8px" }}
                 >
                   กลับ

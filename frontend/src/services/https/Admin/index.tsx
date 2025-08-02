@@ -13,6 +13,14 @@ const requestOptions = {
 };
 
 /* ============================ all  ============================ */
+// ฟังก์ชันสำหรับดึงข้อมูล Status Posts
+export async function UpdateStatusPost(postId: number, statusPostId: number) {
+  return await api
+    .put(`${apiUrl}/posts/update-status`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+
 export async function GetAllStatusVerify() {
   return await api
     .get(`${apiUrl}/status_verifies`, requestOptions)

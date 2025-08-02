@@ -6,6 +6,8 @@ import {
   Tag,
   Space,
   Button,
+  Modal,
+  message,
 } from "antd";
 import {
   EditOutlined,
@@ -133,7 +135,9 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
         </Descriptions.Item>
         <Descriptions.Item label="วันทำงาน">
           <span>
-            <CalendarOutlined style={{ marginRight: "6px", color: "#1677ff" }} />
+            <CalendarOutlined
+              style={{ marginRight: "6px", color: "#1677ff" }}
+            />
             {post.WorkDay?.work_day}
           </span>
         </Descriptions.Item>
@@ -151,8 +155,15 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
         </Descriptions.Item>
         <Descriptions.Item label="สถานที่">
           <div>
-            <EnvironmentOutlined style={{ marginRight: "6px", color: "#ff4d4f" }} />
-            {[post.location_detail, post.subdistrict, post.district, post.province]
+            <EnvironmentOutlined
+              style={{ marginRight: "6px", color: "#ff4d4f" }}
+            />
+            {[
+              post.location_detail,
+              post.subdistrict,
+              post.district,
+              post.province,
+            ]
               .filter(Boolean)
               .join(", ")}
           </div>
@@ -167,6 +178,19 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
           })}
         </Descriptions.Item>
       </Descriptions>
+      
+      <Button
+        onClick={() =>
+          Modal.confirm({
+            title: "ทดสอบ Modal",
+            content: "นี่คือการทดสอบ Modal.confirm",
+            onOk: () => message.success("ยืนยันเรียบร้อย"),
+            onCancel: () => message.info("ยกเลิก"),
+          })
+        }
+      >
+        ทดสอบ Modal
+      </Button>
 
       <div style={{ marginTop: "20px", justifySelf: "end" }}>
         {post.StatusPost?.status_post === "Pending Approval" && (
@@ -175,7 +199,17 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
               type="primary"
               icon={<CheckOutlined />}
               loading={actionLoading}
-              onClick={handleApprove}
+              onClick={() => {
+                Modal.confirm({
+                  title: "ยืนยันการเปิดรับสมัคร",
+                  icon: <CheckOutlined style={{ color: "#52c41a" }} />,
+                  content:
+                    "คุณแน่ใจหรือไม่ว่าต้องการเปิดรับสมัครสำหรับโพสต์นี้?",
+                  okText: "ยืนยัน",
+                  cancelText: "ยกเลิก",
+                  onOk: handleApprove,
+                });
+              }}
               style={{
                 backgroundColor: "#52c41a",
                 borderColor: "#52c41a",
@@ -183,16 +217,28 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
                 padding: "18px",
               }}
             >
-              {status.find((s) => s.status_post === "Open")?.status_post_th || "อนุมัติ"}
+              {status.find((s) => s.status_post === "Open")?.status_post_th ||
+                "เปิดรับสมัคร"}
             </Button>
             <Button
               danger
               icon={<StopOutlined />}
               loading={actionLoading}
-              onClick={handleReject}
+              onClick={() => {
+                Modal.confirm({
+                  title: "ยืนยันการปิดรับสมัคร",
+                  icon: <StopOutlined style={{ color: "#ff4d4f" }} />,
+                  content:
+                    "คุณแน่ใจหรือไม่ว่าต้องการปิดรับสมัครสำหรับโพสต์นี้?",
+                  okText: "ยืนยัน",
+                  cancelText: "ยกเลิก",
+                  onOk: handleReject,
+                });
+              }}
               style={{ borderRadius: "8px", padding: "18px" }}
             >
-              {status.find((s) => s.status_post === "Closed")?.status_post_th || "ปฏิเสธ"}
+              {status.find((s) => s.status_post === "Closed")?.status_post_th ||
+                "ปิดรับสมัคร"}
             </Button>
           </Space>
         )}
