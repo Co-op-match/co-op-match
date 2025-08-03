@@ -72,6 +72,7 @@ func GetStudentByUserID(c *gin.Context) {
 		Preload("User").
 		Preload("User.ProfileImage").
 		Preload("Admin").
+		Preload("Education").
 		Preload("Education.University").
 		Preload("Education.Faculty").
 		Preload("Education.Program").
@@ -120,37 +121,60 @@ func CreateStudent(c *gin.Context) {
 }
 
 func UpdateStudent(c *gin.Context) {
-	id := c.Param("id")
-
+	userID := c.Param("id") // ใช้ user_id แทน
 	var student entity.Student
-	if err := config.DB().First(&student, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Student not found"})
+	if err := config.DB().Where("user_id = ?", userID).First(&student).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Student not found with this user_id"})
 		return
 	}
-
 	var input entity.Student
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// อัปเดตฟิลด์ต่าง ๆ
-	student.FirstName = input.FirstName
-	student.LastName = input.LastName
-	student.Birthday = input.Birthday
-	student.Age = input.Age
-	student.Nationality = input.Nationality
-	student.Religion = input.Religion
-	student.PhoneNumber = input.PhoneNumber
-	student.Height = input.Height
-	student.Weight = input.Weight
+	updateData := map[string]interface{}{}
 
-	student.GenderID = input.GenderID
-	student.UserID = input.UserID
-	student.AddressID = input.AddressID
-	student.AdminID = input.AdminID
+	// เพิ่มเฉพาะ field ที่มีการเปลี่ยนแปลง
+	if input.FirstName != "" && input.FirstName != student.FirstName {
+		updateData["first_name"] = input.FirstName
+	}
+	if input.LastName != "" && input.LastName != student.LastName {
+		updateData["last_name"] = input.LastName
+	}
+	if input.PhoneNumber != "" && input.PhoneNumber != student.PhoneNumber {
+		updateData["phone_number"] = input.PhoneNumber
+	}
+	if !input.Birthday.IsZero() && input.Birthday != student.Birthday {
+		updateData["birthday"] = input.Birthday
+	}
+	if input.Age != 0 && input.Age != student.Age {
+		updateData["age"] = input.Age
+	}
+	if input.GenderID != 0 && input.GenderID != student.GenderID {
+		updateData["gender_id"] = input.GenderID
+	}
 
-	if err := config.DB().Save(&student).Error; err != nil {
+	// อื่น ๆ เช่น Nationality, Religion, Height, Weight
+	if input.Nationality != "" && input.Nationality != student.Nationality {
+		updateData["nationality"] = input.Nationality
+	}
+	if input.Religion != "" && input.Religion != student.Religion {
+		updateData["religion"] = input.Religion
+	}
+	if input.Height != 0 && input.Height != student.Height {
+		updateData["height"] = input.Height
+	}
+	if input.Weight != 0 && input.Weight != student.Weight {
+		updateData["weight"] = input.Weight
+	}
+
+	if len(updateData) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "ไม่มีข้อมูลที่เปลี่ยนแปลง"})
+		return
+	}
+
+	if err := config.DB().Model(&student).Updates(updateData).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update student"})
 		return
 	}
@@ -177,4 +201,33 @@ func GetUniversities(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, universities)
+}
+
+func GetApplicationsByUserID(c *gin.Context) {
+	userIDParam := c.Param("user_id")
+	userID, err := strconv.ParseUint(userIDParam, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// ค้นหา student ID ที่สัมพันธ์กับ user_id
+	var student entity.Student
+	if err := config.DB().Where("user_id = ?", userID).First(&student).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Student not found for this user"})
+		return
+	}
+
+	// ดึง Application ทั้งหมดของ Student คนนั้น พร้อม preload ข้อมูลที่เกี่ยวข้อง
+	var applications []entity.Application
+	if err := config.DB().
+		Preload("IntershipPost").
+		Preload("IntershipPost.Company").
+		Where("student_id = ?", student.ID).
+		Find(&applications).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch applications"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": applications})
 }

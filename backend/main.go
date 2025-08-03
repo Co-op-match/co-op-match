@@ -76,6 +76,7 @@ func main() {
 			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
+			studentGroup.GET("/applications/:user_id", controller.GetApplicationsByUserID)
 		}
 
 		addressGroup := router.Group("/address")
@@ -130,6 +131,7 @@ func main() {
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
+			notificationGroup.GET("/calendar/user/:user_id", controller.GetCalendarEventsByUserID)
 		}
 
 		companyGroup := router.Group("/company")

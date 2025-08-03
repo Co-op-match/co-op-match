@@ -6,6 +6,7 @@ import {
   BellOutlined,
   SettingOutlined,
   HomeOutlined,
+  SolutionOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -35,6 +36,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
+    { key: 'recommendations', icon: <SolutionOutlined />, label: 'งานแนะนำ' },
     { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
@@ -95,16 +97,18 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           style={{
             border: 'none',
             backgroundColor: 'transparent',
-            minWidth: minimalMenu ? 'auto' : 550, // ปรับ minWidth ตาม mode
+            minWidth: minimalMenu ? 'auto' : 680, // ปรับ minWidth ตาม mode
             flex: '0 0 auto'
           }}
         />
         <Avatar
+          size={40}
           src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
           icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
           style={{ 
             cursor: "pointer", 
-            marginLeft: 16,
+            marginLeft: 5,
+            marginRight: 5,
             flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
           }}
         />
