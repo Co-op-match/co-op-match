@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import CoopMatchHeader from '../../Component/CoopMatchHeader';
+import CoopMatchHeader from '../../component/Coop_MatchHeader';
 import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../services/https/Application/index';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';

@@ -1,0 +1,311 @@
+/* Compressed Application List Card CSS */
+:root {
+  --primary: linear-gradient(135deg, #1890ff 0%, #0d47a1 100%);
+  --bg: linear-gradient(145deg, #fff 0%, #fafcff 100%);
+  --hover-bg: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
+  --shadow: 0 8px 32px rgba(13,71,161,.12), 0 2px 8px rgba(0,0,0,.08);
+  --shadow-hover: 0 12px 40px rgba(13,71,161,.15), 0 4px 12px rgba(0,0,0,.12);
+  --border: 1px solid rgba(13,71,161,.08);
+  --transition: all .3s cubic-bezier(.4,0,.2,1);
+}
+
+.application-list-card {
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: var(--border);
+  background: var(--bg);
+  overflow: hidden;
+  transition: var(--transition);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.application-list-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 15% 85%, rgba(24,144,255,.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.application-list-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Header */
+.application-list-card .ant-card-head {
+  background: var(--primary) !important;
+  border: none !important;
+  padding: 20px 24px !important;
+  border-radius: 16px 16px 0 0 !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.application-list-card .ant-card-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(255,255,255,.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.application-list-card .ant-card-head-title {
+  color: #fff !important;
+  font: 700 20px/1.2 system-ui !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,.2) !important;
+  letter-spacing: -.3px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.application-list-card .ant-card-head-title::before {
+  content: '📋';
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+}
+
+.application-list-card .ant-card-body {
+  padding: 24px !important;
+  background: var(--bg);
+}
+
+/* Table */
+.application-list-card .ant-table {
+  background: var(--bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(13,71,161,.08);
+  border: var(--border);
+  position: relative;
+}
+
+.application-list-card .ant-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 10%, rgba(24,144,255,.02) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* Headers */
+.application-list-card .ant-table-thead > tr > th {
+  background: var(--hover-bg) !important;
+  border-bottom: 2px solid rgba(13,71,161,.1) !important;
+  color: #0d47a1 !important;
+  font: 600 14px system-ui !important;
+  text-align: center !important;
+  padding: 16px 12px !important;
+  position: relative;
+}
+
+.application-list-card .ant-table-thead > tr > th:first-child {
+  border-radius: 12px 0 0 0;
+}
+
+.application-list-card .ant-table-thead > tr > th:last-child {
+  border-radius: 0 12px 0 0;
+}
+
+/* Body cells */
+.application-list-card .ant-table-tbody > tr > td {
+  padding: 16px 12px !important;
+  border-bottom: 1px solid rgba(13,71,161,.06) !important;
+  background: var(--bg);
+  text-align: center;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.application-list-card .ant-table-tbody > tr:hover > td {
+  background: var(--hover-bg) !important;
+  transform: scale(1.01);
+}
+
+.application-list-card .ant-table-tbody > tr:last-child > td:first-child {
+  border-radius: 0 0 0 12px;
+}
+
+.application-list-card .ant-table-tbody > tr:last-child > td:last-child {
+  border-radius: 0 0 12px 0;
+}
+
+/* Sequence number */
+.application-list-card .ant-table-tbody > tr > td:first-child {
+  background: var(--primary) !important;
+  color: #fff !important;
+  font: 700 16px system-ui !important;
+  width: 60px;
+  position: relative;
+}
+
+.application-list-card .ant-table-tbody > tr > td:first-child::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.25) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.application-list-card .ant-table-tbody > tr:hover > td:first-child {
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%) !important;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(24,144,255,.35);
+}
+
+/* Company name */
+.application-list-card .ant-table-tbody > tr > td:nth-child(2) {
+  font-weight: 600;
+  color: #333;
+  padding-left: 20px !important;
+  position: relative;
+}
+
+.application-list-card .ant-table-tbody > tr > td:nth-child(2)::before {
+  content: '🏢';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+/* Position link */
+.application-list-card .ant-table-tbody > tr > td:nth-child(3) a {
+  color: #1890ff !important;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(24,144,255,.08) 0%, rgba(13,71,161,.05) 100%);
+  border: 1px solid rgba(13,71,161,.15);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(24,144,255,.12);
+}
+
+.application-list-card .ant-table-tbody > tr > td:nth-child(3) a::before {
+  content: '💼';
+  font-size: 14px;
+}
+
+.application-list-card .ant-table-tbody > tr > td:nth-child(3) a:hover {
+  background: var(--hover-bg);
+  color: #0050b3 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(24,144,255,.25);
+}
+
+/* Status tags */
+.application-list-card .ant-tag {
+  border-radius: 20px !important;
+  padding: 8px 18px !important;
+  font: 600 12px system-ui !important;
+  border: none !important;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.12);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.application-list-card .ant-tag-gold {
+  background: linear-gradient(135deg, #faad14 0%, #d48806 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(250,173,20,.3);
+}
+
+.application-list-card .ant-tag-gold::after { content: '⏳'; }
+
+.application-list-card .ant-tag-red {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(255,77,79,.3);
+}
+
+.application-list-card .ant-tag-red::after { content: '❌'; }
+
+.application-list-card .ant-tag-green {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(82,196,26,.3);
+}
+
+.application-list-card .ant-tag-green::after { content: '✅'; }
+
+.application-list-card .ant-tag:hover {
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+/* Empty state */
+.application-list-card .ant-empty {
+  padding: 60px 20px;
+  background: var(--bg);
+  border-radius: 12px;
+  margin: 20px;
+  border: var(--border);
+}
+
+/* Loading */
+.application-list-card .ant-spin-container {
+  background: var(--bg);
+  border-radius: 12px;
+  min-height: 200px;
+}
+
+.application-list-card .ant-spin-dot { color: #1890ff; }
+
+/* Animations */
+@keyframes appear {
+  from { opacity: 0; transform: translateY(15px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.application-list-card .ant-table-tbody > tr {
+  animation: appear .4s ease forwards;
+  opacity: 0;
+}
+
+.application-list-card .ant-table-tbody > tr:nth-child(n) { animation-delay: calc(.1s + .05s * (var(--n, 0))); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .application-list-card .ant-table-thead > tr > th,
+  .application-list-card .ant-table-tbody > tr > td {
+    padding: 12px 8px !important;
+    font-size: 12px !important;
+  }
+  
+  .application-list-card .ant-table-tbody > tr > td:first-child {
+    font-size: 14px !important;
+  }
+  
+  .application-list-card .ant-tag {
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .application-list-card {
+    margin-bottom: 16px;
+  }
+  
+  .application-list-card .ant-card-head {
+    padding: 16px 20px !important;
+  }
+  
+  .application-list-card .ant-card-head-title {
+    font-size: 18px !important;
+  }
+  
+  .application-list-card .ant-card-body {
+    padding: 16px !important;
+  }
+}

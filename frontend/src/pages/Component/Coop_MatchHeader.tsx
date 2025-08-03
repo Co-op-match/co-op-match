@@ -100,11 +100,13 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           }}
         />
         <Avatar
+          size={40}
           src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
           icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
           style={{ 
             cursor: "pointer", 
-            marginLeft: 16,
+            marginLeft: 5,
+            marginRight: 5,
             flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
           }}
         />
