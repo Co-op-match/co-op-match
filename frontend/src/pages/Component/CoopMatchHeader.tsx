@@ -6,6 +6,7 @@ import {
   BellOutlined,
   SettingOutlined,
   HomeOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -16,9 +17,10 @@ const { Header } = Layout;
 
 interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
+  postId?: number; // 👈 เพิ่มเพื่อให้ dynamic ได้ภายหลัง
 }
 
-const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
+const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false, postId = 5 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
@@ -26,7 +28,7 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
     if (!userId || isNaN(userId)) return;
-    
+
     GetUserById(userId)
       .then(setUser)
       .catch(err => console.error("Failed to fetch user", err));
@@ -35,19 +37,24 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
+
+    {
+      key: 'applications/history',
+      label: 'ประวัติการสมัคร',
+    },
+
     { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];
 
-  // แก้ไขการกำหนด menuItems
   const menuItems = minimalMenu
     ? [fullMenu.find((item) => item.key === 'profile')!]
     : fullMenu;
 
-  // แก้ไขการหา currentPage ให้ตรงกับ menuItems ที่แสดง
   const availableKeys = menuItems.map(item => item.key);
-  const currentPage = availableKeys.find((key) => location.pathname.includes(key)) || availableKeys[0];
+  const currentPage =
+    availableKeys.find((key) => location.pathname.includes(key)) || availableKeys[0];
 
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(`/student/${key}`);
@@ -67,25 +74,25 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
         zIndex: 1000,
       }}
     >
-      {/** Logo **/}
-      <div 
-        onClick={() => navigate("/student/dashboard")} 
-        style={{ 
-          cursor: "pointer", 
-          display: "flex", 
+      {/* Logo */}
+      <div
+        onClick={() => navigate("/student/dashboard")}
+        style={{
+          cursor: "pointer",
+          display: "flex",
           alignItems: "center",
-          flex: '0 0 auto' // ป้องกัน logo โดนบีบ
+          flex: '0 0 auto'
         }}
       >
         <img src={Logo} alt="Logo" style={{ height: 40 }} />
       </div>
 
-      {/** Menu + Avatar **/}
-      <div style={{ 
-        display: 'flex', 
+      {/* Menu + Avatar */}
+      <div style={{
+        display: 'flex',
         alignItems: 'center',
-        flex: '1 1 auto', // ให้ส่วนนี้ขยายได้
-        justifyContent: 'flex-end' // จัดให้อยู่ด้านขวา
+        flex: '1 1 auto',
+        justifyContent: 'flex-end'
       }}>
         <Menu
           mode="horizontal"
@@ -95,17 +102,17 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
           style={{
             border: 'none',
             backgroundColor: 'transparent',
-            minWidth: minimalMenu ? 'auto' : 550, // ปรับ minWidth ตาม mode
+            minWidth: minimalMenu ? 'auto' : 550,
             flex: '0 0 auto'
           }}
         />
         <Avatar
           src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
           icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-          style={{ 
-            cursor: "pointer", 
+          style={{
+            cursor: "pointer",
             marginLeft: 16,
-            flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
+            flex: '0 0 auto'
           }}
         />
       </div>

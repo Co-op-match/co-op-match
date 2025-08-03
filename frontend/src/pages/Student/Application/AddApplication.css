@@ -1,0 +1,94 @@
+.step-primary-button {
+    background: linear-gradient(135deg, #87ceeb 0%, #4a90e2 50%, #2c5aa0 100%);
+    color: white;
+    border-radius: 16px;
+    height: 48px;
+    padding: 0 32px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  
+  .step-primary-button:hover {
+    background: linear-gradient(135deg, #4a90e2 0%, #2c5aa0 50%, #1e3a8a 100%);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(135, 206, 235, 0.6);
+  }
+  
+  .step-cancel-button:disabled {
+    background: linear-gradient(135deg, #e2e8f0 0%, #f8fbff 100%);
+    color: #b0bfcf;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 6px rgba(180, 200, 220, 0.2);
+    border: 1px solid #d0e0f0;
+  }
+  
+  .step-edit-button {
+    background: linear-gradient(135deg, #e6f7ff 0%, #d0ecff 100%);
+    color: #2c5282;
+    border-radius: 16px;
+    height: 48px;
+    padding: 0 32px;
+    font-weight: 600;
+    font-size: 16px;
+    border: 1px solid #87ceeb;
+    box-shadow: 0 4px 14px rgba(135, 206, 235, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .step-edit-button:hover {
+    background: linear-gradient(135deg, #cdeaff 0%, #b3e5fc 100%);
+    color: #1b365d;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 18px rgba(135, 206, 235, 0.35);
+  }
+  
+  .step-edit-button:active {
+    transform: translateY(0) scale(0.99);
+    box-shadow: 0 4px 10px rgba(135, 206, 235, 0.2);
+  }
+  
+  .step-edit-button:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    border: 1px solid #cbd5e1;
+  }
+  
+  .apply-button {
+    background: linear-gradient(135deg, #4a90e2, #2c5aa0);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    height: 48px;
+    padding: 0 32px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 8px 24px rgba(0, 102, 204, 0.4);
+    transition: all 0.3s ease;
+  }
+  
+  .apply-button:hover {
+    background: linear-gradient(135deg, #2c5aa0, #1e3a8a);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 12px 32px rgba(0, 102, 204, 0.5);
+  }
+
+  /* ให้พื้นหลังสีฟ้าเต็มหน้าจอ */
+.full-page-background {
+    background-color: #f0f7ff;
+    min-height: 100vh;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  
+  
