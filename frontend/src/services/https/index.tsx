@@ -428,14 +428,27 @@ async function SendEmailinterview(student_id: number,company_id: number, ) {
     .catch(e => e.response);
 }
 
+export async function GetRecommendedPosts(studentId: number, query: string = "") {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("❌ ไม่มี token ใน localStorage");
+    return;
+  }
 
-
-async function GetRecommendedPosts(studentId: number) {
   return await axios
-    .get(`${apiUrl}/students/recommended-posts/${studentId}`, requestOptions)
+    .get(`${apiUrl}/students/recommended-posts/${studentId}${query}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
     .then((res) => res)
-    .catch((e) => e.response);
+    .catch((e) => {
+      console.error("❌ Error:", e?.response?.data || e.message);
+      return e.response;
+    });
 }
+
+
 export async function Logout(email: string) {
   try {
     const response = await axios.post(
@@ -449,8 +462,8 @@ export async function Logout(email: string) {
   }
 }
 
+
 export {
-  GetRecommendedPosts,
   SignIn,
   GetRole,
   ResetPassword,
