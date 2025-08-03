@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // POST /applications/:id → id = InternshipPostID
@@ -71,12 +73,21 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 
-	// ✅ ตรวจสอบการสมัครซ้ำ
 	var existingApp entity.Application
-	if err := config.DB().
+	err = config.DB().
 		Joins("JOIN application_details ON applications.id = application_details.application_id").
 		Where("application_details.student_id = ? AND applications.intership_post_id = ?", student.ID, internshipPost.ID).
-		First(&existingApp).Error; err == nil {
+		First(&existingApp).Error
+
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			// ⚠️ เป็น error จริงที่ไม่ใช่แค่ไม่พบ record
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error during application check"})
+			return
+		}
+		// ไม่พบข้อมูล = สมัครใหม่ได้
+	} else {
+		// พบการสมัครซ้ำ
 		c.JSON(http.StatusBadRequest, gin.H{"error": "You have already applied for this post"})
 		return
 	}
@@ -190,7 +201,6 @@ func GetApplicationByID(c *gin.Context) {
 }
 
 // GET /applications/post/:id
-// GET /applications/post/:id
 func GetApplicationsByIntershipPostID(c *gin.Context) {
 	postID := c.Param("id")
 
@@ -260,4 +270,30 @@ func UpdateApplication(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Application updated successfully", "data": application})
+}
+
+// GET /applications/summary/:companyId
+func GetTotalApplicationsByCompanyID(c *gin.Context) {
+	companyId := c.Param("companyId")
+
+	var results []struct {
+		IntershipPostID uint `json:"intership_post_id"`
+		TotalApplicants int  `json:"total_applicants"`
+	}
+
+	query := `
+        SELECT 
+            p.id AS intership_post_id, 
+            COUNT(a.id) AS total_applicants
+        FROM intership_posts p
+        LEFT JOIN applications a ON a.intership_post_id = p.id
+        WHERE p.company_id = ?
+        GROUP BY p.id
+    `
+	if err := config.DB().Raw(query, companyId).Scan(&results).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, results)
 }

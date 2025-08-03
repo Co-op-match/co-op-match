@@ -6,7 +6,7 @@ import (
 
 type CompanyRequiredSkill struct {
 	gorm.Model
-	SkillID         uint          `json:"skill_id"`
+	SkillID         uint          `json:"skills"`
 	IntershipPostID uint          `json:"intership_post_id"`
 	Skill           Skill         `gorm:"foreignKey:SkillID"`
 	IntershipPost   IntershipPost `gorm:"foreignKey:IntershipPostID"`

@@ -20,7 +20,6 @@ import {
   UserOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
 import type { BenefitInterface } from '../../interfaces/Benefit';
 import type { JobTypeInterface } from '../../interfaces/JobType';
 import type { StipendInterface } from '../../interfaces/Stipend';
@@ -37,6 +36,7 @@ import {
   GetIntershipPost
 } from '../../services/https';
 import { useNavigate } from 'react-router-dom';
+import CoopMatchHeader from '../Component/CoopMatchHeader';
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -333,7 +333,7 @@ function SearchJobs(){
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {contextHolder}
-      <CoopMatchHeaderDefault />
+      <CoopMatchHeader />
 
       <Layout>
         <Sider width={300} style={{ background: '#fff', padding: '24px' }}>

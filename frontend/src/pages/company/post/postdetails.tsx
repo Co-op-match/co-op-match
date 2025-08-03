@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Typography, Button } from 'antd';
-import { EnvironmentOutlined } from '@ant-design/icons';
+import { Card, Typography, Button, Tag } from 'antd';
+import {
+  EnvironmentOutlined,
+  ArrowLeftOutlined,
+  UserOutlined,
+  DollarOutlined,
+  CalendarOutlined,
+  PhoneOutlined,
+  GlobalOutlined,
+  MailOutlined,
+  StarOutlined,
+  TeamOutlined
+} from '@ant-design/icons';
 import { GetPostById } from '../../../services/https/post/index';
-// import { GetPostByCompanyId } from '../../../services/https/post/index';
 import { useNavigate } from 'react-router-dom';
-
+import type { BenefitInterface } from '../../../interface/IBenefit';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -13,7 +23,6 @@ const PostDetails = () => {
   const { id } = useParams();
   const [post, setPost] = useState<any>(null);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     if (id) {
@@ -25,173 +34,478 @@ const PostDetails = () => {
       });
     }
   }, [id]);
-  
 
-  if (!post) return <div className="text-center p-8">Loading...</div>;
+  if (!post) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.loadingSpinner}></div>
+        <Text style={{ marginTop: 16, color: '#87ceeb' }}>กำลังโหลด...</Text>
+      </div>
+    );
+  }
 
   return (
-
     <div style={styles.container}>
-      {/* 🔙 ปุ่มย้อนกลับ */}
+      {/* Back Button */}
       <Button
-        type="link"
+        type="text"
+        icon={<ArrowLeftOutlined />}
         onClick={() => navigate(-1)}
-        style={{ marginBottom: 16, paddingLeft: 0 }}
+        style={styles.backButton}
+        size="large"
       >
-        ← ย้อนกลับ
+        ย้อนกลับ
       </Button>
-      {/* ส่วนหัวบริษัท */}
-      <div style={styles.header}>
-        <img
-          src={post?.Company?.logo || '/logo.png'}
-          alt=""
-          style={styles.logo}
-        />
-        <div style={{ marginLeft: 16 }}>
-          <Title level={3} style={{ margin: 0 }}>
-            {post?.Company?.CompanyName}
-          </Title>
-          <Text type="secondary">{post?.Company?.Contact?.Address}</Text>
+
+      {/* Company Header */}
+      <Card style={styles.headerCard}>
+        <div style={styles.header}>
+          <div style={styles.logoContainer}>
+            <img
+              src={post?.Company?.logo || '/logo.png'}
+              alt="Company Logo"
+              style={styles.logo}
+            />
+          </div>
+          <div style={styles.companyInfo}>
+            <Title level={2} style={styles.companyName}>
+              {post?.Company?.company_name || "ชื่อบริษัทไม่ระบุ"}
+            </Title>
+            <div style={styles.addressContainer}>
+              <EnvironmentOutlined style={styles.addressIcon} />
+              <Text style={styles.addressText}>
+                {post?.location_detail && `${post.location_detail} `}
+                {post?.subdistrict && `ต.${post.subdistrict} `}
+                {post?.district && `อ.${post.district} `}
+                {post?.province && `จ.${post.province}`}
+              </Text>
+
+            </div>
+          </div>
         </div>
-      </div>
-
-
-      {/* กล่องข้อมูลหลัก */}
-      <Card style={styles.card}>
-        {/* ชื่อโพสต์ */}
-        <Title level={4} style={{ marginBottom: 16 }}>
-          {post?.post_name}
-        </Title>
-
-        {/* ✅ สถานที่ */}
-        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center' }}>
-          <EnvironmentOutlined style={{ fontSize: 16, marginRight: 8, color: '#1890ff' }} />
-          <Text strong style={{ marginRight: 8 }}>สถานที่:</Text>
-          <Text>
-            {[
-              post?.location_detail,
-              post?.subdistrict,
-              post?.district,
-              post?.province,
-            ]
-              .filter(Boolean) // ลบ null/undefined
-              .join(' / ')}
-          </Text>
-        </div>
-
-        {/* อัตรา */}
-        <div style={{ fontSize: 16, marginRight: 8, color: '#1890ff' }}>
-          <Text strong>อัตรา: </Text>
-          <Text>{post?.quantity || 0} ตำแหน่ง</Text>
-        </div>
-
       </Card>
 
 
-      {/* รายละเอียด */}
-      <div style={{ marginTop: 40 }}>
-        <Section title="รายละเอียดงาน" content={post?.post_description} />
-        <Section
-          title="วัน-เวลาทำงาน"
-          content={
-            <>
-              {post?.WorkDay?.work_day || '-'} <br />
-              {post?.WorkMode?.work_mode || '-'}
-            </>
-          }
-        />
+      {/* Job Title Card */}
+      <Card style={styles.titleCard}>
+        <Title level={3} style={styles.jobTitle}>
+          {post?.post_name}
+        </Title>
 
-        <Section
-          title="คุณสมบัติผู้สมัคร"
-          content={
-            post?.company_required_skills
-              ?.map((rel: any) => rel?.Skill?.skill_name)
-              .filter(Boolean)
-              .join(', ') || '-'
-          }
-        />
+        <div style={styles.quickInfoGrid}>
+          <div style={styles.quickInfoItem}>
+            <EnvironmentOutlined style={styles.quickIcon} />
+            <div>
+              <Text strong style={styles.quickLabel}>สถานที่</Text>
+              <br />
+              <Text style={styles.quickValue}>
+                {[
+                  post?.location_detail,
+                  post?.subdistrict,
+                  post?.district,
+                  post?.province,
+                ]
+                  .filter(Boolean)
+                  .join(' / ')}
+              </Text>
+            </div>
+          </div>
 
-        <Section title="เกรดขั้นต่ำ" content={post?.min_gpa} />
-        <Section title="ค่าตอบแทน" content={post?.Stipend?.stipend} />
-        <Section title="สิทธิประโยชน์" content={post?.Benefit?.benefit_name} />
-        <Section
-          title="ติดต่อ"
-          content={
-            <>
-              {post?.Company?.Contact?.PhoneNumber && <>โทร: {post?.Company?.Contact?.PhoneNumber}<br /></>}
-              {post?.Company?.Contact?.Website && (
-                <>
-                  เว็บไซต์:{' '}
-                  <a href={post?.Company?.Contact?.Website} target="_blank" rel="noreferrer">
-                    {post?.Company?.Contact?.Website}
-                  </a>
-                  <br />
-                </>
-              )}
-              Email: {post?.Company?.User?.Email}
-            </>
-          }
-        />
+          <div style={styles.quickInfoItem}>
+            <TeamOutlined style={styles.quickIcon} />
+            <div>
+              <Text strong style={styles.quickLabel}>อัตรา</Text>
+              <br />
+              <Text style={styles.quickValue}>{post?.quantity || 0} ตำแหน่ง</Text>
+            </div>
+          </div>
 
-        {/* ✅ สถานที่ */}
-        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center' }}>
-
-          <Text strong style={{ marginRight: 8 }}>สถานที่:</Text>
-          <Text>
-            {[
-              post?.location_detail,
-              post?.subdistrict,
-              post?.district,
-              post?.province,
-            ]
-              .filter(Boolean)
-              .join(' / ')}
-          </Text>
+          <div style={styles.quickInfoItem}>
+            <DollarOutlined style={styles.quickIcon} />
+            <div>
+              <Text strong style={styles.quickLabel}>ค่าตอบแทน</Text>
+              <br />
+              <Text style={styles.quickValue}>{post?.Stipend?.stipend || '-'}</Text>
+            </div>
+          </div>
         </div>
+      </Card>
 
+      {/* Details Grid */}
+      <div style={styles.detailsGrid}>
+        {/* Job Description */}
+        <Card style={styles.detailCard}>
+          <SectionHeader icon={<StarOutlined />} title="รายละเอียดงาน" />
+          <Paragraph style={styles.sectionContent}>
+            {post?.post_description || '-'}
+          </Paragraph>
+        </Card>
 
+        {/* Work Schedule */}
+        <Card style={styles.detailCard}>
+          <SectionHeader icon={<CalendarOutlined />} title="วัน-เวลาทำงาน" />
+          <Paragraph style={styles.sectionContent}>
+            <Text strong>วันทำงาน:</Text> {post?.WorkDay?.work_day || '-'}<br />
+            <Text strong>รูปแบบงาน:</Text> {post?.WorkMode?.work_mode || '-'}
+          </Paragraph>
+        </Card>
+
+        {/* Required Skills */}
+        <Card style={styles.detailCard}>
+          <SectionHeader icon={<UserOutlined />} title="คุณสมบัติผู้สมัคร" />
+          <div style={styles.skillsContainer}>
+            {post?.company_required_skills?.length > 0 ? (
+              post.company_required_skills.map((rel: any, idx: number) => (
+                rel?.Skill?.skill_name && (
+                  <Tag key={idx} style={styles.skillTag}>
+                    {rel.Skill.skill_name}
+                  </Tag>
+                )
+              ))
+            ) : (
+              <Text style={styles.sectionContent}>-</Text>
+            )}
+          </div>
+          {post?.min_gpa && (
+            <div style={{ marginTop: 16 }}>
+              <Text strong style={styles.quickLabel}>เกรดขั้นต่ำ: </Text>
+              <Text style={styles.sectionContent}>{post.min_gpa}</Text>
+            </div>
+          )}
+        </Card>
+
+        {/* Benefits */}
+        <Card style={styles.detailCard}>
+          <SectionHeader icon={<StarOutlined />} title="สิทธิประโยชน์" />
+          {post?.benefits && post.benefits.length > 0 ? (
+            <div style={styles.benefitsList}>
+              {post.benefits.map((b: BenefitInterface, idx: number) => (
+                <div key={idx} style={styles.benefitItem}>
+                  <div style={styles.benefitDot}></div>
+                  <Text style={styles.benefitText}>{b.benefit}</Text>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Text style={styles.sectionContent}>-</Text>
+          )}
+        </Card>
+
+        {/* Contact Info */}
+        <Card style={styles.detailCard}>
+          <SectionHeader icon={<PhoneOutlined />} title="ติดต่อ" />
+          <div style={styles.contactInfo}>
+            {post?.Company?.Contact?.PhoneNumber && (
+              <div style={styles.contactItem}>
+                <PhoneOutlined style={styles.contactIcon} />
+                <Text style={styles.contactText}>{post.Company.Contact.PhoneNumber}</Text>
+              </div>
+            )}
+
+            {post?.Company?.Contact?.Website && (
+              <div style={styles.contactItem}>
+                <GlobalOutlined style={styles.contactIcon} />
+                <a
+                  href={post.Company.Contact.Website}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.contactLink}
+                >
+                  {post.Company.Contact.Website}
+                </a>
+              </div>
+            )}
+
+            {post?.Company?.User?.Email && (
+              <div style={styles.contactItem}>
+                <MailOutlined style={styles.contactIcon} />
+                <Text style={styles.contactText}>{post.Company.User.Email}</Text>
+              </div>
+            )}
+
+          </div>
+        </Card>
       </div>
     </div>
   );
 };
 
-// Sub-component: สำหรับแสดงแต่ละหัวข้อ
-const Section = ({ title, content }: { title: string; content: React.ReactNode }) => (
-  <div style={{ marginBottom: 32 }}>
-    <Title level={5}>{title}</Title>
-    <Paragraph>{content}</Paragraph>
+// Section Header Component
+const SectionHeader = ({ icon, title }: { icon: React.ReactNode; title: string }) => (
+  <div style={styles.sectionHeader}>
+    <span style={styles.sectionIcon}>{icon}</span>
+    <Title level={4} style={styles.sectionTitle}>{title}</Title>
   </div>
 );
 
-// CSS-in-JS style objects
+// Styles
 const styles = {
   container: {
-    maxWidth: 900,
+    maxWidth: 1200,
     margin: '0 auto',
-    padding: '40px 20px',
-    backgroundColor: '#fffafc',
-    borderRadius: '12px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    padding: '20px',
+    backgroundColor: '#f0f7ff',
+    minHeight: '100vh',
   },
+
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '50vh',
+  },
+
+  loadingSpinner: {
+    width: 40,
+    height: 40,
+    border: '4px solid #b8e6ff',
+    borderTop: '4px solid #87ceeb',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+
+  backButton: {
+    marginBottom: 24,
+    color: '#87ceeb',
+    fontSize: '16px',
+    fontWeight: 500,
+    padding: '8px 16px',
+    height: 'auto',
+    borderRadius: '8px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: '#b8e6ff',
+      color: '#4a90e2',
+    }
+  },
+
+  headerCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    marginBottom: 24,
+    border: '1px solid #b8e6ff',
+    boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
+    overflow: 'hidden',
+  },
+
   header: {
     display: 'flex',
     alignItems: 'center',
-    marginBottom: 24,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    objectFit: 'cover' as const,
+    padding: '8px 0',
   },
 
-  card: {
-    backgroundColor: '#f0f6ff',
-    padding: 24,
-    borderRadius: 12,
-    border: '1px solid #d0e4ff',
+  logoContainer: {
+    marginRight: 20,
+    position: 'relative' as const,
+  },
+
+  logo: {
+    width: 90,
+    height: 90,
+    borderRadius: '16px',
+    objectFit: 'cover' as const,
+    border: '3px solid #b8e6ff',
+    boxShadow: '0 4px 12px rgba(135, 206, 235, 0.2)',
+  },
+
+  companyInfo: {
+    flex: 1,
+  },
+
+  companyName: {
+    margin: '0 0 8px 0',
+    color: '#2c5282',
+    fontSize: '28px',
+    fontWeight: 600,
+  },
+
+  addressContainer: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  addressIcon: {
+    color: '#87ceeb',
+    fontSize: '16px',
+    marginRight: 8,
+  },
+
+  addressText: {
+    color: '#4a5568',
+    fontSize: '16px',
+  },
+
+  titleCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    marginBottom: 24,
+    border: '1px solid #b8e6ff',
+    boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
+  },
+
+  jobTitle: {
+    margin: '0 0 24px 0',
+    color: '#2c5282',
+    fontSize: '24px',
+    fontWeight: 600,
+    textAlign: 'center' as const,
+  },
+
+  quickInfoGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px',
+  },
+
+  quickInfoItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    padding: '16px',
+    backgroundColor: '#f0f7ff',
+    borderRadius: '12px',
+    border: '1px solid #b8e6ff',
+  },
+
+  quickIcon: {
+    fontSize: '20px',
+    color: '#87ceeb',
+    marginRight: 12,
+    marginTop: 2,
+  },
+
+  quickLabel: {
+    color: '#2c5282',
+    fontSize: '14px',
+    fontWeight: 600,
+  },
+
+  quickValue: {
+    color: '#4a5568',
+    fontSize: '14px',
+  },
+
+  detailsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+    gap: '24px',
+  },
+
+  detailCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    border: '1px solid #b8e6ff',
+    boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 30px rgba(135, 206, 235, 0.25)',
+    }
+  },
+
+  sectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottom: '2px solid #f0f7ff',
+  },
+
+  sectionIcon: {
+    color: '#87ceeb',
+    fontSize: '18px',
+    marginRight: 12,
+  },
+
+  sectionTitle: {
+    margin: 0,
+    color: '#2c5282',
+    fontSize: '18px',
+    fontWeight: 600,
+  },
+
+  sectionContent: {
+    color: '#4a5568',
+    fontSize: '15px',
+    lineHeight: 1.6,
+    margin: 0,
+  },
+
+  skillsContainer: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+  },
+
+  skillTag: {
+    backgroundColor: '#b8e6ff',
+    color: '#2c5282',
+    border: '1px solid #87ceeb',
+    borderRadius: '20px',
+    padding: '4px 12px',
+    fontSize: '13px',
+    fontWeight: 500,
+  },
+
+  benefitsList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+
+  benefitItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+  },
+
+  benefitDot: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#87ceeb',
+    borderRadius: '50%',
+    marginRight: 12,
+    marginTop: 6,
+    flexShrink: 0,
+  },
+
+  benefitText: {
+    color: '#4a5568',
+    fontSize: '15px',
+    lineHeight: 1.6,
+  },
+
+  contactInfo: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+
+  contactItem: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  contactIcon: {
+    color: '#87ceeb',
+    fontSize: '16px',
+    marginRight: 12,
+    width: 20,
+  },
+
+  contactText: {
+    color: '#4a5568',
+    fontSize: '15px',
+  },
+
+  contactLink: {
+    color: '#87ceeb',
+    fontSize: '15px',
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline',
+      color: '#4a90e2',
+    }
   },
 };
-
 
 export default PostDetails;

@@ -410,7 +410,8 @@ async function SendEmailVerify(user_id: number) {
     .catch(e => e.response);
 }
 
-async function SendEmailinterview(id: number) {
+///notification/interview/send-email/${student_id}/${company_id}  SendEmailinterview
+async function SendEmailinterview(student_id: number,company_id: number, ) {
   const Authorization = localStorage.getItem("token");
   const Bearer = localStorage.getItem("token_type");
 
@@ -422,7 +423,7 @@ async function SendEmailinterview(id: number) {
   };
 
   return await axios
-    .post(`${apiUrl}/notification/interview/send-email/${id}`, {}, requestOptions)
+    .post(`${apiUrl}/notification/interview/send-email/${student_id}/${company_id}`, {}, requestOptions)
     .then(res => res)
     .catch(e => e.response);
 }

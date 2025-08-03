@@ -24,8 +24,8 @@ import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPost
 import AddApplication from './pages/Student/Application/AddApplication';
 import ApplicationHistory from "./pages/Student/Application/History";
 import ApplicationByCompany from "../src/pages/company/application/application";
+import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
-
 
 
 function App() {
@@ -185,10 +185,19 @@ function App() {
           />
 
           <Route
-            path="/interview_appointments"
+            path="/company/interview_appointments"
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <CreateInterviewAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company/interview_appointments/confirm"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <ConfirmInterviewAppointment />
               </ProtectedRoute>
             }
           />

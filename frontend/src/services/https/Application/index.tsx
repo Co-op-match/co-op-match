@@ -30,12 +30,17 @@ async function CreateApplication(postId: number, formData: FormData) {
 }
 
 // ฟังก์ชันสำหรับดึงข้อมูลทั้งหมดของ Application
-async function GetApplications() {
-  return await axios
-    .get(`${apiUrl}/applications`, requestOptions)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
+export const GetApplicationSummary = async (companyId: number) => {
+  try {
+    const response = await axios.get(`http://localhost:8000/applications/summary/${companyId}`);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Failed to fetch application summary:", error);
+    return [];
+  }
+};
+
+
 
 // ฟังก์ชันสำหรับดึงข้อมูล Application ตาม ID
 async function GetApplicationById(id: number) {
@@ -118,7 +123,7 @@ async function UpdateApplicationStatus(id: number, status: string, companyNote?:
 // POST นัดสัมภาษณ์ใหม่
 export async function CreateInterviewAppointment(data: any) {
   return await axios
-    .post(`${apiUrl}/interview_appointments`, data, requestOptions)
+    .post(`${apiUrl}/company/interview_appointments`, data, requestOptions)
     .then((res) => res)
     .catch((err) => err.response);
 }
@@ -177,7 +182,7 @@ export async function GetCompanyByUserID(userId: number) {
 
 export {
   CreateApplication,
-  GetApplications,
+
   GetApplicationById,
   UpdateApplication,
   DeleteApplication,
