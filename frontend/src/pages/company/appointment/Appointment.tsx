@@ -34,6 +34,7 @@ import {
 } from "../../../services/https/Application/index";
 import { SendEmailinterview } from "../../../services/https";
 import CompanyHeader from "../../Component/CompanyHeader";
+import './Appointment.css';
 
 const { Title, Text } = Typography;
 
@@ -497,33 +498,6 @@ const InterviewDashboard: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
-
-            <style jsx>{`
-                .table-row:hover {
-                    background-color: #f8f9fa !important;
-                    transition: background-color 0.2s ease;
-                }
-                
-                .ant-table-thead > tr > th {
-                    background-color: #e3f2fd !important;
-                    color: #1976d2 !important;
-                    font-weight: 600 !important;
-                    border-bottom: 2px solid #bbdefb !important;
-                }
-                
-                .ant-table-tbody > tr > td {
-                    border-bottom: 1px solid #f0f0f0 !important;
-                }
-                
-                .ant-btn-primary {
-                    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2) !important;
-                }
-                
-                .ant-btn-primary:hover {
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3) !important;
-                }
-            `}</style>
         </div>
     );
 };
