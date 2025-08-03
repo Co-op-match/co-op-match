@@ -51,8 +51,9 @@ func main() {
 	r.GET("/application/:id", controller.GetApplicationByID)
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
+	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
 
-	r.POST("/interview_appointments", controller.CreateInterviewAppointment)
+	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
 	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
 

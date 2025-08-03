@@ -8,5 +8,5 @@ type Benefit struct {
 	gorm.Model
 	Benefit string `json:"benefit"`
 
-	IntershipPosts []IntershipPost `gorm:"foreignKey:BenefitID"` // One-to-Many
+	IntershipPosts []IntershipPost `gorm:"many2many:intership_post_benefits;joinForeignKey:BenefitID;joinReferences:IntershipPostID"`
 }

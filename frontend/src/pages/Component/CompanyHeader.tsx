@@ -10,6 +10,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
+import { DownOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
+
 
 const { Header } = Layout;
 
@@ -28,12 +31,30 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     GetUserById(userId).then(setUser).catch(err => console.error("Failed to fetch user", err));
   }, []);
 
-  const currentPage = ['dashboard',  'post', 'notifications', 'settings']
-    .find((key) => location.pathname.includes(key)) || 'dashboard';
+  
 
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
-    { key: 'post', icon: <UserOutlined />, label: 'รับสมัคร' },
+    {
+      key: 'recruitment',
+      icon: <UserOutlined />,
+      label: 'รับสมัคร',
+      children: [
+        {
+          key: 'post',
+          label: <Link to="/company/post">โพสต์</Link>,
+        },
+        {
+          key: 'interview_appointments',
+          label: <Link to="/company/interview_appointments">นัดสัมภาษณ์</Link>,
+        },
+        {
+          key: 'interview_appointments/confirm',
+          label: <Link to="/company/interview_appointments/confirm">ยืนยันการนัดสัมภาษณ์</Link>,
+        },
+      ],
+    },
+  ///company/interview_appointments/confirm
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];
@@ -56,6 +77,14 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     </Menu.Item>
   </Menu>
 );
+const currentPath = location.pathname;
+  
+  const currentPage = fullMenu.find(item => {
+    if (item.children) {
+      return item.children.some(child => currentPath.includes(child.key));
+    }
+    return currentPath.includes(item.key);
+  })?.key || 'dashboard';
 
   return (
     <Header
