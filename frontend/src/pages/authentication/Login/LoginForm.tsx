@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button, Checkbox, Form, Input, Typography, message } from "antd";
 import { FacebookOutlined, TwitterOutlined } from "@ant-design/icons";
 import { SignIn } from "../../../services/https";
 import type { SignInInterface } from "../../../interfaces/auth/SignIn";
 import "./login.css";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { UserContext } from "../../../components/UserContext";
 
 const { Title, Text, Link } = Typography;
 
@@ -12,30 +13,32 @@ function LoginForm() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
+  const { refetchUser } = useContext(UserContext);
 
-  useEffect(() => {
-    const isLogin = localStorage.getItem("isLogin");
-    const roleId = localStorage.getItem("roleId");
+const location = useLocation();
 
-    if (isLogin === "true" && roleId) {
-      switch (parseInt(roleId)) {
-        case 1:
-          navigate("/admin/dashboard");
-          break;
-        case 2:
-          navigate("/company/dashboard");
-          break;
-        case 3:
-          navigate("/student/dashboard");
-          break;
-        case 4:
-          navigate("/lecturer/dashboard");
-          break;
-        default:
-          navigate("/");
-      }
+useEffect(() => {
+  const isLogin = localStorage.getItem("isLogin") === "true";
+  const roleId = localStorage.getItem("roleId");
+  if (location.pathname === "/sign-in" && isLogin && roleId) {
+    switch (parseInt(roleId)) {
+      case 1:
+        navigate("/admin/dashboard");
+        break;
+      case 2:
+        navigate("/company/dashboard");
+        break;
+      case 3:
+        navigate("/student/dashboard");
+        break;
+      case 4:
+        navigate("/lecturer/dashboard");
+        break;
+      default:
+        navigate("/");
     }
-  }, [navigate]);
+  }
+}, [navigate, location.pathname]);
 
   const onFinish = async (values: SignInInterface) => {
     setLoading(true);
@@ -54,6 +57,7 @@ function LoginForm() {
       localStorage.setItem("id", res.data.id);
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("roleId", res.data.roleId); 
+      refetchUser(); 
 
       setTimeout(() => {
         const roleId = res.data.roleId;

@@ -3,7 +3,6 @@ import { Table, Tag, Button, Space, Modal, Input, Select, Card, message } from '
 import { type ApplicationInterface } from '../../../interface/IApplication';
 import { GetApplicationById, GetApplicationsByStudentID } from '../../../services/https/Application';
 import { GetStudentByUserId } from '../../../services/https';
-import CoopMatchHeaderDefault from '../../component/CoopMatchHeaderDefault';
 import CoopMatchHeader from '../../Component/CoopMatchHeader';
 
 // กำหนดประเภทของสถานะ
@@ -185,11 +184,6 @@ const ApplicationDetailModal: React.FC<{
   onClose: () => void;
   application: ApplicationInterface | null;
 }> = ({ visible, onClose, application }) => {
-  const statusColors: Record<string, string> = {
-    'กำลังพิจารณา': 'orange',
-    'รอนัดสัมภาษณ์': 'green',
-    'ไม่ได้รับเลือก': 'red',
-  };
 
   const fileBaseURL = 'http://localhost:8000';
 

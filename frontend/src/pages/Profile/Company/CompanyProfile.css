@@ -44,7 +44,7 @@
 .company-post-list-card {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08); /* ใช้เงาสีกรม */
+  box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08); 
   padding: 24px;
 }
 

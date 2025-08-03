@@ -85,7 +85,7 @@ async function UpdateProfileImage(id: number, data: FormData) {
     ...requestOptions,
     headers: {
       ...requestOptions.headers,
-      'Content-Type': 'multipart/form-data', // ส่งไฟล์เช่นกัน
+      'Content-Type': 'multipart/form-data',
     },
   })
   .then(res => res)
@@ -358,7 +358,7 @@ async function CreateEducation(data: EducationInput) {
     .catch(e => e.response);
 }
 
-async function UpdateEducation(user_id: number, data: EducationInterface) {
+async function UpdateEducation(user_id: number, data: EducationInput) {
   return await axios
     .put(`${apiUrl}/education/${user_id}`, data, requestOptions)
     .then(res => res)
@@ -447,6 +447,21 @@ export async function GetRecommendedPosts(studentId: number, query: string = "")
       return e.response;
     });
 }
+async function GetEventsByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/notification/calendar/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
+}
+async function GetApplicationsByUserID(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/students/applications/${user_id}`, requestOptions)
+    .then((res) => res.data.data) 
+    .catch((e) => {
+      console.error("Error fetching applications:", e);
+      return []; 
+    });
+}
 
 
 export async function Logout(email: string) {
@@ -514,5 +529,7 @@ export {
   GetVerifyByUserId,
   SendEmailVerify,
   SendEmailinterview,
+  GetEventsByUserId,
+  GetApplicationsByUserID,
 
 };

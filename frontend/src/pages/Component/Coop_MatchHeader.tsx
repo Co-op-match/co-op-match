@@ -6,7 +6,7 @@ import {
   BellOutlined,
   SettingOutlined,
   HomeOutlined,
-  DownOutlined,
+  SolutionOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -20,7 +20,7 @@ interface CoopMatchHeaderDefaultProps {
   postId?: number; // 👈 เพิ่มเพื่อให้ dynamic ได้ภายหลัง
 }
 
-const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false, postId = 5 }) => {
+const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
@@ -37,12 +37,11 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
-
+    { key: 'recommendations', icon: <SolutionOutlined />, label: 'งานแนะนำ' },
     {
       key: 'applications/history',
       label: 'ประวัติการสมัคร',
     },
-
     { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
@@ -102,17 +101,19 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
           style={{
             border: 'none',
             backgroundColor: 'transparent',
-            minWidth: minimalMenu ? 'auto' : 550,
+            minWidth: minimalMenu ? 'auto' : 680, // ปรับ minWidth ตาม mode
             flex: '0 0 auto'
           }}
         />
         <Avatar
+          size={40}
           src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
           icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-          style={{
-            cursor: "pointer",
-            marginLeft: 16,
-            flex: '0 0 auto'
+          style={{ 
+            cursor: "pointer", 
+            marginLeft: 5,
+            marginRight: 5,
+            flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
           }}
         />
       </div>
@@ -120,4 +121,4 @@ const CoopMatchHeaderDefault: React.FC<CoopMatchHeaderDefaultProps> = ({ minimal
   );
 };
 
-export default CoopMatchHeaderDefault;
+export default CoopMatchHeader;

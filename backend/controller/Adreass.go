@@ -128,17 +128,20 @@ func UpdateAddressByRoleIDAndUserID(c *gin.Context) {
 	}
 
 	var addressID uint
+	db := config.DB() // ✅ ดึง db ครั้งเดียว
+
 	switch roleID {
 	case 2: // company
 		var company entity.Company
-		if err := config.DB().Where("user_id = ?", userID).First(&company).Error; err != nil {
+		if err := db.Select("address_id").Where("user_id = ?", userID).First(&company).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัท"})
 			return
 		}
 		addressID = company.AddressID
+
 	case 3: // student
 		var student entity.Student
-		if err := config.DB().Where("user_id = ?", userID).First(&student).Error; err != nil {
+		if err := db.Select("address_id").Where("user_id = ?", userID).First(&student).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนักศึกษา"})
 			return
 		}
@@ -146,7 +149,7 @@ func UpdateAddressByRoleIDAndUserID(c *gin.Context) {
 
 	case 4: // academic staff
 		var staff entity.AcademicStaff
-		if err := config.DB().Where("user_id = ?", userID).First(&staff).Error; err != nil {
+		if err := db.Select("address_id").Where("user_id = ?", userID).First(&staff).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบอาจารย์"})
 			return
 		}
@@ -157,24 +160,25 @@ func UpdateAddressByRoleIDAndUserID(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบว่า address นี้มีอยู่จริง
-	var existingAddress entity.Address
-	if err := config.DB().First(&existingAddress, addressID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบันทึกที่อยู่เดิม"})
-		return
-	}
-
-	// อัปเดตข้อมูล address
-	if err := config.DB().Model(&existingAddress).Updates(addressInput).Error; err != nil {
+	// ✅ Update โดยไม่ต้อง preload address ทั้ง object
+	if err := db.Model(&entity.Address{}).Where("id = ?", addressID).Updates(map[string]interface{}{
+		"house_number":    addressInput.HouseNumber,
+		"village":         addressInput.Village,
+		"street":          addressInput.Street,
+		"sub_street":      addressInput.SubStreet,
+		"province_id":     addressInput.ProvinceID,
+		"district_id":     addressInput.DistrictID,
+		"sub_district_id": addressInput.SubDistrictID,
+		"postcode_id":     addressInput.PostcodeID,
+	}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถอัปเดตที่อยู่ได้"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "อัปเดตที่อยู่เรียบร้อยแล้ว",
-		"address": existingAddress,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "อัปเดตที่อยู่เรียบร้อยแล้ว"})
 }
+
+
 func GetAllProvinces(c *gin.Context) {
 	var provinces []entity.Provinces
 

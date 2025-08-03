@@ -26,6 +26,7 @@ import ApplicationHistory from "./pages/Student/Application/History";
 import ApplicationByCompany from "../src/pages/company/application/application";
 import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
+import ProtectProfile from "./components/ProtectedProfile";
 
 
 function App() {
@@ -36,15 +37,12 @@ function App() {
           <Route path="/" element={<Navigate to="/sign-in" replace />} />
 
           {/* Public Routes */}
-          <Route element={<UserProvider><Outlet /></UserProvider>}>
-            <Route path="/sign-in" element={<LoginForm />} />
-            <Route path="/sign-up" element={<RegisterPage />} />
-            <Route path="/role-select" element={<RoleSelectionPage />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-
-
+          <Route element={<Outlet />}>
+          <Route path="/sign-in" element={<LoginForm />} />
+          <Route path="/sign-up" element={<RegisterPage />} />
+          <Route path="/role-select" element={<RoleSelectionPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
-
           {/* Protected Routes */}
           <Route
             path="/student/dashboard"
@@ -109,7 +107,9 @@ function App() {
             path="/student/add-student"
             element={
               <ProtectedRoute allowedRoles={[3]}>
-                <AddStudentForm />
+                <ProtectProfile>
+                  <AddStudentForm />
+                </ProtectProfile>
               </ProtectedRoute>
             }
           />
