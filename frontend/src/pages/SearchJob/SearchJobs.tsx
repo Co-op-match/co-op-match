@@ -36,7 +36,7 @@ import {
   GetIntershipPost
 } from '../../services/https';
 import { useNavigate } from 'react-router-dom';
-import CoopMatchHeader from '../Component/CoopMatchHeader';
+import CoopMatchHeader from '../Component/CompanyHeader';
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;

@@ -38,10 +38,10 @@ function App() {
 
           {/* Public Routes */}
           <Route element={<Outlet />}>
-          <Route path="/sign-in" element={<LoginForm />} />
-          <Route path="/sign-up" element={<RegisterPage />} />
-          <Route path="/role-select" element={<RoleSelectionPage />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/sign-in" element={<LoginForm />} />
+            <Route path="/sign-up" element={<RegisterPage />} />
+            <Route path="/role-select" element={<RoleSelectionPage />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           {/* Protected Routes */}
           <Route
@@ -125,9 +125,13 @@ function App() {
           <Route
             path="/student/applications/:postId"
             element={
-              <ProtectedRoute allowedRoles={[3]}>
-                <AddApplication />
-              </ProtectedRoute>
+             
+                <ProtectedRoute allowedRoles={[3]}>
+                   <CheckUser> 
+                  <AddApplication />
+                  </CheckUser>
+                </ProtectedRoute>
+             
             }
           />
 

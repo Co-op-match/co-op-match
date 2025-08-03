@@ -224,46 +224,46 @@ const InterviewDashboard: React.FC = () => {
         },
     ];
 
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     const handleModalSubmit = async () => {
         try {
             const values = await form.validateFields();
-
+    
             if (!values.date || !values.time) {
                 message.error("กรุณาเลือกวันและเวลาสัมภาษณ์");
                 return;
             }
-
-            const appointmentDate = dayjs(`${values.date.format("YYYY-MM-DD")} ${values.time.format("HH:mm")}`).format(); 
-// ได้ format: "2025-07-31T16:47:00+07:00" (RFC3339)
-
-            
+    
+            const appointmentDate = dayjs(`${values.date.format("YYYY-MM-DD")} ${values.time.format("HH:mm")}`).format();
+    
             const payload = {
-              appointment_date: appointmentDate,
-              status: "นัดสัมภาษณ์แล้ว",
-              mode: values.mode,
-              details: values.note || "",
-              CompanyID: Number(companyId),
-              StudentID: selectedApplicant.StudentID,
+                appointment_date: appointmentDate,
+                status: "นัดสัมภาษณ์แล้ว",
+                mode: values.mode,
+                details: values.note || "",
+                CompanyID: Number(companyId),
+                StudentID: selectedApplicant.StudentID,
             };
-            
-
-
-            console.log("Payload",payload);
+    
+            console.log("Payload", payload);
             const res = await CreateInterviewAppointment(payload);
-
+    
             if (res.status === 201) {
                 const updateRes = await UpdateApplicationStatus(
                     selectedApplicant.ID,
                     "นัดสัมภาษณ์แล้ว"
                 );
-
+    
                 if (updateRes.status === 200 || updateRes.status === 201) {
-                    // ✅ เรียกส่งอีเมล พร้อม student_id และ company_id
+    
+                    await delay(5000); // ✅ ดีเลย์ 1 วินาทีก่อนส่งอีเมล
+    
                     const emailRes = await SendEmailinterview(
                         selectedApplicant.StudentID,
                         Number(companyId)
                     );
-
+    
                     if (emailRes.status === 200) {
                         message.success("ส่งนัดหมาย อัปเดตสถานะ และส่งอีเมลเรียบร้อยแล้ว");
                     } else {
@@ -271,10 +271,10 @@ const InterviewDashboard: React.FC = () => {
                             "ส่งนัดหมายสำเร็จ และอัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ"
                         );
                     }
-
+    
                     setIsModalOpen(false);
                     form.resetFields();
-
+    
                     setApplications((prev) =>
                         prev.filter((app) => app.ID !== selectedApplicant.ID)
                     );
@@ -288,7 +288,7 @@ const InterviewDashboard: React.FC = () => {
             message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
         }
     };
-
+    
 
     return (
         <div style={containerStyle}>
