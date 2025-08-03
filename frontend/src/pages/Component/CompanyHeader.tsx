@@ -10,7 +10,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
-import { DownOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 
