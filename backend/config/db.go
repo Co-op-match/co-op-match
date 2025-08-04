@@ -254,11 +254,31 @@ func createSeedData(db *gorm.DB) {
 
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
-		{AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A", UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B", UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C", UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D", UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1},
+		{
+			AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A",
+			FirstName: "สมชาย", LastName: "วิศวกร", Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
+			UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B",
+			FirstName: "สุรีย์", LastName: "เคมี", Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
+			UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
+		},
+		{
+			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C",
+			FirstName: "สมพงษ์", LastName: "การตลาด", Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
+			UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
+		},
+		{
+			AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D",
+			FirstName: "อรทัย", LastName: "ภาษา", Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
+			UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E",
+			FirstName: "ธนพล", LastName: "นิติ", Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
+			UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
+		},
 	}
 	for _, staff := range staffs {
 		db.Unscoped().FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
