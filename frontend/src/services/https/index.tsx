@@ -20,6 +20,7 @@ const requestOptions = {
     Authorization: `${Bearer} ${Authorization}`,
   },
 };
+
 async function SignIn(data: SignInInterface) {
   return await axios
     .post(`${apiUrl}/sign-in`, data, requestOptions)
@@ -207,6 +208,12 @@ async function GetAllGender(): Promise<GenderInterface[]> {
     console.error("Failed to get genders:", error);
     return []; // กรณี error คืน array ว่าง
   }
+}
+async function GetAllStudent() {
+  return await axios
+    .get(`${apiUrl}/students`, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
 }
 //=======================================Company============================================
 async function GetAllCompany() {
@@ -480,6 +487,7 @@ export {
 
   CreateStudent,
   UpdateStudent,
+  GetAllStudent,
   CreateProfileImage,
   UpdateProfileImage,
   GetAllGender,
