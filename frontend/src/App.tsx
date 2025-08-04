@@ -39,8 +39,7 @@ import SubCompanyInAdmin from "./pages/Admin/users/Companies/SubCompany";
 import StudentsInAdmin from "./pages/Admin/users/Students/Students";
 import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
 import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
-import AdminPostManagement from "./pages/Admin/post/Post";
-import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";import AdminPostManagement from "./pages/Admin/post/post";
+import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 
 function App() {
