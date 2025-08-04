@@ -167,6 +167,7 @@ func calculateAdvancedMatch(student entity.Student, post entity.IntershipPost,
 	} else {
 		result.WeakPoints = append(result.WeakPoints, fmt.Sprintf("GPA ต่ำกว่าเกณฑ์ %.1f คะแนน", float64(post.MinGpa)-gpa))
 	}
+	
 
 	// 2. Skills Score with weighted matching
 	skillScore, matchedCount, skillGaps := calculateSkillScore(studentSkills, post.CompanyRequiredSkills)
@@ -177,12 +178,19 @@ func calculateAdvancedMatch(student entity.Student, post entity.IntershipPost,
 	if matchedCount > 0 {
 		result.RecommendReason = append(result.RecommendReason, fmt.Sprintf("ตรงกับทักษะที่ต้องการ %d/%d", matchedCount, len(post.CompanyRequiredSkills)))
 	}
+	if matchedCount < len(post.CompanyRequiredSkills) {
+		result.WeakPoints = append(result.WeakPoints,
+			fmt.Sprintf("มีทักษะตรงเพียง %d จาก %d", matchedCount, len(post.CompanyRequiredSkills)))
+	}
 
 	// 3. Interest Score with semantic matching
 	interestScore := calculateInterestScore(studentInterests, post.PostName, post.PostDescription)
 	result.InterestMatched = interestScore > 0
+
 	if result.InterestMatched {
 		result.RecommendReason = append(result.RecommendReason, "สอดคล้องกับความสนใจ")
+	} else {
+		result.WeakPoints = append(result.WeakPoints, "งานนี้อาจไม่ตรงกับความสนใจหลักของคุณ")
 	}
 
 	// 4. Location Score
@@ -192,6 +200,8 @@ func calculateAdvancedMatch(student entity.Student, post entity.IntershipPost,
 	result.LocationMatched = studentAddress.ProvinceID == companyAddress.ProvinceID
 	if result.LocationMatched {
 		result.RecommendReason = append(result.RecommendReason, "ในจังหวัดเดียวกัน")
+	} else {
+		result.WeakPoints = append(result.WeakPoints, "บริษัทอยู่นอกจังหวัดที่คุณอาศัยอยู่")
 	}
 
 	// 5. Education Level Score (new)
