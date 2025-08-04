@@ -22,7 +22,7 @@ const { Title, Text, Paragraph } = Typography;
 const PostDetails = () => {
   const { id } = useParams();
   const [post, setPost] = useState<any>(null);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (id) {
