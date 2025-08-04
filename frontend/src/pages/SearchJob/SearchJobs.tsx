@@ -36,7 +36,7 @@ import {
   GetIntershipPost
 } from '../../services/https';
 import { useNavigate } from 'react-router-dom';
-import CoopMatchHeader from '../Component/CompanyHeader';
+import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -387,7 +387,7 @@ function SearchJobs(){
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {contextHolder}
-      <CoopMatchHeader />
+      <CoopMatchHeaderDefault />
 
       <Layout>
         <Sider width={300} style={{ background: '#fff', padding: '24px' }}>
