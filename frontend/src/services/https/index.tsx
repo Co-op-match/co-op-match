@@ -86,7 +86,7 @@ async function UpdateProfileImage(id: number, data: FormData) {
     ...requestOptions,
     headers: {
       ...requestOptions.headers,
-      'Content-Type': 'multipart/form-data', // ส่งไฟล์เช่นกัน
+      'Content-Type': 'multipart/form-data',
     },
   })
   .then(res => res)
@@ -100,6 +100,13 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   } catch (e: any) {
     throw e.response || e;
   }
+}
+
+export async function UpdateStatusPost(postId: number, statusPostId: number) {
+  return await axios
+    .put(`${apiUrl}/posts/update-status`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
 }
 
 //=======================================Admin============================================
@@ -126,6 +133,19 @@ export async function GetAllAdmin() {
       return e.response;
     });
 }
+export async function GetAllInternshipPostsInAdmin() {
+  return await axios
+    .get(`${apiUrl}/admin/get-allpost`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetInternshipPostsInAdminByIPostID(id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/get-post-by-postid/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
@@ -365,7 +385,7 @@ async function CreateEducation(data: EducationInput) {
     .catch(e => e.response);
 }
 
-async function UpdateEducation(user_id: number, data: EducationInterface) {
+async function UpdateEducation(user_id: number, data: EducationInput) {
   return await axios
     .put(`${apiUrl}/education/${user_id}`, data, requestOptions)
     .then(res => res)
@@ -417,7 +437,8 @@ async function SendEmailVerify(user_id: number) {
     .catch(e => e.response);
 }
 
-async function SendEmailinterview(id: number) {
+///notification/interview/send-email/${student_id}/${company_id}  SendEmailinterview
+async function SendEmailinterview(student_id: number,company_id: number, ) {
   const Authorization = localStorage.getItem("token");
   const Bearer = localStorage.getItem("token_type");
 
@@ -429,7 +450,7 @@ async function SendEmailinterview(id: number) {
   };
 
   return await axios
-    .post(`${apiUrl}/notification/interview/send-email/${id}`, {}, requestOptions)
+    .post(`${apiUrl}/notification/interview/send-email/${student_id}/${company_id}`, {}, requestOptions)
     .then(res => res)
     .catch(e => e.response);
 }
@@ -451,6 +472,21 @@ export async function GetRecommendedPosts(studentId: number, query: string = "")
     .catch((e) => {
       console.error("❌ Error:", e?.response?.data || e.message);
       return e.response;
+    });
+}
+async function GetEventsByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/notification/calendar/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
+}
+async function GetApplicationsByUserID(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/students/applications/${user_id}`, requestOptions)
+    .then((res) => res.data.data) 
+    .catch((e) => {
+      console.error("Error fetching applications:", e);
+      return []; 
     });
 }
 
@@ -521,5 +557,7 @@ export {
   GetVerifyByUserId,
   SendEmailVerify,
   SendEmailinterview,
+  GetEventsByUserId,
+  GetApplicationsByUserID,
 
 };

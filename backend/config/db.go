@@ -403,10 +403,12 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			BenefitID:       1,
-			WorkDayID:       1,
-			StipendID:       2,
-			JobTypeID:       1,
+			Benefits: []entity.Benefit{
+				{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			},
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 1,
 		},
 		{
 			PostName:        "Data Science Intern",
@@ -418,10 +420,12 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
-			BenefitID:       3,
-			WorkDayID:       2,
-			StipendID:       3,
-			JobTypeID:       4,
+			Benefits: []entity.Benefit{
+				{Model: gorm.Model{ID: 3}}, // Or whichever Benefit ID is appropriate
+			},
+			WorkDayID: 2,
+			StipendID: 3,
+			JobTypeID: 4,
 		},
 		{
 			PostName:        "AI/ML Intern",
@@ -433,10 +437,12 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			BenefitID:       2,
-			WorkDayID:       3,
-			StipendID:       2,
-			JobTypeID:       4,
+			Benefits: []entity.Benefit{
+				{Model: gorm.Model{ID: 2}}, // Or whichever Benefit ID is appropriate
+			},
+			WorkDayID: 3,
+			StipendID: 2,
+			JobTypeID: 4,
 		},
 		{
 			PostName:        "Frontend Developer Intern",
@@ -448,10 +454,12 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			BenefitID:       1,
-			WorkDayID:       1,
-			StipendID:       2,
-			JobTypeID:       1,
+			Benefits: []entity.Benefit{
+				{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			},
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 1,
 		},
 	}
 

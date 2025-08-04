@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button, Card, Layout, Row, Col, Typography, message } from 'antd';
 import {
+<<<<<<< recommendations
   UserOutlined,
   TeamOutlined,
   CheckCircleOutlined,
@@ -16,7 +17,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 const { Header, Content } = Layout;
 const { Title, Paragraph } = Typography;
-import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
+=======
+  Layout,
+  Typography,
+  Button,
+} from 'antd';
+import CoopMatchHeaderDefault from '../component/Coop_MatchHeader';
+>>>>>>> main
 import { UserContext } from '../../components/UserContext';
 import { GetAllCompany,GetIntershipPost, GetAllStudent, } from '../../services/https';
 import { GetAllInterviewAppointments } from '../../services/https/Application';

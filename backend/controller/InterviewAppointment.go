@@ -9,50 +9,63 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 👇 เพิ่ม struct นี้ไว้ด้านบนของไฟล์ (หรือเหนือฟังก์ชัน CreateInterviewAppointment)
+type CreateInterviewAppointmentInput struct {
+	AppointmentDate string `json:"appointment_date" binding:"required"`
+	Status          string `json:"status"`
+	Mode            string `json:"mode"`
+	Details         string `json:"details"`
+	CompanyID       uint   `json:"CompanyID"`
+	StudentID       uint   `json:"StudentID"`
+}
+
 // POST /interview_appointments - Create a new interview appointment entry
 func CreateInterviewAppointment(c *gin.Context) {
-	var interviewAppointment entity.InterviewAppointment
-
-	// Bind the incoming JSON data to the InterviewAppointment struct
-	if err := c.ShouldBindJSON(&interviewAppointment); err != nil {
+	var input CreateInterviewAppointmentInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// ตรวจสอบว่า CompanyID และ StudentID มีอยู่ในฐานข้อมูลหรือไม่
+
+	// ✅ แปลง string → time.Time ด้วย time.Parse
+	appointmentTime, err := time.Parse(time.RFC3339, input.AppointmentDate)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid appointment_date format"})
+		return
+	}
+
+	// ตรวจสอบ Company และ Student เหมือนเดิม
 	var company entity.Company
 	db := config.DB()
-	db.First(&company, interviewAppointment.CompanyID)
+	db.First(&company, input.CompanyID)
 	if company.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
 		return
 	}
 
 	var student entity.Student
-	db.First(&student, interviewAppointment.StudentID)
+	db.First(&student, input.StudentID)
 	if student.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Student not found"})
 		return
 	}
 
-	// สร้าง InterviewAppointment entry
+	// ✅ สร้าง entry
 	appointment := entity.InterviewAppointment{
-		AppointmentDate: interviewAppointment.AppointmentDate,
-		Status:          interviewAppointment.Status,
-		Mode:            interviewAppointment.Mode,
-		Details:         interviewAppointment.Details,
-		CompanyID:       interviewAppointment.CompanyID, // โยงความสัมพันธ์กับ Company
-		Company:         company,                        // โยงความสัมพันธ์กับ Company
-		StudentID:       interviewAppointment.StudentID, // โยงความสัมพันธ์กับ Student
-		Student:         student,                        // โยงความสัมพันธ์กับ Student
+		AppointmentDate: appointmentTime,
+		Status:          input.Status,
+		Mode:            input.Mode,
+		Details:         input.Details,
+		CompanyID:       input.CompanyID,
+		StudentID:       input.StudentID,
 	}
 
-	// บันทึกข้อมูล InterviewAppointment
 	if err := db.Create(&appointment).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create interview appointment"})
 		return
 	}
 
-	// ส่ง response กลับไปที่ client
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Interview appointment created successfully",
 		"data":    appointment,

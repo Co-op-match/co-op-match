@@ -1,0 +1,90 @@
+import React, { useEffect, useState } from "react";
+import { Table, Tag, Card } from "antd";
+import { GetApplicationsByUserID } from "../../../services/https";
+import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
+import "./ApplicationListCard.css";
+
+interface ApplicationItem {
+  ID: number;
+  Status: string;
+  IntershipPost: IntershipPostInterface;
+}
+
+const ApplicationListCard: React.FC = () => {
+  const [applications, setApplications] = useState<ApplicationItem[]>([]);
+
+  useEffect(() => {
+    const userId = Number(localStorage.getItem("id"));
+    if (!isNaN(userId)) {
+      GetApplicationsByUserID(userId)
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setApplications(data);
+          } else {
+            console.error("Expected array but got:", data);
+            setApplications([]);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching applications:", err);
+          setApplications([]);
+        });
+    }
+  }, []);
+
+  const columns = [
+    {
+      title: "ลำดับ",
+      dataIndex: "index",
+      render: (_: any, __: any, index: number) => index + 1,
+      width: 60,
+    },
+    {
+      title: "บริษัท",
+      dataIndex: ["IntershipPost", "Company", "company_name"],
+    },
+    {
+      title: "ตำแหน่งงาน",
+      dataIndex: ["IntershipPost", "post_name"],
+      render: (_: any, record: ApplicationItem) => (
+        <a
+          href={`/student/post-student/${record.IntershipPost?.ID}`}
+          rel="noopener noreferrer"
+        >
+          {record.IntershipPost?.post_name}
+        </a>
+      ),
+    },
+    {
+      title: "สถานะ",
+      dataIndex: "status",
+      render: (status: string | undefined) => {
+        if (!status) return <Tag>ไม่ทราบสถานะ</Tag>;
+
+        let color: "gold" | "red" | "green" | "default" = "default";
+        if (status.includes("กำลังพิจารณา")) color = "gold";
+        else if (status.includes("ไม่ผ่าน")) color = "red";
+        else if (status.includes("รับเข้าฝึกงาน")) color = "green";
+
+        return <Tag color={color}>{status}</Tag>;
+        }
+    },
+  ];
+
+  return (
+    <Card
+      className="application-list-card"
+      title="📋 รายการที่สมัครไปทั้งหมด"
+    >
+      <Table
+        columns={columns}
+        dataSource={applications}
+        rowKey={(record) => record?.ID ?? record?.IntershipPost?.ID ?? Math.random()}
+        pagination={false}
+        size="small"
+      />
+    </Card>
+  );
+};
+
+export default ApplicationListCard;

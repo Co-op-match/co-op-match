@@ -1,0 +1,526 @@
+/* Main Layout */
+.student-layout {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  min-height: 100vh;
+  min-width: 100vw;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(240, 248, 255, 1) 25%,
+    rgba(207, 234, 250, 1) 60%, 
+    rgba(159, 218, 252, 1) 100%
+  );
+}
+
+/* Title Section */
+.student-profile-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+
+.student-profile-text {
+  font-weight: 700;
+  font-size: 32px;
+  color: #0d47a1;
+  white-space: nowrap;
+  margin-right: 20px;
+  margin-top: 1px;
+  margin-bottom: 5px;
+  text-shadow: 2px 2px 6px rgba(13, 71, 161, 0.2);
+  letter-spacing: -0.5px;
+}
+
+.student-profile-line {
+  flex: 1;
+  margin-top: 10px;
+  margin-bottom: 3px;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    rgba(13, 71, 161, 0.6) 0%, 
+    rgba(64, 169, 255, 0.4) 50%,
+    rgba(13, 71, 161, 0.1) 100%
+  );
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(13, 71, 161, 0.15);
+}
+
+/* Profile Card */
+.student-profile-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(13, 71, 161, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 30px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+/* 
+.student-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 40px rgba(13, 71, 161, 0.16),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+} */
+
+.student-profile-card .ant-card-body {
+  padding: 0;
+}
+
+.student-profile-container {
+  display: flex;
+  gap: 32px;
+  align-items: stretch;
+  padding: 32px;
+  flex-wrap: wrap;
+}
+
+/* Left Profile Section */
+.student-profile-left {
+  text-align: center;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  justify-content: center;
+  max-width: 300px;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(248, 252, 255, 0.9) 100%
+  );
+  border-radius: 12px;
+  border: 1px solid rgba(13, 71, 161, 0.08);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.student-avatar-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+/* Avatar Container */
+.student-avatar-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 50px;
+  transition: all 0.3s ease;
+}
+
+/* Avatar + Edit Icon: default style */
+.student-avatar-container .ant-avatar {
+  width: 160px !important;   /* ปรับขนาด Avatar เริ่มต้น */
+  height: 160px !important;
+  font-size: 64px;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 6px 20px rgba(13, 71, 161, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+}
+
+.student-avatar-edit-icon {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 
+    0 0 0 3px white,
+    0 3px 10px rgba(24, 144, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* 🎯 Hover ที่ Container จะมีผลกับทั้ง Avatar และ Icon */
+.student-avatar-container:hover .ant-avatar {
+  transform: scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(13, 71, 161, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.student-avatar-container:hover .student-avatar-edit-icon {
+  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 0 0 3px white,
+    0 5px 15px rgba(24, 144, 255, 0.4);
+}
+
+
+.student-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0d47a1;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+}
+
+.student-university {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1565c0;
+  margin: 4px 0 8px 0;
+  line-height: 1.4;
+}
+
+.student-major {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  margin: 0;
+  opacity: 0.9;
+}
+.student-dashboard-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 32px;
+  justify-content: space-between;
+}
+
+.application-list-wrapper {
+  flex: 1;
+  min-width: 500px;
+  max-width: 1000px;
+}
+
+.calendar-card-wrapper {
+  flex-shrink: 0;
+}
+
+
+/* Profile Details Section */
+.student-profile-details {
+  flex: 1;
+  min-width: 600px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(13, 71, 161, 0.08);
+  background: linear-gradient(90deg, 
+    rgba(240, 248, 255, 0.3) 0%, 
+    transparent 100%
+  );
+  padding-left: 16px;
+  padding-right: 8px;
+  border-radius: 8px;
+}
+
+.section-header h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0d47a1;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.edit-profile-button {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 8px rgba(24, 144, 255, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.edit-profile-button:hover {
+  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 5px 12px rgba(24, 144, 255, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.edit-profile-button:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 6px rgba(24, 144, 255, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Descriptions Styling */
+.student-profile-details .ant-descriptions {
+  margin-bottom: 8px;
+}
+
+.student-profile-details .ant-descriptions-item {
+  padding-bottom: 12px;
+}
+
+.student-profile-details .ant-descriptions-item-label {
+  font-weight: 600;
+  color: #0d47a1;
+  background: rgba(240, 248, 255, 0.4);
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-right: 8px;
+  font-size: 14px;
+  border: 1px solid rgba(13, 71, 161, 0.1);
+}
+
+.student-profile-details .ant-descriptions-item-content {
+  color: #333;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* Dividers */
+.student-divider {
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(13, 71, 161, 0.15) 30%,
+    rgba(13, 71, 161, 0.15) 70%,
+    transparent 100%
+  );
+  border: none;
+  border-radius: 2px;
+  margin: 24px 0;
+  box-shadow: 0 1px 2px rgba(13, 71, 161, 0.1);
+}
+
+.student-vertical-divider {
+  width: 2px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(13, 71, 161, 0.15) 30%,
+    rgba(13, 71, 161, 0.15) 70%,
+    transparent 100%
+  );
+  border: none;
+  border-radius: 2px;
+  margin: 0 16px;
+  align-self: stretch;
+  box-shadow: 1px 0 2px rgba(13, 71, 161, 0.1);
+}
+
+/* Cards Section */
+.student-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  box-shadow: 
+    0 6px 24px rgba(13, 71, 161, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  width: 100%;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.student-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 32px rgba(13, 71, 161, 0.12),
+    0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Calendar Footer */
+.student-calendar-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(13, 71, 161, 0.08);
+  text-align: center;
+  background: rgba(240, 248, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+/* Table Styling */
+.student-card .ant-table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-card .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, 
+    rgba(240, 248, 255, 0.8) 0%, 
+    rgba(230, 245, 255, 0.9) 100%
+  );
+  color: #0d47a1;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(13, 71, 161, 0.1);
+  font-size: 14px;
+}
+
+.student-card .ant-table-tbody > tr {
+  transition: all 0.2s ease;
+}
+
+.student-card .ant-table-tbody > tr:hover > td {
+  background: rgba(240, 248, 255, 0.4);
+  transform: scale(1.01);
+}
+
+/* Calendar Styling */
+.student-card .ant-picker-calendar {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.student-card .ant-picker-calendar-header {
+  background: linear-gradient(135deg, 
+    rgba(240, 248, 255, 0.6) 0%, 
+    rgba(230, 245, 255, 0.8) 100%
+  );
+  padding: 16px;
+  border-bottom: 1px solid rgba(13, 71, 161, 0.08);
+}
+
+.student-card .ant-card-head {
+  background: linear-gradient(135deg, 
+    rgba(240, 248, 255, 0.6) 0%, 
+    rgba(230, 245, 255, 0.8) 100%
+  );
+  border-bottom: 2px solid rgba(13, 71, 161, 0.1);
+}
+
+.student-card .ant-card-head-title {
+  color: #0d47a1;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .student-profile-container {
+    gap: 24px;
+  }
+  
+  .student-profile-details {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 992px) {
+  .student-layout {
+    padding: 20px;
+  }
+  
+  .student-profile-container {
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+  }
+  
+  .student-profile-left {
+    max-width: 100%;
+    min-width: 100%;
+    padding: 20px;
+  }
+  
+  .student-profile-details {
+    min-width: 100%;
+  }
+  
+  .section-header {
+    padding-left: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-layout {
+    padding: 16px;
+  }
+
+  .student-profile-text {
+    font-size: 26px;
+    margin-right: 12px;
+  }
+
+  .student-profile-container {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .student-profile-left {
+    padding: 16px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .edit-profile-button {
+    align-self: flex-end;
+  }
+
+  .student-profile-details .ant-descriptions {
+    column-count: 1 !important;
+  }
+
+  .student-profile-details .ant-descriptions-item {
+    padding-bottom: 8px;
+  }
+
+  .student-card {
+    padding: 16px;
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-layout {
+    padding: 12px;
+  }
+
+  .student-profile-title {
+    margin-bottom: 20px;
+  }
+
+  .student-profile-text {
+    font-size: 22px;
+    margin-right: 10px;
+  }
+
+  .student-profile-container {
+    padding: 16px;
+  }
+
+  .student-card {
+    padding: 12px;
+  }
+} 

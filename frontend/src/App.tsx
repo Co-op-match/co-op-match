@@ -24,9 +24,11 @@ import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPost
 import AddApplication from './pages/Student/Application/AddApplication';
 import ApplicationHistory from "./pages/Student/Application/History";
 import ApplicationByCompany from "../src/pages/company/application/application";
+import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
-
-
+import ProtectProfile from "./components/ProtectedProfile";
+import AdminPostManagement from "./pages/Admin/post/post";
+import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 
 function App() {
   return (
@@ -36,15 +38,12 @@ function App() {
           <Route path="/" element={<Navigate to="/sign-in" replace />} />
 
           {/* Public Routes */}
-          <Route element={<UserProvider><Outlet /></UserProvider>}>
+          <Route element={<Outlet />}>
             <Route path="/sign-in" element={<LoginForm />} />
             <Route path="/sign-up" element={<RegisterPage />} />
             <Route path="/role-select" element={<RoleSelectionPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-
-
           </Route>
-
           {/* Protected Routes */}
           <Route
             path="/student/dashboard"
@@ -111,7 +110,9 @@ function App() {
             path="/student/add-student"
             element={
               <ProtectedRoute allowedRoles={[3]}>
-                <AddStudentForm />
+                <ProtectProfile>
+                  <AddStudentForm />
+                </ProtectProfile>
               </ProtectedRoute>
             }
           />
@@ -127,9 +128,13 @@ function App() {
           <Route
             path="/student/applications/:postId"
             element={
-              <ProtectedRoute allowedRoles={[3]}>
-                <AddApplication />
-              </ProtectedRoute>
+             
+                <ProtectedRoute allowedRoles={[3]}>
+                   <CheckUser> 
+                  <AddApplication />
+                  </CheckUser>
+                </ProtectedRoute>
+             
             }
           />
 
@@ -187,10 +192,19 @@ function App() {
           />
 
           <Route
-            path="/interview_appointments"
+            path="/company/interview_appointments"
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <CreateInterviewAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company/interview_appointments/confirm"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <ConfirmInterviewAppointment />
               </ProtectedRoute>
             }
           />
@@ -209,6 +223,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-posts"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-post/:id"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostDetailManagement />
               </ProtectedRoute>
             }
           />

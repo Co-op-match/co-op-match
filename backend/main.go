@@ -51,8 +51,9 @@ func main() {
 	r.GET("/application/:id", controller.GetApplicationByID)
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
+	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
 
-	r.POST("/interview_appointments", controller.CreateInterviewAppointment)
+	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
 	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
 
@@ -60,6 +61,8 @@ func main() {
 
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
+
+	r.PUT("/posts/update-status", controller.UpdateStatusPost)
 
 	// Protected Routes
 	router := r.Group("/")
@@ -77,6 +80,7 @@ func main() {
 			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
+			studentGroup.GET("/applications/:user_id", controller.GetApplicationsByUserID)
 		}
 
 		addressGroup := router.Group("/address")
@@ -131,6 +135,7 @@ func main() {
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
+			notificationGroup.GET("/calendar/user/:user_id", controller.GetCalendarEventsByUserID)
 		}
 
 		companyGroup := router.Group("/company")
@@ -153,6 +158,8 @@ func main() {
 		adminGroup.GET("/all", controller.GetAllAdmin)
 		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 		adminGroup.GET("/:id", controller.GetAdminByID)
+		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
 	}
 
 	r.GET("/", func(c *gin.Context) {

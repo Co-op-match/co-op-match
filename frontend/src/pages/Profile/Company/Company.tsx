@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { EditOutlined, UserOutlined } from "@ant-design/icons";
 import { GetCompanyByUserId ,GetVerifyByUserId} from "../../../services/https";
-import CompanyHeader from "../../component/CompanyHeader";
+import CompanyHeader from "../../Component/CompanyHeader";
 import type { CompanyInterface } from "../../../interfaces/Company";
 import "./CompanyProfile.css";
 const { Content } = Layout;
@@ -94,9 +94,7 @@ useEffect(() => {
                   text={`สถานะการรับรอง: ${verifyStatus}`}
                 />
                 </div>
-
                 <Divider type="vertical" className="company-vertical-divider" />
-
                 <div className="company-profile-details">
                   <Descriptions column={3}>
                     <Descriptions.Item label="เว็บไซต์">{company?.Contact?.website || "-"}</Descriptions.Item>
