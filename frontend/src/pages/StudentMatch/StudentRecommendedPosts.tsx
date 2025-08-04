@@ -37,8 +37,10 @@ import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
 const { Title, Text, Paragraph } = Typography;
 import type { MatchResult } from '../../interfaces/MatchResult';
 import type { MatchingWeights } from '../../interfaces/MatchingWeights';
+import { useNavigate } from 'react-router-dom';
 
 function StudentRecommendedPosts() {
+  const navigate = useNavigate();
   const [recommendedPosts, setRecommendedPosts] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -240,6 +242,18 @@ useEffect(() => {
                   <Card
                     hoverable
                     style={{ height: '100%' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 40px rgba(24, 144, 255, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(24, 144, 255, 0.2)';
+                      }}
+                      onClick={() => {
+                        setSelectedPost(post);   // ต้องมี!
+                        setDetailVisible(true);
+                      }}
                     actions={[
                       <Button 
                         type="link" 
@@ -250,7 +264,7 @@ useEffect(() => {
                       >
                         ดูรายละเอียด
                       </Button>,
-                      <Button type="link" icon={<HeartOutlined />}>
+                      <Button type="link" icon={<HeartOutlined />} >
                         สนใจ
                       </Button>
                     ]}
@@ -449,7 +463,7 @@ useEffect(() => {
           <Button key="close" onClick={() => setDetailVisible(false)}>
             ปิด
           </Button>,
-          <Button key="apply" type="primary">
+          <Button key="apply" type="primary" onClick={() => navigate(`/student/post-student/${selectedPost?.post_id}`)}>
             สมัครตำแหน่งนี้
           </Button>
         ]}
