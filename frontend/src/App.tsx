@@ -27,7 +27,8 @@ import ApplicationByCompany from "../src/pages/company/application/application";
 import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 import ProtectProfile from "./components/ProtectedProfile";
-
+import AdminPostManagement from "./pages/Admin/post/post";
+import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 
 function App() {
   return (
@@ -220,6 +221,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-posts"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-post/:id"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostDetailManagement />
               </ProtectedRoute>
             }
           />

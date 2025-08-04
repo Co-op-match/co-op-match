@@ -62,6 +62,8 @@ func main() {
 	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
 
+	r.PUT("/posts/update-status", controller.UpdateStatusPost)
+
 	// Protected Routes
 	router := r.Group("/")
 	{
@@ -155,6 +157,8 @@ func main() {
 		adminGroup.GET("/all", controller.GetAllAdmin)
 		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 		adminGroup.GET("/:id", controller.GetAdminByID)
+		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
 	}
 
 	r.GET("/", func(c *gin.Context) {
