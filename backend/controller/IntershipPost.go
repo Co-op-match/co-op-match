@@ -328,7 +328,7 @@ func GetAllInternshipPostsInAdmin(c *gin.Context) {
 		Preload("WorkDay").
 		Preload("WorkMode").
 		Preload("StatusPost").
-		Preload("Benefit").
+		Preload("Benefits").
 		Preload("Admin.User.Role").
 		Preload("Applications.Student").
 		Find(&posts).Error
@@ -362,7 +362,7 @@ func GetInternshipPostsInAdminByIPostID(c *gin.Context) {
 		Preload("WorkDay").
 		Preload("WorkMode").
 		Preload("StatusPost").
-		Preload("Benefit").
+		Preload("Benefits").
 		Preload("Admin.User.Role").
 		Preload("Applications.Student").
 		First(&post, id).Error

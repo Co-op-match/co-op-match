@@ -103,15 +103,17 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   };
 
   const fullMenu = [
-    { 
-      key: "dashboard", 
-      icon: <HomeOutlined />, 
-      label: isMobile ? "หน้าหลัก" : "หน้าหลัก"
+    {
+      key: "dashboard",
+      icon: <HomeOutlined />,
+      label: isMobile ? "หน้าหลัก" : "หน้าหลัก",
     },
     {
       key: "users",
       icon: <TeamOutlined />,
-      label: isMobile ? "ผู้ใช้ทั้งหมด" : (
+      label: isMobile ? (
+        "ผู้ใช้ทั้งหมด"
+      ) : (
         <Dropdown menu={userMenuProps} trigger={["hover"]} disabled={isMobile}>
           <Space>
             <span style={{ cursor: "pointer" }}>ผู้ใช้ทั้งหมด</span>
@@ -120,20 +122,20 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       ),
       children: isMobile ? userDropdownItems : undefined,
     },
-    { 
-      key: "manage-posts", 
-      icon: <FileTextOutlined />, 
-      label: "จัดการ Post" 
+    {
+      key: "manage-posts",
+      icon: <FileTextOutlined />,
+      label: "จัดการ Post",
     },
-    { 
-      key: "notifications", 
-      icon: <BellOutlined />, 
-      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน"
+    {
+      key: "notifications",
+      icon: <BellOutlined />,
+      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน",
     },
-    { 
-      key: "settings", 
-      icon: <SettingOutlined />, 
-      label: "ตั้งค่า"
+    {
+      key: "settings",
+      icon: <SettingOutlined />,
+      label: "ตั้งค่า",
     },
   ];
 
@@ -185,25 +187,32 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
         {/* Left side - Logo */}
         <div
           onClick={() => navigate("/admin/dashboard")}
-          style={{ 
-            cursor: "pointer", 
-            display: "flex", 
+          style={{
+            cursor: "pointer",
+            display: "flex",
             alignItems: "center",
-            flex: "0 0 auto"
+            flex: "0 0 auto",
           }}
         >
-          <img 
-            src={Logo} 
-            alt="Logo" 
-            style={{ 
+          <img
+            src={Logo}
+            alt="Logo"
+            style={{
               height: isMobile ? 32 : 40,
-              maxWidth: isMobile ? 120 : 150
-            }} 
+              maxWidth: isMobile ? 120 : 150,
+            }}
           />
         </div>
 
         {/* Right side - Menu and Profile */}
-        <div style={{ display: "flex", alignItems: "center", flex: "1 1 auto", justifyContent: "flex-end" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flex: "1 1 auto",
+            justifyContent: "flex-end",
+          }}
+        >
           {/* Desktop Menu */}
           {!isMobile && (
             <Menu
@@ -240,18 +249,22 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
             trigger={["click"]}
           >
             <Avatar
+              size={40}
               src={
                 user?.ProfileImage?.[0]?.image_url
                   ? `http://localhost:8000${user.ProfileImage[0].image_url}`
                   : undefined
               }
               icon={
-                !user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined
+                !user?.ProfileImage?.[0]?.image_url ? (
+                  <UserOutlined />
+                ) : undefined
               }
-              style={{ 
-                cursor: "pointer", 
-                marginLeft: isMobile ? 8 : 16,
-                flexShrink: 0
+              style={{
+                cursor: "pointer",
+                marginLeft: 5,
+                marginRight: 5,
+                flex: "0 0 auto",
               }}
             />
           </Dropdown>
@@ -271,7 +284,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
         open={drawerVisible}
         width={280}
         styles={{
-          body: { padding: 0 }
+          body: { padding: 0 },
         }}
       >
         <Menu
