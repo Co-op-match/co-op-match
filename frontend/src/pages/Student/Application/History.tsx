@@ -3,7 +3,7 @@ import { Table, Tag, Button, Space, Modal, Input, Select, Card, message } from '
 import { type ApplicationInterface } from '../../../interface/IApplication';
 import { GetApplicationById, GetApplicationsByStudentID } from '../../../services/https/Application';
 import { GetStudentByUserId } from '../../../services/https';
-import CoopMatchHeaderDefault from '../../component/CoopMatchHeaderDefault';
+import CoopMatchHeader from '../../component/Coop_MatchHeader';
 
 // กำหนดประเภทของสถานะ
 type Status = 'รอนัดสัมภาษณ์' | 'กำลังพิจารณา' | 'ไม่ได้รับเลือก';
@@ -130,7 +130,7 @@ const ApplicationHistory: React.FC = () => {
 
   return (
     <div style={containerStyle}>
-      <CoopMatchHeaderDefault />
+      <CoopMatchHeader/>
       <h2 style={headingStyle}>ประวัติการสมัคร</h2>
 
       <Card style={searchCardStyle}>
@@ -184,11 +184,6 @@ const ApplicationDetailModal: React.FC<{
   onClose: () => void;
   application: ApplicationInterface | null;
 }> = ({ visible, onClose, application }) => {
-  const statusColors: Record<string, string> = {
-    'กำลังพิจารณา': 'orange',
-    'รอนัดสัมภาษณ์': 'green',
-    'ไม่ได้รับเลือก': 'red',
-  };
 
   const fileBaseURL = 'http://localhost:8000';
 
@@ -482,15 +477,6 @@ const fileLinkStyle = {
   textDecoration: 'none'
 };
 
-const actionButtonStyle = {
-  width: '100%',
-  padding: '10px',
-  border: '1px solid #ddd',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '14px',
-  textAlign: 'left' as const,
-  display: 'block'
-};
+
 
 export default ApplicationHistory;

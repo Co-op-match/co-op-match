@@ -1,122 +1,124 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-// POST /internship_posts - Create a new internship post entry
+// POST /post
 func CreateInternshipPost(c *gin.Context) {
 	var internshipPost entity.IntershipPost
+	db := config.DB()
 
-	// ✅ รับ skill_id ที่ frontend ส่งมา
 	var payload struct {
 		entity.IntershipPost
-		Skills []uint `json:"skills"`
+		Skills     []uint `json:"skills"`      // 🔹 skill IDs
+		BenefitIDs []uint `json:"benefit_ids"` // 🔹 benefit IDs
 	}
 
+	// 🔹 Bind JSON from request body
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	internshipPost = payload.IntershipPost
 
-	var jobType entity.JobType
-	var stipend entity.Stipend
-	var workDay entity.WorkDay
-	var workMode entity.WorkMode
-	var statusPost entity.StatusPost
-	var benefit entity.Benefit
+	// 🔹 Validate foreign keys
+	var (
+		jobType    entity.JobType
+		stipend    entity.Stipend
+		workDay    entity.WorkDay
+		workMode   entity.WorkMode
+		statusPost entity.StatusPost
+	)
 
-	db := config.DB()
+	db.First(&jobType, payload.JobTypeID)
+	db.First(&stipend, payload.StipendID)
+	db.First(&workDay, payload.WorkDayID)
+	db.First(&workMode, payload.WorkModeID)
+	db.First(&statusPost, payload.StatusPostID)
 
-	// ✅ ตรวจสอบ foreign key
-	db.First(&jobType, internshipPost.JobTypeID)
-	if jobType.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Job Type not found"})
+	if jobType.ID == 0 || stipend.ID == 0 || workDay.ID == 0 || workMode.ID == 0 || statusPost.ID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid foreign key(s) provided"})
 		return
 	}
 
-	db.First(&stipend, internshipPost.StipendID)
-	if stipend.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Stipend not found"})
-		return
+	// 🔹 Build []Benefit from IDs
+	var benefits []entity.Benefit
+	for _, id := range payload.BenefitIDs {
+		benefits = append(benefits, entity.Benefit{Model: gorm.Model{ID: id}})
 	}
 
-	db.First(&workDay, internshipPost.WorkDayID)
-	if workDay.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Work Day not found"})
-		return
-	}
-
-	db.First(&workMode, internshipPost.WorkModeID)
-	if workMode.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Work Mode not found"})
-		return
-	}
-
-	db.First(&statusPost, internshipPost.StatusPostID)
-	if statusPost.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Status Post not found"})
-		return
-	}
-
-	db.First(&benefit, internshipPost.BenefitID)
-	if benefit.ID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Benefit not found"})
-		return
-	}
-
-	// ✅ สร้าง Post พร้อม location
+	// 🔹 Create Internship Post
 	post := entity.IntershipPost{
 		PostName:        internshipPost.PostName,
 		PostDescription: internshipPost.PostDescription,
 		Quantity:        internshipPost.Quantity,
 		MinGpa:          internshipPost.MinGpa,
-		CreatedAt:       internshipPost.CreatedAt,
+		CreatedAt:       time.Now(), // 🔄 ใส่เวลาปัจจุบัน
 		LocationDetail:  internshipPost.LocationDetail,
 		Subdistrict:     internshipPost.Subdistrict,
 		District:        internshipPost.District,
 		Province:        internshipPost.Province,
-
-		JobTypeID:    internshipPost.JobTypeID,
-		JobType:      jobType,
-		StipendID:    internshipPost.StipendID,
-		Stipend:      stipend,
-		WorkDayID:    internshipPost.WorkDayID,
-		WorkDay:      workDay,
-		WorkModeID:   internshipPost.WorkModeID,
-		WorkMode:     workMode,
-		StatusPostID: internshipPost.StatusPostID,
-		StatusPost:   statusPost,
-		BenefitID:    internshipPost.BenefitID,
-		Benefit:      benefit,
-		CompanyID:    internshipPost.CompanyID,
-		AdminID:      internshipPost.AdminID,
+		CompanyID:       internshipPost.CompanyID,
+		AdminID:         internshipPost.AdminID,
+		JobTypeID:       internshipPost.JobTypeID,
+		StipendID:       internshipPost.StipendID,
+		WorkDayID:       internshipPost.WorkDayID,
+		WorkModeID:      internshipPost.WorkModeID,
+		StatusPostID:    internshipPost.StatusPostID,
+		Benefits:        benefits,
 	}
 
-	// ✅ บันทึกโพสต์
 	if err := db.Create(&post).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create internship post"})
 		return
 	}
 
-	// ✅ บันทึก Skill ความสัมพันธ์
+	// 🔹 Create CompanyRequiredSkills (if any)
 	for _, skillID := range payload.Skills {
-		skillRel := entity.CompanyRequiredSkill{
+		var skill entity.Skill
+		if err := db.First(&skill, skillID).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Skill with ID %d not found", skillID)})
+			return
+		}
+
+		companySkill := entity.CompanyRequiredSkill{
 			SkillID:         skillID,
 			IntershipPostID: post.ID,
 		}
-		db.Create(&skillRel)
+		if err := db.Create(&companySkill).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create required skill"})
+			return
+		}
 	}
 
+	// 🔹 Preload full post with relationships
+	var fullPost entity.IntershipPost
+	if err := db.Preload("Company").
+		Preload("JobType").
+		Preload("Stipend").
+		Preload("WorkDay").
+		Preload("WorkMode").
+		Preload("StatusPost").
+		Preload("Benefits").
+		Preload("CompanyRequiredSkills.Skill"). // 👈 สำคัญ
+		Where("id = ?", post.ID).
+		First(&fullPost).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load full post"})
+		return
+	}
+
+	// 🔚 Success
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Internship post created successfully",
-		"data":    post,
+		"data":    fullPost,
 	})
 }
 
@@ -207,7 +209,7 @@ func GetInternshipPostById(c *gin.Context) {
 		Preload("WorkDay").
 		Preload("WorkMode").
 		Preload("StatusPost").
-		Preload("Benefit").
+		Preload("Benefits").
 		Preload("CompanyRequiredSkills.Skill").
 		First(&internshipPost, internshipPostID)
 
@@ -285,6 +287,7 @@ func GetInterviewAppointmentsByCompanyID(c *gin.Context) {
 }
 
 // GET /posts/company/:id
+
 func GetPostsByCompanyID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -292,16 +295,16 @@ func GetPostsByCompanyID(c *gin.Context) {
 
 	db := config.DB()
 
-	// 🔁 preload ข้อมูล relations เพื่อใช้ใน frontend
-	if err := db.Preload("StatusPost").
-		Preload("JobType").
-		Preload("Stipend").
-		Preload("WorkDay").
-		Preload("WorkMode").
-		Preload("Benefit").
-		Preload("CompanyRequiredSkills.Skill"). // ✅ preload ทักษะที่ต้องการของแต่ละโพสต์
-		Where("company_id = ?", id).
-		Find(&posts).Error; err != nil {
+	if err := db.Preload("Company"). // ✅ เพิ่มบรรทัดนี้
+						Preload("StatusPost").
+						Preload("JobType").
+						Preload("Stipend").
+						Preload("WorkDay").
+						Preload("WorkMode").
+						Preload("Benefits").
+						Preload("CompanyRequiredSkills.Skill").
+						Where("company_id = ?", id).
+						Find(&posts).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

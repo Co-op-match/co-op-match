@@ -33,16 +33,22 @@ import {
     UpdateApplicationStatus,
 } from "../../../services/https/Application/index";
 import { SendEmailinterview } from "../../../services/https";
+import CompanyHeader from "../../Component/CompanyHeader";
+import './Appointment.css';
 
 const { Title, Text } = Typography;
 
 const InterviewDashboard: React.FC = () => {
+
     const [applications, setApplications] = useState<any[]>([]);
     const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
     const [companyId, setCompanyId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+
+
+
 
     useEffect(() => {
         const userId = Number(localStorage.getItem("id"));
@@ -67,6 +73,7 @@ const InterviewDashboard: React.FC = () => {
     
         fetchCompanyId();
     }, []);
+    
 
     useEffect(() => {
         const fetchApplications = async () => {
@@ -77,26 +84,26 @@ const InterviewDashboard: React.FC = () => {
                 setLoading(false);
                 return;
             }
-    
+
             const company = await GetCompanyByUserID(userId);
             if (!company || !company.ID) {
                 console.warn("❌ ไม่พบ company จาก user_id นี้");
                 setLoading(false);
                 return;
             }
-    
+
             const companyId = company.ID;
             console.log("📦 ดึงใบสมัครของบริษัท ID:", companyId);
-    
+
             const res = await GetApplicationsByCompanyID(userId);
             if (res.status === 200 && Array.isArray(res.data.data)) {
                 const filtered = res.data.data.filter(
                     (app: any) => app.status === "รอการนัดสัมภาษณ์"
                 );
-                
+
                 const appsWithKey = filtered.map((app: any) => {
                     console.log("📍 app จาก backend:", app);
-                
+
                     return {
                         ...app,
                         key: app.ID,
@@ -105,16 +112,16 @@ const InterviewDashboard: React.FC = () => {
                         post_name: app.IntershipPost?.post_name || "-",
                     };
                 });
-    
+
                 setApplications(appsWithKey);
                 console.log("📦 applications:", appsWithKey);
-                
+
             } else {
                 message.error("ไม่สามารถโหลดข้อมูลผู้สมัครได้");
             }
             setLoading(false);
         };
-    
+
         fetchApplications();
     }, []);
 
@@ -147,9 +154,9 @@ const InterviewDashboard: React.FC = () => {
             key: "student_name",
             render: (name: string) => (
                 <Space>
-                    <Avatar 
-                        size="large" 
-                        icon={<UserOutlined />} 
+                    <Avatar
+                        size="large"
+                        icon={<UserOutlined />}
                         style={{ backgroundColor: '#1890ff' }}
                     />
                     <div>
@@ -184,7 +191,7 @@ const InterviewDashboard: React.FC = () => {
             dataIndex: "status",
             key: "status",
             render: (status: string) => (
-                <Tag 
+                <Tag
                     icon={getStatusIcon(status)}
                     color={getStatusColor(status)}
                     style={{ fontSize: '12px', padding: '4px 8px' }}
@@ -217,42 +224,59 @@ const InterviewDashboard: React.FC = () => {
         },
     ];
 
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     const handleModalSubmit = async () => {
         try {
             const values = await form.validateFields();
-            const datetime = dayjs(values.date)
-                .set("hour", values.time.hour())
-                .set("minute", values.time.minute());
+    
+            if (!values.date || !values.time) {
+                message.error("กรุณาเลือกวันและเวลาสัมภาษณ์");
+                return;
+            }
+    
+            const appointmentDate = dayjs(`${values.date.format("YYYY-MM-DD")} ${values.time.format("HH:mm")}`).format();
     
             const payload = {
-                AppointmentDate: datetime.toISOString(),
-                Status: "นัดสัมภาษณ์แล้ว",
-                Mode: values.mode,
-                Details: values.note || "",
+                appointment_date: appointmentDate,
+                status: "นัดสัมภาษณ์แล้ว",
+                mode: values.mode,
+                details: values.note || "",
                 CompanyID: Number(companyId),
                 StudentID: selectedApplicant.StudentID,
             };
     
+            console.log("Payload", payload);
             const res = await CreateInterviewAppointment(payload);
     
             if (res.status === 201) {
-                const updateRes = await UpdateApplicationStatus(selectedApplicant.ID, "นัดสัมภาษณ์แล้ว");
+                const updateRes = await UpdateApplicationStatus(
+                    selectedApplicant.ID,
+                    "นัดสัมภาษณ์แล้ว"
+                );
     
                 if (updateRes.status === 200 || updateRes.status === 201) {
-                    // ✅ เรียกส่งอีเมล
-                    const emailRes = await SendEmailinterview(selectedApplicant.StudentID);
+    
+                    await delay(5000); // ✅ ดีเลย์ 1 วินาทีก่อนส่งอีเมล
+    
+                    const emailRes = await SendEmailinterview(
+                        selectedApplicant.StudentID,
+                        Number(companyId)
+                    );
     
                     if (emailRes.status === 200) {
                         message.success("ส่งนัดหมาย อัปเดตสถานะ และส่งอีเมลเรียบร้อยแล้ว");
                     } else {
-                        message.warning("ส่งนัดหมายสำเร็จ และอัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ");
+                        message.warning(
+                            "ส่งนัดหมายสำเร็จ และอัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ"
+                        );
                     }
     
                     setIsModalOpen(false);
                     form.resetFields();
     
-                    setApplications(prev =>
-                        prev.filter(app => app.ID !== selectedApplicant.ID)
+                    setApplications((prev) =>
+                        prev.filter((app) => app.ID !== selectedApplicant.ID)
                     );
                 } else {
                     message.warning("สร้างนัดหมายสำเร็จ แต่ไม่สามารถอัปเดตสถานะใบสมัครได้");
@@ -264,9 +288,11 @@ const InterviewDashboard: React.FC = () => {
             message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
         }
     };
+    
 
     return (
         <div style={containerStyle}>
+            <CompanyHeader />
             {/* Header Section */}
             <div style={headerStyle}>
                 <div>
@@ -286,7 +312,7 @@ const InterviewDashboard: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <Card 
+            <Card
                 style={tableCardStyle}
                 title={
                     <Space>
@@ -302,8 +328,8 @@ const InterviewDashboard: React.FC = () => {
                     </Tag>
                 }
             >
-                <Table 
-                    dataSource={applications} 
+                <Table
+                    dataSource={applications}
                     columns={columns}
                     loading={loading}
                     pagination={{
@@ -359,8 +385,8 @@ const InterviewDashboard: React.FC = () => {
                         style={applicantInfoStyle}
                         title={
                             <Space>
-                                <Avatar 
-                                    icon={<UserOutlined />} 
+                                <Avatar
+                                    icon={<UserOutlined />}
                                     style={{ backgroundColor: '#1976d2' }}
                                 />
                                 <Text strong>ข้อมูลผู้สมัคร</Text>
@@ -395,8 +421,8 @@ const InterviewDashboard: React.FC = () => {
                         }
                         rules={[{ required: true, message: "กรุณาเลือกวันที่สัมภาษณ์" }]}
                     >
-                        <DatePicker 
-                            style={inputStyle} 
+                        <DatePicker
+                            style={inputStyle}
                             placeholder="เลือกวันที่สัมภาษณ์"
                             disabledDate={(current) => current && current < dayjs().startOf('day')}
                         />
@@ -412,15 +438,15 @@ const InterviewDashboard: React.FC = () => {
                         }
                         rules={[{ required: true, message: "กรุณาเลือกเวลา" }]}
                     >
-                        <TimePicker 
-                            format="HH:mm" 
-                            style={inputStyle} 
+                        <TimePicker
+                            format="HH:mm"
+                            style={inputStyle}
                             placeholder="เลือกเวลาสัมภาษณ์"
                         />
                     </Form.Item>
 
-                    <Form.Item 
-                        name="mode" 
+                    <Form.Item
+                        name="mode"
                         label={
                             <Space>
                                 <VideoCameraOutlined style={{ color: '#1976d2' }} />
@@ -433,30 +459,30 @@ const InterviewDashboard: React.FC = () => {
                             style={inputStyle}
                             placeholder="เลือกรูปแบบการสัมภาษณ์"
                             options={[
-                                { 
+                                {
                                     label: (
                                         <Space>
                                             <VideoCameraOutlined />
                                             <span>ออนไลน์ (Video Call)</span>
                                         </Space>
-                                    ), 
-                                    value: "ออนไลน์" 
+                                    ),
+                                    value: "ออนไลน์"
                                 },
-                                { 
+                                {
                                     label: (
                                         <Space>
                                             <HomeOutlined />
                                             <span>ออนไซต์ (ที่บริษัท)</span>
                                         </Space>
-                                    ), 
-                                    value: "ออนไซต์" 
+                                    ),
+                                    value: "ออนไซต์"
                                 },
                             ]}
                         />
                     </Form.Item>
 
-                    <Form.Item 
-                        name="note" 
+                    <Form.Item
+                        name="note"
                         label={
                             <Space>
                                 <EditOutlined style={{ color: '#1976d2' }} />
@@ -464,7 +490,7 @@ const InterviewDashboard: React.FC = () => {
                             </Space>
                         }
                     >
-                        <Input.TextArea 
+                        <Input.TextArea
                             placeholder="เช่น กรุณาเตรียม portfolio, ใส่ชุดสุภาพ, หรือข้อมูลสำคัญอื่นๆ..."
                             rows={4}
                             style={textareaStyle}
@@ -472,33 +498,6 @@ const InterviewDashboard: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
-
-            <style jsx>{`
-                .table-row:hover {
-                    background-color: #f8f9fa !important;
-                    transition: background-color 0.2s ease;
-                }
-                
-                .ant-table-thead > tr > th {
-                    background-color: #e3f2fd !important;
-                    color: #1976d2 !important;
-                    font-weight: 600 !important;
-                    border-bottom: 2px solid #bbdefb !important;
-                }
-                
-                .ant-table-tbody > tr > td {
-                    border-bottom: 1px solid #f0f0f0 !important;
-                }
-                
-                .ant-btn-primary {
-                    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2) !important;
-                }
-                
-                .ant-btn-primary:hover {
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3) !important;
-                }
-            `}</style>
         </div>
     );
 };

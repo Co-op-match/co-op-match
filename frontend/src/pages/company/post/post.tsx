@@ -5,7 +5,6 @@ import {
   Typography,
   Button,
   Table,
-  Tag,
   Modal,
   Form,
   Input,
@@ -14,10 +13,21 @@ import {
   Row,
   Col,
   message,
+  Space,
+  Divider,
 } from 'antd';
+import { 
+  PlusOutlined, 
+  LogoutOutlined, 
+  EyeOutlined, 
+  RiseOutlined,
+  TeamOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  StopOutlined 
+} from '@ant-design/icons';
 import CompanyHeader from '../../Component/CompanyHeader';
 import { useNavigate } from 'react-router-dom';
-import { GetPostByCompanyId } from '../../../services/https/post';
 import { type InternshipPostInterface } from '../../../interface/IIntershipPost';
 import {
   GetJobTypes,
@@ -25,10 +35,12 @@ import {
   GetWorkDays,
   GetWorkModes,
   GetBenefits,
+  GetPostByCompanyId,
 } from '../../../services/https/post';
 import axios from 'axios';
 import { GetAllProvinces, GetAllSkill } from '../../../services/https';
 import type { SkillInterface } from '../../../interfaces/Skill';
+import { GetApplicationSummary } from '../../../services/https/Application';
 
 interface SelectOption {
   label: string;
@@ -55,8 +67,6 @@ interface Province {
   name_th: string;
   Districts: District[];
 }
-
-
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -91,59 +101,152 @@ const CompanyDashboard: React.FC = () => {
 
   const realColumns = [
     {
-      title: 'ตำแหน่งงาน',
+      title: (
+                  <Space>
+          <RiseOutlined style={{ color: '#1976d2' }} />
+          <span style={{ color: '#333', fontWeight: 600 }}>ตำแหน่งงาน</span>
+        </Space>
+      ),
       dataIndex: 'post_name',
       key: 'post_name',
       render: (text: string, record: InternshipPostInterface) => (
-        <Button type="link" onClick={() => navigate(`/post/${record.ID}`)}>{text}</Button>
+        <Button 
+          type="link" 
+          onClick={() => navigate(`/post/${record.ID}`)}
+          style={{
+            color: '#1976d2',
+            fontWeight: 500,
+            fontSize: '14px',
+            padding: 0,
+            height: 'auto',
+            textDecoration: 'none',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#1565c0';
+            e.currentTarget.style.textDecoration = 'underline';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#1976d2';
+            e.currentTarget.style.textDecoration = 'none';
+          }}
+        >
+          {text}
+        </Button>
       ),
     },
     {
-      title: 'จำนวนผู้สมัคร',
-      dataIndex: 'applicants',
-      key: 'applicants',
-      render: (applicants: number) => applicants ?? 0,
+      title: (
+        <Space>
+          <TeamOutlined style={{ color: '#1976d2' }} />
+          <span style={{ color: '#333', fontWeight: 600 }}>จำนวนที่รับ</span>
+        </Space>
+      ),
+      dataIndex: 'quantity', // ✅ เปลี่ยนจาก applicants → quantity
+      key: 'quantity',
+      align: 'center' as const,
+      render: (quantity: number) => (
+        <div style={{
+          background: '#e3f2fd',
+          padding: '6px 12px',
+          borderRadius: '6px',
+          fontWeight: 600,
+          color: '#1565c0',
+          minWidth: '40px',
+          textAlign: 'center'
+        }}>
+          {quantity ?? 0}
+        </div>
+      ),
     },
+    
     {
-      title: 'สถานะ',
+      title: (
+        <Space>
+          <CheckCircleOutlined style={{ color: '#1976d2' }} />
+          <span style={{ color: '#333', fontWeight: 600 }}>สถานะ</span>
+        </Space>
+      ),
       dataIndex: 'StatusPost',
       key: 'status',
+      align: 'center' as const,
       render: (statusObj: { status_post: string }) => {
-        const status = statusObj?.status_post; // ✅ ถูกต้อง
-
-        let color = 'default';
+        const status = statusObj?.status_post;
+        let color = '#1976d2';
+        let bgColor = '#e3f2fd';
         let text = status;
+        let icon = <CheckCircleOutlined />;
 
         if (status === 'Open') {
-          color = 'green';
+          color = '#52c41a';
+          bgColor = '#f6ffed';
           text = 'เปิดรับสมัคร';
+          icon = <CheckCircleOutlined />;
         } else if (status === 'Closed') {
-          color = 'red';
+          color = '#ff4d4f';
+          bgColor = '#fff2f0';
           text = 'ปิดรับสมัคร';
+          icon = <StopOutlined />;
         } else if (status === 'Pending Approval') {
-          color = 'orange';
+          color = '#faad14';
+          bgColor = '#fffbe6';
           text = 'รอตรวจสอบ';
+          icon = <ClockCircleOutlined />;
         }
 
-        return <Tag color={color}>{text}</Tag>;
-      }
-      ,
+        return (
+          <div style={{
+            background: bgColor,
+            color: color,
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontWeight: 500,
+            border: `1px solid ${color}20`,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '13px'
+          }}>
+            {icon}
+            {text}
+          </div>
+        );
+      },
     },
-
     {
-      title: 'จัดการ',
+      title: (
+        <Space>
+          <EyeOutlined style={{ color: '#1976d2' }} />
+          <span style={{ color: '#333', fontWeight: 600 }}>จัดการ</span>
+        </Space>
+      ),
       key: 'action',
+      align: 'center' as const,
       render: (_: any, record: InternshipPostInterface) => {
-        console.log('record:', record); // 👈 ดู output ว่ามี id ไหม
         return (
           <Button
             type="primary"
+            icon={<EyeOutlined />}
             onClick={() => navigate(`/applications/post/${record.ID}`)}
+            style={{
+              background: '#1976d2',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 500,
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#1565c0';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#1976d2';
+            }}
           >
             ดูใบสมัคร
           </Button>
         );
-      },}      
+      },
+    }
   ];
 
   useEffect(() => {
@@ -171,11 +274,8 @@ const CompanyDashboard: React.FC = () => {
     const fetchOptions = async () => {
       try {
         const skillsData = await GetAllSkill();
-
         setSkills(skillsData);
-
         console.log(skillsData)
-
       } catch {
         messageApi.error({
           content: 'โหลดข้อมูลทักษะหรือความสนใจไม่สำเร็จ',
@@ -189,31 +289,44 @@ const CompanyDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("id");
-    if (companyId) {
-      GetPostByCompanyId(Number(companyId)).then((res) => {
-        if (Array.isArray(res?.data)) {
-          // เพิ่ม mock applicants และ status
-          const postsWithMock = res.data.map((post: any) => ({
-            ...post,
-            applicants: Math.floor(Math.random() * 10),
-            status: 'เปิดรับสมัคร',
-          }));
-          setPosts(postsWithMock);
-        } else {
-          console.error("โพสต์ไม่อยู่ในรูปแบบ array:", res?.data);
-          setPosts([]);
+    const fetchData = async () => {
+      const companyId = localStorage.getItem("id");
+      if (!companyId) return;
+  
+      try {
+        const [postRes, applicationRes] = await Promise.all([
+          GetPostByCompanyId(Number(companyId)),
+          GetApplicationSummary(Number(companyId)),
+        ]);
+  
+        let applications = applicationRes?.data || [];
+  
+        if (!Array.isArray(applications)) {
+          applications = [applications];
         }
-      });
-    }
-
+  
+        const postsWithApplicantCount = postRes?.data.map((post: any) => {
+          const count = applications.filter((a: any) => a.IntershipPostID === post.ID).length;
+          return {
+            ...post,
+            applicants: count,
+          };
+        });
+  
+        setPosts(postsWithApplicantCount);
+      } catch (error) {
+        console.error("❌ Error loading data:", error);
+        setPosts([]);
+      }
+    };
+  
+    fetchData();
+  
     GetJobTypes().then(res => setJobTypes(res || []));
     GetStipends().then(res => setStipends(res || []));
     GetWorkDays().then(res => setWorkDays(res || []));
     GetWorkModes().then(res => setWorkModes(res || []));
     GetBenefits().then(res => setBenefits(res || []));
-
-    
   }, []);
 
   const handleAddPost = async (values: any) => {
@@ -222,13 +335,10 @@ const CompanyDashboard: React.FC = () => {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
     }
-
-    // values.StatusPostID = 1;
   
     values.StatusPostID = 3;
     values.CompanyID = Number(companyId);
   
-    // 🔁 ดึงชื่อจาก rawProvinces ก่อนส่ง
     const selectedProvince = rawProvinces.find(p => p.name_th === values.province);
     const selectedDistrict = selectedProvince?.Districts?.find(d => d.name_th === values.district);
     const selectedSubdistrict = selectedDistrict?.SubDistricts?.find(s => s.ID === values.subdistrict_id);
@@ -245,17 +355,20 @@ const CompanyDashboard: React.FC = () => {
         form.resetFields();
         setIsAddModalVisible(false);
   
-        const res = await GetPostByCompanyId(Number(companyId));
-        if (Array.isArray(res?.data)) {
-          const postsWithMock = res.data.map((post: any) => ({
+        const [postRes, applicationRes] = await Promise.all([
+          GetPostByCompanyId(Number(companyId)),
+          GetApplicationSummary(Number(companyId)),
+        ]);
+        const applications = applicationRes?.data || [];
+        const postsWithApplicantCount = postRes?.data.map((post: any) => {
+          const count = applications.filter((a: any) => a.IntershipPostID === post.ID).length;
+          return {
             ...post,
-            applicants: Math.floor(Math.random() * 10),
-          }));
-          setPosts(postsWithMock);
-        } else {
-          setPosts([]);
-          console.error("ผลลัพธ์จาก backend ไม่ใช่ array:", res?.data);
-        }
+            applicants: count,
+          };
+        });
+  
+        setPosts(postsWithApplicantCount);
       } else {
         message.error("เกิดข้อผิดพลาดในการบันทึกโพสต์งาน");
       }
@@ -289,7 +402,7 @@ const CompanyDashboard: React.FC = () => {
           label: d.name_th,
           value: Number(d.ID),
         }))
-      );      
+      );
     }
   };
 
@@ -316,23 +429,23 @@ const CompanyDashboard: React.FC = () => {
           label: s.name_th,
           value: Number(s.ID),
         }))
-      );           
+      );
     }
   };
 
   const handleSubdistrictChange = (subdistrictId: number) => {
     console.log("✅ เลือกตำบล ID:", subdistrictId);
-  
+
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
     const selectedDistrict = selectedProvince?.Districts?.find((d: any) => d.ID === selectedDistrictId);
     const selectedSubdistrict = selectedDistrict?.SubDistricts?.find((s: any) => s.ID === subdistrictId);
-  
+
     console.log("📌 selectedSubdistrict:", selectedSubdistrict);
     console.log("📌 Postcode ID:", selectedSubdistrict?.Postcode?.ID);
-  
+
     if (selectedSubdistrict) {
       setSelectedSubdistrict(selectedSubdistrict);
-  
+
       form.setFieldsValue({
         subdistrict: selectedSubdistrict.name_th,
         district: selectedDistrict?.name_th,
@@ -342,38 +455,215 @@ const CompanyDashboard: React.FC = () => {
       });
     }
   };
-  
-
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ 
+      minHeight: '100vh',
+      background: '#f8fafb'
+    }}>
       <CompanyHeader />
-      <Header style={{ background: '#fff', padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={3} style={{ margin: 0 }}>Company Dashboard</Title>
-        <Button type="primary" danger onClick={handleLogout}>Logout</Button>
+      <Header style={{ 
+        background: '#e3f2fd',
+        padding: '0 24px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        borderBottom: '1px solid #e0e7ff'
+      }}>
+        <Title level={2} style={{ 
+          margin: 0,
+          color: '#1565c0',
+          fontWeight: 600,
+          fontSize: '24px'
+        }}>
+          Company Dashboard
+        </Title>
+        <Button 
+          type="primary" 
+          danger 
+          icon={<LogoutOutlined />}
+          onClick={handleLogout}
+          style={{
+            borderRadius: '8px',
+            fontWeight: 500,
+            height: '40px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            boxShadow: '0 2px 8px rgba(255, 77, 79, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 77, 79, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 77, 79, 0.3)';
+          }}
+        >
+          Logout
+        </Button>
       </Header>
 
-      <Content style={{ margin: '16px' }}>
+      <Content style={{ margin: '24px', minHeight: 'calc(100vh - 200px)' }}>
         <Card
-          title="ตำแหน่งงานที่โพสต์ไว้"
-          extra={<Button type="primary" onClick={() => setIsAddModalVisible(true)}>เพิ่มโพสต์</Button>}
+          style={{
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e3f2fd',
+            background: '#ffffff'
+          }}
+          title={
+            <div style={{
+              background: '#e3f2fd',
+              margin: '-24px -24px 24px -24px',
+              padding: '16px 24px',
+              borderRadius: '8px 8px 0 0',
+              color: '#1565c0',
+              fontSize: '18px',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginTop: '16px',
+              width: '1260px',
+            }}>
+              <RiseOutlined style={{ fontSize: '24px' }} />
+              ตำแหน่งงานที่โพสต์ไว้
+            </div>
+          }
+          extra={
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              onClick={() => setIsAddModalVisible(true)}
+              style={{
+                background: '#1976d2',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 500,
+                height: '36px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                fontSize: '14px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#1565c0';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#1976d2';
+              }}
+            >
+              เพิ่มโพสต์
+            </Button>
+          }
+          bodyStyle={{ padding: '0' }}
         >
-          <Table dataSource={posts} columns={realColumns} rowKey="id" pagination={false} />
+          <Table 
+            dataSource={posts} 
+            columns={realColumns} 
+            rowKey="id" 
+            pagination={false}
+            style={{
+              '.ant-table-thead > tr > th': {
+                background: 'linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%)',
+                borderBottom: '2px solid #87ceeb',
+                fontWeight: 600,
+                color: '#2c5aa0'
+              }
+            }}
+            rowClassName={(record, index) => 
+              index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
+            }
+          />
         </Card>
       </Content>
 
-      <Modal title="เพิ่มโพสต์" open={isAddModalVisible} onCancel={() => setIsAddModalVisible(false)} footer={null} width={720}>
-        <Form form={form} onFinish={handleAddPost} layout="vertical">
-          <Form.Item label="หัวข้อหรือตำแหน่งที่เปิดรับ" name="post_name" rules={[{ required: true, message: 'กรุณากรอกหัวข้อหรือตำแหน่งที่เปิดรับ' }]}>
-            <Input />
+      <Modal 
+        title={
+          <div style={{
+            background: '#e3f2fd',
+            margin: '-24px -24px 24px -24px',
+            padding: '16px 24px',
+            color: '#1565c0',
+            fontSize: '18px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <PlusOutlined style={{ fontSize: '20px' }} />
+            เพิ่มโพสต์งานใหม่
+          </div>
+        }
+        open={isAddModalVisible} 
+        onCancel={() => setIsAddModalVisible(false)} 
+        footer={null} 
+        width={800}
+        style={{ top: 20 }}
+        styles={{
+          body: { 
+            background: '#ffffff',
+            borderRadius: '0 0 8px 8px'
+          }
+        }}
+      >
+        <Form 
+          form={form} 
+          onFinish={handleAddPost} 
+          layout="vertical"
+          style={{ marginTop: '20px' }}
+        >
+          <Form.Item 
+            label={<span style={{ color: '#333', fontWeight: 600 }}>หัวข้อหรือตำแหน่งที่เปิดรับ</span>}
+            name="post_name" 
+            rules={[{ required: true, message: 'กรุณากรอกหัวข้อหรือตำแหน่งที่เปิดรับ' }]}
+          >
+            <Input 
+              style={{
+                borderRadius: '6px',
+                border: '1px solid #e0e7ff',
+                fontSize: '14px',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#1976d2';
+                e.target.style.boxShadow = '0 0 0 2px rgba(25, 118, 210, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e0e7ff';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
           </Form.Item>
 
-          <Form.Item label="จำนวนที่รับ" name="quantity" rules={[{ required: true, message: 'กรุณากรอกจำนวนที่รับ' }]}>
-            <InputNumber style={{ width: '100%' }} />
+          <Form.Item 
+            label={<span style={{ color: '#333', fontWeight: 600 }}>จำนวนที่รับ</span>}
+            name="quantity" 
+            rules={[{ required: true, message: 'กรุณากรอกจำนวนที่รับ' }]}
+          >
+            <InputNumber 
+              style={{ 
+                width: '100%',
+                borderRadius: '6px'
+              }} 
+            />
           </Form.Item>
 
-          <Form.Item label="รายละเอียดงาน" name="post_description" rules={[{ required: true, message: 'กรุณากรอกรายละเอียดงาน' }]}>
-            <Input.TextArea rows={3} />
+          <Form.Item 
+            label={<span style={{ color: '#333', fontWeight: 600 }}>รายละเอียดงาน</span>}
+            name="post_description" 
+            rules={[{ required: true, message: 'กรุณากรอกรายละเอียดงาน' }]}
+          >
+            <Input.TextArea 
+              rows={4} 
+              style={{
+                borderRadius: '6px',
+                resize: 'none'
+              }}
+            />
           </Form.Item>
           {contextHolder}
           <Form.Item
@@ -391,35 +681,96 @@ const CompanyDashboard: React.FC = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="GPA" name="min_gpa" rules={[{ required: true, message: 'กรุณากรอก GPA' }]}>
-            <InputNumber min={0} max={4} step={0.01} style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item label="ประเภทงาน" name="JobTypeID" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
-            <Select placeholder="เลือกประเภทงาน">
-              {jobTypes.map(j => (
-                <Select.Option key={j.ID} value={j.ID}>{j.job_type}</Select.Option>
+          {contextHolder}
+          
+          <Form.Item
+            label={<span style={{ color: '#333', fontWeight: 600 }}>สวัสดิการ</span>}
+            name="benefit_ids"
+            rules={[{ required: true, message: 'กรุณาเลือกสวัสดิการอย่างน้อย 1 รายการ' }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="เลือกสวัสดิการ"
+              allowClear
+              style={{
+                borderRadius: '6px'
+              }}
+            >
+              {benefits.map(b => (
+                <Select.Option key={b.ID} value={b.ID}>
+                  {b.benefit}
+                </Select.Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item label="ค่าตอบแทน" name="StipendID" rules={[{ required: true, message: 'กรุณาเลือกค่าตอบแทน' }]}>
-            <Select placeholder="เลือกค่าตอบแทน">
-              {stipends.map(s => (
-                <Select.Option key={s.ID} value={s.ID}>{s.stipend}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item 
+                label={<span style={{ color: '#333', fontWeight: 600 }}>GPA ขั้นต่ำ</span>}
+                name="min_gpa" 
+                rules={[{ required: true, message: 'กรุณากรอก GPA' }]}
+              >
+                <InputNumber 
+                  min={0} 
+                  max={4} 
+                  step={0.01} 
+                  style={{ 
+                    width: '100%',
+                    borderRadius: '6px'
+                  }} 
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                label={<span style={{ color: '#333', fontWeight: 600 }}>ประเภทงาน</span>}
+                name="JobTypeID" 
+                rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}
+              >
+                <Select placeholder="เลือกประเภทงาน">
+                  {jobTypes.map(j => (
+                    <Select.Option key={j.ID} value={j.ID}>{j.job_type}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item label="วันทำงาน" name="WorkDayID" rules={[{ required: true, message: 'กรุณาเลือกวันทำงาน' }]}>
-            <Select placeholder="เลือกวันทำงาน">
-              {workDays.map(w => (
-                <Select.Option key={w.ID} value={w.ID}>{w.work_day}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item 
+                label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>ค่าตอบแทน</span>}
+                name="StipendID" 
+                rules={[{ required: true, message: 'กรุณาเลือกค่าตอบแทน' }]}
+              >
+                <Select placeholder="เลือกค่าตอบแทน">
+                  {stipends.map(s => (
+                    <Select.Option key={s.ID} value={s.ID}>{s.stipend}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>วันทำงาน</span>}
+                name="WorkDayID" 
+                rules={[{ required: true, message: 'กรุณาเลือกวันทำงาน' }]}
+              >
+                <Select placeholder="เลือกวันทำงาน">
+                  {workDays.map(w => (
+                    <Select.Option key={w.ID} value={w.ID}>{w.work_day}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item label="รูปแบบการทำงาน" name="WorkModeID" rules={[{ required: true, message: 'กรุณาเลือกรูปแบบการทำงาน' }]}>
+          <Form.Item 
+            label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>รูปแบบการทำงาน</span>}
+            name="WorkModeID" 
+            rules={[{ required: true, message: 'กรุณาเลือกรูปแบบการทำงาน' }]}
+          >
             <Select placeholder="เลือกรูปแบบการทำงาน">
               {workModes.map(w => (
                 <Select.Option key={w.ID} value={w.ID}>{w.work_mode}</Select.Option>
@@ -427,74 +778,236 @@ const CompanyDashboard: React.FC = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="สวัสดิการ" name="benefit_id" rules={[{ required: true, message: 'กรุณาเลือกสวัสดิการ' }]}>
-            <Select placeholder="เลือกสวัสดิการ">
-              {benefits.map(b => (
-                <Select.Option key={b.ID} value={b.ID}>{b.benefit}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+          <Divider style={{ 
+            borderColor: '#e0e7ff', 
+            margin: '24px 0 20px 0',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#333'
+          }}>
+            📍 ที่ตั้งสถานประกอบการ
+          </Divider>
 
-          <h3>ที่ตั้ง</h3>
           <Row gutter={16}>
-            
             <Col span={12}>
-              <Form.Item label="จังหวัด" name="province" rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}>
+              <Form.Item 
+                label={<span style={{ color: '#333', fontWeight: 600 }}>จังหวัด</span>}
+                name="province" 
+                rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}
+              >
                 <Select
                   showSearch
                   options={provinceOptions}
                   onChange={handleProvinceChange}
                   placeholder="เลือกจังหวัด"
-                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                  filterOption={(input, option) => 
+                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                  style={{
+                    borderRadius: '6px'
+                  }}
                 />
               </Form.Item>
             </Col>
 
             <Col span={12}>
-              <Form.Item label="อำเภอ / เขต" name="district" rules={[{ required: true, message: 'กรุณาเลือกอำเภอ/เขต' }]}>
+              <Form.Item 
+                label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>อำเภอ / เขต</span>}
+                name="district" 
+                rules={[{ required: true, message: 'กรุณาเลือกอำเภอ/เขต' }]}
+              >
                 <Select
                   showSearch
                   options={districtOptions}
                   onChange={handleDistrictChange}
                   placeholder="เลือกอำเภอ / เขต"
                   disabled={!districtOptions.length}
-                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                  filterOption={(input, option) => 
+                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                  style={{
+                    borderRadius: '8px'
+                  }}
                 />
               </Form.Item>
             </Col>
 
             <Col span={12}>
-              <Form.Item label="ตำบล / แขวง" name="subdistrict_id" rules={[{ required: true, message: 'กรุณาเลือกตำบล/แขวง' }]}>
+              <Form.Item 
+                label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>ตำบล / แขวง</span>}
+                name="subdistrict_id" 
+                rules={[{ required: true, message: 'กรุณาเลือกตำบล/แขวง' }]}
+              >
                 <Select
                   showSearch
                   options={subdistrictOptions}
                   onChange={handleSubdistrictChange}
                   placeholder="เลือกตำบล / แขวง"
                   disabled={!subdistrictOptions.length}
-                  filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                  filterOption={(input, option) => 
+                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                  style={{
+                    borderRadius: '8px'
+                  }}
                 />
               </Form.Item>
             </Col>
 
             <Col span={12}>
-              <Form.Item label="รหัสไปรษณีย์" name="post_code" rules={[{ required: true, message: 'กรุณาเลือกรหัสไปรษณีย์' }]}>
+              <Form.Item 
+                label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>รหัสไปรษณีย์</span>}
+                name="post_code" 
+                rules={[{ required: true, message: 'กรุณาเลือกรหัสไปรษณีย์' }]}
+              >
                 <Select
                   disabled={!selectedSubdistrict?.Postcode}
-                  options={selectedSubdistrict?.Postcode ? [{ label: selectedSubdistrict.Postcode.post_code, value: selectedSubdistrict.Postcode.ID }] : []}
+                  options={selectedSubdistrict?.Postcode ? 
+                    [{ 
+                      label: selectedSubdistrict.Postcode.post_code, 
+                      value: selectedSubdistrict.Postcode.ID 
+                    }] : []
+                  }
                   placeholder="เลือกรหัสไปรษณีย์"
+                  style={{
+                    borderRadius: '8px'
+                  }}
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item>
-            <Row justify="end" gutter={10}>
-              <Col span={8}><Button onClick={() => setIsAddModalVisible(false)} block>ยกเลิก</Button></Col>
-              <Col span={8}><Button type="primary" htmlType="submit" block>โพสต์</Button></Col>
+          <Divider style={{ margin: '32px 0 24px 0' }} />
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Row justify="center" gutter={16}>
+              <Col span={8}>
+                <Button 
+                  onClick={() => setIsAddModalVisible(false)} 
+                  block
+                  style={{
+                    height: '45px',
+                    borderRadius: '10px',
+                    fontWeight: 500,
+                    fontSize: '15px',
+                    border: '2px solid #e8f4ff',
+                    color: '#2c5aa0',
+                    background: 'transparent',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#87ceeb';
+                    e.currentTarget.style.color = '#87ceeb';
+                    e.currentTarget.style.background = '#f0f7ff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#e8f4ff';
+                    e.currentTarget.style.color = '#2c5aa0';
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  ยกเลิก
+                </Button>
+              </Col>
+              <Col span={8}>
+                <Button 
+                  type="primary" 
+                  htmlType="submit" 
+                  block
+                  style={{
+                    height: '45px',
+                    background: 'linear-gradient(135deg, #87ceeb 0%, #5fb3d4 100%)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    boxShadow: '0 4px 16px rgba(135, 206, 235, 0.4)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 24px rgba(135, 206, 235, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(135, 206, 235, 0.4)';
+                  }}
+                >
+                  โพสต์งาน
+                </Button>
+              </Col>
             </Row>
           </Form.Item>
         </Form>
       </Modal>
+
+      <style jsx global>{`
+        .table-row-light {
+          background: rgba(240, 247, 255, 0.3) !important;
+        }
+        .table-row-dark {
+          background: rgba(255, 255, 255, 0.8) !important;
+        }
+        .table-row-light:hover,
+        .table-row-dark:hover {
+          background: rgba(135, 206, 235, 0.1) !important;
+          transform: scale(1.01);
+          transition: all 0.3s ease;
+        }
+        .ant-table-thead > tr > th {
+          background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
+          border-bottom: 2px solid #87ceeb !important;
+          font-weight: 600 !important;
+          color: #2c5aa0 !important;
+          position: relative;
+        }
+        .ant-table-thead > tr > th::before {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #87ceeb 0%, #b8e6ff 100%);
+        }
+        .ant-select-dropdown {
+          border-radius: 8px !important;
+          box-shadow: 0 6px 24px rgba(135, 206, 235, 0.15) !important;
+        }
+        .ant-select-item-option-selected {
+          background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
+          color: #2c5aa0 !important;
+          font-weight: 500 !important;
+        }
+        .ant-input:focus,
+        .ant-input-focused,
+        .ant-select:focus,
+        .ant-select-focused .ant-select-selector {
+          border-color: #87ceeb !important;
+          box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
+        }
+        .ant-input-number:focus,
+        .ant-input-number-focused {
+          border-color: #87ceeb !important;
+          box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
+        }
+        .ant-modal {
+          border-radius: 16px !important;
+          overflow: hidden;
+        }
+        .ant-modal-content {
+          border-radius: 16px !important;
+          overflow: hidden;
+          box-shadow: 0 12px 48px rgba(135, 206, 235, 0.25) !important;
+        }
+        .ant-form-item-label > label {
+          font-size: 14px;
+        }
+        .ant-divider-horizontal.ant-divider-with-text::before,
+        .ant-divider-horizontal.ant-divider-with-text::after {
+          border-top-color: #87ceeb !important;
+        }
+      `}</style>
     </Layout>
   );
 };

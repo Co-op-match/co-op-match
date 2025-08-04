@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import CoopMatchHeader from '../../Component/CoopMatchHeader';
+import CompanyHeader from '../../Component/CompanyHeader';
 import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../services/https/Application/index';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +22,6 @@ interface ApplicationInterface {
 const Dashboard = () => {
     const { postId } = useParams();
     const [applications, setApplications] = useState<ApplicationInterface[]>([]);
-    const [approvedApplications, setApprovedApplications] = useState<ApplicationInterface[]>([]);
-    const [rejectedApplications, setRejectedApplications] = useState<ApplicationInterface[]>([]);
     const [approvalStats, setApprovalStats] = useState({ approved: 0, pending: 0, rejected: 0 });
     const [showModal, setShowModal] = useState(false);
     const [selectedApplication, setSelectedApplication] = useState<ApplicationInterface | null>(null);
@@ -53,7 +51,7 @@ const Dashboard = () => {
     }, [postId]);
 
     const handleScheduleInterview = (application: ApplicationInterface) => {
-        navigate("/interview_appointments", {
+        navigate("/company/interview_appointments", {
           state: {
             studentId: application.id,
             studentName: application.name,
@@ -96,7 +94,6 @@ const Dashboard = () => {
 
 
     useEffect(() => {
-  filterApplicationsByStatus(applications); // << ถ้าต้องการใช้ต่อ
   calculateStats(applications);             // ✅ ถูกต้อง
 }, [applications]);
 
@@ -110,15 +107,6 @@ const Dashboard = () => {
         });
         setApprovalStats(stats); // ✅ << ตรงนี้แหละ
     };
-
-
-    const filterApplicationsByStatus = (data: ApplicationInterface[]) => {
-        const approved = data.filter(application => application.status === 'รอการนัดสัมภาษณ์');
-        const rejected = data.filter(application => application.status === 'ไม่ได้รับเลือก');
-        setApprovedApplications(approved);
-        setRejectedApplications(rejected);
-    };
-
 
 
     const handleApproval = (
@@ -161,7 +149,7 @@ const Dashboard = () => {
 
     return (
         <div style={containerStyle}>
-            <CoopMatchHeader />
+            <CompanyHeader />
 
             <div style={summaryCardStyle}>
                 <h3 style={headingStyle}>📊 สรุปผลคำขอ</h3>

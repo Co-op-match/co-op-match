@@ -1,4 +1,6 @@
 import type { CompanyInterface } from "../interfaces/Company";
+import type { BenefitInterface } from "../interface/IBenefit";
+
 export interface InternshipPostInterface {
   status_post: string;
   ID?: number;
@@ -13,7 +15,7 @@ export interface InternshipPostInterface {
   WorkDayID: number;
   WorkModeID: number;
   StatusPostID: number;
-  benefit_id: number;
+  benefit_ids: number[]; // ✅ แก้ตรงนี้
   company_id: number;
 
   // ✅ ที่อยู่
@@ -22,10 +24,10 @@ export interface InternshipPostInterface {
   district: string;
   province: string;
 
-  // ✅ สำหรับแสดงสถานะ (เช่น Active/Inactive)
+  // ✅ แสดงข้อมูลสัมพันธ์
   StatusPost?: {
     status_post: string;
   };
-
   Company?: CompanyInterface;
+  Benefits?: BenefitInterface[]; // ✅ preload มาใช้แสดง
 }

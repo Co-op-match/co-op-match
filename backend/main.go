@@ -52,8 +52,9 @@ func main() {
 	r.GET("/application/:id", controller.GetApplicationByID)
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
+	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
 
-	r.POST("/interview_appointments", controller.CreateInterviewAppointment)
+	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
 	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
 
@@ -81,6 +82,7 @@ func main() {
 			studentGroup.PUT("/:id", controller.UpdateStudent)
 			studentGroup.GET("/:id", controller.GetStudentByID)
 			studentGroup.GET("user/:user_id", controller.GetStudentByUserID)
+			studentGroup.GET("/applications/:user_id", controller.GetApplicationsByUserID)
 			studentGroup.GET("/all-active", controller.GetAllActiveStudents)
 			studentGroup.GET("/all-deleted", controller.GetAllDeletedStudents)
 			studentGroup.DELETE("/delete/:id", controller.DeleteStudent)
@@ -138,6 +140,7 @@ func main() {
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
+			notificationGroup.GET("/calendar/user/:user_id", controller.GetCalendarEventsByUserID)
 		}
 
 		companyGroup := router.Group("/company")

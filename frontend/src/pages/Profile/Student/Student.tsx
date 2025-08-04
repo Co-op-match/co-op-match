@@ -7,127 +7,147 @@ import {
   Table,
   Calendar,
   Badge,
-  Divider,
 } from "antd";
-import { EditOutlined, UserOutlined } from "@ant-design/icons";
-import { GetStudentByUserId } from "../../../services/https";
+import { BookOutlined, EditOutlined, EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
+import { GetStudentByUserId,UpdateProfileImage  } from "../../../services/https";
 import type { StudentInterface } from "../../../interfaces/Student";
 import "./StudentProfile.css";
-import CoopMatchHeader from '../../component/CoopMatchHeader';
+import CoopMatchHeader from "../../component/Coop_MatchHeader";
 import dayjs from "dayjs";
+import EditProfileModal from "../Student/Edit/Popup";
+import StudentCalendarCard from "./StudentCalendar";
+import ApplicationListCard from "./ApplicationListCard";
 
 const { Content } = Layout;
+const ProfileCard: React.FC<{
+  student?: StudentInterface;
+  onEditSection: (section: "personal" | "education" | "address") => void;
+  onImageUpdated: (newImageUrl: string) => void
+}> = ({ student, onEditSection, onImageUpdated }) => {
+  const firstEducation = student?.Education?.[0];
+  const [uploading, setUploading] = useState(false);
 
-const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
-  const firstEducation =
-    student?.Education && student.Education.length > 0
-      ? student.Education[0]
-      : undefined;
+const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (file && student?.User?.ID) {
+    const formData = new FormData();
+    formData.append("user_id", String(student.User.ID));
+    formData.append("image", file);
+
+    setUploading(true);
+    const res = await UpdateProfileImage(student.User.ID, formData);
+    setUploading(false);
+
+    // ✅ ใส่ตรงนี้
+    if (res?.status === 200 && res.data?.data?.image_url) {
+      onImageUpdated(res.data.data.image_url); // ส่ง URL กลับให้ StudentProfile
+    }
+  }
+};
 
   return (
-    <Card bordered style={{ marginBottom: 20 }}>
+    <Card bordered className="student-profile-card">
       <div className="student-profile-container">
-        {/* ซ้าย */}
         <div className="student-profile-left">
         <div className="student-avatar-container">
-          <Avatar
-            src={
-              student?.User?.ProfileImage?.[0]?.image_url
-                ? `http://localhost:8000${student?.User?.ProfileImage[0].image_url}`
-                : undefined
-            }
-            size={120}
-            icon={!student?.User?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-          />
-          <div className="student-avatar-edit-icon">
+          <label style={{ cursor: "pointer" }}>
+            <Avatar
+              src={
+                student?.User?.ProfileImage?.[0]?.image_url
+                  ? `http://localhost:8000${student.User.ProfileImage[0].image_url}`
+                  : undefined
+              }
+              size={120}
+              icon={
+                !student?.User?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined
+              }
+              style={{ border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleImageUpload}
+            />
+          </label>
+
+          {/* Edit icon overlay (คลิกได้เหมือนกัน) */}
+          <label className="student-avatar-edit-icon" title="เปลี่ยนรูปโปรไฟล์">
             <EditOutlined />
-          </div>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleImageUpload}
+            />
+          </label>
+
+          {uploading && <div className="uploading-overlay">กำลังอัปโหลด...</div>}
         </div>
           <p className="student-name">
             {student?.first_name} {student?.last_name}
           </p>
-        <p className="student-university">
-          {firstEducation?.University?.name_th || "Suranaree University Of Technology"}
-        </p>
-        <p className="student-major">
-          {firstEducation?.Faculty?.name_th|| "Computer Engineering"}
-        </p>
-
+          <p className="student-university-major">
+            {firstEducation?.University?.name_th || "Suranaree University Of Technology"} <br />
+            {firstEducation?.Faculty?.name_th || "คณะวิศวกรรมศาสตร์"} - {firstEducation?.Program?.name_th || "วิศวกรรมคอมพิวเตอร์"}
+          </p>
+          <p className="student-major">
+            {firstEducation?.Faculty?.name_th || "Computer Engineering"}
+          </p>
         </div>
 
-        {/* เส้น Divider แนวตั้ง */}
-        <Divider type="vertical" className="studdent-vertical-divider" />
-
-        {/* ขวา */}
         <div className="student-profile-details">
-          <Descriptions column={4}>
-            <Descriptions.Item label="เพศ">
-              {student?.Gender?.name || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="วันเกิด">
-              {student?.birthday ? dayjs(student.birthday).format("DD/MM/YYYY") : "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="เบอร์">
-              {student?.phone_number || "-"}
-            </Descriptions.Item>
+          <div className="section-header">
+            <h4><UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลส่วนตัว</h4>
+            <button className="edit-profile-button" onClick={() => onEditSection("personal")}>
+              <EditOutlined /> แก้ไข
+            </button>
+          </div>
+          <div style={{ padding: "0px 24px 0px 24px" }}>
+          <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+            <Descriptions.Item label="เพศ">{student?.Gender?.name || "-"}</Descriptions.Item>
+            <Descriptions.Item label="วันเกิด">{student?.birthday ? dayjs(student.birthday).format("DD/MM/YYYY") : "-"}</Descriptions.Item>
+            <Descriptions.Item label="เบอร์">{student?.phone_number || "-"}</Descriptions.Item>
             <Descriptions.Item label="อายุ">{student?.age || "-"}</Descriptions.Item>
-            <Descriptions.Item label="สัญชาติ">
-              {student?.nationality || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="ศาสนา">
-              {student?.religion || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="น้ำหนัก">
-              {student?.weight} ก.
-            </Descriptions.Item>
-            <Descriptions.Item label="ส่วนสูง">
-              {student?.height} ซม.
-            </Descriptions.Item>
+            <Descriptions.Item label="สัญชาติ">{student?.nationality || "-"}</Descriptions.Item>
+            <Descriptions.Item label="ศาสนา">{student?.religion || "-"}</Descriptions.Item>
+            <Descriptions.Item label="น้ำหนัก">{student?.weight} ก.</Descriptions.Item>
+            <Descriptions.Item label="ส่วนสูง">{student?.height} ซม.</Descriptions.Item>
           </Descriptions>
+          </div>
 
-          <div className="studdent-divider-section"></div>
-          <Divider className="studdent-divider" />
-
-          <Descriptions column={4}>
+          <div className="section-header">
+            <h4><BookOutlined style={{ color: "#0d47a1" }} /> ข้อมูลการศึกษา</h4>
+            <button className="edit-profile-button" onClick={() => onEditSection("education")}>
+              <EditOutlined /> แก้ไข
+            </button>
+          </div>
+          <div style={{ padding: "0px 24px 0px 24px" }}>
+          <Descriptions column={{ xs: 1, sm: 2, md: 3 }}>
             <Descriptions.Item label="GPX">{firstEducation?.grade}</Descriptions.Item>
-            <Descriptions.Item label="อีเมล">
-              {student?.User?.Email || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="คณะ">
-              {firstEducation?.Program?.name_th || "-"}
-            </Descriptions.Item>
+            <Descriptions.Item label="อีเมล">{student?.User?.Email || "-"}</Descriptions.Item>
+            <Descriptions.Item label="คณะ">{firstEducation?.Program?.name_th || "-"}</Descriptions.Item>
             <Descriptions.Item label="สาขา">{firstEducation?.Faculty?.name_th || "-"}</Descriptions.Item>
-            <Descriptions.Item label="ระดับการศึกษา">
-              {firstEducation?.EducationLevel.name || "-"}
-            </Descriptions.Item>
+            <Descriptions.Item label="ระดับการศึกษา">{firstEducation?.EducationLevel?.name || "-"}</Descriptions.Item>
             <Descriptions.Item label="ชั้นปี">{firstEducation?.year || "-"}</Descriptions.Item>
           </Descriptions>
-
-          <div className="studdent-divider-section">
-            <Divider className="studdent-divider" />
-            <Descriptions column={4}>
-              <Descriptions.Item label="บ้านเลขที่">
-                {student?.Address?.house_number}
-              </Descriptions.Item>
-              <Descriptions.Item label="หมู่บ้าน">
-                {student?.Address?.village}
-              </Descriptions.Item>
-              <Descriptions.Item label="ซอย">
-                {student?.Address?.sub_street}
-              </Descriptions.Item>
+          </div>
+          <div className="section-header">
+            <h4><EnvironmentOutlined style={{ color: "#0d47a1" }} /> ที่อยู่</h4>
+            <button className="edit-profile-button" onClick={() => onEditSection("address")}>
+              <EditOutlined /> แก้ไข
+            </button>
+          </div>
+          <div style={{ padding: "0px 24px 0px 24px" }}>
+            <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+              <Descriptions.Item label="บ้านเลขที่">{student?.Address?.house_number}</Descriptions.Item>
+              <Descriptions.Item label="หมู่บ้าน">{student?.Address?.village}</Descriptions.Item>
+              <Descriptions.Item label="ซอย">{student?.Address?.sub_street}</Descriptions.Item>
               <Descriptions.Item label="ถนน">{student?.Address?.street}</Descriptions.Item>
-              <Descriptions.Item label="ตำบล/แขวง">
-                {student?.Address?.Subdistrict?.name_th}
-              </Descriptions.Item>
-              <Descriptions.Item label="อำเภอ/เขต">
-                {student?.Address?.District?.name_th}
-              </Descriptions.Item>
-              <Descriptions.Item label="จังหวัด">
-                {student?.Address?.Province?.name_th}
-              </Descriptions.Item>
-              <Descriptions.Item label="รหัสไปรษณีย์">
-                {student?.Address?.Postcode?.post_code}
-              </Descriptions.Item>
+              <Descriptions.Item label="ตำบล/แขวง">{student?.Address?.SubDistrict?.name_th}</Descriptions.Item>
+              <Descriptions.Item label="อำเภอ/เขต">{student?.Address?.District?.name_th}</Descriptions.Item>
+              <Descriptions.Item label="จังหวัด">{student?.Address?.Province?.name_th}</Descriptions.Item>
+              <Descriptions.Item label="รหัสไปรษณีย์">{student?.Address?.Postcode?.post_code}</Descriptions.Item>
             </Descriptions>
           </div>
         </div>
@@ -143,7 +163,6 @@ const JobTable: React.FC = () => {
     { title: "สถานะ", dataIndex: "status", key: "status" },
     { title: "ข้อมูล", dataIndex: "info", key: "info" },
   ];
-
   const data = [
     {
       key: "1",
@@ -153,65 +172,117 @@ const JobTable: React.FC = () => {
       info: "ดู",
     },
   ];
-
   return <Table columns={columns} dataSource={data} pagination={false} />;
 };
+const events = [
+  { date: "2025-08-02", type: "warning", content: "ส่งเอกสารสหกิจ" },
+  { date: "2025-08-03", type: "success", content: "นัดสัมภาษณ์กับบริษัท A" },
+  { date: "2025-08-15", type: "error", content: "วันสุดท้ายอัปโหลดใบสมัคร" },
+];
+const dateCellRender = (value: dayjs.Dayjs) => {
+  const formattedDate = value.format("YYYY-MM-DD");
+  const dayEvents = events.filter((event) => event.date === formattedDate);
 
-const CalendarCard: React.FC = () => (
+  return (
+    <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      {dayEvents.map((event, index) => (
+        <li key={index}>
+          <Badge status={event.type as any} text={event.content} />
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const CalendarCard: React.FC<{ dateCellRender: (value: dayjs.Dayjs) => React.ReactNode }> = ({ dateCellRender }) => (
   <Card title="ปฏิทินแจ้งเตือน" bordered>
-    <Calendar fullscreen={false} />
+    <Calendar fullscreen={false} dateCellRender={dateCellRender} />
     <div className="student-calendar-footer">
-      <Badge status="success" text="No upcoming events" />
+      <Badge status="success" text="ไม่มีรายการแจ้งเตือนใหม่" />
     </div>
   </Card>
 );
 
 const StudentProfile: React.FC = () => {
   const [student, setStudent] = useState<StudentInterface | undefined>(undefined);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [section, setSection] = useState<"personal" | "education" | "address">("personal"); 
+  const [imageRefreshKey, setImageRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const loadStudent = async () => {
-      const userIdString = localStorage.getItem("id");
+ useEffect(() => {
+  loadStudent();
+}, []);
 
-      if (userIdString) {
-        const userId = Number(userIdString);
-        if (!isNaN(userId)) {
-          try {
-            const studentData = await GetStudentByUserId(userId);
-            setStudent(studentData);
-            console.log(studentData);
-          } catch (error) {
-            console.error("ไม่พบข้อมูลนักเรียนหรือเกิดข้อผิดพลาด:", error);
-          }
-        } else {
-          console.error("userId ที่ได้ไม่ใช่ตัวเลข");
-        }
-      } else {
-        console.error("ไม่พบ id ใน localStorage");
+const loadStudent = async () => {
+  const userIdString = localStorage.getItem("id");
+  if (userIdString) {
+    const userId = Number(userIdString);
+    if (!isNaN(userId)) {
+      try {
+        const studentData = await GetStudentByUserId(userId);
+        setStudent(studentData);
+      } catch (error) {
+        console.error("ไม่พบข้อมูลนักเรียนหรือเกิดข้อผิดพลาด:", error);
       }
+    }
+  }
+};
+const handleImageUpdated = (newImageUrl: string) => {
+  if (student && student.User?.ProfileImage?.[0]) {
+    const updatedStudent = {
+      ...student,
+      User: {
+        ...student.User,
+        ProfileImage: [
+          {
+            ...student.User.ProfileImage[0],
+            image_url: newImageUrl,
+          },
+        ],
+      },
     };
-
-    loadStudent();
-  }, []);
+    setStudent(updatedStudent);
+    setImageRefreshKey(prev => prev + 1); // ✅ เปลี่ยน key
+  }
+};
 
   return (
     <Layout>
-      <CoopMatchHeader />
+      <CoopMatchHeader key={imageRefreshKey} />
       <Layout className="student-layout">
         <Content>
           <div className="student-profile-title">
             <span className="student-profile-text">Student Profile</span>
             <div className="student-profile-line" />
           </div>
-          <ProfileCard student={student} />
-          <div className="student-job-calendar-section">
-            <div style={{ flex: 1 }}>
-              <JobTable />
-            </div>
-            <div className="student-calendar-card">
-              <CalendarCard />
-            </div>
+
+          <ProfileCard
+            student={student}
+            onEditSection={(sec) => {
+              setSection(sec);
+              setModalOpen(true);
+            }}
+            onImageUpdated={handleImageUpdated}
+          />
+
+        <div className="student-dashboard-section">
+          <div className="application-list-wrapper">
+            <ApplicationListCard />
           </div>
+          <div className="calendar-card-wrapper">
+            <StudentCalendarCard />
+          </div>
+        </div> 
+
+          <EditProfileModal 
+          open={modalOpen} 
+          section={section} 
+          onClose={() => {
+            setModalOpen(false);
+            loadStudent();
+          }} 
+          initialData={student}
+        />
         </Content>
       </Layout>
     </Layout>
