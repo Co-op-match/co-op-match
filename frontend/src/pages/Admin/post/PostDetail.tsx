@@ -1,48 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  message,
-  Row,
-  Col,
-  Typography,
-  Divider,
-  Layout,
-  Avatar,
-  Descriptions,
-  Empty,
-  Spin,
-  Badge,
-  Alert,
-  Modal,
-  Table,
-} from "antd";
-import {
-  ArrowLeftOutlined,
-  TeamOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseOutlined,
-  ExclamationCircleOutlined,
-  UserOutlined,
-  StarOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  GiftOutlined,
-  DesktopOutlined,
-  SafetyCertificateOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  GlobalOutlined,
-  FacebookOutlined,
-  EditOutlined,
-  EyeOutlined,
-  CheckOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { Card, Button, Space, Tag, message, Row, Col, Typography, Divider, Layout, Empty, Spin } from "antd";
+import { ArrowLeftOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
 import { useNavigate, useParams } from "react-router-dom";
@@ -56,7 +14,7 @@ import ApplicationsCard from "../../../components/adminpage/post/PDetail_Applica
 import PostInfoCard from "../../../components/adminpage/post/PDetail_PostInfoCard";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const PostDetailPage = () => {
   const navigate = useNavigate();
@@ -66,9 +24,6 @@ const PostDetailPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [applicationsVisible, setApplicationsVisible] = useState<
-    ApplicationInterface[]
-  >([]);
 
   // Mock loading data
   useEffect(() => {

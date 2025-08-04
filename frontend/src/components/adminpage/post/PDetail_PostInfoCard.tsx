@@ -1,26 +1,6 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Descriptions,
-  Typography,
-  Tag,
-  Space,
-  Button,
-  Modal,
-  message,
-} from "antd";
-import {
-  EditOutlined,
-  UserOutlined,
-  StarOutlined,
-  DesktopOutlined,
-  CalendarOutlined,
-  GiftOutlined,
-  DollarOutlined,
-  EnvironmentOutlined,
-  CheckOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
+import { Card, Descriptions, Typography, Tag, Space, Button, Modal } from "antd";
+import { EditOutlined, UserOutlined, StarOutlined, DesktopOutlined, CalendarOutlined, GiftOutlined, DollarOutlined, EnvironmentOutlined, CheckOutlined, StopOutlined } from "@ant-design/icons";
 
 const { Title, Paragraph } = Typography;
 
@@ -38,28 +18,12 @@ interface PostInfoCardProps {
   status: { status_post: string; status_post_th: string }[];
 }
 
-const PostInfoCard: React.FC<PostInfoCardProps> = ({
-  post,
-  statusStyle,
-  statusIcon,
-  actionLoading,
-  handleApprove,
-  handleReject,
-  status,
-}) => {
-  const [testModalVisible, setTestModalVisible] = useState(false);
+const PostInfoCard: React.FC<PostInfoCardProps> = ({ post, statusStyle, statusIcon, actionLoading, handleApprove, handleReject, status }) => {
   const [approveModalVisible, setApproveModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
 
-  const handleApproveOk = () => {
-    setApproveModalVisible(false);
-    handleApprove();
-  };
-
-  const handleRejectOk = () => {
-    setRejectModalVisible(false);
-    handleReject();
-  };
+  const handleApproveOk = () => { setApproveModalVisible(false); handleApprove(); };
+  const handleRejectOk = () => { setRejectModalVisible(false); handleReject(); };
 
   return (
     <>
