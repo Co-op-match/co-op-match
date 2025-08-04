@@ -1,106 +1,33 @@
 import React, { useState, useEffect } from "react";
-import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Tag,
-  Input,
-  message,
-  Popconfirm,
-  Row,
-  Col,
-  Typography,
-  Tooltip,
-  Layout,
-  Tabs,
-  Empty,
-} from "antd";
-import {
-  EyeOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-  LinkOutlined,
-  UserOutlined,
-  StarOutlined,
-} from "@ant-design/icons";
-import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
-import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
-import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
+import { useNavigate } from "react-router-dom";
+import { Card, Table, Space, Tag, Input, message, Row, Col, Typography, Layout, Tabs, Empty } from "antd";
+import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import "./Post.css";
-import "../main.css";
+
+import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
+import { GetStatusPosts } from "../../../services/https/post";
+
+import type { StatusPostInterface } from "../../../interface/IStatusPost";
+import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
+
+import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
-import { GetStatusPosts } from "../../../services/https/post";
-import type { StatusPostInterface } from "../../../interface/IStatusPost";
-import { useNavigate } from "react-router-dom";
+import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
+import "./Post.css";
+import "../main.css";
 
 const { Title, Text } = Typography;
 
-interface TabProps {
-  activeTab: string;
-  onChange: (key: string) => void;
-}
-
-const getStatusTabs = ({
-  activeTab,
-  onChange,
-}: {
-  activeTab: string;
-  onChange: (key: string) => void;
-}) => {
+const getStatusTabs = ({ activeTab, onChange }: { activeTab: string; onChange: (key: string) => void; }) => {
   const items = [
-    {
-      key: "all",
-      label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
-          <FileTextOutlined /> ทั้งหมด
-        </span>
-      ),
-    },
-    {
-      key: "pending",
-      label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
-          <ClockCircleOutlined style={{ color: "#faad14" }} /> รอตรวจสอบ
-        </span>
-      ),
-    },
-    {
-      key: "approved",
-      label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
-          <CheckCircleOutlined style={{ color: "#52c41a" }} /> เปิดรับสมัคร
-        </span>
-      ),
-    },
-    {
-      key: "rejected",
-      label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
-          <CloseOutlined style={{ color: "#ff4d4f" }} /> ปิดรับสมัคร
-        </span>
-      ),
-    },
+    { key: "all", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><FileTextOutlined /> ทั้งหมด</span>)},
+    { key: "pending", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><ClockCircleOutlined style={{ color: "#faad14" }} /> รอตรวจสอบ</span>)},
+    { key: "approved", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><CheckCircleOutlined style={{ color: "#52c41a" }} /> เปิดรับสมัคร</span>)},
+    { key: "rejected", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><CloseOutlined style={{ color: "#ff4d4f" }} /> ปิดรับสมัคร</span>)},
   ];
 
-  return (
-    <Tabs
-      activeKey={activeTab}
-      onChange={onChange}
-      size="large"
-      items={items}
-    />
-  );
+  return ( <Tabs activeKey={activeTab} onChange={onChange} size="large" items={items} /> );
 };
 
 const ManagePostsPage = () => {
@@ -114,38 +41,38 @@ const ManagePostsPage = () => {
   const [status, setStatus] = useState<StatusPostInterface[]>([]);
 
   const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState<Record<number, boolean>>(
-    {}
-  );
   const [activeTab, setActiveTab] = useState("all");
   const [searchText, setSearchText] = useState("");
 
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 8,
-  });
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 8 });
 
-  // โหลดโพสต์จาก API
+    // Calculate statistics
+  const totalPosts = posts.length;
+  const pendingPosts = posts.filter( (p) => p.StatusPost?.status_post === "Pending Approval").length;
+  const approvedPosts = posts.filter( (p) => p.StatusPost?.status_post === "Open").length;
+  const rejectedPosts = posts.filter( (p) => p.StatusPost?.status_post === "Closed").length;
+
   useEffect(() => {
-    const loadPosts = async () => {
-      setLoading(true);
-      try {
-        const res_post = await GetAllInternshipPostsInAdmin();
-        const res_status = await GetStatusPosts();
-        setPosts(res_post.data);
-        setStatus(res_status);
-      } catch (error) {
-        message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
-      } finally {
-        setLoading(false);
-      }
-    };
     loadPosts();
-  }, []);
+  }, []); // เรียกครั้งเดียวตอน component mount
 
   useEffect(() => {
     filterPosts();
-  }, [posts, searchText, activeTab]);
+  }, [posts, searchText, activeTab]); // เรียกเฉพาะตอน filter เปลี่ยน
+
+  const loadPosts = async () => {
+    setLoading(true);
+    try {
+      const res_post = await GetAllInternshipPostsInAdmin();
+      const res_status = await GetStatusPosts();
+      setPosts(res_post.data);
+      setStatus(res_status);
+    } catch (error) {
+      message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filterPosts = () => {
     let filtered = posts;
@@ -168,7 +95,22 @@ const ManagePostsPage = () => {
         );
         break;
       default:
-        filtered = posts;
+        // All: sort so Pending Approval shows first
+        filtered = [...posts].sort((a, b) => {
+          const getPriority = (status: string | undefined) => {
+            switch (status) {
+              case "Pending Approval":
+                return 1;
+              case "Open":
+                return 2;
+              case "Closed":
+                return 3;
+              default:
+                return 99;
+            }
+          };
+          return getPriority(a.StatusPost?.status_post) - getPriority(b.StatusPost?.status_post);
+        });
     }
 
     // Filter by search text
@@ -409,18 +351,6 @@ const ManagePostsPage = () => {
     },
   ];
 
-  // Calculate statistics
-  const totalPosts = posts.length;
-  const pendingPosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "Pending Approval"
-  ).length;
-  const approvedPosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "Open"
-  ).length;
-  const rejectedPosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "Closed"
-  ).length;
-
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
       <AdminHeader />
@@ -454,30 +384,7 @@ const ManagePostsPage = () => {
             </Col>
             <Col>
               <Space>
-                <Button
-                  icon={<ReloadOutlined />}
-                  style={{
-                    backgroundColor: "#e6f4ff",
-                    border: "1px solid #91caff",
-                    color: "#1677ff",
-                    borderRadius: "8px",
-                  }}
-                  loading={loading}
-                  onClick={() => setLoading(true)}
-                >
-                  รีเฟรช
-                </Button>
-                <Button
-                  icon={<DownloadOutlined />}
-                  style={{
-                    backgroundColor: "#e6f4ff",
-                    border: "1px solid #91caff",
-                    color: "#1677ff",
-                    borderRadius: "8px",
-                  }}
-                >
-                  ส่งออกข้อมูล
-                </Button>
+                <ExportPostsButton posts={filteredPosts} />
               </Space>
             </Col>
           </Row>

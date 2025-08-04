@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Layout,
   Row,
@@ -13,22 +13,15 @@ import {
   Space,
   Avatar,
   Progress,
-  Divider,
   Alert,
   notification,
-  Dropdown,
-  Menu,
-  Badge,
 } from "antd";
 import {
   UserOutlined,
   BankOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CloseCircleOutlined,
   EyeOutlined,
-  MoreOutlined,
-  BellOutlined,
   SettingOutlined,
   LogoutOutlined,
   SearchOutlined,
@@ -38,8 +31,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../Component/AdminCoopMatchHeaderDefault";
 
-const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Content } = Layout;
+const { Text } = Typography;
 
 interface DashboardStats {
   totalUsers: number;

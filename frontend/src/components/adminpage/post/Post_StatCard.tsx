@@ -73,22 +73,16 @@ const getStatusCardProps = (
   }
 };
 
-const showTotalCard = true; // หรือจะใช้ props แทนก็ได้
+const showTotalCard = true;
 
-const Post_StatCard: React.FC<Props> = ({
-  statusList,
-  totalPosts,
-  pendingPosts,
-  approvedPosts,
-  rejectedPosts,
-}) => {
+const Post_StatCard: React.FC<Props> = ({ statusList, totalPosts, pendingPosts, approvedPosts, rejectedPosts }) => {
+
   const counts = {
     total: totalPosts,
     pending: pendingPosts,
     approved: approvedPosts,
     rejected: rejectedPosts,
   };
-        console.log("statusList: ",statusList);
 
   return (
     <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
