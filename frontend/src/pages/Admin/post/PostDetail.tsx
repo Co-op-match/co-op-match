@@ -43,7 +43,7 @@ import {
   CheckOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/Admin";
+import { GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";

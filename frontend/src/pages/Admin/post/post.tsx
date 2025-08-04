@@ -34,11 +34,11 @@ import {
 } from "@ant-design/icons";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
-import { GetAllInternshipPostsInAdmin } from "../../../services/https/Admin";
+import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
 import type { ColumnsType } from "antd/es/table";
 import "./Post.css";
 import "../main.css";
-import { getStatusStyle } from "../../../components/adminpage/verify/statusStyle";
+import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import { GetStatusPosts } from "../../../services/https/post";
 import type { StatusPostInterface } from "../../../interface/IStatusPost";
