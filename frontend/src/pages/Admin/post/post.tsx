@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Table, Button, Space, Tag, Input, message, Row, Col, Typography, Layout, Tabs, Empty } from "antd";
-import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, ReloadOutlined, DownloadOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
+import { Card, Table, Space, Tag, Input, message, Row, Col, Typography, Layout, Tabs, Empty } from "antd";
+import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 
 import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
@@ -13,6 +13,7 @@ import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
+import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
 import "./Post.css";
 import "../main.css";
 
@@ -45,27 +46,30 @@ const ManagePostsPage = () => {
 
   const [pagination, setPagination] = useState({ current: 1, pageSize: 8 });
 
-  // โหลดโพสต์จาก API
-  useEffect(() => {
-    const loadPosts = async () => {
-      setLoading(true);
-      try {
-        const res_post = await GetAllInternshipPostsInAdmin();
-        const res_status = await GetStatusPosts();
-        setPosts(res_post.data);
-        setStatus(res_status);
-      } catch (error) {
-        message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPosts();
-  }, []);
+    // Calculate statistics
+  const totalPosts = posts.length;
+  const pendingPosts = posts.filter( (p) => p.StatusPost?.status_post === "Pending Approval").length;
+  const approvedPosts = posts.filter( (p) => p.StatusPost?.status_post === "Open").length;
+  const rejectedPosts = posts.filter( (p) => p.StatusPost?.status_post === "Closed").length;
 
   useEffect(() => {
+    loadPosts();
     filterPosts();
   }, [posts, searchText, activeTab]);
+
+  const loadPosts = async () => {
+    setLoading(true);
+    try {
+      const res_post = await GetAllInternshipPostsInAdmin();
+      const res_status = await GetStatusPosts();
+      setPosts(res_post.data);
+      setStatus(res_status);
+    } catch (error) {
+      message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filterPosts = () => {
     let filtered = posts;
@@ -88,7 +92,22 @@ const ManagePostsPage = () => {
         );
         break;
       default:
-        filtered = posts;
+        // All: sort so Pending Approval shows first
+        filtered = [...posts].sort((a, b) => {
+          const getPriority = (status: string | undefined) => {
+            switch (status) {
+              case "Pending Approval":
+                return 1;
+              case "Open":
+                return 2;
+              case "Closed":
+                return 3;
+              default:
+                return 99;
+            }
+          };
+          return getPriority(a.StatusPost?.status_post) - getPriority(b.StatusPost?.status_post);
+        });
     }
 
     // Filter by search text
@@ -329,18 +348,6 @@ const ManagePostsPage = () => {
     },
   ];
 
-  // Calculate statistics
-  const totalPosts = posts.length;
-  const pendingPosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "Pending Approval"
-  ).length;
-  const approvedPosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "Open"
-  ).length;
-  const rejectedPosts = posts.filter(
-    (p) => p.StatusPost?.status_post === "Closed"
-  ).length;
-
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
       <AdminHeader />
@@ -374,30 +381,7 @@ const ManagePostsPage = () => {
             </Col>
             <Col>
               <Space>
-                <Button
-                  icon={<ReloadOutlined />}
-                  style={{
-                    backgroundColor: "#e6f4ff",
-                    border: "1px solid #91caff",
-                    color: "#1677ff",
-                    borderRadius: "8px",
-                  }}
-                  loading={loading}
-                  onClick={() => setLoading(true)}
-                >
-                  รีเฟรช
-                </Button>
-                <Button
-                  icon={<DownloadOutlined />}
-                  style={{
-                    backgroundColor: "#e6f4ff",
-                    border: "1px solid #91caff",
-                    color: "#1677ff",
-                    borderRadius: "8px",
-                  }}
-                >
-                  ส่งออกข้อมูล
-                </Button>
+                <ExportPostsButton posts={filteredPosts} />
               </Space>
             </Col>
           </Row>
