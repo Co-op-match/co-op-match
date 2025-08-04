@@ -68,6 +68,7 @@ func main() {
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
+		router.GET("/interview_appointments", controller.ListInterviewAppointments)
 
 		studentGroup := router.Group("/students")
 		{
