@@ -1,0 +1,50 @@
+.adminpage-table .ant-table-container {
+  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); 
+  transition: transform 0.3s ease;
+}
+
+.adminpage-table .ant-table-tbody > tr > td {
+  transition: background-color 0.3s ease;
+}
+
+.adminpage-table .ant-table-tbody > tr.suspended-row > td {
+  color: #888 !important;
+  font-style: italic;
+}
+
+.adminpage-table .ant-table-tbody > tr.suspended-row:hover > td {
+  background-color: #d9d9d9 !important;
+}
+
+.fade-in-card:hover {
+  transform: translateY(-4px); 
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.adminpage-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border-bottom: 2px solid #e6f0ff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.adminpage-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 12px;
+}
+
+.adminpage-table .ant-table-tbody > tr:hover > td {
+  background: rgba(22, 119, 255, 0.02);
+}
