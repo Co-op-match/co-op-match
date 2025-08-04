@@ -19,6 +19,7 @@ import {
   FileTextOutlined,
   MenuOutlined,
   LogoutOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -70,6 +71,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "dashboard",
       "post",
       "manage-posts",
+      "verify",
       "notifications",
       "settings",
       "students",
@@ -126,6 +128,11 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       key: "manage-posts",
       icon: <FileTextOutlined />,
       label: "จัดการ Post",
+    },
+    {
+      key: "verify",
+      icon: <CheckCircleOutlined />,
+      label: isMobile ? "ตรวจสอบ" : "ตรวจสอบการรับรอง",
     },
     {
       key: "notifications",

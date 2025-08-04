@@ -41,6 +41,7 @@ import LecturersInAdmin from "./pages/Admin/users/Lecturers/Lecturers";
 import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
+import AdminVerify from "./pages/Admin/verify/verify";
 
 function App() {
   return (
@@ -285,6 +286,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminPostDetailManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/verify"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminVerify />
               </ProtectedRoute>
             }
           />

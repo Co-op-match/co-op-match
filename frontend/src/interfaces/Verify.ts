@@ -15,7 +15,7 @@ export interface VerifyInterface {
   User?: UserInterface;
 
   AdminID?: number | null;
-  admin?: AdminInterface | null;
+  Admin?: AdminInterface | null;
 
   CreatedAt?: string;
   DeletedAt?: string | null;

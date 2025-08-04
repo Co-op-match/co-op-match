@@ -146,6 +146,20 @@ export async function GetInternshipPostsInAdminByIPostID(id: number) {
     .catch((e) => e.response);
 }
 
+//=======================================Verifications============================================
+export async function GetAllVerifications() {
+  return await axios
+    .get(`${apiUrl}/verifications`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetVerificationByID(id: number) {
+  return await axios
+    .get(`${apiUrl}/verifications/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

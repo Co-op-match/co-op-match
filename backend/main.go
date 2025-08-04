@@ -171,7 +171,11 @@ func main() {
 			adminGroup.DELETE("/delete/:id", controller.DeleteAdmin)
 			adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
 			adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
-
+		}
+		verifyGroup := r.Group("/verifications")
+		{
+			verifyGroup.GET("", controller.GetAllVerifications)
+			verifyGroup.GET("/:id", controller.GetVerificationByID)
 		}
 		academicStaffGroup := r.Group("/academic-staff")
 		{

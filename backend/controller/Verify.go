@@ -59,3 +59,36 @@ func UpdateVerifyStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, verify)
 }
+
+// GET /api/verifications
+func GetAllVerifications(c *gin.Context) {
+	var verifications []entity.Verify
+	if err := config.DB().
+		Preload("User.Company").
+		Preload("User.AcademicStaff").
+		Preload("User.ProfileImage").
+		Preload("StatusVerify").
+		Preload("Admin").
+		Find(&verifications).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถดึงข้อมูลได้"})
+		return
+	}
+	c.JSON(http.StatusOK, verifications)
+}
+
+// GET /api/verifications/:id
+func GetVerificationByID(c *gin.Context) {
+	id := c.Param("id")
+	var verify entity.Verify
+	if err := config.DB().
+		Preload("User.Company").
+		Preload("User.AcademicStaff").
+		Preload("User.ProfileImage").
+		Preload("StatusVerify").
+		Preload("Admin").
+		First(&verify, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลการรับรอง"})
+		return
+	}
+	c.JSON(http.StatusOK, verify)
+}
