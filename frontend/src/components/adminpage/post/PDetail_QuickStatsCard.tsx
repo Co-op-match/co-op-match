@@ -3,9 +3,7 @@ import { Card, Row, Col } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 
-type QuickStatsCardProps = {
-  post: IntershipPostInterface;
-};
+type QuickStatsCardProps = { post: IntershipPostInterface; };
 
 const QuickStatsCard: React.FC<QuickStatsCardProps> = ({ post }) => {
   return (

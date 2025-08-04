@@ -249,7 +249,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
             trigger={["click"]}
           >
             <Avatar
-              size={40}
+              size={30}
               src={
                 user?.ProfileImage?.[0]?.image_url
                   ? `http://localhost:8000${user.ProfileImage[0].image_url}`

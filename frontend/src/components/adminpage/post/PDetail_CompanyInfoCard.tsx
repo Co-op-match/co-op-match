@@ -1,22 +1,14 @@
 import React from "react";
 import { Card, Avatar, Typography, Divider, Space } from "antd";
-import {
-  TeamOutlined,
-  EnvironmentOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  GlobalOutlined,
-  FacebookOutlined,
-} from "@ant-design/icons";
+import { TeamOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, GlobalOutlined, FacebookOutlined } from "@ant-design/icons";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 
 const { Title, Text } = Typography;
 
-type Props = {
-  post: IntershipPostInterface;
-};
+type Props = { post: IntershipPostInterface; };
 
 const CompanyInfoCard: React.FC<Props> = ({ post }) => {
+
   const company = post.Company;
   const contact = company?.Contact;
   const address = company?.Address;
