@@ -54,8 +54,11 @@ const ManagePostsPage = () => {
 
   useEffect(() => {
     loadPosts();
+  }, []); // เรียกครั้งเดียวตอน component mount
+
+  useEffect(() => {
     filterPosts();
-  }, [posts, searchText, activeTab]);
+  }, [posts, searchText, activeTab]); // เรียกเฉพาะตอน filter เปลี่ยน
 
   const loadPosts = async () => {
     setLoading(true);
