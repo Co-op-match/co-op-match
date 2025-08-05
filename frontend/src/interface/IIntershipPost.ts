@@ -17,6 +17,7 @@ export interface InternshipPostInterface {
   StatusPostID: number;
   benefit_ids: number[]; // ✅ แก้ตรงนี้
   company_id: number;
+  CompanyID: number;
 
   // ✅ ที่อยู่
   location_detail: string;

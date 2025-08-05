@@ -36,7 +36,6 @@ const Dashboard = () => {
         const handleNewApplication = (event: any) => {
             if (Number(event.detail.postId) === Number(postId)) {
                 fetchApplications();
-                console.log("🧾 Post ID from URL:", postId);
 
             }
         };
@@ -65,12 +64,11 @@ const Dashboard = () => {
     const fetchApplications = async () => {
         if (!postId) return;
         const res = await GetApplicationsByPostId(Number(postId));
-        console.log("📦 API Response:", res);
         const realApplications = res?.data?.data || [];
 
         // ตรวจสอบว่าข้อมูลที่ได้มีจริงหรือไม่
         if (!Array.isArray(realApplications)) {
-            console.error("❌ ข้อมูลที่ได้จาก API ไม่ใช่ array:", realApplications);
+
             return;
         }
 
@@ -86,9 +84,6 @@ const Dashboard = () => {
             submit_at: app.date,
             internship_post_id: Number(postId),
         }));
-
-
-        console.log("✅ mappedApps:", mappedApps);
         setApplications(mappedApps);
     };
 

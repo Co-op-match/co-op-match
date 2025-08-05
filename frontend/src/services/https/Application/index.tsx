@@ -176,6 +176,31 @@ export async function GetCompanyByUserID(userId: number) {
       return null;
     });
 }
+export async function UpdateInterviewAppointmentStatus(
+  studentId: number,
+  companyId: number,
+  status: string
+) {
+  return await axios
+    .put(`${apiUrl}/interview-appointments/status`, {
+      student_id: studentId,
+      company_id: companyId,
+      status,
+    }, requestOptions)
+    .then((res) => res)
+    .catch((err) => err.response);
+}
+
+export async function GetInterviewAppointmentByStudentAndCompany(studentId: number, companyId: number) {
+  return await axios
+    .get(`${apiUrl}/interview_appointments/${studentId}/${companyId}`, requestOptions)
+    .then((res) => res.data)
+    .catch((err) => {
+      console.error("❌ ไม่พบข้อมูลการนัดสัมภาษณ์:", err);
+      return null;
+    });
+}
+
 
 
 

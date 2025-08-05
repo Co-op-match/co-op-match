@@ -1,0 +1,30 @@
+/* post.css */
+
+.table-row-Light {
+    background: rgba(240, 247, 255, 0.3) !important;
+  }
+  
+  .table-row-dark {
+    background: rgba(255, 255, 255, 0.5) !important;
+  }
+  
+  .table-row-Light:hover {
+    background: rgba(135, 206, 235, 0.1) !important;
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+  }
+  
+  .table-row-dark:hover {
+    background: rgba(135, 206, 235, 0.1) !important;
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+  }
+  
+  .ant-table-thead > tr > th {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
+    border-bottom: 2px solid #87ceeb !important;
+    font-weight: 600 !important;
+    color: #2c5aaa !important;
+    position: relative;
+  }
+  

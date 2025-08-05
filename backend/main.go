@@ -59,10 +59,7 @@ func main() {
 
 	r.Static("/public", "./public")
 
-	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
-
-	r.PUT("/posts/update-status", controller.UpdateStatusPost)
 
 	// Protected Routes
 	router := r.Group("/")
@@ -71,7 +68,6 @@ func main() {
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
-		router.GET("/interview_appointments", controller.ListInterviewAppointments)
 
 		studentGroup := router.Group("/students")
 		{
@@ -122,6 +118,14 @@ func main() {
 			userGroup.PUT("/image/:id", controller.UpdateProfileImage)
 			userGroup.GET("/gender", controller.GetAllGender)
 			userGroup.GET("/image/:id", controller.GetProfileImageByUserID)
+		}
+
+		reviewGroup := router.Group("/reviews")
+		{
+			reviewGroup.POST("", controller.CreateReview)
+			reviewGroup.GET("/company/:company_id", controller.GetReviewsByCompanyID)
+			reviewGroup.GET("/student/:student_id", controller.GetReviewsByStudentID)
+			reviewGroup.GET("/application/passed/student/:id", controller.GetPassedApplicationsByStudentID)
 		}
 
 		chatGroup := router.Group("/chat")
