@@ -21,6 +21,7 @@ const requestOptions = {
     Authorization: `${Bearer} ${Authorization}`,
   },
 };
+
 async function SignIn(data: SignInInterface) {
   return await axios
     .post(`${apiUrl}/sign-in`, data, requestOptions)
@@ -102,6 +103,13 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   }
 }
 
+export async function UpdateStatusPost(postId: number, statusPostId: number) {
+  return await axios
+    .put(`${apiUrl}/posts/update-status`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+
 //=======================================Admin============================================
 export async function GetAdminById(id: number) {
   return await axios
@@ -126,6 +134,19 @@ export async function GetAllAdmin() {
       return e.response;
     });
 }
+export async function GetAllInternshipPostsInAdmin() {
+  return await axios
+    .get(`${apiUrl}/admin/get-allpost`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetInternshipPostsInAdminByIPostID(id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/get-post-by-postid/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
@@ -208,6 +229,12 @@ async function GetAllGender(): Promise<GenderInterface[]> {
     console.error("Failed to get genders:", error);
     return []; // กรณี error คืน array ว่าง
   }
+}
+async function GetAllStudent() {
+  return await axios
+    .get(`${apiUrl}/students`, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
 }
 //=======================================Company============================================
 async function GetAllCompany() {
@@ -543,6 +570,7 @@ export {
 
   CreateStudent,
   UpdateStudent,
+  GetAllStudent,
   CreateProfileImage,
   UpdateProfileImage,
   GetAllGender,

@@ -27,7 +27,6 @@ import ApplicationByCompany from "../src/pages/company/application/application";
 import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 import ProtectProfile from "./components/ProtectedProfile";
-import ReviewPage from "./pages/Student/Review/Review";
 
 
 function App() {
@@ -64,7 +63,9 @@ function App() {
             path="/student/recommendations"
             element={
               <ProtectedRoute allowedRoles={[3]}>
-                <StudentRecommendedPosts />
+                <CheckUser>
+                  <StudentRecommendedPosts />
+                </CheckUser>
               </ProtectedRoute>
             }
           />
@@ -231,6 +232,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-posts"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-post/:id"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminPostDetailManagement />
               </ProtectedRoute>
             }
           />

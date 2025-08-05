@@ -95,9 +95,10 @@ func ListInterviewAppointments(c *gin.Context) {
             interview_appointments.mode, 
             interview_appointments.details, 
             interview_appointments.company_id, 
-            companies.name as company_name,
+            companies.company_name as company_name,
             interview_appointments.student_id, 
-            students.name as student_name
+          	-- students.name as student_name,  -- 
+						students.first_name || ' ' || students.last_name as student_name
         `).
 		Joins("left join companies on companies.id = interview_appointments.company_id").
 		Joins("left join students on students.id = interview_appointments.student_id").

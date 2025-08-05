@@ -60,7 +60,6 @@ func main() {
 	r.Static("/public", "./public")
 
 	r.POST("/applications/:id", controller.CreateApplication)
-	r.PUT("/interview-appointments/status", controller.UpdateInterviewStatus)
 
 	// Protected Routes
 	router := r.Group("/")
@@ -69,7 +68,6 @@ func main() {
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
-		router.GET("/interview_appointments/:student_id/:company_id", controller.GetInterviewAppointmentByStudentAndCompany)
 
 		studentGroup := router.Group("/students")
 		{
@@ -164,6 +162,8 @@ func main() {
 		adminGroup.GET("/all", controller.GetAllAdmin)
 		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 		adminGroup.GET("/:id", controller.GetAdminByID)
+		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
 	}
 
 	r.GET("/", func(c *gin.Context) {
