@@ -234,6 +234,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/analysis"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/companies"
             element={
               <ProtectedRoute allowedRoles={[1]}>

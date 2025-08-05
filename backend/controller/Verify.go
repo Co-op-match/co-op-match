@@ -67,6 +67,7 @@ func GetAllVerifications(c *gin.Context) {
 		Preload("User.Company").
 		Preload("User.AcademicStaff").
 		Preload("User.ProfileImage").
+		Preload("User.Role").
 		Preload("StatusVerify").
 		Preload("Admin").
 		Find(&verifications).Error; err != nil {
@@ -84,6 +85,7 @@ func GetVerificationByID(c *gin.Context) {
 		Preload("User.Company").
 		Preload("User.AcademicStaff").
 		Preload("User.ProfileImage").
+		Preload("User.Role").
 		Preload("StatusVerify").
 		Preload("Admin").
 		First(&verify, id).Error; err != nil {

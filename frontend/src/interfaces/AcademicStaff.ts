@@ -4,13 +4,12 @@ import type { AdminInterface } from "./Admin";
 import type { GenderInterface } from "./Gender";
 
 export interface AcademicStaffInterface {
-  id: number;
-  academic_position: string;
-  age: number;
-  faculty: string;
-  department: string;
-  university: string;
-  verify: boolean;
+  id?: number;
+  academic_position?: string;
+  age?: number;
+  faculty?: string;
+  department?: string;
+  university?: string;
 
   user_id: number;
   address_id: number;
@@ -22,7 +21,7 @@ export interface AcademicStaffInterface {
   admin?: AdminInterface;
   gender?: GenderInterface;
 
-  ID: number;
+  ID?: number;
   User?: UserInterface;
   Address?: AddressInterface;
   Admin?: AdminInterface;
@@ -30,4 +29,8 @@ export interface AcademicStaffInterface {
 
   UserID?: number;
   CreatedAt?: string;
+
+  first_name?: string;
+  last_name?: string;
+  birthday?: string;
 }

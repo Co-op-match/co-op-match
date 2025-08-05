@@ -64,7 +64,7 @@ func main() {
 	r.POST("/applications/:id", controller.CreateApplication)
 
 	r.GET("/status_verifies", controller.GetAllStatusVerify)
-	r.PATCH("/patch-verify/:id", controller.UpdateVerifyStatus)
+	r.PUT("/patch-verify/:id", controller.UpdateVerifyStatus)
 	r.PUT("/posts/update-status", controller.UpdateStatusPost)
 
 	// Protected Routes

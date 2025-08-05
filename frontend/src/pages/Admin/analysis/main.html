@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoopMatch - Admin Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.8/reset.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.8/antd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .stat-card.students {
+            border-left-color: #3498db;
+        }
+
+        .stat-card.companies {
+            border-left-color: #2ecc71;
+        }
+
+        .stat-card.staff {
+            border-left-color: #e74c3c;
+        }
+
+        .stat-card.admins {
+            border-left-color: #9b59b6;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            opacity: 0.1;
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .stat-card.students::before {
+            background: #3498db;
+        }
+
+        .stat-card.companies::before {
+            background: #2ecc71;
+        }
+
+        .stat-card.staff::before {
+            background: #e74c3c;
+        }
+
+        .stat-card.admins::before {
+            background: #9b59b6;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-card.students .stat-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .stat-card.companies .stat-icon {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .stat-card.staff .stat-icon {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .stat-card.admins .stat-icon {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .stat-title {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.students .stat-number {
+            color: #3498db;
+        }
+
+        .stat-card.companies .stat-number {
+            color: #2ecc71;
+        }
+
+        .stat-card.staff .stat-number {
+            color: #e74c3c;
+        }
+
+        .stat-card.admins .stat-number {
+            color: #9b59b6;
+        }
+
+        .stat-change {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .stat-change.negative {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .activity-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+            color: white;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        select, input[type="date"] {
+            padding: 10px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Admin Analysis Dashboard</h1>
+            <p>ระบบวิเคราะห์ข้อมูล CoopMatch - ภาพรวมสถิติและข้อมูลผู้ใช้งาน</p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">ช่วงเวลา</label>
+                    <select id="timeRange">
+                        <option value="7">7 วันที่ผ่านมา</option>
+                        <option value="30" selected>30 วันที่ผ่านมา</option>
+                        <option value="90">90 วันที่ผ่านมา</option>
+                        <option value="365">1 ปีที่ผ่านมา</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">จากวันที่</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">ถึงวันที่</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">&nbsp;</label>
+                    <button class="btn btn-primary" onclick="updateData()">🔍 อัปเดตข้อมูล</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card students">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">นักศึกษา</div>
+                        <div class="stat-number" id="studentCount">1,247</div>
+                        <div class="stat-change positive">+12% จากเดือนที่แล้ว</div>
+                    </div>
+                    <div class="stat-icon">👨‍🎓</div>
+                </div>
+            </div>
+
+            <div class="stat-card companies">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">บริษัท</div>
+                        <div class="stat-number" id="companyCount">89</div>
+                        <div class="stat-change positive">+5% จากเดือนที่แล้ว</div>
+                    </div>
+                    <div class="stat-icon">🏢</div>
+                </div>
+            </div>
+
+            <div class="stat-card staff">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">อาจารย์</div>
+                        <div class="stat-number" id="staffCount">156</div>
+                        <div class="stat-change negative">-2% จากเดือนที่แล้ว</div>
+                    </div>
+                    <div class="stat-icon">👨‍🏫</div>
+                </div>
+            </div>
+
+            <div class="stat-card admins">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">แอดมิน</div>
+                        <div class="stat-number" id="adminCount">8</div>
+                        <div class="stat-change positive">+1 คนใหม่</div>
+                    </div>
+                    <div class="stat-icon">⚙️</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="chart-title">📈 สถิติการลงทะเบียนรายเดือน</div>
+                <canvas id="registrationChart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">🥧 สัดส่วนผู้ใช้งาน</div>
+                <canvas id="userDistributionChart" width="300" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+            <div class="chart-title">📋 กิจกรรมล่าสุด</div>
+            
+            <div class="activity-item">
+                <div class="activity-icon" style="background: linear-gradient(135deg, #3498db, #2980b9);">👨‍🎓</div>
+                <div class="activity-content">
+                    <div class="activity-title">นักศึกษาใหม่ลงทะเบียน 15 คน</div>
+                    <div class="activity-time">2 ชั่วโมงที่แล้ว</div>
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">🏢</div>
+                <div class="activity-content">
+                    <div class="activity-title">บริษัท ABC Corp. ลงประกาศงานใหม่</div>
+                    <div class="activity-time">4 ชั่วโมงที่แล้ว</div>
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">👨‍🏫</div>
+                <div class="activity-content">
+                    <div class="activity-title">อาจารย์อนุมัติใบสมัคร 25 ใบ</div>
+                    <div class="activity-time">6 ชั่วโมงที่แล้ว</div>
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">🤝</div>
+                <div class="activity-content">
+                    <div class="activity-title">Job Matching สำเร็จ 8 คู่</div>
+                    <div class="activity-time">1 วันที่แล้ว</div>
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">⚙️</div>
+                <div class="activity-content">
+                    <div class="activity-title">อัปเดตระบบเสร็จสิ้น</div>
+                    <div class="activity-time">2 วันที่แล้ว</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data และการจัดการ Charts
+        let registrationChart, userDistributionChart;
+
+        // ข้อมูลจำลอง
+        const mockData = {
+            students: 1247,
+            companies: 89,
+            staff: 156,
+            admins: 8,
+            registrationData: {
+                labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.'],
+                datasets: [{
+                    label: 'นักศึกษา',
+                    data: [120, 140, 95, 180, 150, 165, 195, 220],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'บริษัท',
+                    data: [8, 12, 6, 15, 10, 14, 18, 20],
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'อาจารย์',
+                    data: [5, 8, 3, 12, 7, 9, 11, 15],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.4
+                }]
+            }
+        };
+
+        // สร้าง Registration Chart
+        function createRegistrationChart() {
+            const ctx = document.getElementById('registrationChart').getContext('2d');
+            registrationChart = new Chart(ctx, {
+                type: 'line',
+                data: mockData.registrationData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 6,
+                            hoverRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+
+        // สร้าง User Distribution Chart
+        function createUserDistributionChart() {
+            const ctx = document.getElementById('userDistributionChart').getContext('2d');
+            userDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['นักศึกษา', 'บริษัท', 'อาจารย์', 'แอดมิน'],
+                    datasets: [{
+                        data: [mockData.students, mockData.companies, mockData.staff, mockData.admins],
+                        backgroundColor: [
+                            '#3498db',
+                            '#2ecc71',
+                            '#e74c3c',
+                            '#9b59b6'
+                        ],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ฟังก์ชันอัปเดตข้อมูล
+        function updateData() {
+            // จำลองการโหลดข้อมูลใหม่
+            const loadingText = 'กำลังโหลด...';
+            document.getElementById('studentCount').textContent = loadingText;
+            document.getElementById('companyCount').textContent = loadingText;
+            document.getElementById('staffCount').textContent = loadingText;
+            document.getElementById('adminCount').textContent = loadingText;
+
+            // จำลอง API call
+            setTimeout(() => {
+                // อัปเดตตัวเลขด้วยข้อมูลสุ่ม
+                const newData = {
+                    students: Math.floor(Math.random() * 500) + 1000,
+                    companies: Math.floor(Math.random() * 50) + 50,
+                    staff: Math.floor(Math.random() * 100) + 100,
+                    admins: Math.floor(Math.random() * 5) + 5
+                };
+
+                document.getElementById('studentCount').textContent = newData.students.toLocaleString();
+                document.getElementById('companyCount').textContent = newData.companies.toLocaleString();
+                document.getElementById('staffCount').textContent = newData.staff.toLocaleString();
+                document.getElementById('adminCount').textContent = newData.admins.toLocaleString();
+
+                // อัปเดต charts
+                userDistributionChart.data.datasets[0].data = [
+                    newData.students, newData.companies, newData.staff, newData.admins
+                ];
+                userDistributionChart.update();
+
+                alert('✅ อัปเดตข้อมูลเสร็จสิ้น!');
+            }, 1500);
+        }
+
+        // ตั้งค่าวันที่เริ่มต้น
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+
+        // เริ่มต้นเมื่อหน้าเว็บโหลดเสร็จ
+        window.addEventListener('load', function() {
+            createRegistrationChart();
+            createUserDistributionChart();
+            setDefaultDates();
+        });
+
+        // จัดการการเปลี่ยนช่วงเวลา
+        document.getElementById('timeRange').addEventListener('change', function() {
+            const days = parseInt(this.value);
+            const today = new Date();
+            const startDate = new Date(today.getTime() - (days * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 /******************************** verify modal ***************************/
-.verify-modal-title {
+.adminpage-verify-modal-title {
   font-size: 20px;
   font-weight: 600;
   color: #2c3e50;
@@ -8,7 +8,7 @@
   margin-bottom: 20px;
 }
 
-.verify-doc-iframe {
+.adminpage-verify-doc-iframe {
   width: 100%;
   height: 600px;
   border: 1px solid #e6f0ff;
@@ -17,7 +17,7 @@
   display: block;
 }
 
-.verify-modal-ok-button {
+.adminpage-verify-modal-ok-button {
   background: linear-gradient(135deg, #1677ff, #69b1ff);
   border: none;
   border-radius: 8px;
@@ -25,64 +25,64 @@
   font-weight: 500;
 }
 
-.verify-modal-cancel-button {
+.adminpage-verify-modal-cancel-button {
   border-radius: 8px;
   height: 40px;
   font-weight: 500;
 }
 
-.company-info-card {
+.adminpage-company-info-card {
   background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
   border: 1px solid #e6f0ff;
   border-radius: 12px;
   margin-bottom: 20px;
 }
 
-.verify-section-label {
+.adminpage-verify-section-label {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 12px;
   color: #2c3e50;
 }
 
-.verify-status-title {
+.adminpage-verify-status-title {
   color: #666;
   font-size: 12px;
   margin-bottom: 4px;
 }
 
-.verify-no-doc {
+.adminpage-verify-no-doc {
   text-align: center;
   padding: 40px;
   color: #999;
 }
 
-.reject-textarea {
+.adminpage-reject-textarea {
   border-radius: 8px;
   border: 2px solid #ffebe6;
   resize: none;
 }
 
-.radio-ok .ant-radio-inner {
+.adminpage-radio-ok .ant-radio-inner {
   border-color: #1677ff !important;
 }
 
-.radio-ok .ant-radio-checked .ant-radio-inner {
+.adminpage-radio-ok .ant-radio-checked .ant-radio-inner {
   background-color: #1677ff !important;
 }
 
-.radio-ok span {
+.adminpage-radio-ok span {
   color: #1677ff !important;
 }
 
-.radio-danger .ant-radio-inner {
+.adminpage-radio-danger .ant-radio-inner {
   border-color: #ff4d4f !important;
 }
 
-.radio-danger .ant-radio-checked .ant-radio-inner {
+.adminpage-radio-danger .ant-radio-checked .ant-radio-inner {
   background-color: #ff4d4f !important;
 }
 
-.radio-danger span {
+.adminpage-radio-danger span {
   color: #ff4d4f !important;
 }

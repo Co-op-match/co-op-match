@@ -17,7 +17,7 @@
   background-color: #d9d9d9 !important;
 }
 
-.fade-in-card:hover {
+.adminpage-fade-in-card:hover {
   transform: translateY(-4px); 
 }
 
@@ -33,7 +33,7 @@
 }
 
 .adminpage-table .ant-table-thead > tr > th {
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  background: rgb(25, 118, 210);
   border-bottom: 2px solid #e6f0ff;
   font-size: 14px;
   font-weight: 600;

@@ -66,7 +66,7 @@ const PageHeaderSection: React.FC<PageHeaderSectionProps> = ({
   const config = roleConfig(role);
 
   return (
-    <div className="admin-header-box">
+    <div className="adminpage-header-box">
       <Row justify="space-between" align="middle">
         <Col>
           <Space direction="vertical" size={0}>

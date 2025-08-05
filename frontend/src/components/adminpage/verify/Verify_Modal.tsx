@@ -49,24 +49,12 @@ const Verify_Modal: React.FC<Props> = ({
     return "-";
   };
 
-  // Custom loading indicator
-  const customLoadingIcon = (
-    <LoadingOutlined
-      style={{
-        fontSize: 32,
-        color: "#1677ff",
-        filter: "drop-shadow(0 0 8px rgba(22, 119, 255, 0.3))",
-      }}
-      spin
-    />
-  );
-
   if (!entity) return null;
 
   return (
     <Modal
       open={open}
-      title={<div className="verify-modal-title">รายละเอียดการรับรอง</div>}
+      title={<div className="adminpage-verify-modal-title">รายละเอียดการรับรอง</div>}
       onCancel={() => {
         if (isSubmitting) return;
         setIsDetailModalVisible(false);
@@ -89,12 +77,12 @@ const Verify_Modal: React.FC<Props> = ({
       width={500}
       className="adminpage-modal"
       okButtonProps={{
-        className: "verify-modal-ok-button",
+        className: "adminpage-verify-modal-ok-button",
         loading: isSubmitting,
         disabled: isSubmitting,
       }}
       cancelButtonProps={{
-        className: "verify-modal-cancel-button",
+        className: "adminpage-verify-modal-cancel-button",
         disabled: isSubmitting,
       }}
       closable={!isSubmitting}
@@ -105,18 +93,18 @@ const Verify_Modal: React.FC<Props> = ({
 
       {/* Top Loading Bar */}
       {isSubmitting && (
-        <div className="verify-loading-bar">
-          <div className="verify-loading-bar-progress"></div>
+        <div className="adminpage-verify-loading-bar">
+          <div className="adminpage-verify-loading-bar-progress"></div>
         </div>
       )}
 
       <div style={{ position: "relative" }}>
         <Form form={verifyForm} layout="vertical">
           <Card
-            className="company-info-card"
+            className="adminpage-company-info-card"
             styles={{ body: { padding: "20px" } }}
           >
-            <div className="verify-section-label">
+            <div className="adminpage-verify-section-label">
               ข้อมูล{role?.RoleNameTH ?? "ผู้ใช้"}
             </div>
             <div
@@ -137,7 +125,7 @@ const Verify_Modal: React.FC<Props> = ({
               <Row gutter={[16, 16]} style={{ marginBottom: "20px" }}>
                 <Col span={12}>
                   <Card size="small" style={{ borderRadius: "8px" }}>
-                    <div className="verify-status-title">สถานะ</div>
+                    <div className="adminpage-verify-status-title">สถานะ</div>
                     <div style={{ fontSize: "16px", fontWeight: "600" }}>
                       {latest?.StatusVerify?.status_verify || "ไม่ทราบสถานะ"}
                     </div>
@@ -145,7 +133,7 @@ const Verify_Modal: React.FC<Props> = ({
                 </Col>
                 <Col span={12}>
                   <Card size="small" style={{ borderRadius: "8px" }}>
-                    <div className="verify-status-title">วันที่ส่งคำขอ</div>
+                    <div className="adminpage-verify-status-title">วันที่ส่งคำขอ</div>
                     <div style={{ fontSize: "16px", fontWeight: "600" }}>
                       {dayjs(latest?.CreatedAt).format("DD/MM/YYYY HH:mm")}
                     </div>
@@ -161,10 +149,10 @@ const Verify_Modal: React.FC<Props> = ({
                   <iframe
                     title="Verification Document"
                     src={`http://localhost:8000${latest.verification_document}`}
-                    className="verify-doc-iframe"
+                    className="adminpage-verify-doc-iframe"
                   />
                 ) : (
-                  <div className="verify-no-doc">ไม่มีเอกสาร</div>
+                  <div className="adminpage-verify-no-doc">ไม่มีเอกสาร</div>
                 )}
               </Card>
 
@@ -209,7 +197,7 @@ const Verify_Modal: React.FC<Props> = ({
                           value="รับรอง"
                           className={
                             selectedVerifyStatus === "รับรอง"
-                              ? "radio-ok"
+                              ? "adminpage-radio-ok"
                               : undefined
                           }
                           style={{ fontSize: "16px" }}
@@ -245,7 +233,7 @@ const Verify_Modal: React.FC<Props> = ({
                           value="ปฏิเสธ"
                           className={
                             selectedVerifyStatus === "ปฏิเสธ"
-                              ? "radio-danger"
+                              ? "adminpage-radio-danger"
                               : undefined
                           }
                           style={{ fontSize: "16px" }}

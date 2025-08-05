@@ -571,7 +571,7 @@ const LecturersEditModal: React.FC<LecturersEditModalProps> = ({
               <Input
                 disabled
                 size="large"
-                className="input-disabled"
+                className="adminpage-input-disabled"
                 prefix={<CalendarOutlined style={{ color: "#1890ff" }} />}
               />
             </Form.Item>

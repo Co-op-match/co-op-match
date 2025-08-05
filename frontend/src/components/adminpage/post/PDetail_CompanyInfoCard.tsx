@@ -51,7 +51,7 @@ const CompanyInfoCard: React.FC<Props> = ({ post }) => {
           <EnvironmentOutlined style={{ marginRight: "6px", color: "#1677ff" }} />
           ที่อยู่
         </Text>
-        <Text style={{ color: "#8c8c8c", fontSize: "13px", lineHeight: 1.5 }}>
+        <Text style={{ color: "#8c8c8c", fontSize: "14px", lineHeight: 1.5 }}>
           {[
             address?.house_number,
             address?.village,
@@ -79,25 +79,25 @@ const CompanyInfoCard: React.FC<Props> = ({ post }) => {
           {contact?.phone_number && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <PhoneOutlined style={{ color: "#52c41a", fontSize: "14px" }} />
-              <Text style={{ fontSize: "13px" }}>{contact.phone_number}</Text>
+              <Text style={{ fontSize: "14px" }}>{contact.phone_number}</Text>
             </div>
           )}
           {contact?.email && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <MailOutlined style={{ color: "#1677ff", fontSize: "14px" }} />
-              <Text style={{ fontSize: "13px" }}>{contact.email}</Text>
+              <Text style={{ fontSize: "14px" }}>{contact.email}</Text>
             </div>
           )}
           {contact?.website && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <GlobalOutlined style={{ color: "#722ed1", fontSize: "14px" }} />
-              <Text style={{ fontSize: "13px" }}>{contact.website}</Text>
+              <Text style={{ fontSize: "14px" }}>{contact.website}</Text>
             </div>
           )}
           {contact?.facebook && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <FacebookOutlined style={{ color: "#1877f2", fontSize: "14px" }} />
-              <Text style={{ fontSize: "13px" }}>{contact.facebook}</Text>
+              <Text style={{ fontSize: "14px" }}>{contact.facebook}</Text>
             </div>
           )}
         </Space>

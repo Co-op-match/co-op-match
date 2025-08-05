@@ -75,7 +75,7 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({ post, statusStyle, statusIc
               background: statusStyle.bgColor,
               color: statusStyle.textColor,
               border: statusStyle.border,
-              fontSize: "13px",
+              fontSize: "14px",
               fontWeight: 600,
               marginTop: "12px",
             }}

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   Table,
   Button,
   Modal,
-  Tag,
   Space,
   Typography,
   Descriptions,
@@ -14,12 +13,12 @@ import {
   Row,
   Col,
   Avatar,
-  Divider,
   Badge,
   Tooltip,
-  Timeline,
-  Spin,
-  Alert,
+  Layout,
+  type FormInstance,
+  Form,
+  Select,
 } from "antd";
 import {
   CheckOutlined,
@@ -27,29 +26,48 @@ import {
   EyeOutlined,
   FileTextOutlined,
   UserOutlined,
-  CalendarOutlined,
   BankOutlined,
-  IdcardOutlined,
   FilePdfOutlined,
   FileImageOutlined,
   DownloadOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
   StopOutlined,
   BuildOutlined,
   TeamOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
-import { GetAllVerifications } from "../../../services/https";
+import {
+  GetAdminById,
+  GetAdminByUserId,
+  GetAllVerifications,
+  SendEmailVerify,
+} from "../../../services/https";
 import type { StatusVerifyInterface } from "../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../interfaces/Verify";
-import { GetAllStatusVerify } from "../../../services/https/Admin";
+import {
+  GetAllStatusVerify,
+  UpdateVerifyStatus,
+} from "../../../services/https/Admin";
 import type { ColumnsType } from "antd/es/table";
+import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
+import DocumentModal from "./DocumentModal";
+import DetailModal from "./DetailModal";
+import { getStatusStyle } from "../../../components/adminpage/statusStyle";
+import type { AdminInterface } from "../../../interfaces/Admin";
+import { flushSync } from "react-dom";
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
+const user_id = Number(localStorage.getItem("id") || 0);
+
 const CertificationReviewPage = () => {
+  /*   const verifyFormRef = useRef<FormInstance>(null);
+   */ const [verifyForm] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const [admin, setAdmin] = useState<AdminInterface | undefined>(undefined);
   const [selectedRecord, setSelectedRecord] = useState<
     VerifyInterface | undefined
   >(undefined);
@@ -68,28 +86,38 @@ const CertificationReviewPage = () => {
   const [statusVerifications, setStatusVerifications] = useState<
     StatusVerifyInterface[]
   >([]);
-  const [tableLoading, setTableLoading] = useState(true);
+  const [selectedStatus, setSelectedStatus] = useState<
+    StatusVerifyInterface | undefined
+  >(undefined);
 
-  // Fetch verifications from API
+  const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<
+    string[]
+  >([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
+
   const fetchVerifications = async () => {
-    setTableLoading(true);
+    setLoading(true);
     try {
-      // Replace with your actual API endpoint
-      const [res_verify, res_status] = await Promise.all([
+      const [res_verify, res_status, res_admin] = await Promise.all([
         GetAllVerifications(),
         GetAllStatusVerify(),
+        GetAdminByUserId(user_id),
       ]);
-
       if (res_verify.status === 200) setVerifications(res_verify.data);
       if (res_status.status === 200) setStatusVerifications(res_status.data);
-      
+      if (res_admin.status === 200) setAdmin(res_admin.data);
     } catch (error) {
-      message.error(
+      messageApi.error(
         "เกิดข้อผิดพลาดในการดึงข้อมูล: " +
           ((error as Error).message || "Unknown error")
       );
     } finally {
-      setTableLoading(false);
+      setLoading(false);
     }
   };
 
@@ -98,8 +126,105 @@ const CertificationReviewPage = () => {
   }, []);
 
   useEffect(() => {
-    console.log("verifications: ", verifications);
-  }, [verifications]);
+    if (!open) {
+      verifyForm.resetFields();
+      setSelectedStatus(undefined);
+    }
+  }, [open]);
+
+  const filteredVerifications = verifications.filter((v) => {
+    const status = v.StatusVerify?.status_verify || "รอรับรอง";
+
+    const matchStatus =
+      selectedFilterStatuses.length === 0 ||
+      selectedFilterStatuses.includes(status);
+
+    const keyword = searchKeyword.toLowerCase();
+
+    const companyName =
+      v?.User?.Company?.[0]?.company_name?.toLowerCase() || "";
+
+    const staffFirstName =
+      v?.User?.AcademicStaff?.[0]?.first_name?.toLowerCase() || "";
+    const staffLastName =
+      v?.User?.AcademicStaff?.[0]?.last_name?.toLowerCase() || "";
+
+    const email = v?.User?.Email?.toLowerCase() || "";
+    const id = `verify-${v.ID?.toString().padStart(4, "0")}`;
+
+    const matchKeyword =
+      companyName.includes(keyword) ||
+      staffFirstName.includes(keyword) ||
+      staffLastName.includes(keyword) ||
+      email.includes(keyword) ||
+      id.includes(keyword);
+
+    return matchStatus && matchKeyword;
+  });
+
+  const sortedVerifications = [...filteredVerifications].sort((a, b) => {
+    const priority: Record<string, number> = {
+      รอรับรอง: 0,
+      รับรอง: 1,
+      ปฏิเสธ: 2,
+    };
+
+    const statusA = a.StatusVerify?.status_verify || "รอรับรอง";
+    const statusB = b.StatusVerify?.status_verify || "รอรับรอง";
+
+    return priority[statusA] - priority[statusB];
+  });
+
+  const handleSubmitVerify = async () => {
+    if (!selectedRecord || !selectedStatus?.ID) {
+      messageApi.error("กรุณาเลือกสถานะและรายการก่อนยืนยัน");
+      return;
+    }
+
+    try {
+      await verifyForm.validateFields();
+      const values = verifyForm.getFieldsValue();
+
+      const statusObj = statusVerifications.find(
+        (s) => s.ID === selectedStatus?.ID
+      );
+      if (!statusObj) {
+        messageApi.error("ไม่พบสถานะที่เลือก");
+        return;
+      }
+
+      if (statusObj.status_verify === "ปฏิเสธ" && !values.rejectReason) {
+        messageApi.warning("กรุณากรอกเหตุผลการปฏิเสธก่อนยืนยัน");
+        return;
+      }
+
+      const updateData: VerifyInterface = {
+        StatusVerifyID: selectedStatus?.ID,
+        AdminID: admin?.ID,
+        reason: statusObj.status_verify === "ปฏิเสธ" ? values.reason : "",
+      };
+
+      setLoading(true);
+      await UpdateVerifyStatus(selectedRecord.ID!, updateData);
+      await SendEmailVerify(selectedRecord.UserID!);
+
+      messageApi.success(`${statusObj.status_verify} เรียบร้อยแล้ว`);
+      verifyForm.resetFields();
+      setRejectReason("");
+      setSelectedRecord(undefined);
+      setSelectedStatus(undefined);
+      setSelectedDocument(null);
+      setDetailModalVisible(false);
+      await fetchVerifications();
+    } catch (error) {
+      console.error(error);
+      /* messageApi.error(
+        "เกิดข้อผิดพลาด: " + ((error as Error).message || "Unknown error")
+      ); */
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Get user type and details
   const getUserInfo = (user: any) => {
@@ -119,7 +244,7 @@ const CertificationReviewPage = () => {
         name: `${staff.first_name} ${staff.last_name}`,
         position: staff.position,
         department: staff.department,
-        details: "บุคลากรทางวิชาการ",
+        details: user.Role.role,
         icon: <TeamOutlined />,
       };
     }
@@ -138,21 +263,27 @@ const CertificationReviewPage = () => {
         color: "#faad14",
         bgColor: "#fff7e6",
         icon: <ClockCircleOutlined />,
-        text: "รอรับรอง",
+        text:
+          statusVerifications.find((s) => s.status_verify === "รอรับรอง")
+            ?.status_verify || "รอรับรอง",
         key: "pending",
       },
-      รับรองแล้ว: {
+      รับรอง: {
         color: "#52c41a",
         bgColor: "#f6ffed",
         icon: <CheckCircleOutlined />,
-        text: "รับรองแล้ว",
+        text:
+          statusVerifications.find((s) => s.status_verify === "รับรอง")
+            ?.status_verify || "รับรอง",
         key: "approved",
       },
       ปฏิเสธ: {
         color: "#ff4d4f",
         bgColor: "#fff2f0",
         icon: <StopOutlined />,
-        text: "ปฏิเสธ",
+        text:
+          statusVerifications.find((s) => s.status_verify === "ปฏิเสธ")
+            ?.status_verify || "ปฏิเสธ",
         key: "rejected",
       },
     };
@@ -162,9 +293,31 @@ const CertificationReviewPage = () => {
     );
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "รับรอง":
+      case "เปิดรับสมัคร":
+        return <CheckCircleOutlined />;
+      case "ปฏิเสธ":
+        return <StopOutlined />;
+      case "รอรับรอง":
+      case "รอตรวจสอบ":
+        return <ClockCircleOutlined />;
+      default:
+        return null;
+    }
+  };
+
   const handleViewDetail = (record: VerifyInterface) => {
     setSelectedRecord(record);
     setDetailModalVisible(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false); // ปิด modal
+    verifyForm.resetFields(); // รีเซ็ตฟอร์ม
+    setSelectedStatus(undefined); // เคลียร์สถานะที่เลือก
+    setSelectedDocument(null); // เคลียร์เอกสารที่เลือก
   };
 
   const handleViewDocument = (documentPath: string) => {
@@ -187,88 +340,10 @@ const CertificationReviewPage = () => {
     setDocumentModalVisible(true);
   };
 
-  const getFileType = (filePath: string) => {
-    const extension = filePath.split(".").pop()?.toLowerCase();
-    if (extension === "pdf") return "pdf";
-    if (["png", "jpg", "jpeg", "webp"].includes(extension || ""))
-      return "image";
-    return "unknown";
-  };
-
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-  const handleApprove = async () => {
-    setLoading(true);
-    try {
-      /* const response = await fetch(`/api/verifications/${selectedRecord.ID}/approve`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          verified_at: new Date().toISOString(),
-          StatusVerifyID: 1, // Assuming 1 is approved status
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('ไม่สามารถอนุมัติได้');
-      }
-
-      message.success('อนุมัติการรับรองเรียบร้อยแล้ว');
-      setApproveModalVisible(false);
-      setDetailModalVisible(false); */
-      await fetchVerifications(); // Refresh data
-    } catch (error) {
-      message.error(
-        "เกิดข้อผิดพลาด: " + ((error as Error).message || "Unknown error")
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!rejectReason.trim()) {
-      message.warning("กรุณาระบุเหตุผลในการปฏิเสธ");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      /* const response = await fetch(`/api/verifications/${selectedRecord.ID}/reject`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reason: rejectReason,
-          StatusVerifyID: 3, // Assuming 3 is rejected status
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('ไม่สามารถปฏิเสธได้');
-      }
-
-      message.success('ปฏิเสธการรับรองเรียบร้อยแล้ว');
-      setRejectModalVisible(false);
-      setDetailModalVisible(false);
-      setRejectReason(''); */
-      await fetchVerifications(); // Refresh data
-    } catch (error) {
-      message.error(
-        "เกิดข้อผิดพลาด: " + ((error as Error).message || "Unknown error")
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const columns: ColumnsType<VerifyInterface> = [
     {
       title: "ผู้ขอรับรอง",
-      key: "User",
+      key: "user",
       width: 250,
       render: (_, record) => {
         const userInfo = getUserInfo(record.User);
@@ -286,11 +361,11 @@ const CertificationReviewPage = () => {
               <div style={{ fontWeight: 600, color: "#262626" }}>
                 {userInfo.name}
               </div>
-              <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
+              <div style={{ fontSize: "13px", color: "#8c8c8c" }}>
                 {userInfo.details}
               </div>
               {userInfo.position && (
-                <div style={{ fontSize: "12px", color: "#595959" }}>
+                <div style={{ fontSize: "13px", color: "#595959" }}>
                   {userInfo.position}
                 </div>
               )}
@@ -309,7 +384,7 @@ const CertificationReviewPage = () => {
           <div>
             <div
               style={{
-                fontSize: "13px",
+                fontSize: "14px",
                 color: "#595959",
                 marginBottom: "4px",
               }}
@@ -317,7 +392,7 @@ const CertificationReviewPage = () => {
               อีเมล: {record.User?.Email}
             </div>
             {userInfo.department && (
-              <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
+              <div style={{ fontSize: "13px", color: "#8c8c8c" }}>
                 {userInfo.department}
               </div>
             )}
@@ -330,77 +405,102 @@ const CertificationReviewPage = () => {
       key: "id",
       width: 120,
       render: (_, record) => (
-        <Text code style={{ fontSize: "12px" }}>
+        <Text code style={{ fontSize: "13px" }}>
           VERIFY-{record.ID?.toString().padStart(4, "0")}
         </Text>
       ),
     },
-    {
-      title: "สถานะ",
-      key: "status",
-      width: 120,
-      render: (_, record) => {
-        const config = getStatusConfig(record.StatusVerify);
-        return (
-          <Badge
-            color={config.color}
-            text={
-              <span style={{ color: config.color, fontWeight: 500 }}>
-                {config.text}
-              </span>
-            }
-          />
-        );
-      },
-    },
+
     {
       title: "วันที่ส่ง",
       key: "createdAt",
       width: 120,
       render: (_, record) => (
-        <div style={{ fontSize: "13px" }}>
+        <div style={{ fontSize: "14px" }}>
           {new Date(record.CreatedAt!).toLocaleDateString("th-TH")}
         </div>
       ),
     },
     {
+      title: "สถานะ",
+      key: "status",
+      width: 150,
+      align: "center",
+      fixed: "right",
+      render: (_, record) => {
+        const statusText = record.StatusVerify?.status_verify || "รอรับรอง";
+        const { bgColor, textColor, border } = getStatusStyle(statusText);
+        return (
+          <Button
+            className="adminpage-verify-status-button"
+            style={{
+              background: bgColor,
+              color: textColor,
+              border,
+              borderRadius: "16px",
+              width: "60%",
+              cursor: "default",
+            }}
+          >
+            {statusText}
+          </Button>
+        );
+      },
+    },
+    {
       title: "การดำเนินการ",
       key: "actions",
       width: 120,
+      align: "center",
       fixed: "right",
       render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="ดูรายละเอียด">
-            <Button
-              type="primary"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => handleViewDetail(record)}
-              style={{ borderRadius: "6px" }}
-            />
-          </Tooltip>
-        </Space>
+        <Tooltip title="ดูรายละเอียด">
+          <Button
+            type="primary"
+            size="middle"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+            style={{ borderRadius: "16px", width: "50%" }}
+          />
+        </Tooltip>
       ),
     },
   ];
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "24px" }}>
-          <Title level={2} style={{ margin: 0, color: "#262626" }}>
-            <BankOutlined style={{ marginRight: "12px", color: "#1677ff" }} />
-            ตรวจสอบการรับรอง
-          </Title>
-          <Text type="secondary" style={{ fontSize: "16px" }}>
-            ระบบตรวจสอบและอนุมัติการรับรองบุคลากรทางวิชาการและบริษัท
-          </Text>
+    <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+      <AdminHeader />
+      {contextHolder}
+      <Layout style={{ margin: "2rem" }}>
+        <div className="adminpost-header-box">
+          <Row justify="space-between" align="middle">
+            <Col>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "16px" }}
+              >
+                <div
+                  style={{
+                    backgroundColor: "#e6f4ff",
+                    borderRadius: "12px",
+                    padding: "12px",
+                  }}
+                >
+                  <FileTextOutlined
+                    style={{ fontSize: "32px", color: "#1677ff" }}
+                  />
+                </div>
+                <div>
+                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>
+                    ตรวจสอบการรับรอง
+                  </Title>
+                  <Text style={{ color: "#555", fontSize: "16px" }}>
+                    ระบบตรวจสอบและอนุมัติการรับรองบุคลากรทางวิชาการและบริษัท
+                  </Text>
+                </div>
+              </div>
+            </Col>
+            <Col></Col>
+          </Row>
         </div>
 
         <Card
@@ -410,454 +510,141 @@ const CertificationReviewPage = () => {
             border: "none",
           }}
         >
+          {/* Filter Section */}
+          <div style={{ marginBottom: 24 }}>
+            <Card
+              className="adminpage-filter-card"
+              styles={{ body: { padding: 20 } }}
+            >
+              <Row gutter={[16, 16]} align="middle">
+                <Col xs={24} md={12}>
+                  <div className="adminpage-filter-label">กรองตามสถานะ</div>
+                  <Select
+                    mode="multiple"
+                    value={selectedFilterStatuses}
+                    onChange={(values) => {
+                      if (values.includes("ทั้งหมด")) {
+                        const allStatuses = statusVerifications.map(
+                          (s) => s.status_verify
+                        );
+                        const isAllSelected =
+                          selectedFilterStatuses.length ===
+                            allStatuses.length &&
+                          allStatuses.every((s) =>
+                            selectedFilterStatuses.includes(s)
+                          );
+
+                        if (isAllSelected) {
+                          setSelectedFilterStatuses([]); // ยกเลิกทั้งหมด
+                        } else {
+                          setSelectedFilterStatuses(allStatuses); // เลือกทั้งหมด
+                        }
+                      } else {
+                        setSelectedFilterStatuses(values);
+                      }
+                    }}
+                    style={{ width: "100%" }}
+                    size="large"
+                    options={[
+                      { label: "ทั้งหมด", value: "ทั้งหมด" },
+                      ...statusVerifications.map((s) => ({
+                        label: s.status_verify,
+                        value: s.status_verify,
+                      })),
+                    ]}
+                    placeholder="เลือกสถานะที่ต้องการแสดง"
+                    allowClear
+                    maxTagCount="responsive"
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <div className="adminpage-filter-label">ค้นหาผู้ขอรับรอง</div>
+                  <Input
+                    placeholder="ค้นหาชื่อบริษัท, Email หรือ ID..."
+                    suffix={
+                      <SearchOutlined
+                        style={{ color: "#bfbfbf", fontSize: "16px" }}
+                      />
+                    }
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    size="large"
+                    className="adminpage-search-input"
+                  />
+                </Col>
+              </Row>
+            </Card>
+          </div>
+
           <Table
             columns={columns}
-            dataSource={verifications}
             rowKey="ID"
-            loading={tableLoading}
+            loading={loading}
+            dataSource={sortedVerifications}
             pagination={{
-              pageSize: 10,
-              showSizeChanger: false,
-              showTotal: (total) => `ทั้งหมด ${total} รายการ`,
+              ...pagination,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} จาก ${total} รายการ`,
+              onChange: (page, pageSize) => {
+                setPagination({ current: page, pageSize });
+              },
             }}
-            scroll={{ x: 1000 }}
+            size="middle"
+            scroll={{ x: 800 }}
           />
         </Card>
 
-        {/* Detail Modal */}
-        <Modal
-          title={
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <FileTextOutlined
-                style={{ color: "#1677ff", fontSize: "20px" }}
-              />
-              <span>รายละเอียดการรับรอง</span>
-            </div>
-          }
+        <DetailModal
           open={detailModalVisible}
-          onCancel={() => setDetailModalVisible(false)}
-          width={900}
-          footer={
-            selectedRecord?.StatusVerify?.status_verify === "รอรับรอง" ? (
-              <Space>
-                <Button
-                  onClick={() => setDetailModalVisible(false)}
-                  style={{ borderRadius: "8px" }}
-                >
-                  ปิด
-                </Button>
-                <Button
-                  danger
-                  icon={<CloseOutlined />}
-                  onClick={() => {
-                    setRejectModalVisible(true);
-                    setDetailModalVisible(false);
-                  }}
-                  style={{ borderRadius: "8px" }}
-                >
-                  ปฏิเสธ
-                </Button>
-                <Button
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  onClick={() => {
-                    setApproveModalVisible(true);
-                    setDetailModalVisible(false);
-                  }}
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
-                    borderColor: "transparent",
-                    borderRadius: "8px",
-                  }}
-                >
-                  อนุมัติ
-                </Button>
-              </Space>
-            ) : (
-              <Button
-                onClick={() => setDetailModalVisible(false)}
-                style={{ borderRadius: "8px" }}
-              >
-                ปิด
-              </Button>
-            )
-          }
-        >
-          {selectedRecord && (
-            <div>
-              <Row gutter={24}>
-                <Col span={16}>
-                  <Card
-                    title="ข้อมูลผู้ขอรับรอง"
-                    size="small"
-                    style={{ marginBottom: "16px", borderRadius: "8px" }}
-                  >
-                    {(() => {
-                      const userInfo = getUserInfo(selectedRecord.User);
-                      const profileImage =
-                        selectedRecord.User?.ProfileImage?.[0]?.image_url;
+          record={selectedRecord}
+          onClose={handleCloseDetailModal}
+          onSubmitVerify={handleSubmitVerify}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          statusVerifications={statusVerifications}
+          loading={loading}
+          isReadOnlyStatus={false}
+          verifyForm={verifyForm}
+          getUserInfo={getUserInfo}
+          handleViewDocument={handleViewDocument}
+          getStatusConfig={getStatusConfig}
+          selectedDocument={selectedDocument}
+          setRejectReason={setRejectReason}
+          rejectReason={rejectReason}
+        />
 
-                      return (
-                        <Descriptions column={2} size="small">
-                          <Descriptions.Item label="ชื่อ/ชื่อบริษัท" span={2}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
-                            >
-                              <Avatar
-                                src={
-                                  userInfo.type === "company"
-                                    ? userInfo.logo
-                                    : profileImage
-                                }
-                                icon={userInfo.icon}
-                                size={32}
-                              />
-                              <strong>{userInfo.name}</strong>
-                            </div>
-                          </Descriptions.Item>
-                          <Descriptions.Item label="ประเภท">
-                            {userInfo.details}
-                          </Descriptions.Item>
-                          <Descriptions.Item label="อีเมล">
-                            {selectedRecord.User?.Email}
-                          </Descriptions.Item>
-                          {userInfo.position && (
-                            <Descriptions.Item label="ตำแหน่ง" span={2}>
-                              {userInfo.position}
-                            </Descriptions.Item>
-                          )}
-                          {userInfo.department && (
-                            <Descriptions.Item label="หน่วยงาน" span={2}>
-                              {userInfo.department}
-                            </Descriptions.Item>
-                          )}
-                          <Descriptions.Item label="รหัสการรับรอง" span={2}>
-                            <Text code>
-                              VERIFY-
-                              {selectedRecord.ID?.toString().padStart(4, "0")}
-                            </Text>
-                          </Descriptions.Item>
-                        </Descriptions>
-                      );
-                    })()}
-                  </Card>
-
-                  <Card
-                    title="เอกสารแนบ"
-                    size="small"
-                    style={{ marginBottom: "16px", borderRadius: "8px" }}
-                  >
-                    <Row gutter={[12, 12]}>
-                      <Col span={8}>
-                        <Card
-                          hoverable
-                          size="small"
-                          onClick={() =>
-                            handleViewDocument(
-                              selectedRecord.verification_document!
-                            )
-                          }
-                          style={{
-                            textAlign: "center",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <div style={{ marginBottom: "8px" }}>
-                            {selectedRecord.verification_document
-                              ?.toLowerCase()
-                              .includes(".pdf") ? (
-                              <FilePdfOutlined
-                                style={{ fontSize: "32px", color: "#ff4d4f" }}
-                              />
-                            ) : (
-                              <FileImageOutlined
-                                style={{ fontSize: "32px", color: "#1677ff" }}
-                              />
-                            )}
-                          </div>
-                          <div style={{ fontSize: "12px", fontWeight: 500 }}>
-                            เอกสารประกอบการขอรับรอง
-                          </div>
-                        </Card>
-                      </Col>
-                    </Row>
-                  </Card>
-                </Col>
-
-                <Col span={8}>
-                  <Card
-                    title="สถานะ"
-                    size="small"
-                    style={{ marginBottom: "16px", borderRadius: "8px" }}
-                  >
-                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                      {(() => {
-                        const config = getStatusConfig(
-                          selectedRecord.StatusVerify
-                        );
-                        return (
-                          <div
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              padding: "8px 16px",
-                              borderRadius: "20px",
-                              backgroundColor: config.bgColor,
-                              color: config.color,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {config.icon}
-                            <span style={{ marginLeft: "8px" }}>
-                              {config.text}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {selectedRecord.reason && (
-                      <div style={{ marginTop: "12px" }}>
-                        <Text strong style={{ color: "#ff4d4f" }}>
-                          เหตุผลการปฏิเสธ:
-                        </Text>
-                        <Paragraph
-                          style={{
-                            marginTop: "8px",
-                            padding: "8px",
-                            backgroundColor: "#fff2f0",
-                            borderRadius: "6px",
-                            fontSize: "13px",
-                          }}
-                        >
-                          {selectedRecord.reason}
-                        </Paragraph>
-                      </div>
-                    )}
-
-                    {selectedRecord.verified_at && (
-                      <div style={{ marginTop: "12px" }}>
-                        <Text strong>วันที่รับรอง:</Text>
-                        <div style={{ fontSize: "13px", color: "#595959" }}>
-                          {new Date(selectedRecord.verified_at).toLocaleString(
-                            "th-TH"
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedRecord.Admin && (
-                      <div style={{ marginTop: "12px" }}>
-                        <Text strong>ผู้อนุมัติ:</Text>
-                        <div style={{ fontSize: "13px", color: "#595959" }}>
-                          {selectedRecord.Admin.first_name}{" "}
-                          {selectedRecord.Admin.last_name}
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-
-                  <Card
-                    title="ข้อมูลเพิ่มเติม"
-                    size="small"
-                    style={{ borderRadius: "8px" }}
-                  >
-                    <Descriptions column={1} size="small">
-                      <Descriptions.Item label="วันที่ส่งคำขอ">
-                        {new Date(selectedRecord.CreatedAt!).toLocaleString(
-                          "th-TH"
-                        )}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="ID ผู้ใช้">
-                        {selectedRecord.UserID}
-                      </Descriptions.Item>
-                    </Descriptions>
-                  </Card>
-                </Col>
-              </Row>
-            </div>
-          )}
-        </Modal>
-
-        {/* Document Modal */}
-        <Modal
-          title={
-            selectedDocument && (
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                {selectedDocument.fileType === "pdf" ? (
-                  <FilePdfOutlined
-                    style={{ color: "#ff4d4f", fontSize: "20px" }}
-                  />
-                ) : (
-                  <FileImageOutlined
-                    style={{ color: "#1677ff", fontSize: "20px" }}
-                  />
-                )}
-                <span>{selectedDocument.name}</span>
-              </div>
-            )
-          }
+        <DocumentModal
           open={documentModalVisible}
+          selectedDocument={selectedDocument}
           onCancel={() => setDocumentModalVisible(false)}
-          width={800}
-          footer={
-            <Space>
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={() => {
-                  if (selectedDocument?.url) {
-                    const link = document.createElement("a");
-                    link.href = selectedDocument.url;
-                    link.download = selectedDocument.name;
-                    link.click();
-                    message.success("เริ่มดาวน์โหลดเอกสารแล้ว");
-                  }
-                }}
-                style={{ borderRadius: "8px" }}
-              >
-                ดาวน์โหลด
-              </Button>
-              <Button
-                onClick={() => setDocumentModalVisible(false)}
-                style={{ borderRadius: "8px" }}
-              >
-                ปิด
-              </Button>
-            </Space>
-          }
-        >
-          {selectedDocument && (
-            <div style={{ textAlign: "center" }}>
-              {selectedDocument.fileType === "pdf" ? (
-                <iframe
-                  src={selectedDocument.url}
-                  title="Verification PDF"
-                  width="100%"
-                  height="500px"
-                  style={{
-                    border: "none",
-                    borderRadius: "8px",
-                    background: "#f0f0f0",
-                  }}
-                />
-              ) : selectedDocument.fileType === "image" ? (
-                <Image
-                  src={selectedDocument.url}
-                  alt={selectedDocument.name}
-                  style={{ maxWidth: "100%", borderRadius: "8px" }}
-                />
-              ) : (
-                <div>ไม่สามารถแสดงเอกสารนี้ได้</div>
-              )}
-            </div>
-          )}
-        </Modal>
+        />
 
-        {/* Approve Modal */}
-        <Modal
-          title={
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <CheckOutlined style={{ color: "#52c41a", fontSize: "20px" }} />
-              <span>ยืนยันการอนุมัติ</span>
-            </div>
-          }
+        {/* <ApproveModal
           open={approveModalVisible}
-          onOk={handleApprove}
+          loading={loading}
+          record={selectedRecord}
           onCancel={() => setApproveModalVisible(false)}
-          confirmLoading={loading}
-          okText="อนุมัติ"
-          cancelText="ยกเลิก"
-          okButtonProps={{
-            style: {
-              background: "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
-              borderColor: "transparent",
-              borderRadius: "8px",
-            },
-          }}
-          cancelButtonProps={{ style: { borderRadius: "8px" } }}
-        >
-          <p style={{ fontSize: "15px", margin: "16px 0" }}>
-            คุณแน่ใจหรือไม่ว่าต้องการอนุมัติการรับรองสำหรับผู้ใช้คนนี้?
-          </p>
-          {selectedRecord && (
-            <div
-              style={{
-                padding: "12px",
-                backgroundColor: "#f6ffed",
-                borderRadius: "8px",
-                border: "1px solid #b7eb8f",
-              }}
-            >
-              <strong>{getUserInfo(selectedRecord.User).name}</strong>
-              <br />
-              <Text type="secondary">
-                VERIFY-{selectedRecord.ID?.toString().padStart(4, "0")}
-              </Text>
-            </div>
-          )}
-        </Modal>
+          onSubmit={handleSubmitVerify} // Assuming 1 is the ID for approved status
+          getUserInfo={getUserInfo}
+        />
 
-        {/* Reject Modal */}
-        <Modal
-          title={
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <CloseOutlined style={{ color: "#ff4d4f", fontSize: "20px" }} />
-              <span>ยืนยันการปฏิเสธ</span>
-            </div>
-          }
+        <RejectModal
           open={rejectModalVisible}
-          onOk={handleReject}
+          loading={loading}
+          rejectReason={rejectReason}
+          record={selectedRecord}
           onCancel={() => {
             setRejectModalVisible(false);
             setRejectReason("");
           }}
-          confirmLoading={loading}
-          okText="ปฏิเสธ"
-          cancelText="ยกเลิก"
-          okButtonProps={{
-            danger: true,
-            style: { borderRadius: "8px" },
-          }}
-          cancelButtonProps={{ style: { borderRadius: "8px" } }}
-        >
-          <p style={{ fontSize: "15px", margin: "16px 0" }}>
-            กรุณาระบุเหตุผลในการปฏิเสธการรับรอง:
-          </p>
-          {selectedRecord && (
-            <div
-              style={{
-                padding: "12px",
-                backgroundColor: "#fff2f0",
-                borderRadius: "8px",
-                border: "1px solid #ffccc7",
-                marginBottom: "16px",
-              }}
-            >
-              <strong>{getUserInfo(selectedRecord.User).name}</strong>
-              <br />
-              <Text type="secondary">
-                VERIFY-{selectedRecord.ID?.toString().padStart(4, "0")}
-              </Text>
-            </div>
-          )}
-          <TextArea
-            rows={4}
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="เช่น เอกสารไม่ชัดเจน, ข้อมูลไม่ครบถ้วน, คุณสมบัติไม่เป็นไปตามเกณฑ์"
-            style={{ borderRadius: "8px" }}
-          />
-        </Modal>
-      </div>
-    </div>
+          onSubmit={handleSubmitVerify} // Assuming 0 is the ID for rejected status
+          onChangeReason={(val) => setRejectReason(val)}
+          getUserInfo={getUserInfo}
+        /> */}
+      </Layout>
+    </Layout>
   );
 };
 

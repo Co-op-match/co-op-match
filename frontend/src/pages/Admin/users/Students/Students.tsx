@@ -347,7 +347,7 @@ const StudentManagementPage: React.FC = () => {
               background: "#fff",
               borderRadius: "8px",
             }}
-            rowClassName="hover-row"
+            rowClassName="adminpage-hover-row"
           />
         </Card>
 

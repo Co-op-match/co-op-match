@@ -32,7 +32,7 @@ export async function GetAllStatusVerify() {
 }
 export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface) {
   return await axios
-    .patch(`${apiUrl}/patch-verify/${verifyId}`, data, requestOptions)
+    .put(`${apiUrl}/patch-verify/${verifyId}`, data, requestOptions)
     .then((res) => res)
     .catch((e) => {
       console.error("Error updating verification status:", e);

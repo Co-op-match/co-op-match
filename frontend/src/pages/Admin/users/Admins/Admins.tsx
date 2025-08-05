@@ -129,7 +129,7 @@ const AdminManagementPage: React.FC = () => {
         <div>
           <div
             style={{
-              fontSize: "13px",
+              fontSize: "14px",
               marginBottom: "6px",
               display: "flex",
               alignItems: "center",
@@ -152,7 +152,7 @@ const AdminManagementPage: React.FC = () => {
         <div>
           <div
             style={{
-              fontSize: "13px",
+              fontSize: "14px",
               marginBottom: "4px",
               display: "flex",
               alignItems: "center",
@@ -185,7 +185,7 @@ const AdminManagementPage: React.FC = () => {
             text={
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: "14px",
                   fontWeight: 500,
                   color: tabKey === "active" ? "#52c41a" : "#ff4d4f",
                 }}
@@ -392,7 +392,7 @@ const AdminManagementPage: React.FC = () => {
               background: "#fff",
               borderRadius: "8px",
             }}
-            rowClassName="hover-row"
+            rowClassName="adminpage-hover-row"
             locale={{
               emptyText: (
                 <div style={{ padding: "40px", textAlign: "center" }}>

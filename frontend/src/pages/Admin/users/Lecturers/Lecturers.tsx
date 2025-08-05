@@ -244,7 +244,7 @@ const AcademicStaffManagement: React.FC = () => {
       key: "CreatedAt",
       width: 120,
       render: (val: string) => (
-        <div style={{ fontSize: "13px", color: "#666" }}>
+        <div style={{ fontSize: "14px", color: "#666" }}>
           {dayjs(val).format("DD/MM/YYYY")}
         </div>
       ),
@@ -280,7 +280,7 @@ const AcademicStaffManagement: React.FC = () => {
         return (
           <Button
             onClick={() => showVerificationModal(rec)}
-            className="status-button"
+            className="adminpage-status-button"
             style={{
               background: bgColor,
               color: textColor,
@@ -305,12 +305,12 @@ const AcademicStaffManagement: React.FC = () => {
             type="text"
             icon={<EditOutlined />}
             onClick={() => showEditStaffModal(rec)}
-            className="action-edit-btn"
+            className="adminpage-action-edit-btn"
           />
           <Popconfirm
             title="ยืนยันการลบ"
             description="คุณแน่ใจหรือไม่ที่จะลบบัญชีบริษัทนี้?"
-            onConfirm={() => handleDeleteStaff(rec.ID)}
+            onConfirm={() => handleDeleteStaff(rec.ID!)}
             okText="ลบ"
             cancelText="ยกเลิก"
             okButtonProps={{ danger: true }}
@@ -319,7 +319,7 @@ const AcademicStaffManagement: React.FC = () => {
               type="text"
               danger
               icon={<DeleteOutlined />}
-              className="action-delete-btn"
+              className="adminpage-action-delete-btn"
             />
           </Popconfirm>
         </Flex>
@@ -344,7 +344,7 @@ const AcademicStaffManagement: React.FC = () => {
         />
 
         {/* Main Content */}
-        <Card className="admin-main-card" styles={{ body: { padding: 0 } }}>
+        <Card className="adminpage-main-card" styles={{ body: { padding: 0 } }}>
           {/* Tabs */}
           <div style={{ padding: "24px 24px 0 24px" }}>
             {role && (
@@ -355,12 +355,12 @@ const AcademicStaffManagement: React.FC = () => {
           {/* Filters */}
           <div style={{ padding: "0 24px 24px 24px" }}>
             <Card
-              className="admin-filter-card"
+              className="adminpage-filter-card"
               styles={{ body: { padding: 20 } }}
             >
               <Row gutter={[16, 16]} align="middle">
                 <Col xs={24} md={12}>
-                  <div className="admin-filter-label">กรองตามสถานะ</div>
+                  <div className="adminpage-filter-label">กรองตามสถานะ</div>
                   <Select
                     mode="multiple"
                     value={selectedFilterStatuses}
@@ -394,7 +394,7 @@ const AcademicStaffManagement: React.FC = () => {
                   />
                 </Col>
                 <Col xs={24} md={12}>
-                  <div className="admin-filter-label">ค้นหาอาจารย์</div>
+                  <div className="adminpage-filter-label">ค้นหาอาจารย์</div>
                   <Input
                     placeholder="ค้นหาอีเมล, มหาวิทยาลัย หรือข้อมูลอื่นๆ..."
                     suffix={
@@ -405,7 +405,7 @@ const AcademicStaffManagement: React.FC = () => {
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     size="large"
-                    className="admin-search-input"
+                    className="adminpage-search-input"
                   />
                 </Col>
               </Row>

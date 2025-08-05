@@ -373,7 +373,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                   <Upload
                     name="logo"
                     listType="picture-card"
-                    className="logo-uploader"
+                    className="adminpage-logo-uploader"
                     showUploadList={false}
                     accept="image/*"
                     beforeUpload={handleLogoUpload}
@@ -396,10 +396,10 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
                             borderRadius: "6px",
                           }}
                         />
-                        <div className="upload-overlay">คลิกเพื่อเปลี่ยน</div>
+                        <div className="adminpage-upload-overlay">คลิกเพื่อเปลี่ยน</div>
                       </div>
                     ) : (
-                      <div className="upload-card-placeholder">
+                      <div className="adminpage-upload-card-placeholder">
                         <UploadOutlined
                           style={{ fontSize: "24px", marginBottom: "8px" }}
                         />
@@ -623,7 +623,7 @@ const CompanyEditModal: React.FC<CompanyEditModalProps> = ({
               <Input
                 disabled
                 size="large"
-                className="input-disabled"
+                className="adminpage-input-disabled"
                 prefix={<CalendarOutlined style={{ color: "#1890ff" }} />}
               />
             </Form.Item>
