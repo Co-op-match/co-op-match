@@ -1,6 +1,5 @@
 import type { InternshipPostInterface } from "./IIntershipPost";
 import type { StudentInterface } from "../interfaces/Student"; // 🔹 เพิ่ม import นี้ด้วย
-import type { InterviewAppointmentInterface } from "./IInterviewAppointment";
 
 export interface ApplicationInterface {
   id?: number;

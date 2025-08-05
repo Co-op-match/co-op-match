@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Table, Tag, Button, Space, Modal, Input, Select, Card, message } from 'antd';
 import { StarOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { type ApplicationInterface } from '../../../interface/IApplication';
-import { GetApplicationById, GetApplicationsByStudentID, GetInterviewAppointmentByStudentAndCompany } from '../../../services/https/Application';
+import { GetApplicationById, GetApplicationsByStudentID} from '../../../services/https/Application';
 import { GetStudentByUserId } from '../../../services/https';
-import CoopMatchHeader from '../../component/Coop_MatchHeader';
+import CoopMatchHeader from '../../Component/Coop_MatchHeader';
 import dayjs from 'dayjs';
 import ReviewModalContainer from '../Review/Review';
 
@@ -28,7 +28,6 @@ const ApplicationHistory: React.FC = () => {
   const [companySearch, setCompanySearch] = useState('');
   const [positionSearch, setPositionSearch] = useState('');
   const [statusSearch, setStatusSearch] = useState('');
-  const [interviewInfo, setInterviewInfo] = useState<any>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [studentId, setStudentId] = useState<number | null>(null);
   const [reviewCompanyId, setReviewCompanyId] = useState<number | null>(null);
@@ -64,20 +63,6 @@ const ApplicationHistory: React.FC = () => {
 
     fetchApplications();
   }, []);
-
-  useEffect(() => {
-    const fetchInterviewInfo = async () => {
-      if (selectedApplication?.StudentID && selectedApplication?.IntershipPost?.Company?.ID) {
-        const result = await GetInterviewAppointmentByStudentAndCompany(
-          selectedApplication.StudentID,
-          selectedApplication.IntershipPost.Company.ID
-        );
-        setInterviewInfo(result);
-      }
-    };
-
-    fetchInterviewInfo();
-  }, [selectedApplication]);
 
   const handleViewDetails = async (record: ApplicationInterface) => {
     try {

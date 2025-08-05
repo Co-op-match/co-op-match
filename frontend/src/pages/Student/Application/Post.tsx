@@ -91,7 +91,16 @@ const PostDetails = () => {
               <Badge count="HIRING" style={styles.hiringBadge} />
             </div>
             <div style={styles.companyInfo}>
-              <Title level={2} style={styles.companyName}>
+              <Title
+                level={2}
+                style={{ ...styles.companyName, cursor: "pointer" }}
+                onClick={() => {
+                  const companyId = post?.Company?.ID || post?.Company?.id;
+                  if (companyId) {
+                    navigate(`/company/${companyId}`);
+                  }
+                }}
+              >
                 {post?.Company?.company_name}
               </Title>
               <div style={styles.addressContainer}>
@@ -205,8 +214,11 @@ const PostDetails = () => {
                   <StarOutlined style={styles.qualificationIcon} />
                   <div style={styles.qualificationContent}>
                     <Text strong style={styles.qualificationLabel}>เกรดขั้นต่ำ:</Text>
-                    <Tag color="blue" style={styles.gpaTag}>{post.min_gpa}</Tag>
+                    <Tag color="blue" style={styles.gpaTag}>
+                      {Number(post.min_gpa).toFixed(2)}
+                    </Tag>
                   </div>
+
                 </div>
               )}
 

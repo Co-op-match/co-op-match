@@ -168,7 +168,9 @@ const PostDetails = () => {
           {post?.min_gpa && (
             <div style={{ marginTop: 16 }}>
               <Text strong style={styles.quickLabel}>เกรดขั้นต่ำ: </Text>
-              <Text style={styles.sectionContent}>{post.min_gpa}</Text>
+              <Text style={styles.sectionContent}>
+                {Number(post.min_gpa).toFixed(2)}
+              </Text>
             </div>
           )}
         </Card>

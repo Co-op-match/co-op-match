@@ -409,47 +409,6 @@ const tableStyle: React.CSSProperties = {
     overflow: 'hidden',
 };
 
-const modalHeaderStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center',
-};
-
-const applicantInfoStyle: React.CSSProperties = {
-    backgroundColor: '#f8f9fa',
-    border: '1px solid #e3f2fd',
-    borderRadius: '8px',
-    marginBottom: '16px',
-};
-
-const infoGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '12px',
-};
-
-const infoItemStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 0',
-};
-
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    borderRadius: '8px',
-    border: '1px solid #d9d9d9',
-};
-
-const textareaStyle: React.CSSProperties = {
-    borderRadius: '8px',
-    border: '1px solid #d9d9d9',
-    resize: 'vertical',
-};
 
 export default InterviewDashboard;
 
-function GetInterviewAppointmentByStudentAndCompany(StudentID: any, companyId: number) {
-    throw new Error("Function not implemented.");
-}
