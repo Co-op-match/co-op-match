@@ -43,6 +43,7 @@ import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import AdminVerify from "./pages/Admin/verify/verify";
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -140,13 +141,13 @@ function App() {
           <Route
             path="/student/applications/:postId"
             element={
-             
-                <ProtectedRoute allowedRoles={[3]}>
-                   <CheckUser> 
+
+              <ProtectedRoute allowedRoles={[3]}>
+                <CheckUser>
                   <AddApplication />
-                  </CheckUser>
-                </ProtectedRoute>
-             
+                </CheckUser>
+              </ProtectedRoute>
+
             }
           />
           <Route

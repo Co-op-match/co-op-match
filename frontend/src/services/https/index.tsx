@@ -11,6 +11,7 @@ import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
 import type { CompanyInterface } from "../../interfaces/Company";
 import type { ContactInterface } from "../../interfaces/Contact";
+import type { ReviewPayload } from "../../interface/IReview";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -289,6 +290,17 @@ async function GetVerifyByUserId(user_id: number) {
     throw e.response || e;
   }
 }
+async function CreateSendVerify(user_id: number ,data: FormData) {
+  return await axios.post(`${apiUrl}/company/verify/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
+}
 export async function UpdateCompany(companyId: number, data: FormData) {
   return await axios
     .patch(`${apiUrl}/company/patch-company/${companyId}`, data, {
@@ -500,10 +512,10 @@ async function SendEmailinterview(student_id: number,company_id: number, ) {
     .catch(e => e.response);
 }
 
-export async function GetRecommendedPosts(studentId: number, query: string = "") {
+async function GetRecommendedPosts(studentId: number, query: string = "") {
   const token = localStorage.getItem("token");
   if (!token) {
-    console.error("❌ ไม่มี token ใน localStorage");
+    console.error("ไม่มี token ใน localStorage");
     return;
   }
 
@@ -519,9 +531,15 @@ export async function GetRecommendedPosts(studentId: number, query: string = "")
       return e.response;
     });
 }
-async function GetEventsByUserId(user_id: number) {
+async function GetEventsStudentByUserId(user_id: number) {
   return await axios
-    .get(`${apiUrl}/notification/calendar/user/${user_id}`, requestOptions)
+    .get(`${apiUrl}/notification/calendar/student/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
+}
+async function GetEventsCompanyByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/notification/calendar/company/${user_id}`, requestOptions)
     .then((res) => res)
     .then((res) => res.data);
 }
@@ -533,6 +551,12 @@ async function GetApplicationsByUserID(user_id: number) {
       console.error("Error fetching applications:", e);
       return []; 
     });
+}
+async function GetRwviewCompanyByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
 }
 
 
@@ -547,6 +571,52 @@ export async function Logout(email: string) {
   } catch (error: any) {
     throw error.response?.data || error.message;
   }
+}
+
+// ============================== Review =================================== //
+
+// ✅ สร้างรีวิว
+export async function CreateReview(data: ReviewPayload) {
+  return await axios
+    .post(`${apiUrl}/reviews`, data, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ Failed to create review:", e);
+      throw e;
+    });
+}
+
+// ✅ ดึงรีวิวของบริษัท
+export async function GetReviewsByCompanyID(companyId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/company/${companyId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch company reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึงรีวิวของนักศึกษา (ถ้ามี)
+export async function GetReviewsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/student/${studentId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch student reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึง Application ที่ผ่านแล้วของนักศึกษา
+export async function GetPassedApplicationsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/application/passed/student/${studentId}`, requestOptions)
+    .then((res) => res.data) // หรือ res.data.data แล้วแต่ backend ส่งกลับมาแบบไหน
+    .catch((e) => {
+      console.error("❌ Failed to fetch passed applications:", e);
+      return [];
+    });
 }
 
 
@@ -602,7 +672,11 @@ export {
   GetVerifyByUserId,
   SendEmailVerify,
   SendEmailinterview,
-  GetEventsByUserId,
+  GetEventsStudentByUserId,
   GetApplicationsByUserID,
+  CreateSendVerify,
+  GetRecommendedPosts,
+  GetEventsCompanyByUserId,
+  GetRwviewCompanyByUserId,
 
 };

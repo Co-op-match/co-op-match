@@ -53,6 +53,7 @@ func main() {
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
 	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
+	r.GET("/reviews/:user_id", controller.GetReviewsByUserID)
 
 	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
@@ -60,7 +61,6 @@ func main() {
 
 	r.Static("/public", "./public")
 
-	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
 
 	r.GET("/status_verifies", controller.GetAllStatusVerify)
@@ -74,7 +74,6 @@ func main() {
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
-		router.GET("/interview_appointments", controller.ListInterviewAppointments)
 
 		studentGroup := router.Group("/students")
 		{
@@ -130,6 +129,14 @@ func main() {
 			userGroup.GET("/image/:id", controller.GetProfileImageByUserID)
 		}
 
+		reviewGroup := router.Group("/reviews")
+		{
+			reviewGroup.POST("", controller.CreateReview)
+			reviewGroup.GET("/company/:company_id", controller.GetReviewsByCompanyID)
+			reviewGroup.GET("/student/:student_id", controller.GetReviewsByStudentID)
+			reviewGroup.GET("/application/passed/student/:id", controller.GetPassedApplicationsByStudentID)
+		}
+
 		chatGroup := router.Group("/chat")
 		{
 			chatGroup.POST("/room", controller.CreateChatRoom)
@@ -141,7 +148,8 @@ func main() {
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
-			notificationGroup.GET("/calendar/user/:user_id", controller.GetCalendarEventsByUserID)
+			notificationGroup.GET("/calendar/student/:user_id", controller.GetCalendarEventsStudentByUserID)
+			notificationGroup.GET("/calendar/company/:user_id", controller.GetCalendarEventsCompanyByUserID)
 		}
 
 		companyGroup := router.Group("/company")
@@ -150,6 +158,7 @@ func main() {
 			companyGroup.POST("", controller.CreateCompany)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
+			companyGroup.POST("/verify/:user_id", controller.CreateSendVerify)
 			companyGroup.GET("/all-active", controller.GetAllActiveCompanies)
 			companyGroup.GET("/all-deleted", controller.GetAllDeletedCompany)
 			companyGroup.DELETE("/delete/:id", controller.DeleteCompany)

@@ -74,7 +74,7 @@ const ApplicationListCard: React.FC = () => {
   return (
     <Card
       className="application-list-card"
-      title="📋 รายการที่สมัครไปทั้งหมด"
+      title="รายการที่สมัครไปทั้งหมด"
     >
       <Table
         columns={columns}

@@ -111,8 +111,11 @@ func SendInterviewEmail(c *gin.Context) {
 	studentID := c.Param("student_id")
 	companyID := c.Param("company_id")
 
+	db := config.DB()
+
+	// 1. ดึงนัดสัมภาษณ์ตาม student_id และ company_id
 	var appointment entity.InterviewAppointment
-	if err := config.DB().
+	if err := db.
 		Preload("Company.User").
 		Preload("Student.User").
 		Where("student_id = ? AND company_id = ?", studentID, companyID).
@@ -121,14 +124,27 @@ func SendInterviewEmail(c *gin.Context) {
 		return
 	}
 
+	// 2. ดึง status จากตาราง application ที่เชื่อมกับ student_id และ company_id
+	var application entity.Application
+	if err := db.
+		Joins("JOIN application_details ON application_details.application_id = applications.id").
+		Joins("JOIN intership_posts ON applications.intership_post_id = intership_posts.id").
+		Where("application_details.student_id = ? AND intership_posts.company_id = ?", studentID, companyID).
+		First(&application).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลการสมัครที่ตรงกับ student และบริษัท"})
+		return
+	}
+
 	logoBase64 := "data:image/png;base64," + getLogoBase64()
 
-	body, err := buildEmailBody(appointment, logoBase64)
+	// 3. ส่งสถานะ application.Status ไปสร้าง email template
+	body, err := buildEmailBody(appointment, logoBase64, application.Status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "เกิดข้อผิดพลาดขณะสร้างเนื้อหาอีเมล: " + err.Error()})
 		return
 	}
 
+	// 4. ส่งอีเมล
 	err = sendEmail(
 		appointment.Student.User.Email,
 		"แจ้งเตือนนัดสัมภาษณ์จากระบบ Co-op Match",
@@ -139,12 +155,13 @@ func SendInterviewEmail(c *gin.Context) {
 		return
 	}
 
+	// 5. ส่ง response กลับ
 	c.JSON(http.StatusOK, gin.H{
 		"message": "ส่งอีเมลแจ้งเตือนนัดสัมภาษณ์เรียบร้อยแล้ว",
 		"appointment": gin.H{
 			"id":               appointment.ID,
 			"appointment_date": appointment.AppointmentDate.Format("2006-01-02 15:04"),
-			"status":           appointment.Status,
+			"status":           application.Status, // 👈 ใช้ status จาก application
 			"mode":             appointment.Mode,
 			"details":          appointment.Details,
 		},
@@ -163,11 +180,12 @@ func SendInterviewEmail(c *gin.Context) {
 }
 
 // ฟังก์ชันย่อย: สร้างเนื้อหาอีเมลจาก template
-func buildEmailBody(appointment entity.InterviewAppointment, logoBase64 string) (string, error) {
+func buildEmailBody(appointment entity.InterviewAppointment, logoBase64 string, status string) (string, error) {
 	var tmplPath string
 
-	// ตรวจสอบสถานะว่าควรใช้เทมเพลตไหน
-	switch appointment.Status {
+	fmt.Println("application.Status: ", status)
+	// ตรวจสอบสถานะเพื่อเลือก template
+	switch status {
 	case "ผ่าน", "ไม่ผ่าน":
 		tmplPath = "utils/email_template_interview_result.html"
 	default:
@@ -203,7 +221,7 @@ func buildEmailBody(appointment entity.InterviewAppointment, logoBase64 string) 
 		"RecipientName":  appointment.Student.FirstName + " " + appointment.Student.LastName,
 		"Title":          "นัดสัมภาษณ์งานจากบริษัท " + appointment.Company.CompanyName,
 		"Message":        appointment.Details,
-		"Status":         appointment.Status,
+		"Status":         status, // 👈 เปลี่ยนเป็น status ที่รับเข้ามา
 		"Company":        appointment.Company.CompanyName,
 		"Position":       "ตำแหน่งที่คุณสมัคร",
 		"Schedule":       formattedDate,
@@ -363,7 +381,7 @@ func SendVerifyStatusEmail(c *gin.Context) {
 
 }
 
-func GetCalendarEventsByUserID(c *gin.Context) {
+func GetCalendarEventsStudentByUserID(c *gin.Context) {
 	userID := c.Param("user_id")
 
 	// 1. หานักเรียนจาก user_id
@@ -391,6 +409,41 @@ func GetCalendarEventsByUserID(c *gin.Context) {
 		events = append(events, CalendarEvent{
 			Date:    i.AppointmentDate.Format("2006-01-02"),
 			Content: "นัดสัมภาษณ์กับ " + i.Company.CompanyName,
+		})
+	}
+
+	// 4. ส่งออก
+	c.JSON(http.StatusOK, events)
+}
+
+func GetCalendarEventsCompanyByUserID(c *gin.Context) {
+	userID := c.Param("user_id")
+
+	// 1. หาcompanyจาก user_id
+	var company entity.Company
+	if err := config.DB().Where("user_id = ?", userID).First(&company).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบcompanyที่ตรงกับ user_id นี้"})
+		return
+	}
+
+	// 2. หา InterviewAppointment จาก company.ID
+	var interviews []entity.InterviewAppointment
+	if err := config.DB().Preload("Student").Where("student_id = ?", company.ID).Find(&interviews).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "โหลดข้อมูลนัดสัมภาษณ์ไม่สำเร็จ"})
+		return
+	}
+
+	// 3. สร้าง response struct (ไม่มี type)
+	type CalendarEvent struct {
+		Date    string `json:"date"`
+		Content string `json:"content"`
+	}
+
+	var events []CalendarEvent
+	for _, i := range interviews {
+		events = append(events, CalendarEvent{
+			Date:    i.AppointmentDate.Format("2006-01-02"),
+			Content: "นัดสัมภาษณ์กับ " + i.Student.FirstName + " " + i.Student.LastName,
 		})
 	}
 

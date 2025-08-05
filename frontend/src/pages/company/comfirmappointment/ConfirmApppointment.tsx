@@ -26,9 +26,11 @@ import {
     GetApplicationsByCompanyID,
     GetCompanyByUserID,
     UpdateApplicationStatus,
+    UpdateInterviewAppointmentStatus,
 } from "../../../services/https/Application/index";
 import { SendEmailinterview } from "../../../services/https";
 import CompanyHeader from "../../Component/CompanyHeader";
+
 
 const { Title, Text } = Typography;
 
@@ -41,62 +43,31 @@ const InterviewDashboard: React.FC = () => {
     const [companyId, setCompanyId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
-
-
-
-    useEffect(() => {
-        const userId = Number(localStorage.getItem("id"));
-        if (!userId) {
-            console.warn("❌ ไม่พบ user_id ใน localStorage");
-            return;
-        }
-
-        const fetchCompanyId = async () => {
-            try {
-                const res = await GetCompanyByUserID(userId);
-                if (res && res.ID) {
-                    setCompanyId(res.ID);
-                    console.log("✅ ดึง company_id สำเร็จ:", res.ID);
-                } else {
-                    console.warn("❌ ไม่พบข้อมูลบริษัทสำหรับ user_id นี้");
-                }
-            } catch (error) {
-                console.error("❌ ดึง company_id ล้มเหลว:", error);
-            }
-        };
-
-        fetchCompanyId();
-    }, []);
-
     useEffect(() => {
         const fetchApplications = async () => {
             setLoading(true);
             const userId = Number(localStorage.getItem("id"));
             if (!userId) {
-                console.warn("❌ ไม่พบ user_id ใน localStorage");
                 setLoading(false);
                 return;
             }
 
             const company = await GetCompanyByUserID(userId);
             if (!company || !company.ID) {
-                console.warn("❌ ไม่พบ company จาก user_id นี้");
                 setLoading(false);
                 return;
             }
 
             const companyId = company.ID;
-            console.log("📦 ดึงใบสมัครของบริษัท ID:", companyId);
 
-            const res = await GetApplicationsByCompanyID(userId);
+            setCompanyId(companyId);
+            const res = await GetApplicationsByCompanyID(companyId);
             if (res.status === 200 && Array.isArray(res.data.data)) {
                 const filtered = res.data.data.filter(
                     (app: any) => app.status === "นัดสัมภาษณ์แล้ว"
                 );
 
                 const appsWithKey = filtered.map((app: any) => {
-                    console.log("📍 app จาก backend:", app);
-
                     return {
                         ...app,
                         key: app.ID,
@@ -107,7 +78,6 @@ const InterviewDashboard: React.FC = () => {
                 });
 
                 setApplications(appsWithKey);
-                console.log("📦 applications:", appsWithKey);
 
             } else {
                 message.error("ไม่สามารถโหลดข้อมูลผู้สมัครได้");
@@ -184,20 +154,20 @@ const InterviewDashboard: React.FC = () => {
             dataIndex: "status",
             key: "status",
             render: (status: string) => (
-              <Tag
-                icon={getStatusIcon(status)}
-                color={getStatusColor(status)}
-                style={{ fontSize: '12px', padding: '4px 8px' }}
-              >
-                {status}
-              </Tag>
+                <Tag
+                    icon={getStatusIcon(status)}
+                    color={getStatusColor(status)}
+                    style={{ fontSize: '12px', padding: '4px 8px' }}
+                >
+                    {status}
+                </Tag>
             ),
-          },
-          
+        },
+
         {
             title: "การจัดการ",
             render: (_: any, record: any) => (
-                <Tooltip title="คลิกเพื่อนัดหมายสัมภาษณ์">
+                <Tooltip title="คลิกเพื่อยืนยันการสัมภาษณ์">
                     <Button
                         type="primary"
                         icon={<EditOutlined />}
@@ -219,16 +189,44 @@ const InterviewDashboard: React.FC = () => {
         try {
             const values = await form.validateFields();
             const newStatus = values.status;
+            const note = values.note || "";
 
+            // ✅ 1. Update Application Status
             const res = await UpdateApplicationStatus(
                 selectedApplicant.ID,
                 newStatus,
-                values.note || ""
+                note
             );
 
             if (res.status === 200 || res.status === 201) {
-                message.success("อัปเดตสถานะเรียบร้อยแล้ว");
+                // ✅ 2. Update Interview Appointment Status
+                const updateInterviewRes = await UpdateInterviewAppointmentStatus(
+                    selectedApplicant.StudentID,
+                    Number(companyId),
+                    newStatus
+                );
 
+                if (updateInterviewRes.status !== 200 && updateInterviewRes.status !== 201) {
+                    message.warning("อัปเดตสถานะในตาราง interview_appointments ไม่สำเร็จ");
+                }
+
+                // ✅ 3. Simulate delay (optional)
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+
+                // ✅ 4. Send Email
+                const emailRes = await SendEmailinterview(
+                    selectedApplicant.StudentID,
+                    Number(companyId),
+
+                );
+
+                if (emailRes.status === 200) {
+                    message.success("อัปเดตสถานะและส่งอีเมลเรียบร้อยแล้ว");
+                } else {
+                    message.warning("อัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ");
+                }
+
+                // ✅ 5. Remove from list
                 setApplications((prev) =>
                     prev.filter((app) => app.ID !== selectedApplicant.ID)
                 );
@@ -236,13 +234,12 @@ const InterviewDashboard: React.FC = () => {
                 setIsModalOpen(false);
                 form.resetFields();
             } else {
-                message.error("ไม่สามารถอัปเดตสถานะได้");
+                message.error("ไม่สามารถอัปเดตสถานะใบสมัครได้");
             }
         } catch (err) {
             message.error("กรุณาเลือกสถานะ");
         }
     };
-
 
 
     return (
@@ -255,7 +252,7 @@ const InterviewDashboard: React.FC = () => {
                         ยืนยันการนัดสัมภาษณ์การสัมภาษณ์
                     </Title>
                     <Text style={subtitleStyle}>
-                    รายชื่อผู้รอการผลการสัมภาษณ์
+                        รายชื่อผู้รอการผลการสัมภาษณ์
                     </Text>
                 </div>
                 <div style={statsCardStyle}>
@@ -324,46 +321,20 @@ const InterviewDashboard: React.FC = () => {
                         rules={[{ required: true, message: "กรุณาเลือกสถานะ" }]}
                     >
                         <Select placeholder="เลือกสถานะ">
-                            <Select.Option value="ผ่าน">✅ ผ่าน</Select.Option>
-                            <Select.Option value="ไม่ผ่าน">❌ ไม่ผ่าน</Select.Option>
+                            <Select.Option value="ผ่าน">✅ ผ่านการสัมภาษณ์</Select.Option>
+                            <Select.Option value="ไม่ผ่าน">❌ ไม่ผ่านการสัมภาษณ์</Select.Option>
                         </Select>
                     </Form.Item>
 
                     <Form.Item name="note" label="หมายเหตุเพิ่มเติม (ไม่บังคับ)">
                         <Input.TextArea
-                            rows={3}
-                            placeholder="เช่น คะแนนสัมภาษณ์ไม่ถึงเกณฑ์, ไม่ตรงคุณสมบัติ ฯลฯ"
+                            rows={4}
+                            placeholder="เช่น คะแนนสัมภาษณ์ไม่ถึงเกณฑ์ หรือไม่ตรงตามคุณสมบัติ ฯลฯ"
                         />
                     </Form.Item>
                 </Form>
             </Modal>
 
-            <style jsx>{`
-                .table-row:hover {
-                    background-color: #f8f9fa !important;
-                    transition: background-color 0.2s ease;
-                }
-                
-                .ant-table-thead > tr > th {
-                    background-color: #e3f2fd !important;
-                    color: #1976d2 !important;
-                    font-weight: 600 !important;
-                    border-bottom: 2px solid #bbdefb !important;
-                }
-                
-                .ant-table-tbody > tr > td {
-                    border-bottom: 1px solid #f0f0f0 !important;
-                }
-                
-                .ant-btn-primary {
-                    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2) !important;
-                }
-                
-                .ant-btn-primary:hover {
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3) !important;
-                }
-            `}</style>
         </div>
     );
 };
@@ -438,43 +409,6 @@ const tableStyle: React.CSSProperties = {
     overflow: 'hidden',
 };
 
-const modalHeaderStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center',
-};
-
-const applicantInfoStyle: React.CSSProperties = {
-    backgroundColor: '#f8f9fa',
-    border: '1px solid #e3f2fd',
-    borderRadius: '8px',
-    marginBottom: '16px',
-};
-
-const infoGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '12px',
-};
-
-const infoItemStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 0',
-};
-
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    borderRadius: '8px',
-    border: '1px solid #d9d9d9',
-};
-
-const textareaStyle: React.CSSProperties = {
-    borderRadius: '8px',
-    border: '1px solid #d9d9d9',
-    resize: 'vertical',
-};
 
 export default InterviewDashboard;
+

@@ -630,7 +630,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
 			Details:         "ลิงก์ Zoom จะส่งให้ทางอีเมล",
-			Status:          "นัดแล้ว",
 			StudentID:       1,
 			CompanyID:       1,
 		},
@@ -638,7 +637,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(-3 * 24 * time.Hour),
 			Mode:            "ออนไซต์",
 			Details:         "คุณผ่านการสัมภาษณ์เรียบร้อยแล้ว",
-			Status:          "ผ่าน",
 			StudentID:       2,
 			CompanyID:       2,
 		},
@@ -646,7 +644,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(-4 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
 			Details:         "ขอบคุณที่เข้าร่วมสัมภาษณ์",
-			Status:          "ไม่ผ่าน",
 			StudentID:       3,
 			CompanyID:       1,
 		},
@@ -708,6 +705,29 @@ func createSeedData(db *gorm.DB) {
 	for _, v := range verifies {
 		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
+	}
+
+	reviews := []entity.Review{
+		{
+			CreatedAt: time.Now(),
+			Rating:    5,
+			Comment:   "ประสบการณ์ดีมาก ได้เรียนรู้งานจริงจากพี่ ๆ",
+			StudentID: 1,
+			CompanyID: 1,
+			Like:      5,
+		},
+		{
+			CreatedAt: time.Now(),
+			Rating:    4,
+			Comment:   "บริษัทดูแลดี ได้ลองทำหลายโปรเจกต์",
+			StudentID: 10,
+			CompanyID: 2,
+			Like:      5,
+		},
+	}
+
+	for _, review := range reviews {
+		db.Create(&review)
 	}
 }
 

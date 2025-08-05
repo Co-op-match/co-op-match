@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"co-op-match.com/co-op-match/config"
@@ -149,6 +150,60 @@ func GetVerifyByUserId(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, verify)
 }
+
+func CreateSendVerify(c *gin.Context) {
+	var verify entity.Verify
+
+	userID := c.Param("user_id")
+	// รับค่าจากฟอร์ม
+	statusVerifyID := c.PostForm("status_verify_id")
+	reason := c.PostForm("reason")
+
+	// แปลง string เป็น uint
+	statusID, err := strconv.ParseUint(statusVerifyID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status_verify_id"})
+		return
+	}
+	uid, err := strconv.ParseUint(userID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+		return
+	}
+
+	file, err := c.FormFile("verification_document")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กรุณาอัปโหลดเอกสาร"})
+		return
+	}
+
+	// ✅ เปลี่ยนชื่อไฟล์ใหม่ให้ปลอดภัย
+	ext := filepath.Ext(file.Filename)
+	newFileName := fmt.Sprintf("verify_%d_%d%s", uid, time.Now().Unix(), ext)
+	filePath := filepath.Join("public/uploads/verifyDocument", newFileName)
+	filePath = strings.ReplaceAll(filePath, "\\", "/") 
+
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
+		return
+	}
+	// สร้าง Verify record
+	verify = entity.Verify{
+		VerificationDocument: filePath,
+		Reason:               reason,
+		StatusVerifyID:       uint(statusID),
+		UserID:               uint(uid),
+		AdminID:              nil,
+	}
+
+	if err := config.DB().Create(&verify).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกข้อมูลได้"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": verify})
+}
+
 
 func GetAllActiveCompanies(c *gin.Context) {
 	var companies []entity.Company
