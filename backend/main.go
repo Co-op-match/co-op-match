@@ -60,7 +60,6 @@ func main() {
 
 	r.Static("/public", "./public")
 
-	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
 
 	// Protected Routes
@@ -122,6 +121,14 @@ func main() {
 			userGroup.GET("/image/:id", controller.GetProfileImageByUserID)
 		}
 
+		reviewGroup := router.Group("/reviews")
+		{
+			reviewGroup.POST("", controller.CreateReview)
+			reviewGroup.GET("/company/:company_id", controller.GetReviewsByCompanyID)
+			reviewGroup.GET("/student/:student_id", controller.GetReviewsByStudentID)
+			reviewGroup.GET("/application/passed/student/:id", controller.GetPassedApplicationsByStudentID)
+		}
+
 		chatGroup := router.Group("/chat")
 		{
 			chatGroup.POST("/room", controller.CreateChatRoom)
@@ -158,6 +165,8 @@ func main() {
 		adminGroup.GET("/all", controller.GetAllAdmin)
 		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
 		adminGroup.GET("/:id", controller.GetAdminByID)
+		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
 	}
 
 	r.GET("/", func(c *gin.Context) {

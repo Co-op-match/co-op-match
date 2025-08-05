@@ -33,7 +33,8 @@ import { GetPostById, CreateApplication } from '../../../services/https/Applicat
 import { GetStudentByUserId } from '../../../services/https/index';
 import type { InternshipPostInterface } from '../../../interface/IIntershipPost';
 import type { StudentInterface } from '../../../interfaces/Student';
-import CoopMatchHeader from '../../component/Coop_MatchHeader';
+import CoopMatchHeader from '../../Component/Coop_MatchHeader';
+
 
 const { Title, Text } = Typography;
 const { Step } = Steps;
@@ -64,8 +65,6 @@ const AddApplication: React.FC = () => {
                 ]);
                 setPost(postRes.data);
                 setStudent(studentRes);
-                console.log("✅ student.Education:", studentRes.Education);
-                console.log("✅ student.Education[0]:", studentRes.Education?.[0]);
             } catch (error) {
                 message.error('โหลดข้อมูลล้มเหลว');
             }
@@ -101,11 +100,6 @@ const AddApplication: React.FC = () => {
             formData.append('submit_at', new Date().toISOString());
             formData.append('student_id', localStorage.getItem('id')!);
             formData.append('company_note', values.company_note || '');
-
-            for (const [key, value] of formData.entries()) {
-                console.log(`${key}:`, value);
-            }
-
             setLoading(true);
             const res = await CreateApplication(postIdNumber, formData);
 
@@ -119,7 +113,7 @@ const AddApplication: React.FC = () => {
                     navigate('/student/applications/history');
                 }, 2000);
             } else {
-                console.log("❌ Response not successful:", res);
+
                 messageApi.error({
                     content: 'ส่งใบสมัครไม่สำเร็จ',
                     style: { marginTop: '20vh' }

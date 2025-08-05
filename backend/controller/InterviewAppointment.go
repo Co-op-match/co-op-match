@@ -54,7 +54,6 @@ func CreateInterviewAppointment(c *gin.Context) {
 	// ✅ สร้าง entry
 	appointment := entity.InterviewAppointment{
 		AppointmentDate: appointmentTime,
-		Status:          input.Status,
 		Mode:            input.Mode,
 		Details:         input.Details,
 		CompanyID:       input.CompanyID,
@@ -96,9 +95,10 @@ func ListInterviewAppointments(c *gin.Context) {
             interview_appointments.mode, 
             interview_appointments.details, 
             interview_appointments.company_id, 
-            companies.name as company_name,
+            companies.company_name as company_name,
             interview_appointments.student_id, 
-            students.name as student_name
+          	-- students.name as student_name,  -- 
+						students.first_name || ' ' || students.last_name as student_name
         `).
 		Joins("left join companies on companies.id = interview_appointments.company_id").
 		Joins("left join students on students.id = interview_appointments.student_id").
@@ -131,37 +131,28 @@ func GetInterviewAppointmentById(c *gin.Context) {
 }
 
 // PUT /interview_appointments/:id
-func UpdateInterviewAppointment(c *gin.Context) {
-	appointmentID := c.Param("id")
-	var existing entity.InterviewAppointment
-	var input entity.InterviewAppointment
+type AppointmentStatusPayload struct {
+	StudentID uint   `json:"student_id"`
+	CompanyID uint   `json:"company_id"`
+	Status    string `json:"status"`
+}
 
-	db := config.DB()
+func UpdateInterviewStatus(c *gin.Context) {
+	var payload AppointmentStatusPayload
 
-	// หา record เดิมก่อน
-	if err := db.First(&existing, appointmentID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Interview appointment not found"})
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
 		return
 	}
 
-	// รับ input ใหม่
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var appointment entity.InterviewAppointment
+	if err := config.DB().Where("student_id = ? AND company_id = ?", payload.StudentID, payload.CompanyID).
+		Last(&appointment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Appointment not found"})
 		return
 	}
 
-	// อัปเดตเฉพาะฟิลด์
-	existing.AppointmentDate = input.AppointmentDate
-	existing.Status = input.Status
-	existing.Mode = input.Mode
-	existing.Details = input.Details
-
-	if err := db.Save(&existing).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update interview appointment"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Interview appointment updated successfully", "data": existing})
+	c.JSON(http.StatusOK, gin.H{"message": "Appointment status updated"})
 }
 
 // DELETE /interview_appointments/:id - Delete a specific interview appointment entry
@@ -187,7 +178,7 @@ func GetPendingInterviewApplicationsByCompanyID(c *gin.Context) {
 	err := db.Preload("Student").
 		Preload("IntershipPost").
 		Joins("JOIN intership_posts ON intership_posts.id = applications.intership_post_id").
-		Where("intership_posts.company_id = ? AND applications.status LIKE ?", companyID, "%รอการนัดสัมภาษณ์%").
+		Where("intership_posts.company_id = ?", companyID).
 		Find(&applications).Error
 
 	if err != nil {
@@ -196,4 +187,20 @@ func GetPendingInterviewApplicationsByCompanyID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": applications})
+}
+
+func GetInterviewAppointmentByStudentAndCompany(c *gin.Context) {
+	studentID := c.Param("student_id")
+	companyID := c.Param("company_id")
+
+	var appointment entity.InterviewAppointment
+	if err := config.DB().
+		Where("student_id = ? AND company_id = ?", studentID, companyID).
+		Order("created_at desc").
+		First(&appointment).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลนัดสัมภาษณ์"})
+		return
+	}
+
+	c.JSON(http.StatusOK, appointment)
 }

@@ -254,11 +254,31 @@ func createSeedData(db *gorm.DB) {
 
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
-		{AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A", UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B", UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C", UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D", UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1},
+		{
+			AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A",
+			FirstName: "สมชาย", LastName: "วิศวกร", Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
+			UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B",
+			FirstName: "สุรีย์", LastName: "เคมี", Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
+			UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
+		},
+		{
+			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C",
+			FirstName: "สมพงษ์", LastName: "การตลาด", Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
+			UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
+		},
+		{
+			AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D",
+			FirstName: "อรทัย", LastName: "ภาษา", Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
+			UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E",
+			FirstName: "ธนพล", LastName: "นิติ", Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
+			UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
+		},
 	}
 	for _, staff := range staffs {
 		db.Unscoped().FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
@@ -463,31 +483,60 @@ func createSeedData(db *gorm.DB) {
 		},
 	}
 
-	for _, post := range intershipPosts {
-		db.Create(&post)
-		db.Create(&entity.CompanyRequiredSkill{
-			SkillID:         1,
-			IntershipPostID: intershipPosts[0].ID,
-		})
-		db.Create(&entity.CompanyRequiredSkill{
-			SkillID:         2,
-			IntershipPostID: intershipPosts[0].ID,
-		})
-		db.Create(&entity.CompanyRequiredSkill{
-			SkillID:         3,
-			IntershipPostID: intershipPosts[1].ID,
-		})
-		db.Create(&entity.CompanyRequiredSkill{
-			SkillID:         4,
-			IntershipPostID: intershipPosts[1].ID,
-		})
-		db.Create(&entity.CompanyRequiredSkill{SkillID: 1, IntershipPostID: 3}) // Python
-		db.Create(&entity.CompanyRequiredSkill{SkillID: 5, IntershipPostID: 3}) // Data Analysis
-
-		db.Create(&entity.CompanyRequiredSkill{SkillID: 3, IntershipPostID: 4}) // JavaScript
-		db.Create(&entity.CompanyRequiredSkill{SkillID: 4, IntershipPostID: 4}) // SQL
-
+	// Step 1: Create Posts
+	for i := range intershipPosts {
+		db.Create(&intershipPosts[i])
 	}
+
+	// Step 2: Map post index → skills
+	skillMap := map[int][]uint{
+		0: {1, 2}, // Software Dev → Python, Java
+		1: {1, 5}, // Data Science → Python, Data Analysis
+		2: {1, 5}, // AI/ML → Python, Data Analysis
+		3: {3, 4}, // Frontend → JavaScript, SQL
+	}
+
+	// Step 3: Assign skills safely using FirstOrCreate
+	for postIdx, skillIDs := range skillMap {
+		if postIdx < len(intershipPosts) {
+			postID := intershipPosts[postIdx].ID
+			for _, skillID := range skillIDs {
+				reqSkill := entity.CompanyRequiredSkill{
+					SkillID:         skillID,
+					IntershipPostID: postID,
+				}
+				db.FirstOrCreate(&reqSkill, reqSkill)
+			}
+		}
+	}
+
+	/*
+		for _, post := range intershipPosts {
+			db.Create(&post)
+			db.Create(&entity.CompanyRequiredSkill{
+				SkillID:         1,
+				IntershipPostID: intershipPosts[0].ID,
+			})
+			db.Create(&entity.CompanyRequiredSkill{
+				SkillID:         2,
+				IntershipPostID: intershipPosts[0].ID,
+			})
+			db.Create(&entity.CompanyRequiredSkill{
+				SkillID:         3,
+				IntershipPostID: intershipPosts[1].ID,
+			})
+			db.Create(&entity.CompanyRequiredSkill{
+				SkillID:         4,
+				IntershipPostID: intershipPosts[1].ID,
+			})
+			db.Create(&entity.CompanyRequiredSkill{SkillID: 1, IntershipPostID: 3}) // Python
+			db.Create(&entity.CompanyRequiredSkill{SkillID: 5, IntershipPostID: 3}) // Data Analysis
+
+			db.Create(&entity.CompanyRequiredSkill{SkillID: 3, IntershipPostID: 4}) // JavaScript
+			db.Create(&entity.CompanyRequiredSkill{SkillID: 4, IntershipPostID: 4}) // SQL
+		}
+	*/
+
 	// Seed Skills
 	skills := []entity.Skill{
 		{SkillName: "Python"},
@@ -521,20 +570,21 @@ func createSeedData(db *gorm.DB) {
 	for _, pkg := range studentSkills {
 		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
 	}
+	/*
+		companyRequiredSkills := []entity.CompanyRequiredSkill{
+			{SkillID: 1, IntershipPostID: 1}, // Python for Software Dev
+			{SkillID: 2, IntershipPostID: 1}, // Java for Software Dev
+			{SkillID: 1, IntershipPostID: 2}, // Python for Data Science
+			{SkillID: 5, IntershipPostID: 2}, // Data Analysis for Data Science
+		}
 
-	companyRequiredSkills := []entity.CompanyRequiredSkill{
-		{SkillID: 1, IntershipPostID: 1}, // Python for Software Dev
-		{SkillID: 2, IntershipPostID: 1}, // Java for Software Dev
-		{SkillID: 1, IntershipPostID: 2}, // Python for Data Science
-		{SkillID: 5, IntershipPostID: 2}, // Data Analysis for Data Science
-	}
-
-	for _, pkg := range companyRequiredSkills {
-		db.FirstOrCreate(&pkg, entity.CompanyRequiredSkill{
-			SkillID:         pkg.SkillID,
-			IntershipPostID: pkg.IntershipPostID,
-		})
-	}
+		for _, pkg := range companyRequiredSkills {
+			db.FirstOrCreate(&pkg, entity.CompanyRequiredSkill{
+				SkillID:         pkg.SkillID,
+				IntershipPostID: pkg.IntershipPostID,
+			})
+		}
+	*/
 	studentInterests := []entity.StudentInterest{
 		{StudentID: 1, InterestID: 1}, // Web Development
 		{StudentID: 1, InterestID: 3}, // Data Science
@@ -580,7 +630,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
 			Details:         "ลิงก์ Zoom จะส่งให้ทางอีเมล",
-			Status:          "นัดแล้ว",
 			StudentID:       1,
 			CompanyID:       1,
 		},
@@ -588,7 +637,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(-3 * 24 * time.Hour),
 			Mode:            "ออนไซต์",
 			Details:         "คุณผ่านการสัมภาษณ์เรียบร้อยแล้ว",
-			Status:          "ผ่าน",
 			StudentID:       2,
 			CompanyID:       2,
 		},
@@ -596,7 +644,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(-4 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
 			Details:         "ขอบคุณที่เข้าร่วมสัมภาษณ์",
-			Status:          "ไม่ผ่าน",
 			StudentID:       3,
 			CompanyID:       1,
 		},

@@ -11,6 +11,7 @@ import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
 import type { CompanyInterface } from "../../interfaces/Company";
 import type { ContactInterface } from "../../interfaces/Contact";
+import type { ReviewPayload } from "../../interface/IReview";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -20,6 +21,7 @@ const requestOptions = {
     Authorization: `${Bearer} ${Authorization}`,
   },
 };
+
 async function SignIn(data: SignInInterface) {
   return await axios
     .post(`${apiUrl}/sign-in`, data, requestOptions)
@@ -101,6 +103,13 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   }
 }
 
+export async function UpdateStatusPost(postId: number, statusPostId: number) {
+  return await axios
+    .put(`${apiUrl}/posts/update-status`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+
 //=======================================Admin============================================
 export async function GetAdminById(id: number) {
   return await axios
@@ -125,6 +134,19 @@ export async function GetAllAdmin() {
       return e.response;
     });
 }
+export async function GetAllInternshipPostsInAdmin() {
+  return await axios
+    .get(`${apiUrl}/admin/get-allpost`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetInternshipPostsInAdminByIPostID(id: number) {
+  return await axios
+    .get(`${apiUrl}/admin/get-post-by-postid/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
@@ -207,6 +229,12 @@ async function GetAllGender(): Promise<GenderInterface[]> {
     console.error("Failed to get genders:", error);
     return []; // กรณี error คืน array ว่าง
   }
+}
+async function GetAllStudent() {
+  return await axios
+    .get(`${apiUrl}/students`, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
 }
 //=======================================Company============================================
 async function GetAllCompany() {
@@ -500,6 +528,52 @@ export async function Logout(email: string) {
   }
 }
 
+// ============================== Review =================================== //
+
+// ✅ สร้างรีวิว
+export async function CreateReview(data: ReviewPayload) {
+  return await axios
+    .post(`${apiUrl}/reviews`, data, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ Failed to create review:", e);
+      throw e;
+    });
+}
+
+// ✅ ดึงรีวิวของบริษัท
+export async function GetReviewsByCompanyID(companyId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/company/${companyId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch company reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึงรีวิวของนักศึกษา (ถ้ามี)
+export async function GetReviewsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/student/${studentId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch student reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึง Application ที่ผ่านแล้วของนักศึกษา
+export async function GetPassedApplicationsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/application/passed/student/${studentId}`, requestOptions)
+    .then((res) => res.data) // หรือ res.data.data แล้วแต่ backend ส่งกลับมาแบบไหน
+    .catch((e) => {
+      console.error("❌ Failed to fetch passed applications:", e);
+      return [];
+    });
+}
+
 
 export {
   SignIn,
@@ -519,6 +593,7 @@ export {
 
   CreateStudent,
   UpdateStudent,
+  GetAllStudent,
   CreateProfileImage,
   UpdateProfileImage,
   GetAllGender,

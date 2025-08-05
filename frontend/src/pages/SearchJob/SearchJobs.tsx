@@ -36,7 +36,8 @@ import {
   GetIntershipPost
 } from '../../services/https';
 import { useNavigate } from 'react-router-dom';
-import CoopMatchHeader from '../component/Coop_MatchHeader';
+import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
+
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -248,27 +249,54 @@ function SearchJobs(){
   const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => (
     <Card
       hoverable
-      style={{ height: '100%' }}
+      style={{
+        height: '100%',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(24, 144, 255, 0.2)',
+        border: 'none',
+        overflow: 'hidden',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer'
+      }}
+      onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 12px 40px rgba(24, 144, 255, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(24, 144, 255, 0.2)';
+        }}
       cover={
         <div style={{
-          height: 120,
-          background: 'linear-gradient(to right, #002c8c, #0057d8)',
+          height: 140,
+          background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 50%, #0050b3 100%)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <img
-            //src={job.Company?.logo}
-            src={
-              job.Company?.logo?.startsWith('http')
-                ? job.Company.logo 
-                : job.Company?.logo
-                  ? `http://localhost:8000${job.Company.logo}` 
-                  : undefined
-            }
-            //alt={job.Company?.company_name}
-            style={{ height: '80px', objectFit: 'contain' }}
-          />
+
+          {/* โลโก้บริษัท */}
+          <div style={{
+          }}>
+            <img
+              src={
+                  job.Company?.logo?.startsWith('http')
+                    ? job.Company.logo 
+                    : job.Company?.logo
+                      ? `http://localhost:8000${job.Company.logo}` 
+                      : undefined
+                }
+              //alt={job.Company?.company_name}
+              style={{
+                height: '100px',
+                objectFit: 'contain',
+              }}
+            />
+          </div>
         </div>
       }
       actions={[
@@ -276,6 +304,31 @@ function SearchJobs(){
           type="primary"
           size="large"
           onClick={() => navigate(`/student/post-student/${job.ID}`)}
+          style={{
+            background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+            border: 'none',
+            borderRadius: '25px',
+            height: '40px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            width: '90%',
+            margin: 'auto',
+            color: 'white',
+            boxShadow: '0 4px 15px rgba(24, 144, 255, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.transform = 'translateY(-2px)';
+            el.style.boxShadow = '0 6px 20px rgba(24, 144, 255, 0.4)';
+            el.style.background = 'linear-gradient(135deg, #40a9ff 0%, #1890ff 100%)';
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.transform = 'translateY(0)';
+            el.style.boxShadow = '0 4px 15px rgba(24, 144, 255, 0.3)';
+            el.style.background = 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)';
+          }}
         >
           สมัครฝึกงาน
         </Button>
@@ -284,10 +337,12 @@ function SearchJobs(){
       <Card.Meta
         title={
           <div>
-            <Text strong style={{ fontSize: '18px' }}>{job.post_name}</Text><br />
-            <Tag
-              color={getWorkModeColor(job.WorkMode?.work_mode)}
-              style={{ marginTop: 4, fontWeight: 'bold', color: 'white' }}
+            <Text strong style={{ fontSize: '18px', color: '#0050b3' }}>{job.post_name}</Text><br />
+            <Tag 
+              color={job.WorkMode?.work_mode === 'Remote' ? '#1890ff' :
+                    job.WorkMode?.work_mode === 'On-site' ? '#52c41a' :
+                    job.WorkMode?.work_mode === 'Hybrid' ? '#fa8c16' : '#d9d9d9'}
+              style={{ marginTop: 4, fontWeight: 'bold', color: 'white', borderRadius: '20px', }}
             >
               {job.WorkMode?.work_mode || 'ไม่ระบุ'}
             </Tag>
@@ -296,22 +351,22 @@ function SearchJobs(){
         description={
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Space>
-              <EnvironmentOutlined />
+            <EnvironmentOutlined style={{ color: '#0050b3' }} />
               <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
             </Space>
             <Space>
-              <CalendarOutlined />
+              <CalendarOutlined style={{ color: '#0050b3' }}/>
               <Text style={{ color: '#434343' }}>วันทำงาน: {job.WorkDay?.work_day}</Text>
             </Space>
             <Space>
-              <UserOutlined />
+              <UserOutlined style={{ color: '#0050b3' }}/>
               <Text style={{ color: '#434343' }}>จำนวนรับสมัคร: {job.quantity} อัตรา</Text>
             </Space>
             <Space>
-              <DollarOutlined />
+              <DollarOutlined style={{ color: '#0050b3' }}/>
               <Text style={{ color: '#434343' }}>เบี้ยเลี้ยง: {job.Stipend?.stipend}</Text>
             </Space>
-            <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
+            <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginTop: 8 }}>
               {job.post_description}
             </Paragraph>
           </Space>
@@ -333,7 +388,7 @@ function SearchJobs(){
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {contextHolder}
-      <CoopMatchHeader />
+      <CoopMatchHeaderDefault />
 
       <Layout>
         <Sider width={300} style={{ background: '#fff', padding: '24px' }}>
