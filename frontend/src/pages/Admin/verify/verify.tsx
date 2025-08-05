@@ -193,11 +193,6 @@ const CertificationReviewPage = () => {
         return;
       }
 
-      if (statusObj.status_verify === "ปฏิเสธ" && !values.rejectReason) {
-        messageApi.warning("กรุณากรอกเหตุผลการปฏิเสธก่อนยืนยัน");
-        return;
-      }
-
       const updateData: VerifyInterface = {
         StatusVerifyID: selectedStatus?.ID,
         AdminID: admin?.ID,

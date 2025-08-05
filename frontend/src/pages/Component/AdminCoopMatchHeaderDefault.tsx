@@ -73,6 +73,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "manage-posts",
       "verify",
       "notifications",
+      "analysis",
       "settings",
       "students",
       "companies",
@@ -133,6 +134,11 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       key: "verify",
       icon: <CheckCircleOutlined />,
       label: isMobile ? "ตรวจสอบ" : "ตรวจสอบการรับรอง",
+    },
+    {
+      key: "analysis",
+      icon: <FileTextOutlined />,
+      label: isMobile ? "วิเคราะห์" : "การวิเคราะห์",
     },
     {
       key: "notifications",

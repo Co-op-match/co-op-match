@@ -42,7 +42,7 @@ import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import AdminVerify from "./pages/Admin/verify/verify";
-
+//import AdminAnalysis from "./pages/Admin/analysis/main";
 
 function App() {
   return (
@@ -234,14 +234,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
+          {/* <Route
             path="/admin/analysis"
             element={
               <ProtectedRoute allowedRoles={[1]}>
-                <AdminDashboard />
+                <AdminAnalysis />
               </ProtectedRoute>
             }
-          />
+          /> */}
           <Route
             path="/admin/companies"
             element={
