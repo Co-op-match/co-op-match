@@ -27,6 +27,8 @@ import ApplicationByCompany from "../src/pages/company/application/application";
 import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 import ProtectProfile from "./components/ProtectedProfile";
+import AdminPostManagement from "./pages/Admin/post/post";
+import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 
 
 function App() {
@@ -145,16 +147,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          <Route
-            path="/student/review"
-            element={
-              <ProtectedRoute allowedRoles={[3]}>
-                <ReviewPage />
-              </ProtectedRoute>
-            }
-          />
-
 
           <Route
             path="/company/dashboard"

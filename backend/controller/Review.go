@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 
 	"co-op-match.com/co-op-match/config"
@@ -18,11 +17,6 @@ func CreateReview(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Debug ก่อน
-	fmt.Println("🎯 Received Review:")
-	fmt.Println("StudentID:", review.StudentID)
-	fmt.Println("CompanyID:", review.CompanyID)
 
 	if review.StudentID == 0 || review.CompanyID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "student_id หรือ company_id ไม่ถูกต้อง"})
