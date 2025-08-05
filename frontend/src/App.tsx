@@ -27,6 +27,7 @@ import ApplicationByCompany from "../src/pages/company/application/application";
 import ConfirmInterviewAppointment from "../src/pages/company/comfirmappointment/ConfirmApppointment";
 import CreateInterviewAppointment from "../src/pages/company/appointment/Appointment";
 import ProtectProfile from "./components/ProtectedProfile";
+import ReviewPage from "./pages/Student/Review/Review";
 
 
 function App() {
@@ -125,13 +126,13 @@ function App() {
           <Route
             path="/student/applications/:postId"
             element={
-             
-                <ProtectedRoute allowedRoles={[3]}>
-                   <CheckUser> 
+
+              <ProtectedRoute allowedRoles={[3]}>
+                <CheckUser>
                   <AddApplication />
-                  </CheckUser>
-                </ProtectedRoute>
-             
+                </CheckUser>
+              </ProtectedRoute>
+
             }
           />
 
@@ -143,6 +144,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/student/review"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <ReviewPage />
+              </ProtectedRoute>
+            }
+          />
+
 
           <Route
             path="/company/dashboard"

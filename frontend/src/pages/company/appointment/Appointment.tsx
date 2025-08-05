@@ -47,63 +47,32 @@ const InterviewDashboard: React.FC = () => {
     const [companyId, setCompanyId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
-
-
-
-    useEffect(() => {
-        const userId = Number(localStorage.getItem("id"));
-        if (!userId) {
-            console.warn("❌ ไม่พบ user_id ใน localStorage");
-            return;
-        }
-    
-        const fetchCompanyId = async () => {
-            try {
-                const res = await GetCompanyByUserID(userId);
-                if (res && res.ID) {
-                    setCompanyId(res.ID);
-                    console.log("✅ ดึง company_id สำเร็จ:", res.ID);
-                } else {
-                    console.warn("❌ ไม่พบข้อมูลบริษัทสำหรับ user_id นี้");
-                }
-            } catch (error) {
-                console.error("❌ ดึง company_id ล้มเหลว:", error);
-            }
-        };
-    
-        fetchCompanyId();
-    }, []);
-    
-
     useEffect(() => {
         const fetchApplications = async () => {
             setLoading(true);
             const userId = Number(localStorage.getItem("id"));
             if (!userId) {
-                console.warn("❌ ไม่พบ user_id ใน localStorage");
                 setLoading(false);
                 return;
             }
 
             const company = await GetCompanyByUserID(userId);
             if (!company || !company.ID) {
-                console.warn("❌ ไม่พบ company จาก user_id นี้");
                 setLoading(false);
                 return;
             }
 
             const companyId = company.ID;
-            console.log("📦 ดึงใบสมัครของบริษัท ID:", companyId);
 
-            const res = await GetApplicationsByCompanyID(userId);
+            setCompanyId(companyId);
+            
+            const res = await GetApplicationsByCompanyID(companyId);
             if (res.status === 200 && Array.isArray(res.data.data)) {
                 const filtered = res.data.data.filter(
                     (app: any) => app.status === "รอการนัดสัมภาษณ์"
                 );
 
                 const appsWithKey = filtered.map((app: any) => {
-                    console.log("📍 app จาก backend:", app);
-
                     return {
                         ...app,
                         key: app.ID,
@@ -114,7 +83,6 @@ const InterviewDashboard: React.FC = () => {
                 });
 
                 setApplications(appsWithKey);
-                console.log("📦 applications:", appsWithKey);
 
             } else {
                 message.error("ไม่สามารถโหลดข้อมูลผู้สมัครได้");
@@ -236,7 +204,7 @@ const InterviewDashboard: React.FC = () => {
             }
     
             const appointmentDate = dayjs(`${values.date.format("YYYY-MM-DD")} ${values.time.format("HH:mm")}`).format();
-    
+
             const payload = {
                 appointment_date: appointmentDate,
                 status: "นัดสัมภาษณ์แล้ว",
@@ -246,31 +214,21 @@ const InterviewDashboard: React.FC = () => {
                 StudentID: selectedApplicant.StudentID,
             };
     
-            console.log("Payload", payload);
             const res = await CreateInterviewAppointment(payload);
     
             if (res.status === 201) {
                 const updateRes = await UpdateApplicationStatus(
                     selectedApplicant.ID,
-                    "นัดสัมภาษณ์แล้ว"
-                );
+                    "นัดสัมภาษณ์แล้ว",
+                    values.note || "" // ✅ ส่งหมายเหตุบริษัทเข้าไป
+                  );
+                  
     
                 if (updateRes.status === 200 || updateRes.status === 201) {
     
-                    await delay(5000); // ✅ ดีเลย์ 1 วินาทีก่อนส่งอีเมล
+                    await delay(2000); // ✅ ดีเลย์ 1 วินาทีก่อนส่งอีเมล
     
-                    const emailRes = await SendEmailinterview(
-                        selectedApplicant.StudentID,
-                        Number(companyId)
-                    );
-    
-                    if (emailRes.status === 200) {
-                        message.success("ส่งนัดหมาย อัปเดตสถานะ และส่งอีเมลเรียบร้อยแล้ว");
-                    } else {
-                        message.warning(
-                            "ส่งนัดหมายสำเร็จ และอัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ"
-                        );
-                    }
+                    
     
                     setIsModalOpen(false);
                     form.resetFields();
@@ -286,7 +244,19 @@ const InterviewDashboard: React.FC = () => {
             }
         } catch (error) {
             message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
-        }
+        
+        }const emailRes = await SendEmailinterview(
+                        selectedApplicant.StudentID,
+                        Number(companyId)
+                    );
+    
+                    if (emailRes.status === 200) {
+                        message.success("ส่งนัดหมาย อัปเดตสถานะ และส่งอีเมลเรียบร้อยแล้ว");
+                    } else {
+                        message.warning(
+                            "ส่งนัดหมายสำเร็จ และอัปเดตสถานะแล้ว แต่ส่งอีเมลไม่สำเร็จ"
+                        );
+                    }
     };
     
 

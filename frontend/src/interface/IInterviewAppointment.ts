@@ -6,5 +6,6 @@ export interface InterviewAppointmentInterface {
     details: string;
     company_id: number;
     student_id: number;
+    
   }
   

@@ -28,7 +28,6 @@ const PostDetails = () => {
     if (id) {
       GetPostById(Number(id)).then((res) => {
         if (res?.data) {
-          console.log("👉 post from API:", res.data);
           setPost(res.data);
         }
       });

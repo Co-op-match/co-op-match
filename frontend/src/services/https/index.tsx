@@ -11,6 +11,7 @@ import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
 import type { CompanyInterface } from "../../interfaces/Company";
 import type { ContactInterface } from "../../interfaces/Contact";
+import type { ReviewPayload } from "../../interface/IReview";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -475,6 +476,52 @@ export async function Logout(email: string) {
   } catch (error: any) {
     throw error.response?.data || error.message;
   }
+}
+
+// ============================== Review =================================== //
+
+// ✅ สร้างรีวิว
+export async function CreateReview(data: ReviewPayload) {
+  return await axios
+    .post(`${apiUrl}/reviews`, data, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ Failed to create review:", e);
+      throw e;
+    });
+}
+
+// ✅ ดึงรีวิวของบริษัท
+export async function GetReviewsByCompanyID(companyId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/company/${companyId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch company reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึงรีวิวของนักศึกษา (ถ้ามี)
+export async function GetReviewsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/student/${studentId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch student reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึง Application ที่ผ่านแล้วของนักศึกษา
+export async function GetPassedApplicationsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/application/passed/student/${studentId}`, requestOptions)
+    .then((res) => res.data) // หรือ res.data.data แล้วแต่ backend ส่งกลับมาแบบไหน
+    .catch((e) => {
+      console.error("❌ Failed to fetch passed applications:", e);
+      return [];
+    });
 }
 
 

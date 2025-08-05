@@ -38,10 +38,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
     { key: 'recommendations', icon: <SolutionOutlined />, label: 'งานแนะนำ' },
-    {
-      key: 'applications/history',
-      label: 'ประวัติการสมัคร',
-    },
+    {key: 'applications/history',label: 'ประวัติการสมัคร',},
     { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },

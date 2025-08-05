@@ -40,7 +40,8 @@ import {
 import axios from 'axios';
 import { GetAllProvinces, GetAllSkill } from '../../../services/https';
 import type { SkillInterface } from '../../../interfaces/Skill';
-import { GetApplicationSummary } from '../../../services/https/Application';
+import { GetApplicationSummary, GetCompanyByUserID } from '../../../services/https/Application';
+import './post.css';
 
 interface SelectOption {
   label: string;
@@ -93,6 +94,7 @@ const CompanyDashboard: React.FC = () => {
   const [selectedProvinceId, setSelectedProvinceId] = useState<number>();
   const [selectedDistrictId, setSelectedDistrictId] = useState<number>();
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<SubDistrict | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -249,13 +251,13 @@ const CompanyDashboard: React.FC = () => {
     }
   ];
 
+
   useEffect(() => {
     const loadProvinces = async () => {
       try {
         const res = await GetAllProvinces();
         const data = res.data || res;
         setRawProvinces(data);
-        console.log("✅ data:", data);
         setProvinceOptions(
           data.map((p: any) => ({
             label: p.name_th,
@@ -263,7 +265,6 @@ const CompanyDashboard: React.FC = () => {
           }))
         );
       } catch (error) {
-        console.error('โหลดจังหวัดล้มเหลว:', error);
       }
     };
 
@@ -275,7 +276,6 @@ const CompanyDashboard: React.FC = () => {
       try {
         const skillsData = await GetAllSkill();
         setSkills(skillsData);
-        console.log(skillsData)
       } catch {
         messageApi.error({
           content: 'โหลดข้อมูลทักษะหรือความสนใจไม่สำเร็จ',
@@ -289,14 +289,27 @@ const CompanyDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const userId = Number(localStorage.getItem("id"));
+    if (!userId) {
+        return;
+    }
     const fetchData = async () => {
-      const companyId = localStorage.getItem("id");
-      if (!companyId) return;
-  
       try {
+
+        const userId = Number(localStorage.getItem("id"));
+    
+        if (!userId) return;
+  
+        const res = await GetCompanyByUserID(userId);
+        const company_id = res?.ID;
+  
+        if (!company_id) return;
+  
+        setCompanyId(company_id); // เซ็ตค่า companyId
+        
         const [postRes, applicationRes] = await Promise.all([
-          GetPostByCompanyId(Number(companyId)),
-          GetApplicationSummary(Number(companyId)),
+          GetPostByCompanyId(Number(company_id)),
+          GetApplicationSummary(Number(company_id)),
         ]);
   
         let applications = applicationRes?.data || [];
@@ -315,11 +328,9 @@ const CompanyDashboard: React.FC = () => {
   
         setPosts(postsWithApplicantCount);
       } catch (error) {
-        console.error("❌ Error loading data:", error);
         setPosts([]);
       }
     };
-  
     fetchData();
   
     GetJobTypes().then(res => setJobTypes(res || []));
@@ -330,12 +341,13 @@ const CompanyDashboard: React.FC = () => {
   }, []);
 
   const handleAddPost = async (values: any) => {
-    const companyId = localStorage.getItem("id");
-    if (!companyId) {
+    
+    const userId = localStorage.getItem("id");
+    if (!userId) {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
     }
-  
+    
     values.StatusPostID = 3;
     values.CompanyID = Number(companyId);
   
@@ -373,13 +385,11 @@ const CompanyDashboard: React.FC = () => {
         message.error("เกิดข้อผิดพลาดในการบันทึกโพสต์งาน");
       }
     } catch (error) {
-      console.error("❌ POST error:", error);
       message.error("ไม่สามารถบันทึกโพสต์งานได้");
     }
   };
 
   const handleProvinceChange = (provinceId: number) => {
-    console.log("✅ เลือกจังหวัด ID:", provinceId);
     form.setFieldsValue({
       province: provinceId,
       district: undefined,
@@ -393,8 +403,6 @@ const CompanyDashboard: React.FC = () => {
     setSubdistrictOptions([]);
 
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === provinceId);
-    console.log("📌 ข้อมูลจังหวัดที่เลือก:", selectedProvince);
-    console.log("📌 Districts:", selectedProvince?.Districts);
 
     if (Array.isArray(selectedProvince?.Districts)) {
       setDistrictOptions(
@@ -407,7 +415,6 @@ const CompanyDashboard: React.FC = () => {
   };
 
   const handleDistrictChange = (districtId: number) => {
-    console.log("✅ เลือกอำเภอ ID:", districtId);
     form.setFieldsValue({
       district: districtId,
       subdistrict: undefined,
@@ -419,10 +426,6 @@ const CompanyDashboard: React.FC = () => {
 
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
     const selectedDistrict = selectedProvince?.Districts?.find((d: any) => Number(d.ID) === districtId);
-
-    console.log("📌 selectedDistrict:", selectedDistrict);
-    console.log("📌 SubDistricts:", selectedDistrict?.SubDistricts);
-
     if (Array.isArray(selectedDistrict?.SubDistricts)) {
       setSubdistrictOptions(
         selectedDistrict.SubDistricts.map((s: { ID: number; name_th: string }) => ({
@@ -434,15 +437,9 @@ const CompanyDashboard: React.FC = () => {
   };
 
   const handleSubdistrictChange = (subdistrictId: number) => {
-    console.log("✅ เลือกตำบล ID:", subdistrictId);
-
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
     const selectedDistrict = selectedProvince?.Districts?.find((d: any) => d.ID === selectedDistrictId);
     const selectedSubdistrict = selectedDistrict?.SubDistricts?.find((s: any) => s.ID === subdistrictId);
-
-    console.log("📌 selectedSubdistrict:", selectedSubdistrict);
-    console.log("📌 Postcode ID:", selectedSubdistrict?.Postcode?.ID);
-
     if (selectedSubdistrict) {
       setSelectedSubdistrict(selectedSubdistrict);
 
@@ -566,15 +563,8 @@ const CompanyDashboard: React.FC = () => {
             columns={realColumns} 
             rowKey="id" 
             pagination={false}
-            style={{
-              '.ant-table-thead > tr > th': {
-                background: 'linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%)',
-                borderBottom: '2px solid #87ceeb',
-                fontWeight: 600,
-                color: '#2c5aa0'
-              }
-            }}
-            rowClassName={(record, index) => 
+            className="custom-table"
+            rowClassName={(_record, index) => 
               index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
             }
           />
@@ -940,74 +930,6 @@ const CompanyDashboard: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-
-      <style jsx global>{`
-        .table-row-light {
-          background: rgba(240, 247, 255, 0.3) !important;
-        }
-        .table-row-dark {
-          background: rgba(255, 255, 255, 0.8) !important;
-        }
-        .table-row-light:hover,
-        .table-row-dark:hover {
-          background: rgba(135, 206, 235, 0.1) !important;
-          transform: scale(1.01);
-          transition: all 0.3s ease;
-        }
-        .ant-table-thead > tr > th {
-          background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
-          border-bottom: 2px solid #87ceeb !important;
-          font-weight: 600 !important;
-          color: #2c5aa0 !important;
-          position: relative;
-        }
-        .ant-table-thead > tr > th::before {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: linear-gradient(90deg, #87ceeb 0%, #b8e6ff 100%);
-        }
-        .ant-select-dropdown {
-          border-radius: 8px !important;
-          box-shadow: 0 6px 24px rgba(135, 206, 235, 0.15) !important;
-        }
-        .ant-select-item-option-selected {
-          background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
-          color: #2c5aa0 !important;
-          font-weight: 500 !important;
-        }
-        .ant-input:focus,
-        .ant-input-focused,
-        .ant-select:focus,
-        .ant-select-focused .ant-select-selector {
-          border-color: #87ceeb !important;
-          box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
-        }
-        .ant-input-number:focus,
-        .ant-input-number-focused {
-          border-color: #87ceeb !important;
-          box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
-        }
-        .ant-modal {
-          border-radius: 16px !important;
-          overflow: hidden;
-        }
-        .ant-modal-content {
-          border-radius: 16px !important;
-          overflow: hidden;
-          box-shadow: 0 12px 48px rgba(135, 206, 235, 0.25) !important;
-        }
-        .ant-form-item-label > label {
-          font-size: 14px;
-        }
-        .ant-divider-horizontal.ant-divider-with-text::before,
-        .ant-divider-horizontal.ant-divider-with-text::after {
-          border-top-color: #87ceeb !important;
-        }
-      `}</style>
     </Layout>
   );
 };

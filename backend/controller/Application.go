@@ -191,13 +191,26 @@ func GetApplicationByID(c *gin.Context) {
 		return
 	}
 
-	// Format วันที่
-	formattedDate := application.CreatedAt.Format("02-01-2006") // DD-MM-YYYY
+	formattedDate := application.CreatedAt.Format("02-01-2006 15:04")
 
-	c.JSON(http.StatusOK, ApplicationResponse{
-		Application:   application,
-		FormattedDate: formattedDate,
-	})
+	// ✅ ดึงข้อมูล InterviewAppointment
+	var interview entity.InterviewAppointment
+	err := config.DB().
+		Where("student_id = ? AND company_id = ?", application.StudentID, application.IntershipPost.Company.ID).
+		Order("created_at desc").
+		First(&interview).Error
+
+	// สร้าง response object
+	response := gin.H{
+		"application":    application,
+		"formatted_date": formattedDate,
+	}
+
+	if err == nil {
+		response["interview_appointment"] = interview
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GET /applications/post/:id
