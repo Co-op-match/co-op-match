@@ -7,6 +7,7 @@ import {
   SettingOutlined,
   HomeOutlined,
   SolutionOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";

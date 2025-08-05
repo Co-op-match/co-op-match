@@ -8,6 +8,7 @@ import CoopMatchHeader from '../../Component/Coop_MatchHeader';
 import dayjs from 'dayjs';
 import ReviewModalContainer from '../Review/Review';
 
+
 // กำหนดประเภทของสถานะ
 type Status = 'รอนัดสัมภาษณ์' | 'นัดสัมภาษณ์แล้ว' | 'กำลังพิจารณา' | 'ไม่ผ่าน' | 'ผ่าน'
 
