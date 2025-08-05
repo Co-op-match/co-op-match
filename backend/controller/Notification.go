@@ -363,7 +363,7 @@ func SendVerifyStatusEmail(c *gin.Context) {
 
 }
 
-func GetCalendarEventsByUserID(c *gin.Context) {
+func GetCalendarEventsStudentByUserID(c *gin.Context) {
 	userID := c.Param("user_id")
 
 	// 1. หานักเรียนจาก user_id
@@ -391,6 +391,41 @@ func GetCalendarEventsByUserID(c *gin.Context) {
 		events = append(events, CalendarEvent{
 			Date:    i.AppointmentDate.Format("2006-01-02"),
 			Content: "นัดสัมภาษณ์กับ " + i.Company.CompanyName,
+		})
+	}
+
+	// 4. ส่งออก
+	c.JSON(http.StatusOK, events)
+}
+
+func GetCalendarEventsCompanyByUserID(c *gin.Context) {
+	userID := c.Param("user_id")
+
+	// 1. หาcompanyจาก user_id
+	var company entity.Company
+	if err := config.DB().Where("user_id = ?", userID).First(&company).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบcompanyที่ตรงกับ user_id นี้"})
+		return
+	}
+
+	// 2. หา InterviewAppointment จาก company.ID
+	var interviews []entity.InterviewAppointment
+	if err := config.DB().Preload("Student").Where("student_id = ?", company.ID).Find(&interviews).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "โหลดข้อมูลนัดสัมภาษณ์ไม่สำเร็จ"})
+		return
+	}
+
+	// 3. สร้าง response struct (ไม่มี type)
+	type CalendarEvent struct {
+		Date    string `json:"date"`
+		Content string `json:"content"`
+	}
+
+	var events []CalendarEvent
+	for _, i := range interviews {
+		events = append(events, CalendarEvent{
+			Date:    i.AppointmentDate.Format("2006-01-02"),
+			Content: "นัดสัมภาษณ์กับ " + i.Student.FirstName + " " + i.Student.LastName,
 		})
 	}
 

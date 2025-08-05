@@ -4,7 +4,7 @@ import { type ApplicationInterface } from '../../../interface/IApplication';
 import { GetApplicationById, GetApplicationsByStudentID } from '../../../services/https/Application';
 import { GetStudentByUserId } from '../../../services/https';
 import CoopMatchHeaderDefault from '../../component/CoopMatchHeaderDefault';
-import CoopMatchHeader from '../../Component/CoopMatchHeader';
+import CoopMatchHeader from '../../component/Coop_MatchHeader';
 
 // กำหนดประเภทของสถานะ
 type Status = 'รอนัดสัมภาษณ์' | 'กำลังพิจารณา' | 'ไม่ได้รับเลือก';

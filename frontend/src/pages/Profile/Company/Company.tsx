@@ -1,72 +1,172 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Avatar,
   Card,
   Descriptions,
-  Divider,
   List,
   Typography,
   Rate,
   Badge,
+  Divider,
+  Progress,
+  Row,
+  Col,
+  Tag,
 } from "antd";
-import { EditOutlined, UserOutlined } from "@ant-design/icons";
-import { GetCompanyByUserId ,GetVerifyByUserId} from "../../../services/https";
+import { 
+  EditOutlined, 
+  EnvironmentOutlined, 
+  UserOutlined, 
+  StarFilled,
+  CommentOutlined,
+  LikeOutlined,
+  CalendarOutlined
+} from "@ant-design/icons";
+import { GetCompanyByUserId, GetRwviewCompanyByUserId, GetVerifyByUserId } from "../../../services/https";
 import CompanyHeader from "../../Component/CompanyHeader";
 import type { CompanyInterface } from "../../../interfaces/Company";
 import "./CompanyProfile.css";
+import CompanyCalendarCard from "./CompanyCalendar";
+
 const { Content } = Layout;
-const { Text } = Typography;
+const { Text} = Typography;
+
+interface ReviewResponse {
+  reviewer: string;
+  rating: number;
+  comment: string;
+  date: string;
+  position: string;
+  tags: string[];
+  helpful: number;
+  student_id: number;
+}
 
 
 const CompanyProfile: React.FC = () => {
   const [company, setCompany] = useState<CompanyInterface | undefined>(undefined);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
-  const reviews = [
-    { reviewer: "ณัฐพล สายใจ", rating: 5, comment: "ประสบการณ์ดีมาก ได้เรียนรู้งานจริงจากพี่ๆ" },
-    { reviewer: "ศิริพร ใจดี", rating: 4, comment: "บริษัทดูแลดี ได้ลองทำโปรเจกต์จริง" },
-  ];
+  const [reviews, setReviews] = useState<ReviewResponse[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [ratingCounts, setRatingCounts] = useState<number[]>([0, 0, 0, 0, 0]);
+  const totalReviews = useMemo(() => reviews.length, [reviews]);
+
+  const userId = localStorage.getItem("id");
+
+  // const reviews = [
+  //   { 
+  //     reviewer: "ณัฐพล สายใจ", 
+  //     rating: 5, 
+  //     comment: "ประสบการณ์ดีมาก ได้เรียนรู้งานจริงจากพี่ๆ ทีมงานเป็นกันเอง และได้รับการดูแลเป็นอย่างดี สิ่งที่ได้เรียนรู้นำไปใช้ในการทำงานจริงได้มาก",
+  //     date: "2024-01-15",
+  //     position: "Software Developer Intern",
+  //     helpful: 12,
+  //     tags: ["เรียนรู้ได้เยอะ", "ทีมงานดี", "ประสบการณ์ดี"]
+  //   },
+  //   { 
+  //     reviewer: "ศิริพร ใจดี", 
+  //     rating: 4, 
+  //     comment: "บริษัทดูแลดี ได้ลองทำโปรเจกต์จริง แต่อาจจะยุ่งหน่อยในช่วงแรก พี่ๆ ช่วยเหลือดีมาก มีโอกาสได้ทำงานในหลายแผนก",
+  //     date: "2024-01-08",
+  //     position: "Marketing Intern",
+  //     helpful: 8,
+  //     tags: ["โปรเจกต์จริง", "หลากหลาย", "พี่ๆ ช่วยเหลือดี"]
+  //   },
+  //   { 
+  //     reviewer: "วิชญ์ พงษ์ศักดิ์", 
+  //     rating: 5, 
+  //     comment: "สุดยอดมาก! ได้ทำงานกับเทคโนโลยีใหม่ๆ บรรยากาศการทำงานดี มีการอบรมให้ความรู้เป็นระบบ และได้เงินเดือนที่เหมาะสม",
+  //     date: "2023-12-20",
+  //     position: "Data Science Intern",
+  //     helpful: 15,
+  //     tags: ["เทคโนโลยีใหม่", "อบรมดี", "เงินเดือนดี"]
+  //   }
+  // ];
+
 
 useEffect(() => {
-  const loadCompany = async () => {
-    const userIdString = localStorage.getItem("id");
-    if (userIdString) {
-      const userId = Number(userIdString);
-      try {
-        const companyData = await GetCompanyByUserId(userId);
-        setCompany(companyData);
+  async function fetchReviews() {
+    try {
+      const res = await GetRwviewCompanyByUserId(Number(userId));
+      const data: ReviewResponse[] = res.data;
 
-        const verifyData = await GetVerifyByUserId(userId);
-        console.log(verifyData)
-        if (verifyData?.StatusVerify?.status_verify) {
-          setVerifyStatus(verifyData.StatusVerify.status_verify);
-        } else {
-          setVerifyStatus("ยังไม่ได้ส่งคำขอ");
-        }
-      } catch (error) {
-        console.error("โหลดข้อมูลล้มเหลว:", error);
+      console.log("📦 ได้รีวิว:", data);
+
+      setReviews(data);
+
+      if (data.length > 0) {
+        const total = data.reduce((sum, r) => sum + r.rating, 0);
+        const avg = total / data.length;
+        setAverageRating(avg);
+
+        const counts = [0, 0, 0, 0, 0];
+        data.forEach((r) => {
+          if (r.rating >= 1 && r.rating <= 5) {
+            counts[5 - r.rating] += 1;
+          }
+        });
+
+        console.log("⭐ ratingCounts:", counts);
+        console.log("📊 averageRating:", avg.toFixed(1));
+
+        setRatingCounts(counts);
       }
+    } catch (error) {
+      console.error("❌ Error fetching reviews:", error);
     }
+  }
+
+  fetchReviews();
+}, [userId]);
+
+
+  useEffect(() => {
+    const loadCompany = async () => {
+      const userIdString = localStorage.getItem("id");
+      if (userIdString) {
+        const userId = Number(userIdString);
+        try {
+          const companyData = await GetCompanyByUserId(userId);
+          setCompany(companyData);
+
+          const verifyData = await GetVerifyByUserId(userId);
+          if (verifyData?.StatusVerify?.status_verify) {
+            setVerifyStatus(verifyData.StatusVerify.status_verify);
+          } else {
+            setVerifyStatus("ยังไม่ได้ส่งคำขอ");
+          }
+        } catch (error) {
+          console.error("โหลดข้อมูลล้มเหลว:", error);
+        }
+      }
+    };
+
+    loadCompany();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
-
-  loadCompany();
-}, []);
-
 
   return (
     <Layout>
       <CompanyHeader />
       <Layout className="company-layout">
         <Content>
-          <div className="company-grid-container">
           <div className="company-profile-title">
             <span className="company-profile-text">Company Profile</span>
             <div className="company-profile-line" />
           </div>
 
+          {/* TOP: Company Info */}
           <div className="company-main-section">
-            {/* LEFT: Company Info */}
-            <Card className="company-left-card">
+            <Card className="company-profile-card">
               <div className="company-profile-container">
                 <div className="company-profile-left">
                   <div className="company-logo-container">
@@ -79,23 +179,29 @@ useEffect(() => {
                       <EditOutlined />
                     </div>
                   </div>
-                <p className="company-name">{company?.company_name}</p>
-                <Badge
-                  className="verify-badge"
-                  status={
-                    verifyStatus === "รับรอง"
-                      ? "success"
-                      : verifyStatus === "รอรับรอง"
-                      ? "processing"
-                      : verifyStatus === "ปฏิเสธ"
-                      ? "error"
-                      : "default"
-                  }
-                  text={`สถานะการรับรอง: ${verifyStatus}`}
-                />
+                  <p className="company-name">{company?.company_name}</p>
+                  <Badge
+                    className="verify-badge"
+                    status={
+                      verifyStatus === "รับรอง"
+                        ? "success"
+                        : verifyStatus === "รอรับรอง"
+                        ? "processing"
+                        : verifyStatus === "ปฏิเสธ"
+                        ? "error"
+                        : "default"
+                    }
+                    text={`สถานะการรับรอง: ${verifyStatus}`}
+                  />
                 </div>
-                <Divider type="vertical" className="company-vertical-divider" />
+
                 <div className="company-profile-details">
+                  <div className="section-header">
+                    <h4><UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลติดต่อ</h4>
+                    <button className="edit-profile-button">
+                      <EditOutlined /> แก้ไข
+                    </button>
+                  </div>
                   <Descriptions column={3}>
                     <Descriptions.Item label="เว็บไซต์">{company?.Contact?.website || "-"}</Descriptions.Item>
                     <Descriptions.Item label="ไลน์">{company?.Contact?.line || "-"}</Descriptions.Item>
@@ -103,54 +209,140 @@ useEffect(() => {
                     <Descriptions.Item label="เฟสบุ๊ค">{company?.Contact?.facebook || "-"}</Descriptions.Item>
                     <Descriptions.Item label="อีเมล">{company?.Contact?.email || "-"}</Descriptions.Item>
                   </Descriptions>
-                  <div className="company-divider-section">
-                    <Divider className="company-divider" />
-                    <Descriptions column={3}>
-                      <Descriptions.Item label="บ้านเลขที่">{company?.Address?.house_number}</Descriptions.Item>
-                      <Descriptions.Item label="หมู่บ้าน">{company?.Address?.village}</Descriptions.Item>
-                      <Descriptions.Item label="ซอย">{company?.Address?.sub_street}</Descriptions.Item>
-                      <Descriptions.Item label="ถนน">{company?.Address?.street}</Descriptions.Item>
-                      <Descriptions.Item label="ตำบล">{company?.Address?.SubDistrict?.name_th}</Descriptions.Item>
-                      <Descriptions.Item label="อำเภอ">{company?.Address?.District?.name_th}</Descriptions.Item>
-                      <Descriptions.Item label="จังหวัด">{company?.Address?.Province?.name_th}</Descriptions.Item>
-                      <Descriptions.Item label="รหัสไปรษณีย์">{company?.Address?.Postcode?.post_code}</Descriptions.Item>
-                    </Descriptions>
+
+                  <div className="section-header">
+                    <h4><EnvironmentOutlined style={{ color: "#0d47a1" }} /> ที่อยู่</h4>
+                    <button className="edit-profile-button">
+                      <EditOutlined /> แก้ไข
+                    </button>
                   </div>
+                  <Descriptions column={3}>
+                    <Descriptions.Item label="บ้านเลขที่">{company?.Address?.house_number}</Descriptions.Item>
+                    <Descriptions.Item label="หมู่บ้าน">{company?.Address?.village}</Descriptions.Item>
+                    <Descriptions.Item label="ซอย">{company?.Address?.sub_street}</Descriptions.Item>
+                    <Descriptions.Item label="ถนน">{company?.Address?.street}</Descriptions.Item>
+                    <Descriptions.Item label="ตำบล">{company?.Address?.SubDistrict?.name_th}</Descriptions.Item>
+                    <Descriptions.Item label="อำเภอ">{company?.Address?.District?.name_th}</Descriptions.Item>
+                    <Descriptions.Item label="จังหวัด">{company?.Address?.Province?.name_th}</Descriptions.Item>
+                    <Descriptions.Item label="รหัสไปรษณีย์">{company?.Address?.Postcode?.post_code}</Descriptions.Item>
+                  </Descriptions>
                 </div>
               </div>
             </Card>
-
-            {/* RIGHT: Review */}
-            <Card className="company-review-card" title="รีวิวจากนักศึกษา">
-              <List
-                itemLayout="vertical"
-                dataSource={reviews}
-                renderItem={(item) => (
-                  <List.Item>
-                    <Text strong>{item.reviewer}</Text>
-                    <br />
-                    <Rate disabled defaultValue={item.rating} />
-                    <p>{item.comment}</p>
-                  </List.Item>
-                )}
-              />
-            </Card>
           </div>
 
-          {/* BOTTOM: Internship Posts */}
-          <Card className="company-post-list-card" title="รายการโพสต์">
-            <List
-              dataSource={company?.IntershipPosts || []}
-              renderItem={(post) => (
-                <List.Item>
-                  <b>{post.post_name}</b> -{" "}
-                  <span style={{ color: post.StatusPost?.name === "Open" ? "green" : "gray" }}>
-                    {post.StatusPost?.name}
-                  </span>
-                </List.Item>
-              )}
-            />
-          </Card>
+          {/* BOTTOM: Calendar + Reviews */}
+          <div className="student-dashboard-section">
+            <div className="calendar-card-wrapper">
+                <Card 
+                  className="company-review-card" 
+                  title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CommentOutlined style={{ color: '#1890ff' }} />
+                      <span>รีวิวจากนักศึกษา</span>
+                    </div>
+                  }
+                >
+                  {/* สถิติรีวิวภาพรวม */}
+                  <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <Row gutter={[16, 16]} align="middle">
+                      <Col span={8}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#faad14' }}>
+                            {averageRating.toFixed(1)}
+                          </div>
+                            <Rate
+                              disabled
+                              defaultValue={averageRating} // ต้องเป็นตัวเลข ไม่ใช่ string!
+                              allowHalf
+                            />
+                          <div style={{ color: '#666', marginTop: '4px' }}>
+                            จาก {totalReviews} รีวิว
+                          </div>
+                        </div>
+                      </Col>
+                      <Col span={16}>
+                       {[5, 4, 3, 2, 1].map((star, index) => (
+                      <div key={star} style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                        <div style={{ width: '60px', display: 'flex', alignItems: 'center' }}>
+                          <span>{star}</span>
+                          <StarFilled style={{ color: '#faad14', marginLeft: '4px' }} />
+                        </div>
+                        <Progress
+                         percent={totalReviews > 0 ? (ratingCounts[index] / totalReviews) * 100 : 0}
+                          showInfo={false}
+                          strokeColor="#faad14"
+                          style={{ flex: 1, marginLeft: '8px', marginRight: '8px' }}
+                        />
+                        <span style={{ width: '30px', textAlign: 'right' }}>
+                          {ratingCounts[index]}
+                        </span>
+                      </div>
+                    ))}
+
+                      </Col>
+                    </Row>
+                  </div>
+
+                  <Divider>รีวิวล่าสุด</Divider>
+
+                  {/* รายการรีวิว */}
+                  <List
+                    itemLayout="vertical"
+                    dataSource={reviews}
+                    renderItem={(item) => (
+                      <List.Item style={{ padding: '16px 0', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ marginBottom: '8px' }}>
+                          <Row justify="space-between" align="top">
+                            <Col>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <Avatar size="small" icon={<UserOutlined />} />
+                                <Text strong style={{ fontSize: '16px' }}>{item.reviewer}</Text>
+                                <Tag color="blue">{item.position}</Tag>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                <Rate disabled defaultValue={item.rating} style={{ fontSize: '14px' }} />
+                                <span style={{ color: '#666', fontSize: '12px' }}>
+                                  <CalendarOutlined style={{ marginRight: '4px' }} />
+                                  {formatDate(item.date)}
+                                </span>
+                              </div>
+                            </Col>
+                          </Row>
+                        </div>
+
+                        <div style={{ marginBottom: '12px' }}>
+                          <Text style={{ lineHeight: '1.6', color: '#333' }}>{item.comment}</Text>
+                        </div>
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                          {item.tags.map((tag, index) => (
+                            <Tag key={index} color="green" style={{ fontSize: '11px' }}>
+                              {tag}
+                            </Tag>
+                          ))}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#666' }}>
+                          <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <LikeOutlined />
+                            มีประโยชน์ {item.helpful} คน
+                          </span>
+                        </div>
+                      </List.Item>
+                    )}
+                  />
+
+                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                    <Text type="secondary">
+                      แสดง {reviews.length} จาก {totalReviews} รีวิว
+                    </Text>
+                  </div>
+                </Card>
+            </div>
+            <div className="application-list-wrapper">
+              <CompanyCalendarCard />
+            </div>
           </div>
         </Content>
       </Layout>

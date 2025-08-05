@@ -34,7 +34,7 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
 
         const levelOptions = levelData.map((level: any) => ({
           label: level.name,
-          value: Number(level.ID),
+          value: Number(level.ID),      
         }));
         setUniversities(univOptions);
         setEducationLevels(levelOptions);
@@ -176,7 +176,7 @@ useEffect(() => {
           <Select
             placeholder="เลือกระดับการศึกษา"
             options={educationLevels}
-            value={selectededucationLevels} // ✅ เชื่อมตรงนี้
+            value={selectededucationLevels}
             onChange={(value: number) => {
               setSelectededucationLevels(value);
               form.setFieldValue("education_level_id", value);

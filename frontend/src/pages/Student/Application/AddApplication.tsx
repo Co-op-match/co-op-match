@@ -33,7 +33,7 @@ import { GetPostById, CreateApplication } from '../../../services/https/Applicat
 import { GetStudentByUserId } from '../../../services/https/index';
 import type { InternshipPostInterface } from '../../../interface/IIntershipPost';
 import type { StudentInterface } from '../../../interfaces/Student';
-import CoopMatchHeader from '../../Component/CoopMatchHeader';
+import CoopMatchHeader from '../../component/Coop_MatchHeader';
 
 const { Title, Text } = Typography;
 const { Step } = Steps;

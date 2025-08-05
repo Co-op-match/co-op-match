@@ -10,7 +10,8 @@ type Review struct {
 	gorm.Model
 	Rating    int16     `json:"rating"`
 	Comment   string    `json:"comment"`
-	CreatedAt time.Time `json:"created_at"`
+	Like      int16     `jason:"like`
+	CreatedAt time.Time `jason:"created_at"`
 
 	StudentID uint
 	Student   Student `gorm:"foreignKey:StudentID"`

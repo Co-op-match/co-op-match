@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Layout,
   Card,
@@ -25,6 +25,7 @@ import StepGeneralInfo from './StudentFormSteps/StepGeneral';
 import './AddStudentForm.css';
 import { useNavigate } from 'react-router-dom';
 import CoopMatchHeaderDefault from '../../../component/CoopMatchHeaderDefault';
+import { UserContext } from '../../../../components/UserContext';
 
 
 const { Content } = Layout;
@@ -37,6 +38,7 @@ const AddStudentForm: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { refetchUser } = useContext(UserContext);
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -169,7 +171,7 @@ const onFinish = async () => {
       university_id: finalData.university_id,
       faculty_id: finalData.faculty_id,
       program_id: finalData.program_id,
-      education_level_id: finalData.education_level,
+      education_level_id: finalData.education_level_id,
       year: finalData.year,
       grade: finalData.grade,
     };
@@ -194,6 +196,7 @@ const onFinish = async () => {
     setFormData({});
     setImageFile(null);
     setPreviewUrl(null);
+    refetchUser(); 
     setTimeout(() => {
       navigate('/student/profile'); // หรือ path อื่น เช่น /profile
     });

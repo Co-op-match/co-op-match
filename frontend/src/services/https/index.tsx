@@ -242,6 +242,17 @@ async function GetVerifyByUserId(user_id: number) {
     throw e.response || e;
   }
 }
+async function CreateSendVerify(user_id: number ,data: FormData) {
+  return await axios.post(`${apiUrl}/company/verify/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
+}
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
   return await axios
@@ -428,10 +439,10 @@ async function SendEmailinterview(student_id: number,company_id: number, ) {
     .catch(e => e.response);
 }
 
-export async function GetRecommendedPosts(studentId: number, query: string = "") {
+async function GetRecommendedPosts(studentId: number, query: string = "") {
   const token = localStorage.getItem("token");
   if (!token) {
-    console.error("❌ ไม่มี token ใน localStorage");
+    console.error("ไม่มี token ใน localStorage");
     return;
   }
 
@@ -447,9 +458,15 @@ export async function GetRecommendedPosts(studentId: number, query: string = "")
       return e.response;
     });
 }
-async function GetEventsByUserId(user_id: number) {
+async function GetEventsStudentByUserId(user_id: number) {
   return await axios
-    .get(`${apiUrl}/notification/calendar/user/${user_id}`, requestOptions)
+    .get(`${apiUrl}/notification/calendar/student/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
+}
+async function GetEventsCompanyByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/notification/calendar/company/${user_id}`, requestOptions)
     .then((res) => res)
     .then((res) => res.data);
 }
@@ -461,6 +478,12 @@ async function GetApplicationsByUserID(user_id: number) {
       console.error("Error fetching applications:", e);
       return []; 
     });
+}
+async function GetRwviewCompanyByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
 }
 
 
@@ -529,7 +552,11 @@ export {
   GetVerifyByUserId,
   SendEmailVerify,
   SendEmailinterview,
-  GetEventsByUserId,
+  GetEventsStudentByUserId,
   GetApplicationsByUserID,
+  CreateSendVerify,
+  GetRecommendedPosts,
+  GetEventsCompanyByUserId,
+  GetRwviewCompanyByUserId,
 
 };
