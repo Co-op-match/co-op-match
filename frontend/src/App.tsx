@@ -42,7 +42,8 @@ import AdminsInAdmin from "./pages/Admin/users/Admins/Admins";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import AdminVerify from "./pages/Admin/verify/verify";
-//import AdminAnalysis from "./pages/Admin/analysis/main";
+import AdminAnalysis from "./pages/Admin/analysis/main";
+import AdminTestAnalysis from "./pages/Admin/analysis/test";
 
 function App() {
   return (
@@ -234,14 +235,22 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/admin/analysis"
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminAnalysis />
               </ProtectedRoute>
             }
-          /> */}
+          />
+          <Route
+            path="/admin/test"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminTestAnalysis />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/companies"
             element={
