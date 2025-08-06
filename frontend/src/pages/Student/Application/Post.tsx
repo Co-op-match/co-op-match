@@ -97,7 +97,7 @@ const PostDetails = () => {
                 onClick={() => {
                   const companyId = post?.Company?.ID || post?.Company?.id;
                   if (companyId) {
-                    navigate(`/company/${companyId}`);
+                    navigate(`/company-profile/${companyId}`);
                   }
                 }}
               >

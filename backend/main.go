@@ -53,6 +53,9 @@ func main() {
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
 	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
 	r.GET("/reviews/:user_id", controller.GetReviewsByUserID)
+	r.POST("/review/like", controller.LikeReview)
+	r.GET("/review/liked/:user_id", controller.GetLikedReviews)
+	r.POST("/review/unlike", controller.UnlikeReview)
 
 	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
@@ -148,6 +151,7 @@ func main() {
 		companyGroup := router.Group("/company")
 		{
 			companyGroup.GET("", controller.GetAllCompany)
+			companyGroup.GET("/:id", controller.GetCompanyByID)
 			companyGroup.POST("", controller.CreateCompany)
 			companyGroup.PUT("/logo/:user_id", controller.UpdateCompanyLogoByUserID)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
