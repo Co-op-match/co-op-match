@@ -38,6 +38,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
 
+
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 

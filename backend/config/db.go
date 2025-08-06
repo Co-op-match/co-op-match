@@ -707,6 +707,29 @@ func createSeedData(db *gorm.DB) {
 		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
+
+	reviews := []entity.Review{
+		{
+			CreatedAt: time.Now(),
+			Rating:    5,
+			Comment:   "ประสบการณ์ดีมาก ได้เรียนรู้งานจริงจากพี่ ๆ",
+			StudentID: 1,
+			CompanyID: 1,
+			Like:      5,
+		},
+		{
+			CreatedAt: time.Now(),
+			Rating:    4,
+			Comment:   "บริษัทดูแลดี ได้ลองทำหลายโปรเจกต์",
+			StudentID: 10,
+			CompanyID: 2,
+			Like:      5,
+		},
+	}
+
+	for _, review := range reviews {
+		db.Create(&review)
+	}
 }
 
 type RawEducationData struct {

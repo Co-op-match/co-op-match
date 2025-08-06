@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Card, Select } from "antd";
 import { LeftOutlined, RightOutlined, CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import "./StudentCalendarCard.css";
-import { GetEventsStudentByUserId } from "../../../services/https";
+import "./CompanyCalendarCard.css";
+import { GetEventsCompanyByUserId } from "../../../services/https";
 
 interface EventItem {
   date: string;
@@ -11,7 +11,7 @@ interface EventItem {
 }
 
 
-const StudentCalendarCard: React.FC = () => {
+const CompanyCalendarCard: React.FC = () => {
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
     const [events, setEvents] = useState<EventItem[]>([]);
@@ -22,7 +22,7 @@ useEffect(() => {
   const userId = userIdStr ? parseInt(userIdStr) : null;
   if (!userId) return;
 
-  GetEventsStudentByUserId(userId).then((result) => {
+  GetEventsCompanyByUserId(userId).then((result) => {
     console.log("✅ Loaded events:", result); // ⬅ เพิ่ม log
     setEvents(result); 
   });
@@ -164,4 +164,4 @@ const filteredEvents = selectedDate && Array.isArray(events)
   );
 };
 
-export default StudentCalendarCard;
+export default CompanyCalendarCard;

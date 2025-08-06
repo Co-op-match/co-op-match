@@ -33,6 +33,7 @@ import {
   StarOutlined
 } from '@ant-design/icons';
 import { GetRecommendedPosts,GetStudentByUserId } from '../../services/https';
+import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
 const { Title, Text, Paragraph } = Typography;
 import type { MatchResult } from '../../interfaces/MatchResult';
 import type { MatchingWeights } from '../../interfaces/MatchingWeights';

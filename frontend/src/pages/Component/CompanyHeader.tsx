@@ -53,7 +53,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
         },
       ],
     },
-  ///company/interview_appointments/confirm
+    { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์', },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];

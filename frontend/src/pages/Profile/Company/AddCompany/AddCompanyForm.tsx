@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Layout,
   Card,
@@ -16,10 +16,12 @@ import {
   CreateCompany,
   CreateAddress,
   CreateContact,
+  CreateSendVerify,
 } from '../../../../services/https';
 
 import './AddCompanyForm.css';
 import CompanyHeaderDefault from '../../../component/CoopMatchHeaderDefault';
+import { UserContext } from '../../../../components/UserContext';
 const { Content } = Layout;
 
 const AddCompanyForm: React.FC = () => {
@@ -28,8 +30,11 @@ const AddCompanyForm: React.FC = () => {
   const [formData, setFormData] = useState<any>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
+  const { refetchUser } = useContext(UserContext);
 
   useEffect(() => {
     return () => {
@@ -126,6 +131,18 @@ const handleBack = () => {
       formDataToSend.append('logo', imageFile);
     }
     await CreateCompany(formDataToSend);
+    // ✅ Step 4: Upload document verification
+  if (documentFile) {
+    const verifyFormData = new FormData();
+    verifyFormData.append('status_verify_id', '2'); // หรือส่งตาม logic (1 = "รอรับรอง")
+    verifyFormData.append('user_id', userId.toString());
+    verifyFormData.append('verification_document', documentFile);
+
+    const verifyRes = await CreateSendVerify(userId, verifyFormData);
+    console.log("✅ ส่งเอกสารยืนยัน:", verifyRes);
+  }
+
+    refetchUser(); 
 
 
       messageApi.success({
@@ -154,17 +171,20 @@ const handleBack = () => {
 
   const steps = [
     {
-      title: 'ข้อมูลบริษัท',
-      content: (
-        <StepCompanyGeneral
-          form={form}
-          imageFile={imageFile}
-          setImageFile={setImageFile}
-          previewUrl={previewUrl}
-          setPreviewUrl={setPreviewUrl}
-        />
-      ),
-    },
+  title: 'ข้อมูลบริษัท',
+  content: (
+    <StepCompanyGeneral
+      form={form}
+      imageFile={imageFile}
+      setImageFile={setImageFile}
+      previewUrl={previewUrl}
+      setPreviewUrl={setPreviewUrl}
+      documentFile={documentFile}
+      setDocumentFile={setDocumentFile}
+    />
+  ),
+}
+,
     {
       title: 'ข้อมูลที่อยู่',
       content: <StepAddress form={form} formData={formData} />,
@@ -217,3 +237,5 @@ const handleBack = () => {
 };
 
 export default AddCompanyForm;
+
+

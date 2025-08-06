@@ -35,6 +35,7 @@ import type { InternshipPostInterface } from '../../../interface/IIntershipPost'
 import type { StudentInterface } from '../../../interfaces/Student';
 import CoopMatchHeader from '../../Component/Coop_MatchHeader';
 
+
 const { Title, Text } = Typography;
 const { Step } = Steps;
 
