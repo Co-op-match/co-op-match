@@ -9,7 +9,7 @@ import { BookOutlined, EditOutlined, EnvironmentOutlined, UserOutlined } from "@
 import { GetStudentByUserId,UpdateProfileImage  } from "../../../services/https";
 import type { StudentInterface } from "../../../interfaces/Student";
 import "./StudentProfile.css";
-import CoopMatchHeader from "../../component/Coop_MatchHeader";
+import CoopMatchHeader from "../../Component/Coop_MatchHeader";
 import dayjs from "dayjs";
 import EditProfileModal from "../Student/Edit/Popup";
 import StudentCalendarCard from "./StudentCalendar";
