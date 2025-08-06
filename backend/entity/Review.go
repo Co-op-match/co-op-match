@@ -8,14 +8,16 @@ import (
 
 type Review struct {
 	gorm.Model
-	Rating    int16     `json:"rating"`
-	Comment   string    `json:"comment"`
-	Like      int16     `json:"like`
-	CreatedAt time.Time `json:"created_at"`
 
-	StudentID uint
-	Student   Student `gorm:"foreignKey:StudentID"`
+	Rating    int16  `json:"rating" valid:"range(1|5)~Rating must be between 1 and 5"`
+	Comment   string `json:"comment" valid:"required~Comment is required"`
+	LikeCount int    `json:"like_count" gorm:"default:0"`
 
-	CompanyID uint
-	Company   Company `gorm:"foreignKey:CompanyID"`
+	StudentID uint    `valid:"required~StudentID is required"`
+	Student   Student `gorm:"foreignKey:StudentID" valid:"-"`
+
+	CompanyID uint    `valid:"required~CompanyID is required"`
+	Company   Company `gorm:"foreignKey:CompanyID" valid:"-"`
+
+	Tags []*Tag `gorm:"many2many:review_tags;" json:"tags"`
 }
