@@ -11,6 +11,7 @@ export interface ApplicationInterface {
   submit_at?: string;
   internship_post_id?: number;
   company_name?: string;
+  company_id?: number;
   post_name?: string;
   date?: string;
   formatted_date: string;

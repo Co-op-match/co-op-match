@@ -159,7 +159,7 @@ const ApplicationHistory: React.FC = () => {
               type="primary"
               icon={<StarOutlined />}
               size="small"
-              onClick={() => openReviewModal(application.id!)}
+              onClick={() => openReviewModal(application.company_id!)}
               style={reviewButtonStyle}
             >
               ให้คะแนนรีวิว
