@@ -93,8 +93,8 @@ const ReviewModalContainer: React.FC<{
       width={680}
       title={null}
       style={{ padding: 0 }}
-      bodyStyle={{ padding: 0 }}
-      destroyOnClose={true}
+      styles={{ body: { padding: 0 } }}
+      destroyOnHidden={true}
     >
       <div style={{
         backgroundColor: '#f8f9fa',

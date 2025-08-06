@@ -710,7 +710,6 @@ func createSeedData(db *gorm.DB) {
 
 	reviews := []entity.Review{
 		{
-			CreatedAt: time.Now(),
 			Rating:    5,
 			Comment:   "ประสบการณ์ดีมาก ได้เรียนรู้งานจริงจากพี่ ๆ",
 			StudentID: 1,
@@ -718,7 +717,6 @@ func createSeedData(db *gorm.DB) {
 			Like:      5,
 		},
 		{
-			CreatedAt: time.Now(),
 			Rating:    4,
 			Comment:   "บริษัทดูแลดี ได้ลองทำหลายโปรเจกต์",
 			StudentID: 10,
