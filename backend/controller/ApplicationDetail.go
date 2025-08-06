@@ -90,6 +90,7 @@ func GetApplicationDetailsByStudentID(c *gin.Context) {
 			"id":           app.ID,
 			"position":     app.IntershipPost.PostName,
 			"company":      app.IntershipPost.Company.CompanyName,
+			"company_id":   app.IntershipPost.Company.ID,
 			"company_name": app.IntershipPost.Company.CompanyName,
 			"status":       app.Status,
 			"date":         app.SubmitAt.Format("2006-01-02"),
