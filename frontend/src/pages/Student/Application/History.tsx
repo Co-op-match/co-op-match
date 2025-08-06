@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Tag, Button, Space, Modal, Input, Select, Card, message } from 'antd';
 import { StarOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { type ApplicationInterface } from '../../../interface/IApplication';
-import { GetApplicationById, GetApplicationsByStudentID} from '../../../services/https/Application';
+import { GetApplicationById, GetApplicationsByStudentID } from '../../../services/https/Application';
 import { GetStudentByUserId } from '../../../services/https';
 import CoopMatchHeader from '../../Component/Coop_MatchHeader';
 import dayjs from 'dayjs';
@@ -145,7 +145,7 @@ const ApplicationHistory: React.FC = () => {
       key: "action",
       render: (_: any, application: ApplicationInterface) => (
         <Space size={8}>
-          <Button 
+          <Button
             type="default"
             icon={<EyeOutlined />}
             onClick={() => handleViewDetails(application)}
@@ -173,7 +173,7 @@ const ApplicationHistory: React.FC = () => {
   return (
     <div style={containerStyle}>
       <CoopMatchHeader />
-      
+
       <div style={titleContainerStyle}>
         <h2 style={headingStyle}>📋 ประวัติการสมัครงาน</h2>
         <div style={subtitleStyle}>ติดตามสถานะการสมัครและผลการพิจารณาของคุณ</div>
@@ -184,7 +184,7 @@ const ApplicationHistory: React.FC = () => {
           <SearchOutlined style={searchIconStyle} />
           <span style={searchTitleStyle}>ค้นหาข้อมูลการสมัคร</span>
         </div>
-        
+
         <div style={searchFieldsStyle}>
           <div style={searchFieldStyle}>
             <div style={labelStyle}>ชื่อบริษัท</div>
@@ -228,8 +228,8 @@ const ApplicationHistory: React.FC = () => {
 
           <div style={searchFieldStyle}>
             <div style={{ ...labelStyle, opacity: 0 }}>ค้นหา</div>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<SearchOutlined />}
               onClick={handleSearch}
               style={searchButtonStyle}
@@ -241,15 +241,15 @@ const ApplicationHistory: React.FC = () => {
       </Card>
 
       <Card style={tableCardStyle}>
-        <Table 
-          dataSource={filteredApplications} 
-          columns={columns} 
-          pagination={{ 
+        <Table
+          dataSource={filteredApplications}
+          columns={columns}
+          pagination={{
             pageSize: 10,
             showSizeChanger: false,
             showQuickJumper: true,
             showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`
-          }} 
+          }}
           rowKey="id"
           style={tableStyle}
         />
@@ -298,9 +298,11 @@ const ApplicationDetailModal: React.FC<{
       footer={null}
       width={700}
       style={{ top: 40, padding: 0, backgroundColor: 'transparent' }}
-      bodyStyle={{
-        padding: 0,
-        backgroundColor: 'unset',
+      styles={{
+        body: {
+          padding: 0,
+          backgroundColor: 'unset',
+        },
       }}
     >
       <div style={modalContainerStyle}>

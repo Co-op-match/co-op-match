@@ -33,12 +33,12 @@ import {
   StarOutlined
 } from '@ant-design/icons';
 import { GetRecommendedPosts,GetStudentByUserId } from '../../services/https';
-import CoopMatchHeaderDefault from '../Component/CoopMatchHeader';
+import CoopMatchHeaderDefault from '../Component/CompanyHeader';
 const { Title, Text, Paragraph } = Typography;
 import type { MatchResult } from '../../interfaces/MatchResult';
 import type { MatchingWeights } from '../../interfaces/MatchingWeights';
 import { useNavigate } from 'react-router-dom';
-import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
+// import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
 
 function StudentRecommendedPosts() {
   const navigate = useNavigate();
