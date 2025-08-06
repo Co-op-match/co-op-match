@@ -112,14 +112,14 @@ func GetPassedApplicationsByStudentID(c *gin.Context) {
 }
 
 type ReviewResponse struct {
-	Reviewer  string    `json:"reviewer"`
-	Rating    int16     `json:"rating"`
-	Comment   string    `json:"comment"`
-	Date      time.Time `json:"date"`
-	Position  string    `json:"position"`
-	Tags      []string  `json:"tags"`
-	Helpful   int       `json:"helpful"`
-	ProfileImage   string    `json:"image_url"`
+	Reviewer     string    `json:"reviewer"`
+	Rating       int16     `json:"rating"`
+	Comment      string    `json:"comment"`
+	Date         time.Time `json:"date"`
+	Position     string    `json:"position"`
+	Tags         []string  `json:"tags"`
+	Helpful      int       `json:"helpful"`
+	ProfileImage string    `json:"image_url"`
 }
 
 func GetReviewsByUserID(c *gin.Context) {
