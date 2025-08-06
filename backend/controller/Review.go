@@ -95,6 +95,7 @@ type ReviewResponse struct {
 	Position  string    `json:"position"`
 	Tags      []string  `json:"tags"`
 	Helpful   int       `json:"helpful"`
+	ProfileImage   string    `json:"image_url"`
 }
 
 func GetReviewsByUserID(c *gin.Context) {
@@ -113,6 +114,7 @@ func GetReviewsByUserID(c *gin.Context) {
 	var reviews []entity.Review
 	if err := config.DB().
 		Preload("Student").
+		Preload("Student.User.ProfileImage").
 		Where("company_id = ?", company.ID).
 		Order("created_at DESC").
 		Find(&reviews).Error; err != nil {
@@ -135,14 +137,20 @@ func GetReviewsByUserID(c *gin.Context) {
 			continue // ❌ ไม่มี Application ที่ผ่าน → ข้ามรีวิวนี้
 		}
 
+		var imageURL string
+		if len(r.Student.User.ProfileImage) > 0 {
+			imageURL = r.Student.User.ProfileImage[0].ImageURL
+		}
+
 		response = append(response, ReviewResponse{
-			Reviewer:  r.Student.FirstName + " " + r.Student.LastName,
-			Rating:    r.Rating,
-			Comment:   r.Comment,
-			Date:      r.CreatedAt,
-			Position:  apps[0].IntershipPost.PostName,
-			Tags:      []string{"ได้เรียนรู้งานจริง", "พี่ๆ ใจดี"}, // สามารถปรับเป็น dynamic ได้ภายหลัง
-			Helpful:   int(r.Like),                                          
+			Reviewer:     r.Student.FirstName + " " + r.Student.LastName,
+			Rating:       r.Rating,
+			Comment:      r.Comment,
+			Date:         r.CreatedAt,
+			Position:     apps[0].IntershipPost.PostName,
+			Tags:         []string{"ได้เรียนรู้งานจริง", "พี่ๆ ใจดี"},
+			Helpful:      int(r.Like),
+			ProfileImage: imageURL,
 		})
 	}
 

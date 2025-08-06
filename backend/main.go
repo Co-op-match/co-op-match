@@ -148,6 +148,7 @@ func main() {
 		{
 			companyGroup.GET("", controller.GetAllCompany)
 			companyGroup.POST("", controller.CreateCompany)
+			companyGroup.PUT("/logo/:user_id", controller.UpdateCompanyLogoByUserID)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 			companyGroup.POST("/verify/:user_id", controller.CreateSendVerify)
@@ -157,6 +158,7 @@ func main() {
 		{
 			contactGroup.POST("", controller.CreateContact)
 			contactGroup.GET("/:user_id", controller.GetContactByUserId)
+			contactGroup.PUT("/:user_id", controller.UpdateContactByUserID)
 		}
 	}
 

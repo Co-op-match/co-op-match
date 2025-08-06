@@ -12,6 +12,7 @@ import type { EducationInput } from "../../interfaces/EducationInput";
 import type { CompanyInterface } from "../../interfaces/Company";
 import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
+import type { VerifyInterface } from "../../interfaces/Verify";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -264,7 +265,7 @@ async function GetCompanyByUserId(user_id: number): Promise<CompanyInterface> {
 }
 async function GetVerifyByUserId(user_id: number) {
   try {
-    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/verify/${user_id}`, requestOptions);
+    const res = await axios.get<VerifyInterface>(`${apiUrl}/company/verify/${user_id}`, requestOptions);
     return res.data;
   } catch (e: any) {
     throw e.response || e;
@@ -281,12 +282,29 @@ async function CreateSendVerify(user_id: number ,data: FormData) {
   .then(res => res)
   .catch(e => e.response);
 }
+async function UpdateCompanyLogo(user_id: number ,data: FormData) {
+  return await axios.put(`${apiUrl}/company/logo/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
+}
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
   return await axios
     .post(`${apiUrl}/contact`, data, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
+}
+async function UpdateCompanyContact(user_id: number, data: ContactInterface) {
+  return await axios
+    .put(`${apiUrl}/contact/${user_id}`, data, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
 }
 async function GetContactByUserId(user_id: number): Promise<ContactInterface> {
   try {
@@ -633,5 +651,7 @@ export {
   GetRecommendedPosts,
   GetEventsCompanyByUserId,
   GetRwviewCompanyByUserId,
+  UpdateCompanyContact,
+  UpdateCompanyLogo
 
 };

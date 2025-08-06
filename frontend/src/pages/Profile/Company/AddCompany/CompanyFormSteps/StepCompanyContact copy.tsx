@@ -16,14 +16,14 @@ const StepCompanyContact1: React.FC<StepCompanyContactProps> = ({ }) => {
       >
         ข้อมูลติดต่อ
       </div>
-<Form.Item
-  name="website"
-  label="เว็บไซต์"
-  validateTrigger="none"
-  rules={[{ required: true, message: 'กรุณากรอกเว็บไซต์' }]}
->
-  <Input placeholder="เช่น www.website.com" />
-</Form.Item>
+        <Form.Item
+          name="website"
+          label="เว็บไซต์"
+          validateTrigger="none"
+          rules={[{ required: true, message: 'กรุณากรอกเว็บไซต์' }]}
+        >
+          <Input placeholder="เช่น www.website.com" />
+        </Form.Item>
         <Form.Item name="email" label="อีเมล" rules={[{ required: true }]}>
           <Input placeholder="เช่น example@gmail.com" />
         </Form.Item>

@@ -10,7 +10,7 @@ type Review struct {
 	gorm.Model
 	Rating    int16     `json:"rating"`
 	Comment   string    `json:"comment"`
-	Like      int16     `json:"like`
+	Like      int16     `json:"like"`
 	CreatedAt time.Time `json:"created_at"`
 
 	StudentID uint
