@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Rate, Input, Button, message } from "antd";
-import { StarFilled, HeartFilled, MessageOutlined } from "@ant-design/icons";
+import { Modal, Rate, Input, Button, message, Select } from "antd";
+import { StarFilled, HeartFilled, MessageOutlined, TagOutlined } from "@ant-design/icons";
 import { CreateReview } from "../../../services/https";
 import type { ReviewPayload } from "../../../interface/IReview";
+import type { Tag } from "../../../interface/ITag";
+import { GetAllTags } from "../../../services/https/Application";
 
 const ReviewModalContainer: React.FC<{
   open: boolean;
@@ -14,12 +16,19 @@ const ReviewModalContainer: React.FC<{
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
 
-  // Reset form when modal opens
   useEffect(() => {
     if (open) {
       setRating(0);
       setComment("");
+      setSelectedTags([]);
+      GetAllTags().then((res: { data: Tag[] }) => {
+        if (res && res.data) {
+          setAvailableTags(res.data);
+        }
+      });
     }
   }, [open]);
 
@@ -36,6 +45,7 @@ const ReviewModalContainer: React.FC<{
         comment,
         StudentID: studentId,
         CompanyID: companyId,
+        tags: selectedTags,
       };
       await CreateReview(payload);
       message.success("รีวิวสำเร็จแล้ว ขอบคุณสำหรับการแบ่งปัน!");
@@ -66,20 +76,28 @@ const ReviewModalContainer: React.FC<{
     return "#52c41a";
   };
 
+  const calculateProgress = () => {
+    let progress = 0;
+    if (rating > 0) progress += 40;
+    if (comment.trim().length > 0) progress += 30;
+    if (selectedTags.length > 0) progress += 30;
+    return progress;
+  };
+
   return (
     <Modal
       open={open}
       onCancel={onClose}
       footer={null}
       centered
-      width={650}
+      width={680}
       title={null}
       style={{ padding: 0 }}
       bodyStyle={{ padding: 0 }}
       destroyOnClose={true}
     >
       <div style={{
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f8f9fa',
         borderRadius: '12px',
         overflow: 'hidden',
         position: 'relative'
@@ -100,7 +118,7 @@ const ReviewModalContainer: React.FC<{
         <div style={{
           backgroundColor: 'rgb(175, 213, 244)',
           background: 'linear-gradient(135deg, rgb(175, 213, 244) 0%, rgb(135, 193, 244) 100%)',
-          padding: '25px 35px',
+          padding: '28px 35px',
           textAlign: 'center',
           position: 'relative',
           zIndex: 1
@@ -134,15 +152,16 @@ const ReviewModalContainer: React.FC<{
         </div>
 
         {/* Content */}
-        <div style={{ padding: '35px 40px' }}>
+        <div style={{ padding: '30px 40px' }}>
+
           {/* Rating Section */}
           <div style={{
             textAlign: 'center',
-            marginBottom: '35px',
+            marginBottom: '30px',
             padding: '25px',
             backgroundColor: 'white',
             borderRadius: '16px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
             border: '1px solid #f0f0f0'
           }}>
             <div style={{
@@ -153,7 +172,7 @@ const ReviewModalContainer: React.FC<{
             }}>
               ความพึงพอใจโดยรวม
             </div>
-            
+
             <div style={{ marginBottom: '15px' }}>
               <Rate
                 value={rating}
@@ -185,9 +204,14 @@ const ReviewModalContainer: React.FC<{
             </div>
           </div>
 
-          {/* Comment Section */}
+          {/* Tags Section - Moved up */}
           <div style={{
-            marginBottom: '25px'
+            marginBottom: '30px',
+            padding: '25px',
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+            border: '1px solid #f0f0f0'
           }}>
             <div style={{
               display: 'flex',
@@ -196,17 +220,71 @@ const ReviewModalContainer: React.FC<{
               fontSize: '16px',
               fontWeight: '600',
               color: '#333',
-              marginBottom: '12px'
+              marginBottom: '15px'
+            }}>
+              <TagOutlined style={{ color: '#1890ff' }} />
+              <span>แท็กที่เกี่ยวข้อง</span>
+            </div>
+
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="เลือกแท็กที่เกี่ยวข้องกับประสบการณ์ (ไม่บังคับ)"
+              style={{
+                width: '100%',
+                minHeight: '42px'
+              }}
+              value={selectedTags.map(tag => tag.name)}
+              onChange={(values) => {
+                const newTags: Tag[] = values.map((name) => ({ name }));
+                setSelectedTags(newTags);
+              }}
+              options={availableTags.map(tag => ({ label: tag.name, value: tag.name }))}
+              maxTagCount="responsive"
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
+
+            <div style={{
+              fontSize: '12px',
+              color: '#8c8c8c',
+              marginTop: '8px'
+            }}>
+              เลือกแท็กที่เหมาะสมเพื่อช่วยให้นักศึกษาคนอื่นค้นหาได้ง่ายขึ้น
+            </div>
+          </div>
+
+          {/* Comment Section */}
+          <div style={{
+            padding: '25px',
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+            border: '1px solid #f0f0f0'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#333',
+              marginBottom: '15px'
             }}>
               <MessageOutlined style={{ color: '#1890ff' }} />
               <span>เล่าประสบการณ์ของคุณ</span>
+              <span style={{ color: '#ff4d4f', fontSize: '12px' }}>*</span>
             </div>
-            
+
             <Input.TextArea
               rows={5}
-              placeholder="• เล่าเกี่ยวกับสภาพแวดล้อมการทำงาน&#10;• ความเป็นมิตรของเพื่อนร่วมงาน&#10;• ความรู้ที่ได้รับ&#10;• คำแนะนำสำหรับนักศึกษาคนต่อไป"
+              placeholder="• เล่าเกี่ยวกับสภาพแวดล้อมการทำงาน&#10;• ความเป็นมิตรของเพื่อนร่วมงาน&#10;• ความรู้ที่ได้รับ&#10;• คำแนะนำสำหรับนักศึกษาคนต่อไป&#10;• ข้อดีข้อเสียของการฝึกงานที่นี่"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              maxLength={500}
+              showCount
               style={{
                 fontSize: '14px',
                 borderRadius: '12px',
@@ -224,35 +302,39 @@ const ReviewModalContainer: React.FC<{
                 e.target.style.boxShadow = 'none';
               }}
             />
-            
+
             <div style={{
               fontSize: '12px',
               color: '#8c8c8c',
-              marginTop: '8px',
-              textAlign: 'right'
+              marginTop: '8px'
             }}>
-              {comment.length}/500 ตัวอักษร
+              ความคิดเห็นที่ละเอียดจะช่วยให้นักศึกษาคนอื่นได้รับข้อมูลที่เป็นประโยชน์มากขึ้น
             </div>
           </div>
-
-          {/* Progress Indicator */}
+        </div>
+        {/* Progress Indicator */}
+        <div style={{
+          display: 'flex', // ✅ ทำให้ลูกอยู่ในแนวเดียว
+          justifyContent: 'center', // ✅ จัดลูกให้อยู่ตรงกลางแนวนอน
+          marginBottom: '30px'
+        }}>
           <div style={{
-            width: '100%',
-            height: '4px',
-            backgroundColor: '#f0f0f0',
-            borderRadius: '2px',
-            marginBottom: '25px',
+            width: '90%',
+            height: '6px',
+            backgroundColor: '#e8e8e8',
+            borderRadius: '3px',
             overflow: 'hidden'
           }}>
             <div style={{
               height: '100%',
-              backgroundColor: rating > 0 && comment.trim().length > 0 ? '#52c41a' : '#1890ff',
-              width: `${((rating > 0 ? 50 : 0) + (comment.trim().length > 0 ? 50 : 0))}%`,
-              transition: 'width 0.3s ease',
-              borderRadius: '2px'
+              backgroundColor: calculateProgress() === 100 ? '#52c41a' : '#1890ff',
+              width: `${calculateProgress()}%`,
+              transition: 'width 0.3s ease, background-color 0.3s ease',
+              borderRadius: '3px'
             }} />
           </div>
         </div>
+
 
         {/* Footer */}
         <div style={{
@@ -265,17 +347,18 @@ const ReviewModalContainer: React.FC<{
         }}>
           <div style={{
             fontSize: '12px',
-            color: '#8c8c8c'
+            color: '#8c8c8c',
+            maxWidth: '60%'
           }}>
             รีวิวของคุณจะช่วยให้นักศึกษาคนอื่นได้รับข้อมูลที่เป็นประโยชน์
           </div>
-          
+
           <div style={{ display: 'flex', gap: '12px' }}>
             <Button
               onClick={onClose}
               style={{
                 borderRadius: '8px',
-                height: '40px',
+                height: '42px',
                 paddingLeft: '20px',
                 paddingRight: '20px',
                 fontWeight: '600',
@@ -291,17 +374,17 @@ const ReviewModalContainer: React.FC<{
               disabled={rating === 0}
               style={{
                 borderRadius: '8px',
-                height: '40px',
+                height: '42px',
                 paddingLeft: '25px',
                 paddingRight: '25px',
                 fontWeight: '700',
                 fontSize: '14px',
-                background: rating === 0 
-                  ? '#d9d9d9' 
+                background: rating === 0
+                  ? '#d9d9d9'
                   : 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
                 border: 'none',
-                boxShadow: rating === 0 
-                  ? 'none' 
+                boxShadow: rating === 0
+                  ? 'none'
                   : '0 4px 12px rgba(24, 144, 255, 0.3)',
                 transform: rating === 0 ? 'none' : 'translateY(-1px)',
                 transition: 'all 0.3s ease'

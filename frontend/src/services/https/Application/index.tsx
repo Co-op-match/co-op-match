@@ -201,7 +201,15 @@ export async function GetInterviewAppointmentByStudentAndCompany(studentId: numb
     });
 }
 
-
+export async function GetAllTags() {
+  return await axios
+    .get(`${apiUrl}/reviews/tags`, requestOptions)
+    .then((res) => res.data) // 👈 return res.data
+    .catch((e) => {
+      console.error("Error fetching tags:", e);
+      return { data: [] };
+    });
+}
 
 
 
@@ -219,4 +227,5 @@ export {
   GetApplicationsByPostId,
   UpdateApplicationStatus,
   GetApplicationsByCompanyID,
+
 };

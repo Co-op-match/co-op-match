@@ -126,6 +126,7 @@ func main() {
 			reviewGroup.GET("/company/:company_id", controller.GetReviewsByCompanyID)
 			reviewGroup.GET("/student/:student_id", controller.GetReviewsByStudentID)
 			reviewGroup.GET("/application/passed/student/:id", controller.GetPassedApplicationsByStudentID)
+			reviewGroup.GET("/tags", controller.GetAllTags)
 		}
 
 		chatGroup := router.Group("/chat")

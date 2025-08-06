@@ -75,6 +75,7 @@ func SetupDatabase() {
 		&entity.SubDistrict{},
 		&entity.Postcode{},
 		&entity.StatusVerify{},
+		&entity.Tag{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -768,6 +769,22 @@ func insertEducationFromCSV(db *gorm.DB, filePath string) {
 			Faculty:    row[colMap["FAC_NAME"]],
 			Program:    row[colMap["PROGRAM_NAME"]],
 		})
+	}
+
+	// Seed Tags สำหรับรีวิว
+	tags := []entity.Tag{
+		{Name: "บรรยากาศดี"},
+		{Name: "งานท้าทาย"},
+		{Name: "พี่ๆใจดี"},
+		{Name: "ได้ลงมือทำจริง"},
+		{Name: "สนับสนุนดี"},
+		{Name: "เหมาะกับมือใหม่"},
+		{Name: "ได้เรียนรู้หลากหลาย"},
+		{Name: "ได้ทำโปรเจกต์จริง"},
+	}
+
+	for _, tag := range tags {
+		db.FirstOrCreate(&tag, entity.Tag{Name: tag.Name})
 	}
 
 	// Cache for IDs

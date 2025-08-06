@@ -7,41 +7,42 @@ import (
 )
 
 type IntershipPost struct {
-	gorm.Model
-	PostName        string    `json:"post_name"`
-	PostDescription string    `json:"post_description"`
-	Quantity        int32     `json:"quantity"`
-	MinGpa          float32   `json:"min_gpa"`
-	CreatedAt       time.Time `json:"created_at"`
-	LocationDetail  string    `json:"location_detail"` // รายละเอียดที่ตั้ง
-	Subdistrict     string    `json:"subdistrict"`     // แขวง/ตำบล
-	District        string    `json:"district"`        // เขต/อำเภอ
-	Province        string    `json:"province"`        // จังหวัด
+	gorm.Model `valid:"-"`
 
-	CompanyID uint
-	Company   Company `gorm:"foreignKey:CompanyID"`
+	PostName        string  `json:"post_name" valid:"required~Post name is required"`
+	PostDescription string  `json:"post_description" valid:"required~Description is required"`
+	Quantity        int32   `json:"quantity" valid:"required~Quantity is required", "quantity,min=1"`
+	MinGpa          float32 `json:"min_gpa" valid:"required~GPA is required"`
 
-	JobTypeID uint
-	JobType   JobType `gorm:"foreignKey:JobTypeID"`
+	CreatedAt time.Time `json:"created_at" valid:"-"`
 
-	StipendID uint
-	Stipend   Stipend `gorm:"foreignKey:StipendID"`
+	LocationDetail string `json:"location_detail" valid:"required~Location is required"`
+	Subdistrict    string `json:"subdistrict" valid:"required~Subdistrict is required"`
+	District       string `json:"district" valid:"required~District is required"`
+	Province       string `json:"province" valid:"required~Province is required"`
 
-	WorkDayID uint
-	WorkDay   WorkDay `gorm:"foreignKey:WorkDayID"`
+	CompanyID uint    `json:"company_id" valid:"required~CompanyID is required"`
+	Company   Company `gorm:"foreignKey:CompanyID" valid:"-"`
 
-	WorkModeID uint
-	WorkMode   WorkMode `gorm:"foreignKey:WorkModeID"`
+	JobTypeID uint    `json:"job_type_id" valid:"required~JobTypeID is required"`
+	JobType   JobType `gorm:"foreignKey:JobTypeID" valid:"-"`
 
-	StatusPostID uint
-	StatusPost   StatusPost `gorm:"foreignKey:StatusPostID"`
+	StipendID uint    `json:"stipend_id" valid:"required~StipendID is required"`
+	Stipend   Stipend `gorm:"foreignKey:StipendID" valid:"-"`
 
-	AdminID uint
-	Admin   Admin `gorm:"foreignKey:AdminID"`
+	WorkDayID uint    `json:"work_day_id" valid:"required~WorkDayID is required"`
+	WorkDay   WorkDay `gorm:"foreignKey:WorkDayID" valid:"-"`
 
-	Benefits []Benefit `gorm:"many2many:intership_post_benefits;" json:"benefits"`
+	WorkModeID uint     `json:"work_mode_id" valid:"required~WorkModeID is required"`
+	WorkMode   WorkMode `gorm:"foreignKey:WorkModeID" valid:"-"`
 
-	Applications []Application `gorm:"foreignKey:IntershipPostID"`
+	StatusPostID uint       `json:"status_post_id" valid:"required~StatusPostID is required"`
+	StatusPost   StatusPost `gorm:"foreignKey:StatusPostID" valid:"-"`
 
-	CompanyRequiredSkills []CompanyRequiredSkill `gorm:"foreignKey:IntershipPostID" json:"company_required_skills"`
+	AdminID uint  `json:"admin_id" valid:"required~AdminID is required"`
+	Admin   Admin `gorm:"foreignKey:AdminID" valid:"-"`
+
+	Benefits              []Benefit              `gorm:"many2many:intership_post_benefits;" json:"benefits" valid:"-"`
+	Applications          []Application          `gorm:"foreignKey:IntershipPostID" valid:"-"`
+	CompanyRequiredSkills []CompanyRequiredSkill `gorm:"foreignKey:IntershipPostID" json:"company_required_skills" valid:"-"`
 }

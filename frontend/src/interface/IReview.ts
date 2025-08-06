@@ -19,4 +19,5 @@ export interface ReviewPayload {
   comment: string;
   StudentID: number;
   CompanyID: number;
+  tags?: Tag[]; 
 }
