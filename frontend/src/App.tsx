@@ -29,6 +29,8 @@ import CreateInterviewAppointment from "../src/pages/company/appointment/Appoint
 import ProtectProfile from "./components/ProtectedProfile";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
+import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
+import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
 
 
 function App() {
@@ -89,6 +91,17 @@ function App() {
                   <CompanyProfile />
                 </CheckUser>
               </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/company-profile/:id"
+            element={
+                  <CompanyProfileView />
+            }
+          />           <Route
+            path="/review"
+            element={
+                  <CompanyReviewsSection />
             }
           />
           {/* <Route

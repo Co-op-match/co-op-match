@@ -76,6 +76,7 @@ func SetupDatabase() {
 		&entity.Postcode{},
 		&entity.StatusVerify{},
 		&entity.Tag{},
+		&entity.ReviewLike{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -840,7 +841,7 @@ func createSeedData(db *gorm.DB) {
 		{Rating: 5, Comment: "มีการอบรมและโค้ชตลอดฝึกงาน ได้ทำงานจริงแบบเต็มที่", Like: 13, CreatedAt: time.Date(2024, 1, 10, 14, 0, 0, 0, time.UTC), StudentID: 4, CompanyID: 1},
 		{Rating: 2, Comment: "ไม่มีคนดูแลชัดเจน ต้องหางานทำเอง", Like: 2, CreatedAt: time.Date(2023, 12, 15, 13, 0, 0, 0, time.UTC), StudentID: 5, CompanyID: 1},
 		{Rating: 4, Comment: "ได้ใช้เทคโนโลยีใหม่ๆ และเรียนรู้การทำงานเป็นทีม", Like: 9, CreatedAt: time.Date(2023, 12, 1, 15, 30, 0, 0, time.UTC), StudentID: 6, CompanyID: 1},
-		{Rating: 1, Comment: "งานไม่ตรงกับสายที่เรียน ไม่มีการประเมินผล", Like: 1, CreatedAt: time.Date(2023, 11, 10, 16, 0, 0, 0, time.UTC), StudentID: 7, CompanyID: 1},
+		{Rating: 1, Comment: "งานไม่ตรงกับสายที่เรียน ไม่มีการประเมินผล", Like: 1, CreatedAt: time.Now(), StudentID: 7, CompanyID: 1},
 	}
 
 	for _, review := range reviews {

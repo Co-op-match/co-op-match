@@ -13,6 +13,7 @@ import type { CompanyInterface } from "../../interfaces/Company";
 import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
+import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -258,6 +259,14 @@ await axios.post(`${apiUrl}/company`, data, {
 async function GetCompanyByUserId(user_id: number): Promise<CompanyInterface> {
   try {
     const res = await axios.get<CompanyInterface>(`${apiUrl}/company/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function GetCompanyId(id: number): Promise<CompanyInterface> {
+  try {
+    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/${id}`, requestOptions);
     return res.data;
   } catch (e: any) {
     throw e.response || e;
@@ -531,8 +540,24 @@ async function GetRwviewCompanyByUserId(user_id: number) {
     .then((res) => res)
     .then((res) => res.data);
 }
-
-
+export async function LikeReview(data: LikeReviewInput) {
+  return await axios
+    .post(`${apiUrl}/review/like`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function UnlikeReview(data: { user_id: number; review_id: number }) {
+  return await axios
+    .post(`${apiUrl}/review/unlike`, data, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
+export async function GetLikedReviews(userId: number) {
+  return await axios
+    .get(`${apiUrl}/review/liked/${userId}`, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
 export async function Logout(email: string) {
   try {
     const response = await axios.post(
@@ -652,6 +677,7 @@ export {
   GetEventsCompanyByUserId,
   GetRwviewCompanyByUserId,
   UpdateCompanyContact,
-  UpdateCompanyLogo
+  UpdateCompanyLogo,
+  GetCompanyId
 
 };

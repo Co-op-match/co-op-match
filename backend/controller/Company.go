@@ -23,6 +23,11 @@ func GetAllCompany(c *gin.Context) {
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
+		Preload("Address").
+		Preload("Address.Postcode").
+		Preload("Address.Province").
+		Preload("Address.SubDistrict").
+		Preload("Address.District").
 		Preload("Reviews").
 		Find(&company).Error
 
@@ -45,6 +50,11 @@ func GetCompanyByID(c *gin.Context) {
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
+		Preload("Address").
+		Preload("Address.Postcode").
+		Preload("Address.Province").
+		Preload("Address.SubDistrict").
+		Preload("Address.District").
 		Preload("Reviews").
 		First(&company, id).Error; err != nil {
 
@@ -179,7 +189,6 @@ func UpdateCompanyLogoByUserID(c *gin.Context) {
 	})
 }
 
-
 func GetCompanyByUserId(c *gin.Context) {
 	userID := c.Param("user_id")
 
@@ -241,7 +250,7 @@ func CreateSendVerify(c *gin.Context) {
 	ext := filepath.Ext(file.Filename)
 	newFileName := fmt.Sprintf("verify_%d_%d%s", uid, time.Now().Unix(), ext)
 	filePath := filepath.Join("public/uploads/verifyDocument", newFileName)
-	filePath = strings.ReplaceAll(filePath, "\\", "/") 
+	filePath = strings.ReplaceAll(filePath, "\\", "/")
 
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
@@ -263,4 +272,3 @@ func CreateSendVerify(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": verify})
 }
-
