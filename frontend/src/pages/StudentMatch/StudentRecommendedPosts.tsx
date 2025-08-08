@@ -33,8 +33,6 @@ import {
   StarOutlined
 } from '@ant-design/icons';
 import { GetLikedPostsByStudentID, GetRecommendedPosts,GetStudentByUserId,LikePost,DeleteLikedPost } from '../../services/https';
-const { Title, Text } = Typography;
-import { GetRecommendedPosts,GetStudentByUserId } from '../../services/https';
 import CoopMatchHeaderDefault from '../component/CoopMatchHeaderDefault';
 const { Title, Text, Paragraph } = Typography;
 import type { MatchResult } from '../../interfaces/MatchResult';
