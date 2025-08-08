@@ -527,13 +527,15 @@ const onEditSection = (section: "contact" | "address") => {
                         <Text style={{ lineHeight: '1.6', color: '#333' }}>{item.comment}</Text>
                       </div>
 
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
-                        {item.tags.map((tag, index) => (
-                          <Tag key={index} color="green" style={{ fontSize: '11px' }}>
-                            {tag}
-                          </Tag>
-                        ))}
-                      </div>
+// ตอน render
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                      {(item.tags ?? []).map((tag, index) => (
+                        <Tag key={index} color="green" style={{ fontSize: '11px' }}>
+                          {tag}
+                        </Tag>
+                      ))}
+                    </div>
+
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#666' }}>
                         <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
