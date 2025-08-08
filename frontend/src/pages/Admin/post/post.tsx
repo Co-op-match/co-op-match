@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Table, Space, Tag, Input, message, Row, Col, Typography, Layout, Tabs, Empty } from "antd";
+import { Card, Table, Space, Tag, Input, Row, Col, Typography, Layout, Tabs, Empty, message } from "antd";
 import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 
@@ -32,7 +32,8 @@ const getStatusTabs = ({ activeTab, onChange }: { activeTab: string; onChange: (
 
 const ManagePostsPage = () => {
   const navigate = useNavigate();
-
+  const [messageApi, contextHolder] = message.useMessage();
+  
   const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<IntershipPostInterface[]>(
     []
@@ -68,7 +69,7 @@ const ManagePostsPage = () => {
       setPosts(res_post.data);
       setStatus(res_status);
     } catch (error) {
-      message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
+      messageApi.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
     } finally {
       setLoading(false);
     }
@@ -352,9 +353,10 @@ const ManagePostsPage = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
+    <Layout >
+      {contextHolder}
       <AdminHeader />
-      <Layout style={{ margin: "2rem" }}>
+      <Layout className="adminpage-layout" >
         <div className="adminpost-header-box">
           <Row justify="space-between" align="middle">
             <Col>

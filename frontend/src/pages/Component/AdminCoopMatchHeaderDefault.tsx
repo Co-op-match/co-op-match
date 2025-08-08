@@ -19,6 +19,7 @@ import {
   FileTextOutlined,
   MenuOutlined,
   LogoutOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -54,6 +55,11 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   }, []);
 
   const handleMenuClick = ({ key }: { key: string }) => {
+    if (key === "logout") {
+      handleLogout();
+      return;
+    }
+
     if (key === "users") return;
     navigate(`/admin/${key}`);
     setDrawerVisible(false); // Close drawer on mobile after navigation
@@ -61,6 +67,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
   const handleLogout = () => {
     localStorage.clear();
+    
     navigate("/sign-in");
     setDrawerVisible(false);
   };
@@ -70,7 +77,9 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "dashboard",
       "post",
       "manage-posts",
+      "verify",
       "notifications",
+      "analysis",
       "settings",
       "students",
       "companies",
@@ -126,6 +135,16 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       key: "manage-posts",
       icon: <FileTextOutlined />,
       label: "จัดการ Post",
+    },
+    {
+      key: "verify",
+      icon: <CheckCircleOutlined />,
+      label: isMobile ? "ตรวจสอบ" : "ตรวจสอบการรับรอง",
+    },
+    {
+      key: "analysis",
+      icon: <FileTextOutlined />,
+      label: isMobile ? "วิเคราะห์" : "การวิเคราะห์",
     },
     {
       key: "notifications",

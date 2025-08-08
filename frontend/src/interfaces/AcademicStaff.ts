@@ -14,11 +14,14 @@ export interface AcademicStaffInterface {
 
   user_id: number;
   address_id: number;
-  admin_id: number;
+  AdminID: number;
   gender_id: number;
 
-  user?: UserInterface;
-  address?: AddressInterface;
-  admin?: AdminInterface;
-  gender?: GenderInterface;
+  first_name?: string;
+  last_name?: string;
+
+  User?: UserInterface;
+  Address?: AddressInterface;
+  Admin?: AdminInterface;
+  Gender?: GenderInterface;
 }
