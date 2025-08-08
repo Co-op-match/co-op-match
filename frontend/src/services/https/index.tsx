@@ -17,7 +17,10 @@ import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
+axios.defaults.withCredentials = true;
+
 const requestOptions = {
+   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Authorization: `${Bearer} ${Authorization}`,
@@ -683,6 +686,67 @@ export async function GetPassedApplicationsByStudentID(studentId: number) {
       return [];
     });
 }
+// ✅ สร้างห้องแชท (หรือคืนห้องเดิมถ้ามี)
+export async function CreateChatRoom(user1_id: number, user2_id: number) {
+  try {
+    const res = await axios.post(
+      `${apiUrl}/chat/room`,
+      { user1_id, user2_id },
+      requestOptions
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+
+// ✅ ดึงข้อความทั้งหมดของห้องแชท
+export async function GetMessagesByRoomId(roomId: number) {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/chat/messages/${roomId}`,
+      requestOptions
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+
+// ✅ อัปเดตข้อความว่าอ่านแล้ว
+export async function MarkMessagesAsRead(roomId: number, userId: number) {
+  try {
+    const res = await axios.patch(
+      `${apiUrl}/chat/messages/${roomId}/read`,
+      null,
+      {
+        params: { user_id: userId },
+        ...requestOptions,
+      }
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+
+// ✅ ดึงห้องแชททั้งหมดของผู้ใช้
+export async function GetChatRoomsByUserId(userId: number) {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/chat/rooms/${userId}`,
+      requestOptions
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+export function CreateWebSocketConnection(roomId: number, userId: number): WebSocket {
+  const wsUrl = apiUrl.replace(/^http/, "ws");
+  return new WebSocket(`${wsUrl}/chat/ws?room_id=${roomId}&user_id=${userId}`);
+}
+
 
 
 export {

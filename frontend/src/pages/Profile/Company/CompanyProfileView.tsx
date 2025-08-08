@@ -5,16 +5,20 @@ import {
   Card,
   Descriptions,
   Badge,
+  Button,
+  Tooltip,
 } from "antd";
 import { 
   EnvironmentOutlined, 
-  UserOutlined, 
+  MessageOutlined, 
+  UserOutlined,
+  WechatOutlined, 
 } from "@ant-design/icons";
-import { GetCompanyId ,GetVerifyByUserId} from "../../../services/https";
+import { CreateChatRoom, GetCompanyId ,GetVerifyByUserId} from "../../../services/https";
 import CompanyHeader from "../../Component/CompanyHeader";
 import type { CompanyInterface } from "../../../interfaces/Company";
 import "./CompanyProfileView.css";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import CompanyReviews from "./StudentReviews";
 import "./CompanyProfileView.css";
 import CompanyJobList from "./CompanyJobList";
@@ -26,6 +30,8 @@ const { Content } = Layout;
 const CompanyProfileview: React.FC = () => {
   const [company, setCompany] = useState<CompanyInterface | undefined>(undefined);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
+  const [chatHovered, setChatHovered] = useState(false);
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
     const companyId = Number(id); 
 
@@ -51,6 +57,28 @@ const CompanyProfileview: React.FC = () => {
 
     loadCompany();
   }, []);
+  
+const handleChatClick = async () => {
+  const user1Id = Number(localStorage.getItem("id"));
+  const user2Id = company?.user_id;
+
+  if (!user1Id || !user2Id) return;
+
+  const res = await CreateChatRoom(user1Id, user2Id);
+
+  if (res.status === 200 || res.status === 201) {
+    const roomId = res.data.room_id;
+    console.log("✅ สร้างห้องสำเร็จ:", roomId);
+    navigate(`/chat/${roomId}/${user1Id}`);
+  } else if (res.status === 409) {
+    const roomId = res.data.room_id;
+    console.log("⚠️ ห้องมีอยู่แล้ว:", roomId);
+    navigate(`/chat/${roomId}/${user1Id}`);
+  } else {
+    console.error("❌ ไม่สามารถสร้างห้องแชทได้:", res);
+  }
+};
+
 
   return (
     <Layout>
@@ -130,8 +158,24 @@ const CompanyProfileview: React.FC = () => {
         <CompanyJobList  companyId={companyId} />
       </div>
         </Content>
+<div className="chat-floating-wrapper">
+  <Tooltip title="แชทกับบริษัท" placement="left">
+    <Button
+      type="primary"
+      shape="circle"
+      size="large"
+      icon={chatHovered ? <WechatOutlined /> : <MessageOutlined />}
+      onClick={handleChatClick}
+      onMouseEnter={() => setChatHovered(true)}
+      onMouseLeave={() => setChatHovered(false)}
+      className={`chat-floating-button ${chatHovered ? "hovered" : ""}`}
+    />
+  </Tooltip>
+</div>
       </Layout>
+
     </Layout>
+    
   );
 };
 

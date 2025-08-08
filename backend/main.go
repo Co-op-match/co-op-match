@@ -17,10 +17,12 @@ import (
 const PORT = "8000"
 
 func main() {
+	controller.InitChatHub()
 	config.ConnectionDB()
 	config.SetupDatabase()
 
 	r := gin.Default()
+	
 	r.Use(CORSMiddleware())
 	r.Static("/uploads", "./public/uploads")
 
@@ -65,6 +67,7 @@ func main() {
 	r.Static("/public", "./public")
 
 	r.POST("/applications/:id", controller.CreateApplication)
+	r.GET("/chat/ws", controller.ChatWebSocket)
 
 	// Protected Routes
 	router := r.Group("/")
@@ -136,8 +139,22 @@ func main() {
 
 		chatGroup := router.Group("/chat")
 		{
+			// 🔄 สร้างห้องแชท
 			chatGroup.POST("/room", controller.CreateChatRoom)
+
+			// 📩 ดึงข้อความย้อนหลัง
+			chatGroup.GET("/messages/:room_id", controller.GetMessagesByChatRoomID)
+
+			// ✅ อัปเดตข้อความว่าอ่านแล้ว
+			chatGroup.PATCH("/messages/:room_id/read", controller.MarkMessagesAsRead)
+
+			// 📋 ดึงห้องแชททั้งหมดของ user
+			chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
+
+			// 🔌 WebSocket เชื่อมต่อ
+			// chatGroup.GET("/ws", controller.ChatWebSocket)
 		}
+
 
 		notificationGroup := router.Group("/notification")
 		{
@@ -202,7 +219,7 @@ func main() {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
@@ -215,3 +232,17 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+// func CORSMiddleware() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // ✅ ชี้ domain React
+// 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")             // ✅ สำคัญ
+// 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+// 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
+
+// 		if c.Request.Method == "OPTIONS" {
+// 			c.AbortWithStatus(204)
+// 			return
+// 		}
+// 		c.Next()
+// 	}
+// }

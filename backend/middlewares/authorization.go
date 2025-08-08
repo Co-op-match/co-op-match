@@ -16,7 +16,28 @@ var HashKey = []byte("very-secret")
 var BlockKey = []byte("a-lot-secret1234")
 
 // Authorization เป็นฟังก์ชั่นตรวจเช็ค Cookie
+func AuthorizeWithCookie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStr, err := c.Cookie("auth_token")
+		if err != nil || tokenStr == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing auth_token cookie"})
+			return
+		}
 
+		jwtWrapper := services.JwtWrapper{
+			SecretKey: "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
+			Issuer:    "AuthService",
+		}
+
+		_, err = jwtWrapper.ValidateToken(tokenStr)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		c.Next()
+	}
+}
 func Authorizes() gin.HandlerFunc {
 
 	return func(c *gin.Context) {

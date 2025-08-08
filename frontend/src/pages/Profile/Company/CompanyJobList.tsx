@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { GetPostByCompanyId } from '../../../services/https/post';
 import type { IntershipPostInterface } from '../../../interfaces/IntershipPost';
 import { Row, Col, Empty, Spin } from 'antd';
-import JobCard from './jobview';
+import JobCard from './JobView';
 import "./StudentReviews.css";
 import { Briefcase } from 'lucide-react';
 
