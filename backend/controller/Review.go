@@ -135,11 +135,12 @@ func GetReviewsByUserID(c *gin.Context) {
 		return
 	}
 
-	// Step 2: ดึงรีวิวของบริษัทนั้น พร้อม preload ข้อมูล Student
+	// Step 2: ดึงรีวิวของบริษัทนั้น พร้อม preload Student, ProfileImage, Tags
 	var reviews []entity.Review
 	if err := config.DB().
 		Preload("Student").
 		Preload("Student.User.ProfileImage").
+		Preload("Tags").
 		Where("company_id = ?", company.ID).
 		Order("created_at DESC").
 		Find(&reviews).Error; err != nil {
@@ -159,7 +160,13 @@ func GetReviewsByUserID(c *gin.Context) {
 			Find(&apps).Error
 
 		if err != nil || len(apps) == 0 || apps[0].IntershipPost.ID == 0 {
-			continue // ❌ ไม่มี Application ที่ผ่าน → ข้ามรีวิวนี้
+			continue
+		}
+
+		// แปลง []*Tag เป็น []string
+		var tagNames []string
+		for _, tag := range r.Tags {
+			tagNames = append(tagNames, tag.Name)
 		}
 
 		var imageURL string
@@ -174,15 +181,15 @@ func GetReviewsByUserID(c *gin.Context) {
 			Comment:      r.Comment,
 			Date:         r.CreatedAt,
 			Position:     apps[0].IntershipPost.PostName,
-			Tags:         []string{"ได้เรียนรู้งานจริง", "พี่ๆ ใจดี"},
+			Tags:         tagNames,
 			Helpful:      int(r.Like),
 			ProfileImage: imageURL,
 		})
 	}
 
-	// Step 4: ส่งกลับ frontend
 	c.JSON(http.StatusOK, gin.H{"data": response})
 }
+
 
 
 // ✅ กดไลค์รีวิว (ถ้ายังไม่เคย)
