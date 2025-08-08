@@ -7,6 +7,7 @@ import (
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
+	"co-op-match.com/co-op-match/controller/analysis"
 	"co-op-match.com/co-op-match/controller/role"
 	"co-op-match.com/co-op-match/controller/searchjob"
 	"co-op-match.com/co-op-match/controller/users"
@@ -16,10 +17,12 @@ import (
 const PORT = "8000"
 
 func main() {
+	controller.InitChatHub()
 	config.ConnectionDB()
 	config.SetupDatabase()
 
 	r := gin.Default()
+	
 	r.Use(CORSMiddleware())
 	r.Static("/uploads", "./public/uploads")
 
@@ -52,6 +55,10 @@ func main() {
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication)
 	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
+	r.GET("/reviews/:user_id", controller.GetReviewsByUserID)
+	r.POST("/review/like", controller.LikeReview)
+	r.GET("/review/liked/:user_id", controller.GetLikedReviews)
+	r.POST("/review/unlike", controller.UnlikeReview)
 
 	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
@@ -59,10 +66,8 @@ func main() {
 
 	r.Static("/public", "./public")
 
-	// ✅ ย้ายมานอก group เพื่อไม่ใช้ middlewares.Authorizes()
 	r.POST("/applications/:id", controller.CreateApplication)
-
-	r.PUT("/posts/update-status", controller.UpdateStatusPost)
+	r.GET("/chat/ws", controller.ChatWebSocket)
 
 	// Protected Routes
 	router := r.Group("/")
@@ -75,6 +80,7 @@ func main() {
 		router.POST("/liked-post", controller.LikePost)
 		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
 		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
+
 
 		studentGroup := router.Group("/students")
 		{
@@ -127,10 +133,33 @@ func main() {
 			userGroup.GET("/image/:id", controller.GetProfileImageByUserID)
 		}
 
+		reviewGroup := router.Group("/reviews")
+		{
+			reviewGroup.POST("", controller.CreateReview)
+			reviewGroup.GET("/company/:company_id", controller.GetReviewsByCompanyID)
+			reviewGroup.GET("/student/:student_id", controller.GetReviewsByStudentID)
+			reviewGroup.GET("/application/passed/student/:id", controller.GetPassedApplicationsByStudentID)
+			reviewGroup.GET("/tags", controller.GetAllTags)
+		}
+
 		chatGroup := router.Group("/chat")
 		{
+			// 🔄 สร้างห้องแชท
 			chatGroup.POST("/room", controller.CreateChatRoom)
+
+			// 📩 ดึงข้อความย้อนหลัง
+			chatGroup.GET("/messages/:room_id", controller.GetMessagesByChatRoomID)
+
+			// ✅ อัปเดตข้อความว่าอ่านแล้ว
+			chatGroup.PATCH("/messages/:room_id/read", controller.MarkMessagesAsRead)
+
+			// 📋 ดึงห้องแชททั้งหมดของ user
+			chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
+
+			// 🔌 WebSocket เชื่อมต่อ
+			// chatGroup.GET("/ws", controller.ChatWebSocket)
 		}
+
 
 		notificationGroup := router.Group("/notification")
 		{
@@ -138,31 +167,52 @@ func main() {
 			notificationGroup.GET("/user/:userID", controller.GetNotificationsByUser)
 			notificationGroup.PUT("/:id/read", controller.MarkNotificationAsRead)
 			notificationGroup.POST("/email/verify-status/:userID", controller.SendVerifyStatusEmail)
-			notificationGroup.GET("/calendar/user/:user_id", controller.GetCalendarEventsByUserID)
+			notificationGroup.GET("/calendar/student/:user_id", controller.GetCalendarEventsStudentByUserID)
+			notificationGroup.GET("/calendar/company/:user_id", controller.GetCalendarEventsCompanyByUserID)
 		}
 
 		companyGroup := router.Group("/company")
 		{
 			companyGroup.GET("", controller.GetAllCompany)
+			companyGroup.GET("/:id", controller.GetCompanyByID)
 			companyGroup.POST("", controller.CreateCompany)
+			companyGroup.PUT("/logo/:user_id", controller.UpdateCompanyLogoByUserID)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
+			companyGroup.POST("/verify/:user_id", controller.CreateSendVerify)
 		}
 
 		contactGroup := router.Group("/contact")
 		{
 			contactGroup.POST("", controller.CreateContact)
 			contactGroup.GET("/:user_id", controller.GetContactByUserId)
+			contactGroup.PUT("/:user_id", controller.UpdateContactByUserID)
 		}
-	}
 
-	adminGroup := r.Group("/admin")
-	{
-		adminGroup.GET("/all", controller.GetAllAdmin)
-		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
-		adminGroup.GET("/:id", controller.GetAdminByID)
-		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
-		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
+		adminGroup := r.Group("/admin")
+		{
+			adminGroup.GET("/all", controller.GetAllAdmin)
+			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
+			adminGroup.GET("/:id", controller.GetAdminByID)
+			adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+			adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
+		}
+		analysisGroup := r.Group("/analysis")
+		{
+			analysisGroup.GET("/dashboard-summary", analysis.GetAdminStatusSummaries)
+			analysisGroup.GET("/dashboard-overview", analysis.GetAdminDashboardOverview)
+			analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
+			analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
+			analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
+		}
+		verifyGroup := r.Group("/verify")
+		{
+			verifyGroup.GET("", controller.GetAllVerifications)
+			verifyGroup.GET("/:id", controller.GetVerificationByID)
+			verifyGroup.GET("/status", controller.GetAllStatusVerify)
+			verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
+			verifyGroup.PUT("/update-status-posts", controller.UpdateStatusPost)
+		}
 	}
 
 	r.GET("/", func(c *gin.Context) {
@@ -174,7 +224,7 @@ func main() {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
@@ -187,3 +237,17 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+// func CORSMiddleware() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // ✅ ชี้ domain React
+// 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")             // ✅ สำคัญ
+// 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+// 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
+
+// 		if c.Request.Method == "OPTIONS" {
+// 			c.AbortWithStatus(204)
+// 			return
+// 		}
+// 		c.Next()
+// 	}
+// }

@@ -1,0 +1,738 @@
+/* ===========================================
+   REVIEWS SECTION STYLES
+   =========================================== */
+.post-section {
+  border-radius: 12px;
+  padding: 20px;
+  background:  #f8f9ff;
+  border: 1px solid rgba(13, 71, 161, 0.08);
+  box-shadow:
+    0 4px 16px rgba(13, 71, 161, 0.10),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  margin: 0 20px;
+}
+.animation-scroll {
+  animation: fade-in1  linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 80%;
+}
+@keyframes fade-in1 {
+    from{
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    to{
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+/* Main Reviews Section */
+.reviews-section {
+  border-radius: 12px;
+  padding: 20px;
+  background:  #f8f9ff;
+  border: 1px solid rgba(13, 71, 161, 0.08);
+  box-shadow:
+    0 4px 16px rgba(13, 71, 161, 0.10),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  margin: 0 20px;
+}
+.section-post-title {
+  display: flex;              /* ⬅️ จัดให้ inline อยู่แถวเดียว */
+  align-items: center;        /* ⬅️ ตรงกลางแนวตั้ง */
+  justify-content: center;    /* ⬅️ ตรงกลางแนวนอน */
+  gap: 8px;
+
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 40px;
+  margin-top: 30px;
+  text-align: center;
+  position: relative;
+  animation: pulseTextShadow 2s ease-in-out infinite;
+    animation: fade-in1  linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 80%;
+}
+
+.section-post-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 6px;
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+    border-radius: 3px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.section-post-title svg {
+    filter: drop-shadow(0 4px 8px rgba(0, 47, 255, 0.3));
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes pulseTextShadow1 {
+  0% {
+    text-shadow: 0 0 6px rgba(64, 156, 255, 0.4),
+                 0 0 12px rgba(64, 156, 255, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(120, 200, 255, 0.8),
+                 0 0 24px rgba(33, 150, 243, 0.9),
+                 0 0 32px rgba(33, 150, 243, 0.6);
+  }
+  100% {
+    text-shadow: 0 0 6px rgba(64, 156, 255, 0.4),
+                 0 0 12px rgba(64, 156, 255, 0.4);
+  }
+}
+
+@keyframes pulseTextShadowYellow {
+  0% {
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.4),
+                 0 0 12px rgba(255, 179, 0, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.8),
+                 0 0 24px rgba(255, 179, 0, 0.9),
+                 0 0 36px rgba(255, 193, 7, 0.8);
+  }
+  100% {
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.4),
+                 0 0 12px rgba(255, 179, 0, 0.3);
+  }
+}
+
+
+/* Section Title with Underline */
+.section-title {
+    margin-bottom: 50px;
+    margin-top: 10px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    position: relative;
+}
+.section-title svg {
+    filter: drop-shadow(0 4px 8px rgba(255, 217, 0, 0.3));
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(5deg); }
+}
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 6px;
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+    border-radius: 3px;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+
+/* ===========================================
+   REVIEWS OVERVIEW SECTION
+   =========================================== */
+
+.reviews-overview {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+/* Rating Summary Card */
+.rating-summary {
+    text-align: center;
+    background: white;
+    padding: 40px 30px;
+    border-radius: 25px;
+    box-shadow: 
+        0 20px 60px rgba(0, 162, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.rating-summary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #2196F3, transparent);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -50%; }
+    100% { left: 100%; }
+}
+
+.avg-rating {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #2196F3;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+}
+
+.stars {
+    font-size: 1.8rem;
+    color: #ffd700;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
+}
+
+.rating-count {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Rating Breakdown Card */
+.rating-breakdown {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.star-label {
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.star-label svg {
+    filter: drop-shadow(0 1px 2px rgba(255, 215, 0, 0.3));
+}
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ffb300);
+    border-radius: 4px;
+    transition: width 0.8s ease;
+}
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    border-radius: 8px 8px 0 0;
+}
+
+.count {
+    min-width: 30px;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* ===========================================
+   REVIEW FILTERS
+   =========================================== */
+
+.review-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filter-btn {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    position: relative;
+    overflow: hidden;
+}
+.filter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 140, 255, 0.4), transparent);
+    transition: left 0.5s ease;
+}
+.filter-btn:hover::before {
+    left: 100%;
+}
+.filter-btn:hover {
+    border-color: #2196F3;
+    color: #2196F3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+    color: white;
+    border-color: #2196F3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(33, 150, 243, 0.3);
+}
+.filter-btn.active::before {
+    display: none;
+}
+
+/* ===========================================
+   REVIEWS CAROUSEL
+   =========================================== */
+
+.reviews-carousel-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.reviews-carousel {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 20px 0;
+}
+
+/* Review Card Styles */
+.review-card {
+  display: flex; /* 👈 จำเป็น */
+  flex-direction: column; /* 👈 จัดแนวจากบนลงล่าง */
+  justify-content: space-between; /* 👈 ดัน footer ไปอยู่ล่าง */
+  
+  min-width: 350px;
+  max-width: 350px;
+  flex-shrink: 0;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 183, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  min-height: 280px; /* ให้ความสูงเท่ากันทุกกล่อง */
+}
+
+.review-content {
+  flex-grow: 1; /* 👈 ดันให้ content เต็มก่อน แล้ว footer จะอยู่ล่าง */
+}
+
+.review-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.review-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+.review-card:hover::before {
+    transform: scaleX(1);
+}
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 183, 255, 0.233);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.reviewer-name {
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1rem;
+}
+
+.review-date {
+    color: #8a8a8a;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: rgba(138, 138, 138, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.star-icon {
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+  margin-right: 1px;
+}
+
+.star-icon.filled {
+  color: #ffd700;
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
+}
+
+.star-icon.empty {
+  color: #ccc;
+}
+
+.review-text {
+    color: #444;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+/* Review Avatar */
+.review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(33, 150, 243, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.review-card:hover .review-avatar {
+    border-color: rgba(33, 150, 243, 0.3);
+    transform: scale(1.05);
+}
+
+/* Review Tags */
+.review-tags {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.review-tag {
+    background: linear-gradient(135deg, #e6f7ff, #bae7ff);
+    color: #1565C0;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(21, 101, 192, 0.2);
+    transition: all 0.2s ease;
+}
+.review-tag:hover {
+    background: linear-gradient(135deg, #bae7ff, #91d5ff);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+}
+/* Like Button */
+
+/* Like Button - Heart Style with Number Inside */
+.like-button {
+    position: relative;
+    width: 45px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.like-button svg {
+    font-size: 2.2rem;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.like-button:not(.liked) svg {
+    color: #ddd;
+}
+
+.like-button.liked svg {
+    color: #ff6b6b;
+    filter: drop-shadow(0 2px 8px rgba(255, 107, 107, 0.4));
+    animation: heartPulse 1.5s ease-in-out infinite;
+}
+
+.like-button:hover:not(.liked) svg {
+    color: #ffb3b3;
+    transform: scale(1.05);
+    filter: drop-shadow(0 3px 6px rgba(255, 179, 179, 0.3));
+}
+
+.like-button:hover.liked svg {
+    transform: scale(1.08);
+    filter: drop-shadow(0 4px 12px rgba(255, 107, 107, 0.5));
+}
+
+/* Number inside heart */
+.like-button::after {
+    content: attr(data-count);
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.like-button:not(.liked)::after {
+    color: #888;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.like-button.liked::after {
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    animation: numberPulse 1.5s ease-in-out infinite;
+}
+
+.like-button:hover::after {
+    transform: translate(-50%, -50%) scale(1.05);
+}
+
+/* Click animation */
+.like-button.liked {
+    animation: heartBeat 0.5s ease-in-out;
+}
+
+/* Heart animations */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    15% { transform: scale(1.15); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.08); }
+    60% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+@keyframes numberPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* ===========================================
+   CAROUSEL CONTROLS
+   =========================================== */
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #ffffff, #f8fafe);
+    border: 2px solid rgba(33, 150, 243, 0.2);
+    color: #555;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.1),
+        0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.carousel-btn:hover {
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+    color: white;
+    border-color: #2196F3;
+    transform: translateY(-50%) scale(1.15);
+    box-shadow: 
+        0 15px 40px rgba(33, 150, 243, 0.3),
+        0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: translateY(-50%);
+    background: #f5f5f5;
+}
+
+.carousel-btn:disabled:hover {
+    background: #f5f5f5;
+    color: #ccc;
+    border-color: #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transform: translateY(-50%);
+}
+
+.carousel-btn.prev {
+    left: -30px;
+}
+
+.carousel-btn.next {
+    right: -30px;
+}
+
+/* Carousel Indicators */
+.carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.indicator-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(33, 150, 243, 0.2);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid transparent;
+}
+
+.indicator-dot.active {
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+    transform: scale(1.3);
+    box-shadow: 
+        0 4px 15px rgba(33, 150, 243, 0.4),
+        0 0 0 3px rgba(33, 150, 243, 0.2);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.indicator-dot:hover:not(.active) {
+    background: rgba(33, 150, 243, 0.4);
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+}
+
+
+/* Review Counter */
+.review-counter-horizontal {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+
+.fade-in {
+    animation: fadeInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.review-card {
+    animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+@media (max-width: 768px) {
+    .review-card {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .carousel-btn.prev {
+        left: 5px;
+    }
+
+    .carousel-btn.next {
+        right: 5px;
+    }
+
+    .reviews-overview {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .review-filters {
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+
+    .filter-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}

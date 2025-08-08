@@ -69,7 +69,6 @@ const PostDetails = () => {
     <div className="full-page-background">
       <div style={styles.container}>
 
-
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
@@ -92,15 +91,27 @@ const PostDetails = () => {
               <Badge count="HIRING" style={styles.hiringBadge} />
             </div>
             <div style={styles.companyInfo}>
-              <Title level={2} style={styles.companyName}>
+              <Title
+                level={2}
+                style={{ ...styles.companyName, cursor: "pointer" }}
+                onClick={() => {
+                  const companyId = post?.Company?.ID || post?.Company?.id;
+                  if (companyId) {
+                    navigate(`/company-profile/${companyId}`);
+                  }
+                }}
+              >
                 {post?.Company?.company_name}
               </Title>
               <div style={styles.addressContainer}>
                 <EnvironmentOutlined style={styles.addressIcon} />
                 <Text style={styles.addressText}>
-                  {post?.Company?.Contact?.Address}
+                  {[post?.location_detail, post?.subdistrict, post?.district, post?.province]
+                    .filter(Boolean)
+                    .join(' • ')}
                 </Text>
               </div>
+
             </div>
           </div>
         </Card>
@@ -171,57 +182,63 @@ const PostDetails = () => {
             </Paragraph>
           </Card>
 
-          {/* Work Schedule */}
+          {/* Work Schedule - Updated to match first code style */}
           <Card style={styles.detailCard}>
             <SectionHeader icon={<CalendarOutlined />} title="วัน-เวลาทำงาน" />
-            <div style={styles.scheduleContainer}>
-              <div style={styles.scheduleItem}>
-                <ClockCircleOutlined style={styles.scheduleIcon} />
+            <div style={styles.workScheduleContainer}>
+              <div style={styles.workScheduleItem}>
+                <ClockCircleOutlined style={styles.workScheduleIcon} />
                 <div>
-                  <Text strong>วันทำงาน:</Text><br />
-                  <Text>{post?.WorkDay?.work_day || 'ไม่ระบุ'}</Text>
+                  <Text strong style={styles.workScheduleLabel}>วันทำงาน:</Text>
+                  <Text style={styles.workScheduleValue}>{post?.WorkDay?.work_day || 'จันทร์ - เสาร์'}</Text>
                 </div>
               </div>
-              <div style={styles.scheduleItem}>
-                <CalendarOutlined style={styles.scheduleIcon} />
+              <div style={styles.workScheduleItem}>
+                <CalendarOutlined style={styles.workScheduleIcon} />
                 <div>
-                  <Text strong>รูปแบบงาน:</Text><br />
-                  <Text>{post?.WorkMode?.work_mode || 'ไม่ระบุ'}</Text>
+                  <Text strong style={styles.workScheduleLabel}>รูปแบบงาน:</Text>
+                  <Text style={styles.workScheduleValue}>{post?.WorkMode?.work_mode || 'Remote'}</Text>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Qualifications & Requirements */}
+          {/* Qualifications & Requirements - Updated to match first code style */}
           <Card style={styles.detailCard}>
             <SectionHeader icon={<UserOutlined />} title="คุณสมบัติผู้สมัคร" />
-            <div style={styles.requirementsContainer}>
-              
+            <div style={styles.qualificationsContainer}>
 
+              {/* GPA Requirement */}
               {post?.min_gpa && (
-                <div style={styles.gpaRequirement}>
-                  <StarOutlined style={styles.gpaIcon} />
-                  <Text strong>เกรดขั้นต่ำ: </Text>
-                  <Tag color="blue" style={styles.gpaTag}>{post.min_gpa}</Tag>
+                <div style={styles.qualificationItem}>
+                  <StarOutlined style={styles.qualificationIcon} />
+                  <div style={styles.qualificationContent}>
+                    <Text strong style={styles.qualificationLabel}>เกรดขั้นต่ำ:</Text>
+                    <Tag color="blue" style={styles.gpaTag}>
+                      {Number(post.min_gpa).toFixed(2)}
+                    </Tag>
+                  </div>
+
                 </div>
               )}
 
+              {/* Skills */}
               {post?.company_required_skills && post.company_required_skills.length > 0 && (
-                <div >
-                  <Text strong>ทักษะที่ต้องการ:</Text>
-                  <div >
-                    {post.company_required_skills.map((item: { Skill: { skill_name: any; }; }, index: React.Key | null | undefined) => (
-                      <Tag key={index} color="purple">
-                        {item.Skill?.skill_name || "ไม่ระบุ"}
-
-                      </Tag>
-                    ))}
+                <div style={styles.qualificationItem}>
+                  <div style={styles.skillsSection}>
+                    <Text strong style={styles.qualificationLabel}>ทักษะที่ต้องการ:</Text>
+                    <div style={styles.skillsContainer}>
+                      {post.company_required_skills.map((item: { Skill: { skill_name: any; }; }, index: React.Key | null | undefined) => (
+                        <Tag key={index} color="purple" style={styles.skillTag}>
+                          {item.Skill?.skill_name || "ไม่ระบุ"}
+                        </Tag>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </Card>
-
 
           {/* Benefits */}
           <Card style={styles.detailCard}>
@@ -240,40 +257,69 @@ const PostDetails = () => {
             </div>
           </Card>
 
-
           {/* Contact Info */}
           <Card style={styles.detailCard}>
             <SectionHeader icon={<PhoneOutlined />} title="ติดต่อ" />
             <div style={styles.contactInfo}>
-              {post?.Company?.Contact?.PhoneNumber && (
+              {post?.Company?.Contact?.phone_number && (
                 <div style={styles.contactItem}>
                   <PhoneOutlined style={styles.contactIcon} />
-                  <Text style={styles.contactText}>{post.Company.Contact.PhoneNumber}</Text>
+                  <Text style={styles.contactText}>{post.Company.Contact.phone_number}</Text>
                 </div>
               )}
 
-              {post?.Company?.Contact?.Website && (
+              {post?.Company?.Contact?.email && (
+                <div style={styles.contactItem}>
+                  <MailOutlined style={styles.contactIcon} />
+                  <Text style={styles.contactText}>{post.Company.Contact.email}</Text>
+                </div>
+              )}
+
+              {post?.Company?.Contact?.website && (
                 <div style={styles.contactItem}>
                   <GlobalOutlined style={styles.contactIcon} />
                   <a
-                    href={post.Company.Contact.Website}
+                    href={post.Company.Contact.website}
                     target="_blank"
                     rel="noreferrer"
                     style={styles.contactLink}
                   >
-                    {post.Company.Contact.Website}
+                    {post.Company.Contact.website}
                   </a>
                 </div>
               )}
 
-              {post?.Company?.User?.Email && (
+              {post?.Company?.Contact?.facebook && (
                 <div style={styles.contactItem}>
-                  <MailOutlined style={styles.contactIcon} />
-                  <Text style={styles.contactText}>{post.Company.User.Email}</Text>
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/145/145802.png"
+                    alt="Facebook"
+                    style={{ width: 20, marginRight: 12 }}
+                  />
+                  <a
+                    href={post.Company.Contact.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={styles.contactLink}
+                  >
+                    Facebook
+                  </a>
+                </div>
+              )}
+
+              {post?.Company?.Contact?.line && (
+                <div style={styles.contactItem}>
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/2111/2111532.png"
+                    alt="LINE"
+                    style={{ width: 20, marginRight: 12 }}
+                  />
+                  <Text style={styles.contactText}>{post.Company.Contact.line}</Text>
                 </div>
               )}
             </div>
           </Card>
+
         </div>
 
         {/* Related Jobs */}
@@ -485,18 +531,6 @@ const styles = {
     flex: 1,
   },
 
-  applyButton: {
-    backgroundColor: '#87ceeb',
-    borderColor: '#87ceeb',
-    borderRadius: '8px',
-    height: '48px',
-    padding: '0 32px',
-    fontWeight: 600,
-    fontSize: '16px',
-    boxShadow: '0 4px 12px rgba(135, 206, 235, 0.3)',
-    transition: 'all 0.3s ease',
-  },
-
   quickInfoGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -540,7 +574,7 @@ const styles = {
   detailCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
-    border: '1px solid #b8e6ff',
+    border: '1px solid #87ceeb',
     boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   },
@@ -576,53 +610,98 @@ const styles = {
     margin: 0,
   },
 
-  scheduleContainer: {
+  // Updated Work Schedule styles to match first code
+  workScheduleContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+
+  workScheduleItem: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  workScheduleIcon: {
+    color: '#87ceeb',
+    fontSize: '16px',
+    marginRight: 12,
+    minWidth: '16px',
+  },
+
+  workScheduleLabel: {
+    color: '#333',
+    fontSize: '14px',
+    fontWeight: 600,
+    marginRight: 8,
+  },
+
+  workScheduleValue: {
+    color: '#4a5568',
+    fontSize: '14px',
+  },
+
+  // Updated Qualifications styles to match first code
+  qualificationsContainer: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '16px',
   },
 
-  scheduleItem: {
+  qualificationItem: {
     display: 'flex',
     alignItems: 'flex-start',
-    padding: '12px',
-    backgroundColor: '#f0f7ff',
-    borderRadius: '8px',
-    border: '1px solid #b8e6ff',
   },
 
-  scheduleIcon: {
+  qualificationIcon: {
     color: '#87ceeb',
     fontSize: '16px',
     marginRight: 12,
     marginTop: 2,
+    minWidth: '16px',
   },
 
-  requirementsContainer: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-  },
-
-  gpaRequirement: {
+  qualificationContent: {
     display: 'flex',
     alignItems: 'center',
-    padding: '12px',
-    borderRadius: '8px',
-    border: '1px solid #b8e6ff',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
   },
 
-  gpaIcon: {
-    color: '#87ceeb',
-    fontSize: '16px',
-    marginRight: 8,
+  qualificationLabel: {
+    color: '#333',
+    fontSize: '14px',
+    fontWeight: 600,
   },
 
   gpaTag: {
     backgroundColor: '#87ceeb',
     color: 'white',
     border: 'none',
-    marginLeft: 8,
+    borderRadius: '4px',
+    fontSize: '13px',
+    fontWeight: 500,
+  },
+
+  skillsSection: {
+    width: '100%',
+  },
+
+  skillsContainer: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+    marginTop: '8px',
+  },
+
+  skillTag: {
+    backgroundColor: '#9c27b0',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '12px',
+    fontWeight: 500,
+    padding: '4px 8px',
   },
 
   benefitsContainer: {
@@ -731,18 +810,6 @@ const styles = {
     bottom: 20,
     right: 20,
     zIndex: 1000,
-  },
-
-  floatingApplyButton: {
-    backgroundColor: '#87ceeb',
-    borderColor: '#87ceeb',
-    borderRadius: '50px',
-    height: '56px',
-    padding: '0 32px',
-    fontWeight: 600,
-    fontSize: '16px',
-    boxShadow: '0 8px 24px rgba(135, 206, 235, 0.4)',
-    transition: 'all 0.3s ease',
   },
 };
 

@@ -76,6 +76,17 @@ func SetupDatabase() {
 		&entity.SubDistrict{},
 		&entity.Postcode{},
 		&entity.StatusVerify{},
+		&entity.Tag{},
+		&entity.ReviewLike{},
+		&entity.Analysis{},
+		&entity.AnalysisType{},
+		&entity.LoginLog{},
+		&entity.SkillDemandAnalysis{},
+		&entity.ApplicationStatistics{},
+		&entity.StudentPerformanceAnalysis{},
+		&entity.CompanyReviewStats{},
+		&entity.InterestTrendAnalysis{},
+		&entity.UniversityApplicationAnalysis{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -255,11 +266,31 @@ func createSeedData(db *gorm.DB) {
 
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
-		{AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A", UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B", UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C", UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1},
-		{AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D", UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2},
-		{AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E", UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1},
+		{
+			AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A",
+			FirstName: "สมชาย", LastName: "วิศวกร", Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
+			UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B",
+			FirstName: "สุรีย์", LastName: "เคมี", Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
+			UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
+		},
+		{
+			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C",
+			FirstName: "สมพงษ์", LastName: "การตลาด", Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
+			UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
+		},
+		{
+			AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D",
+			FirstName: "อรทัย", LastName: "ภาษา", Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
+			UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E",
+			FirstName: "ธนพล", LastName: "นิติ", Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
+			UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
+		},
 	}
 	for _, staff := range staffs {
 		db.Unscoped().FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
@@ -452,6 +483,137 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       1,
 			StipendID:       2,
 			JobTypeID:       1,
+			//Benefits: []entity.Benefit{
+				//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			//},
+			WorkDayID: 1,
+			StipendID: 2,
+			JobTypeID: 1,
+		}, {
+			PostName:        "Frontend Developer Intern",
+			PostDescription: "พัฒนา UI ด้วย React และ Ant Design",
+			Quantity:        2,
+			MinGpa:          2.5,
+			CreatedAt:       time.Now().AddDate(0, -2, 0),
+			LocationDetail:  "ตึก 1 ชั้น 2",
+			Subdistrict:     "ปทุมวัน",
+			District:        "ปทุมวัน",
+			Province:        "กรุงเทพมหานคร",
+			CompanyID:       1,
+			JobTypeID:       1,
+			StipendID:       1,
+			WorkDayID:       1,
+			WorkModeID:      1,
+			StatusPostID:    1,
+			AdminID:         1,
+		},
+		{
+			PostName:        "Backend Developer Intern",
+			PostDescription: "พัฒนา API ด้วย Go และ GORM",
+			Quantity:        1,
+			MinGpa:          2.3,
+			CreatedAt:       time.Now().AddDate(0, -2, -3),
+			LocationDetail:  "อาคารซอฟต์แวร์ ชั้น 4",
+			Subdistrict:     "ลาดยาว",
+			District:        "จตุจักร",
+			Province:        "กรุงเทพมหานคร",
+			CompanyID:       1,
+			JobTypeID:       2,
+			StipendID:       2,
+			WorkDayID:       2,
+			WorkModeID:      2,
+			StatusPostID:    1,
+			AdminID:         1,
+		},
+		{
+			PostName:        "Data Analyst Intern",
+			PostDescription: "วิเคราะห์ข้อมูลด้วย Python และ SQL",
+			Quantity:        1,
+			MinGpa:          2.7,
+			CreatedAt:       time.Now().AddDate(0, -1, -10),
+			LocationDetail:  "ศูนย์วิจัยข้อมูล",
+			Subdistrict:     "คลองหนึ่ง",
+			District:        "คลองหลวง",
+			Province:        "ปทุมธานี",
+			CompanyID:       1,
+			JobTypeID:       3,
+			StipendID:       2,
+			WorkDayID:       1,
+			WorkModeID:      3,
+			StatusPostID:    1,
+			AdminID:         1,
+		},
+		{
+			PostName:        "UX/UI Designer Intern",
+			PostDescription: "ออกแบบหน้าจอและปรับปรุงประสบการณ์ผู้ใช้",
+			Quantity:        1,
+			MinGpa:          2.2,
+			CreatedAt:       time.Now().AddDate(0, -1, -5),
+			LocationDetail:  "ฝ่าย UX ชั้น 3",
+			Subdistrict:     "ห้วยขวาง",
+			District:        "ห้วยขวาง",
+			Province:        "กรุงเทพมหานคร",
+			CompanyID:       1,
+			JobTypeID:       4,
+			StipendID:       1,
+			WorkDayID:       2,
+			WorkModeID:      2,
+			StatusPostID:    1,
+			AdminID:         1,
+		},
+		{
+			PostName:        "QA Tester Intern",
+			PostDescription: "ทดสอบระบบและเขียน test case",
+			Quantity:        1,
+			MinGpa:          2.0,
+			CreatedAt:       time.Now().AddDate(0, -1, 0),
+			LocationDetail:  "ฝ่าย QA ชั้น 2",
+			Subdistrict:     "บางซื่อ",
+			District:        "บางซื่อ",
+			Province:        "กรุงเทพมหานคร",
+			CompanyID:       1,
+			JobTypeID:       5,
+			StipendID:       3,
+			WorkDayID:       3,
+			WorkModeID:      1,
+			StatusPostID:    1,
+			AdminID:         1,
+		},
+		{
+			PostName:        "DevOps Intern",
+			PostDescription: "ช่วยดูแลระบบ CI/CD และการ deploy",
+			Quantity:        1,
+			MinGpa:          2.4,
+			CreatedAt:       time.Now().AddDate(0, 0, -10),
+			LocationDetail:  "ชั้น 5 ห้อง server",
+			Subdistrict:     "พระโขนง",
+			District:        "คลองเตย",
+			Province:        "กรุงเทพมหานคร",
+			CompanyID:       1,
+			JobTypeID:       6,
+			StipendID:       2,
+			WorkDayID:       2,
+			WorkModeID:      3,
+			StatusPostID:    1,
+			AdminID:         1,
+		},
+		{
+			PostName:        "System Analyst Intern",
+			PostDescription: "วิเคราะห์ระบบและจัดทำเอกสาร",
+			Quantity:        1,
+			MinGpa:          2.6,
+			CreatedAt:       time.Now().AddDate(0, 0, -3),
+			LocationDetail:  "ห้องประชุมชั้น 6",
+			Subdistrict:     "ดินแดง",
+			District:        "ดินแดง",
+			Province:        "กรุงเทพมหานคร",
+			CompanyID:       1,
+			JobTypeID:       7,
+			StipendID:       3,
+			WorkDayID:       1,
+			WorkModeID:      2,
+			StatusPostID:    1,
+			AdminID:         1,
 		},
 	}
 	// ✅ สร้าง post และผูก benefits แยกต่างหาก
@@ -620,7 +782,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
 			Details:         "ลิงก์ Zoom จะส่งให้ทางอีเมล",
-			Status:          "นัดแล้ว",
 			StudentID:       1,
 			CompanyID:       1,
 		},
@@ -628,7 +789,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(-3 * 24 * time.Hour),
 			Mode:            "ออนไซต์",
 			Details:         "คุณผ่านการสัมภาษณ์เรียบร้อยแล้ว",
-			Status:          "ผ่าน",
 			StudentID:       2,
 			CompanyID:       2,
 		},
@@ -636,7 +796,6 @@ func createSeedData(db *gorm.DB) {
 			AppointmentDate: time.Now().Add(-4 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
 			Details:         "ขอบคุณที่เข้าร่วมสัมภาษณ์",
-			Status:          "ไม่ผ่าน",
 			StudentID:       3,
 			CompanyID:       1,
 		},
@@ -699,6 +858,101 @@ func createSeedData(db *gorm.DB) {
 		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
+
+	reviews := []entity.Review{
+		{Rating: 5, Comment: "ได้เรียนรู้งานจริงจากโปรเจกต์ในบริษัท ทีมงานใจดีและให้คำแนะนำดีมาก", Like: 10, CreatedAt: time.Date(2024, 2, 1, 10, 0, 0, 0, time.UTC), StudentID: 1, CompanyID: 1},
+		{Rating: 4, Comment: "บรรยากาศในการทำงานดี เพื่อนร่วมงานเป็นกันเอง", Like: 7, CreatedAt: time.Date(2024, 2, 3, 11, 30, 0, 0, time.UTC), StudentID: 2, CompanyID: 1},
+		{Rating: 3, Comment: "ได้รับมอบหมายงานน้อย แต่ได้เรียนรู้ระบบงานจริง", Like: 5, CreatedAt: time.Date(2024, 1, 20, 9, 15, 0, 0, time.UTC), StudentID: 3, CompanyID: 1},
+		{Rating: 5, Comment: "มีการอบรมและโค้ชตลอดฝึกงาน ได้ทำงานจริงแบบเต็มที่", Like: 13, CreatedAt: time.Date(2024, 1, 10, 14, 0, 0, 0, time.UTC), StudentID: 4, CompanyID: 1},
+		{Rating: 2, Comment: "ไม่มีคนดูแลชัดเจน ต้องหางานทำเอง", Like: 2, CreatedAt: time.Date(2023, 12, 15, 13, 0, 0, 0, time.UTC), StudentID: 5, CompanyID: 1},
+		{Rating: 4, Comment: "ได้ใช้เทคโนโลยีใหม่ๆ และเรียนรู้การทำงานเป็นทีม", Like: 9, CreatedAt: time.Date(2023, 12, 1, 15, 30, 0, 0, time.UTC), StudentID: 6, CompanyID: 1},
+		{Rating: 1, Comment: "งานไม่ตรงกับสายที่เรียน ไม่มีการประเมินผล", Like: 1, CreatedAt: time.Now(), StudentID: 7, CompanyID: 1},
+	}
+
+	for _, review := range reviews {
+		db.Create(&review)
+	}
+
+	applications := []entity.Application{
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student1.pdf",
+			TranscriptUrl:   "transcript_student1.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -10),
+			CompanyNote:     "นักศึกษามีทักษะตรงตามที่ต้องการ",
+			IntershipPostID: 5,
+			StudentID:       1,
+		},
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student2.pdf",
+			TranscriptUrl:   "transcript_student2.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -9),
+			CompanyNote:     "ผลงานโปรเจกต์น่าสนใจ",
+			IntershipPostID: 6,
+			StudentID:       2,
+		},
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student3.pdf",
+			TranscriptUrl:   "transcript_student3.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -8),
+			CompanyNote:     "มีความสนใจในสายงานนี้สูง",
+			IntershipPostID: 7,
+			StudentID:       3,
+		},
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student4.pdf",
+			TranscriptUrl:   "transcript_student4.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -7),
+			CompanyNote:     "สอบสัมภาษณ์ดีมาก",
+			IntershipPostID: 8,
+			StudentID:       4,
+		},
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student5.pdf",
+			TranscriptUrl:   "transcript_student5.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -6),
+			CompanyNote:     "เข้าใจระบบดี",
+			IntershipPostID: 9,
+			StudentID:       5,
+		},
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student6.pdf",
+			TranscriptUrl:   "transcript_student6.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -5),
+			CompanyNote:     "มีทักษะการสื่อสารที่ดี",
+			IntershipPostID: 10,
+			StudentID:       6,
+		},
+		{
+			Status:          "ผ่าน",
+			ResumeUrl:       "resume_student7.pdf",
+			TranscriptUrl:   "transcript_student7.pdf",
+			SubmitAt:        time.Now().AddDate(0, 0, -4),
+			CompanyNote:     "ทำงานเป็นทีมได้ดี",
+			IntershipPostID: 11,
+			StudentID:       7,
+		},
+	}
+	for _, app := range applications {
+		db.Create(&app)
+	}
+
+	analysisTypes := []entity.AnalysisType{
+		{TypeCode: "application", TypeName: "การสมัคร"},
+		{TypeCode: "review", TypeName: "รีวิวบริษัท"},
+		{TypeCode: "matching", TypeName: "การจับคู่งาน"},
+		{TypeCode: "post", TypeName: "ข้อมูลโพสต์"},
+		{TypeCode: "login", TypeName: "รายงานการเข้าระบบ"},
+	}
+	for _, at := range analysisTypes {
+		db.FirstOrCreate(&at, entity.AnalysisType{TypeCode: at.TypeCode})
+	}
+
 }
 
 type RawEducationData struct {
@@ -761,6 +1015,22 @@ func insertEducationFromCSV(db *gorm.DB, filePath string) {
 			Faculty:    row[colMap["FAC_NAME"]],
 			Program:    row[colMap["PROGRAM_NAME"]],
 		})
+	}
+
+	// Seed Tags สำหรับรีวิว
+	tags := []entity.Tag{
+		{Name: "บรรยากาศดี"},
+		{Name: "งานท้าทาย"},
+		{Name: "พี่ๆใจดี"},
+		{Name: "ได้ลงมือทำจริง"},
+		{Name: "สนับสนุนดี"},
+		{Name: "เหมาะกับมือใหม่"},
+		{Name: "ได้เรียนรู้หลากหลาย"},
+		{Name: "ได้ทำโปรเจกต์จริง"},
+	}
+
+	for _, tag := range tags {
+		db.FirstOrCreate(&tag, entity.Tag{Name: tag.Name})
 	}
 
 	// Cache for IDs

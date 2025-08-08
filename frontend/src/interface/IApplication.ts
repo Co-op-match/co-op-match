@@ -1,21 +1,30 @@
 import type { InternshipPostInterface } from "./IIntershipPost";
+import type { StudentInterface } from "../interfaces/Student"; // 🔹 เพิ่ม import นี้ด้วย
 
 export interface ApplicationInterface {
-  
-
-  id?: number; // Optional ID
-  position: string; // Required position
-  status: 'ผ่านการคัดเลือก' | 'กำลังพิจารณา' | 'ไม่ได้รับเลือก' | 'รอนัดสัมภาษณ์' ; // Status field with predefined values
-  companyNote?: string; // Optional company note
-  resume_url?: string; // Optional resume
-  TranscriptUrl?: string; // Optional transcript
-  submit_at?: string; // Optional submission timestamp
-  internship_post_id?: number; // Optional internship post ID
-
-  // ✅ เพิ่มเพื่อใช้แสดงในตาราง
+  id?: number;
+  position: string;
+  status: 'ผ่าน' | 'กำลังพิจารณา' | 'ไม่ผ่าน' | 'รอนัดสัมภาษณ์' | 'นัดสัมภาษณ์แล้ว';
+  company_note?: string;
+  resume_url?: string;
+  TranscriptUrl?: string;
+  submit_at?: string;
+  internship_post_id?: number;
   company_name?: string;
-  post_name?:string;
+  company_id?: number;
+  post_name?: string;
   date?: string;
-  IntershipPost?: InternshipPostInterface;
   formatted_date: string;
+
+  // ✅ เพิ่ม 2 บรรทัดนี้
+  StudentID?: number;
+  Student?: StudentInterface;
+
+  IntershipPost?: InternshipPostInterface;
+
+  interview_appointment?: {
+    appointment_date: string;
+    mode: string;
+    details: string;
+  };
 }

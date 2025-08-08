@@ -16,15 +16,15 @@ import {
   Space,
   Divider,
 } from 'antd';
-import { 
-  PlusOutlined, 
-  LogoutOutlined, 
-  EyeOutlined, 
+import {
+  PlusOutlined,
+  LogoutOutlined,
+  EyeOutlined,
   RiseOutlined,
   TeamOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  StopOutlined 
+  StopOutlined
 } from '@ant-design/icons';
 import CompanyHeader from '../../Component/CompanyHeader';
 import { useNavigate } from 'react-router-dom';
@@ -37,10 +37,10 @@ import {
   GetBenefits,
   GetPostByCompanyId,
 } from '../../../services/https/post';
-import axios from 'axios';
 import { GetAllProvinces, GetAllSkill } from '../../../services/https';
 import type { SkillInterface } from '../../../interfaces/Skill';
-import { GetApplicationSummary } from '../../../services/https/Application';
+import { CreatePost, GetApplicationSummary, GetCompanyByUserID } from '../../../services/https/Application';
+import './post.css';
 
 interface SelectOption {
   label: string;
@@ -93,6 +93,7 @@ const CompanyDashboard: React.FC = () => {
   const [selectedProvinceId, setSelectedProvinceId] = useState<number>();
   const [selectedDistrictId, setSelectedDistrictId] = useState<number>();
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<SubDistrict | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -102,7 +103,7 @@ const CompanyDashboard: React.FC = () => {
   const realColumns = [
     {
       title: (
-                  <Space>
+        <Space>
           <RiseOutlined style={{ color: '#1976d2' }} />
           <span style={{ color: '#333', fontWeight: 600 }}>ตำแหน่งงาน</span>
         </Space>
@@ -110,8 +111,8 @@ const CompanyDashboard: React.FC = () => {
       dataIndex: 'post_name',
       key: 'post_name',
       render: (text: string, record: InternshipPostInterface) => (
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           onClick={() => navigate(`/post/${record.ID}`)}
           style={{
             color: '#1976d2',
@@ -159,7 +160,7 @@ const CompanyDashboard: React.FC = () => {
         </div>
       ),
     },
-    
+
     {
       title: (
         <Space>
@@ -249,13 +250,13 @@ const CompanyDashboard: React.FC = () => {
     }
   ];
 
+
   useEffect(() => {
     const loadProvinces = async () => {
       try {
         const res = await GetAllProvinces();
         const data = res.data || res;
         setRawProvinces(data);
-        console.log("✅ data:", data);
         setProvinceOptions(
           data.map((p: any) => ({
             label: p.name_th,
@@ -263,7 +264,6 @@ const CompanyDashboard: React.FC = () => {
           }))
         );
       } catch (error) {
-        console.error('โหลดจังหวัดล้มเหลว:', error);
       }
     };
 
@@ -275,7 +275,6 @@ const CompanyDashboard: React.FC = () => {
       try {
         const skillsData = await GetAllSkill();
         setSkills(skillsData);
-        console.log(skillsData)
       } catch {
         messageApi.error({
           content: 'โหลดข้อมูลทักษะหรือความสนใจไม่สำเร็จ',
@@ -289,22 +288,35 @@ const CompanyDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const userId = Number(localStorage.getItem("id"));
+    if (!userId) {
+      return;
+    }
     const fetchData = async () => {
-      const companyId = localStorage.getItem("id");
-      if (!companyId) return;
-  
       try {
+
+        const userId = Number(localStorage.getItem("id"));
+
+        if (!userId) return;
+
+        const res = await GetCompanyByUserID(userId);
+        const company_id = res?.ID;
+
+        if (!company_id) return;
+
+        setCompanyId(company_id); // เซ็ตค่า companyId
+
         const [postRes, applicationRes] = await Promise.all([
-          GetPostByCompanyId(Number(companyId)),
-          GetApplicationSummary(Number(companyId)),
+          GetPostByCompanyId(Number(company_id)),
+          GetApplicationSummary(Number(company_id)),
         ]);
-  
+
         let applications = applicationRes?.data || [];
-  
+
         if (!Array.isArray(applications)) {
           applications = [applications];
         }
-  
+
         const postsWithApplicantCount = postRes?.data.map((post: any) => {
           const count = applications.filter((a: any) => a.IntershipPostID === post.ID).length;
           return {
@@ -312,16 +324,14 @@ const CompanyDashboard: React.FC = () => {
             applicants: count,
           };
         });
-  
+
         setPosts(postsWithApplicantCount);
       } catch (error) {
-        console.error("❌ Error loading data:", error);
         setPosts([]);
       }
     };
-  
     fetchData();
-  
+
     GetJobTypes().then(res => setJobTypes(res || []));
     GetStipends().then(res => setStipends(res || []));
     GetWorkDays().then(res => setWorkDays(res || []));
@@ -330,31 +340,32 @@ const CompanyDashboard: React.FC = () => {
   }, []);
 
   const handleAddPost = async (values: any) => {
-    const companyId = localStorage.getItem("id");
-    if (!companyId) {
+
+    const userId = localStorage.getItem("id");
+    if (!userId) {
       message.error("ไม่พบ Company ID กรุณาเข้าสู่ระบบใหม่");
       return;
     }
-  
+
     values.StatusPostID = 3;
     values.CompanyID = Number(companyId);
-  
+
     const selectedProvince = rawProvinces.find(p => p.name_th === values.province);
     const selectedDistrict = selectedProvince?.Districts?.find(d => d.name_th === values.district);
     const selectedSubdistrict = selectedDistrict?.SubDistricts?.find(s => s.ID === values.subdistrict_id);
-  
+
     values.province = selectedProvince?.name_th;
     values.district = selectedDistrict?.name_th;
     values.subdistrict = selectedSubdistrict?.name_th;
     values.post_code = selectedSubdistrict?.Postcode?.post_code;
-  
+
     try {
-      const response = await axios.post('http://localhost:8000/post', values);
+      const response = await CreatePost(values);
       if (response.status >= 200 && response.status < 300) {
         message.success("โพสต์งานใหม่ถูกบันทึกสำเร็จ!");
         form.resetFields();
         setIsAddModalVisible(false);
-  
+
         const [postRes, applicationRes] = await Promise.all([
           GetPostByCompanyId(Number(companyId)),
           GetApplicationSummary(Number(companyId)),
@@ -367,19 +378,17 @@ const CompanyDashboard: React.FC = () => {
             applicants: count,
           };
         });
-  
+
         setPosts(postsWithApplicantCount);
       } else {
         message.error("เกิดข้อผิดพลาดในการบันทึกโพสต์งาน");
       }
     } catch (error) {
-      console.error("❌ POST error:", error);
       message.error("ไม่สามารถบันทึกโพสต์งานได้");
     }
   };
 
   const handleProvinceChange = (provinceId: number) => {
-    console.log("✅ เลือกจังหวัด ID:", provinceId);
     form.setFieldsValue({
       province: provinceId,
       district: undefined,
@@ -393,8 +402,6 @@ const CompanyDashboard: React.FC = () => {
     setSubdistrictOptions([]);
 
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === provinceId);
-    console.log("📌 ข้อมูลจังหวัดที่เลือก:", selectedProvince);
-    console.log("📌 Districts:", selectedProvince?.Districts);
 
     if (Array.isArray(selectedProvince?.Districts)) {
       setDistrictOptions(
@@ -407,7 +414,6 @@ const CompanyDashboard: React.FC = () => {
   };
 
   const handleDistrictChange = (districtId: number) => {
-    console.log("✅ เลือกอำเภอ ID:", districtId);
     form.setFieldsValue({
       district: districtId,
       subdistrict: undefined,
@@ -419,10 +425,6 @@ const CompanyDashboard: React.FC = () => {
 
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
     const selectedDistrict = selectedProvince?.Districts?.find((d: any) => Number(d.ID) === districtId);
-
-    console.log("📌 selectedDistrict:", selectedDistrict);
-    console.log("📌 SubDistricts:", selectedDistrict?.SubDistricts);
-
     if (Array.isArray(selectedDistrict?.SubDistricts)) {
       setSubdistrictOptions(
         selectedDistrict.SubDistricts.map((s: { ID: number; name_th: string }) => ({
@@ -434,15 +436,9 @@ const CompanyDashboard: React.FC = () => {
   };
 
   const handleSubdistrictChange = (subdistrictId: number) => {
-    console.log("✅ เลือกตำบล ID:", subdistrictId);
-
     const selectedProvince = rawProvinces.find((p) => Number(p.ID) === selectedProvinceId);
     const selectedDistrict = selectedProvince?.Districts?.find((d: any) => d.ID === selectedDistrictId);
     const selectedSubdistrict = selectedDistrict?.SubDistricts?.find((s: any) => s.ID === subdistrictId);
-
-    console.log("📌 selectedSubdistrict:", selectedSubdistrict);
-    console.log("📌 Postcode ID:", selectedSubdistrict?.Postcode?.ID);
-
     if (selectedSubdistrict) {
       setSelectedSubdistrict(selectedSubdistrict);
 
@@ -457,21 +453,21 @@ const CompanyDashboard: React.FC = () => {
   };
 
   return (
-    <Layout style={{ 
+    <Layout style={{
       minHeight: '100vh',
       background: '#f8fafb'
     }}>
       <CompanyHeader />
-      <Header style={{ 
+      <Header style={{
         background: '#e3f2fd',
-        padding: '0 24px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+        padding: '0 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
         borderBottom: '1px solid #e0e7ff'
       }}>
-        <Title level={2} style={{ 
+        <Title level={2} style={{
           margin: 0,
           color: '#1565c0',
           fontWeight: 600,
@@ -479,9 +475,9 @@ const CompanyDashboard: React.FC = () => {
         }}>
           Company Dashboard
         </Title>
-        <Button 
-          type="primary" 
-          danger 
+        <Button
+          type="primary"
+          danger
           icon={<LogoutOutlined />}
           onClick={handleLogout}
           style={{
@@ -534,8 +530,8 @@ const CompanyDashboard: React.FC = () => {
             </div>
           }
           extra={
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={() => setIsAddModalVisible(true)}
               style={{
@@ -561,27 +557,20 @@ const CompanyDashboard: React.FC = () => {
           }
           bodyStyle={{ padding: '0' }}
         >
-          <Table 
-            dataSource={posts} 
-            columns={realColumns} 
-            rowKey="id" 
+          <Table
+            dataSource={posts}
+            columns={realColumns}
+            rowKey="id"
             pagination={false}
-            style={{
-              '.ant-table-thead > tr > th': {
-                background: 'linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%)',
-                borderBottom: '2px solid #87ceeb',
-                fontWeight: 600,
-                color: '#2c5aa0'
-              }
-            }}
-            rowClassName={(record, index) => 
+            className="custom-table"
+            rowClassName={(_record, index) =>
               index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
             }
           />
         </Card>
       </Content>
 
-      <Modal 
+      <Modal
         title={
           <div style={{
             background: '#e3f2fd',
@@ -598,30 +587,30 @@ const CompanyDashboard: React.FC = () => {
             เพิ่มโพสต์งานใหม่
           </div>
         }
-        open={isAddModalVisible} 
-        onCancel={() => setIsAddModalVisible(false)} 
-        footer={null} 
+        open={isAddModalVisible}
+        onCancel={() => setIsAddModalVisible(false)}
+        footer={null}
         width={800}
         style={{ top: 20 }}
         styles={{
-          body: { 
+          body: {
             background: '#ffffff',
             borderRadius: '0 0 8px 8px'
           }
         }}
       >
-        <Form 
-          form={form} 
-          onFinish={handleAddPost} 
+        <Form
+          form={form}
+          onFinish={handleAddPost}
           layout="vertical"
           style={{ marginTop: '20px' }}
         >
-          <Form.Item 
+          <Form.Item
             label={<span style={{ color: '#333', fontWeight: 600 }}>หัวข้อหรือตำแหน่งที่เปิดรับ</span>}
-            name="post_name" 
+            name="post_name"
             rules={[{ required: true, message: 'กรุณากรอกหัวข้อหรือตำแหน่งที่เปิดรับ' }]}
           >
-            <Input 
+            <Input
               style={{
                 borderRadius: '6px',
                 border: '1px solid #e0e7ff',
@@ -639,26 +628,36 @@ const CompanyDashboard: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item 
+          <Form.Item
             label={<span style={{ color: '#333', fontWeight: 600 }}>จำนวนที่รับ</span>}
-            name="quantity" 
-            rules={[{ required: true, message: 'กรุณากรอกจำนวนที่รับ' }]}
+            name="quantity"
+            rules={[
+              { required: true, message: 'กรุณากรอกจำนวนที่รับ' },
+              {
+                type: 'number',
+                min: 1,
+                message: 'จำนวนต้องมากกว่าหรือเท่ากับ 1',
+              },
+            ]}
           >
-            <InputNumber 
-              style={{ 
+            <InputNumber
+              style={{
                 width: '100%',
-                borderRadius: '6px'
-              }} 
+                borderRadius: '6px',
+              }}
+              min={1}
+              precision={0} // 👈 ไม่ให้กรอกทศนิยม
             />
           </Form.Item>
 
-          <Form.Item 
+
+          <Form.Item
             label={<span style={{ color: '#333', fontWeight: 600 }}>รายละเอียดงาน</span>}
-            name="post_description" 
+            name="post_description"
             rules={[{ required: true, message: 'กรุณากรอกรายละเอียดงาน' }]}
           >
-            <Input.TextArea 
-              rows={4} 
+            <Input.TextArea
+              rows={4}
               style={{
                 borderRadius: '6px',
                 resize: 'none'
@@ -682,7 +681,7 @@ const CompanyDashboard: React.FC = () => {
           </Form.Item>
 
           {contextHolder}
-          
+
           <Form.Item
             label={<span style={{ color: '#333', fontWeight: 600 }}>สวัสดิการ</span>}
             name="benefit_ids"
@@ -706,26 +705,34 @@ const CompanyDashboard: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#333', fontWeight: 600 }}>GPA ขั้นต่ำ</span>}
-                name="min_gpa" 
-                rules={[{ required: true, message: 'กรุณากรอก GPA' }]}
+                name="min_gpa"
+                rules={[{ required: true, message: "กรุณากรอกเกรดเฉลี่ยขั้นต่ำ" },
+                {
+                  validator: (_, value) => {
+                    if (value >= 0 && value <= 4) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject("เกรดเฉลี่ยต้องอยู่ระหว่าง 0.00 ถึง 4.00");
+                  },
+                },]}
               >
-                <InputNumber 
-                  min={0} 
-                  max={4} 
-                  step={0.01} 
-                  style={{ 
+                <InputNumber
+                  min={0}
+                  max={4}
+                  step={0.01}
+                  style={{
                     width: '100%',
                     borderRadius: '6px'
-                  }} 
+                  }}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#333', fontWeight: 600 }}>ประเภทงาน</span>}
-                name="JobTypeID" 
+                name="JobTypeID"
                 rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}
               >
                 <Select placeholder="เลือกประเภทงาน">
@@ -739,9 +746,9 @@ const CompanyDashboard: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>ค่าตอบแทน</span>}
-                name="StipendID" 
+                name="StipendID"
                 rules={[{ required: true, message: 'กรุณาเลือกค่าตอบแทน' }]}
               >
                 <Select placeholder="เลือกค่าตอบแทน">
@@ -752,9 +759,9 @@ const CompanyDashboard: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>วันทำงาน</span>}
-                name="WorkDayID" 
+                name="WorkDayID"
                 rules={[{ required: true, message: 'กรุณาเลือกวันทำงาน' }]}
               >
                 <Select placeholder="เลือกวันทำงาน">
@@ -766,9 +773,9 @@ const CompanyDashboard: React.FC = () => {
             </Col>
           </Row>
 
-          <Form.Item 
+          <Form.Item
             label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>รูปแบบการทำงาน</span>}
-            name="WorkModeID" 
+            name="WorkModeID"
             rules={[{ required: true, message: 'กรุณาเลือกรูปแบบการทำงาน' }]}
           >
             <Select placeholder="เลือกรูปแบบการทำงาน">
@@ -778,8 +785,8 @@ const CompanyDashboard: React.FC = () => {
             </Select>
           </Form.Item>
 
-          <Divider style={{ 
-            borderColor: '#e0e7ff', 
+          <Divider style={{
+            borderColor: '#e0e7ff',
             margin: '24px 0 20px 0',
             fontSize: '14px',
             fontWeight: 600,
@@ -790,9 +797,9 @@ const CompanyDashboard: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#333', fontWeight: 600 }}>จังหวัด</span>}
-                name="province" 
+                name="province"
                 rules={[{ required: true, message: 'กรุณาเลือกจังหวัด' }]}
               >
                 <Select
@@ -800,7 +807,7 @@ const CompanyDashboard: React.FC = () => {
                   options={provinceOptions}
                   onChange={handleProvinceChange}
                   placeholder="เลือกจังหวัด"
-                  filterOption={(input, option) => 
+                  filterOption={(input, option) =>
                     (option?.label as string).toLowerCase().includes(input.toLowerCase())
                   }
                   style={{
@@ -811,9 +818,9 @@ const CompanyDashboard: React.FC = () => {
             </Col>
 
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>อำเภอ / เขต</span>}
-                name="district" 
+                name="district"
                 rules={[{ required: true, message: 'กรุณาเลือกอำเภอ/เขต' }]}
               >
                 <Select
@@ -822,7 +829,7 @@ const CompanyDashboard: React.FC = () => {
                   onChange={handleDistrictChange}
                   placeholder="เลือกอำเภอ / เขต"
                   disabled={!districtOptions.length}
-                  filterOption={(input, option) => 
+                  filterOption={(input, option) =>
                     (option?.label as string).toLowerCase().includes(input.toLowerCase())
                   }
                   style={{
@@ -833,9 +840,9 @@ const CompanyDashboard: React.FC = () => {
             </Col>
 
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>ตำบล / แขวง</span>}
-                name="subdistrict_id" 
+                name="subdistrict_id"
                 rules={[{ required: true, message: 'กรุณาเลือกตำบล/แขวง' }]}
               >
                 <Select
@@ -844,7 +851,7 @@ const CompanyDashboard: React.FC = () => {
                   onChange={handleSubdistrictChange}
                   placeholder="เลือกตำบล / แขวง"
                   disabled={!subdistrictOptions.length}
-                  filterOption={(input, option) => 
+                  filterOption={(input, option) =>
                     (option?.label as string).toLowerCase().includes(input.toLowerCase())
                   }
                   style={{
@@ -855,17 +862,17 @@ const CompanyDashboard: React.FC = () => {
             </Col>
 
             <Col span={12}>
-              <Form.Item 
+              <Form.Item
                 label={<span style={{ color: '#2c5aa0', fontWeight: 600 }}>รหัสไปรษณีย์</span>}
-                name="post_code" 
+                name="post_code"
                 rules={[{ required: true, message: 'กรุณาเลือกรหัสไปรษณีย์' }]}
               >
                 <Select
                   disabled={!selectedSubdistrict?.Postcode}
-                  options={selectedSubdistrict?.Postcode ? 
-                    [{ 
-                      label: selectedSubdistrict.Postcode.post_code, 
-                      value: selectedSubdistrict.Postcode.ID 
+                  options={selectedSubdistrict?.Postcode ?
+                    [{
+                      label: selectedSubdistrict.Postcode.post_code,
+                      value: selectedSubdistrict.Postcode.ID
                     }] : []
                   }
                   placeholder="เลือกรหัสไปรษณีย์"
@@ -882,8 +889,8 @@ const CompanyDashboard: React.FC = () => {
           <Form.Item style={{ marginBottom: 0 }}>
             <Row justify="center" gutter={16}>
               <Col span={8}>
-                <Button 
-                  onClick={() => setIsAddModalVisible(false)} 
+                <Button
+                  onClick={() => setIsAddModalVisible(false)}
                   block
                   style={{
                     height: '45px',
@@ -910,9 +917,9 @@ const CompanyDashboard: React.FC = () => {
                 </Button>
               </Col>
               <Col span={8}>
-                <Button 
-                  type="primary" 
-                  htmlType="submit" 
+                <Button
+                  type="primary"
+                  htmlType="submit"
                   block
                   style={{
                     height: '45px',
@@ -940,74 +947,6 @@ const CompanyDashboard: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-
-      <style jsx global>{`
-        .table-row-light {
-          background: rgba(240, 247, 255, 0.3) !important;
-        }
-        .table-row-dark {
-          background: rgba(255, 255, 255, 0.8) !important;
-        }
-        .table-row-light:hover,
-        .table-row-dark:hover {
-          background: rgba(135, 206, 235, 0.1) !important;
-          transform: scale(1.01);
-          transition: all 0.3s ease;
-        }
-        .ant-table-thead > tr > th {
-          background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
-          border-bottom: 2px solid #87ceeb !important;
-          font-weight: 600 !important;
-          color: #2c5aa0 !important;
-          position: relative;
-        }
-        .ant-table-thead > tr > th::before {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: linear-gradient(90deg, #87ceeb 0%, #b8e6ff 100%);
-        }
-        .ant-select-dropdown {
-          border-radius: 8px !important;
-          box-shadow: 0 6px 24px rgba(135, 206, 235, 0.15) !important;
-        }
-        .ant-select-item-option-selected {
-          background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
-          color: #2c5aa0 !important;
-          font-weight: 500 !important;
-        }
-        .ant-input:focus,
-        .ant-input-focused,
-        .ant-select:focus,
-        .ant-select-focused .ant-select-selector {
-          border-color: #87ceeb !important;
-          box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
-        }
-        .ant-input-number:focus,
-        .ant-input-number-focused {
-          border-color: #87ceeb !important;
-          box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
-        }
-        .ant-modal {
-          border-radius: 16px !important;
-          overflow: hidden;
-        }
-        .ant-modal-content {
-          border-radius: 16px !important;
-          overflow: hidden;
-          box-shadow: 0 12px 48px rgba(135, 206, 235, 0.25) !important;
-        }
-        .ant-form-item-label > label {
-          font-size: 14px;
-        }
-        .ant-divider-horizontal.ant-divider-with-text::before,
-        .ant-divider-horizontal.ant-divider-with-text::after {
-          border-top-color: #87ceeb !important;
-        }
-      `}</style>
     </Layout>
   );
 };

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"co-op-match.com/co-op-match/config"
@@ -22,6 +23,11 @@ func GetAllCompany(c *gin.Context) {
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
+		Preload("Address").
+		Preload("Address.Postcode").
+		Preload("Address.Province").
+		Preload("Address.SubDistrict").
+		Preload("Address.District").
 		Preload("Reviews").
 		Find(&company).Error
 
@@ -44,6 +50,11 @@ func GetCompanyByID(c *gin.Context) {
 		Preload("Contact").
 		Preload("IntershipPosts").
 		Preload("InterviewAppointments").
+		Preload("Address").
+		Preload("Address.Postcode").
+		Preload("Address.Province").
+		Preload("Address.SubDistrict").
+		Preload("Address.District").
 		Preload("Reviews").
 		First(&company, id).Error; err != nil {
 
@@ -117,6 +128,66 @@ func CreateCompany(c *gin.Context) {
 		"data":    company,
 	})
 }
+func UpdateCompanyLogoByUserID(c *gin.Context) {
+	// 1. รับ user_id จาก URL
+	userIDStr := c.Param("user_id")
+	userID, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+		return
+	}
+
+	// 2. ค้นหาบริษัทที่เกี่ยวข้องกับ user_id นี้
+	var company entity.Company
+	if err := config.DB().Where("user_id = ?", userID).First(&company).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัทที่เกี่ยวข้องกับ user_id นี้"})
+		return
+	}
+
+	// 3. รับไฟล์โลโก้ใหม่
+	file, err := c.FormFile("logo")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กรุณาอัปโหลดโลโก้ใหม่"})
+		return
+	}
+
+	// 4. เตรียมไดเรกทอรี
+	uploadDir := "public/uploads/companyLogo"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		_ = os.MkdirAll(uploadDir, os.ModePerm)
+	}
+
+	// 5. ลบโลโก้เก่าถ้ามี
+	if company.Logo != "" {
+		oldPath := "." + company.Logo // จาก "/uploads/..." → "./uploads/..."
+		if _, err := os.Stat(oldPath); err == nil {
+			_ = os.Remove(oldPath)
+		}
+	}
+
+	// 6. บันทึกโลโก้ใหม่
+	filename := fmt.Sprintf("%s-%s", time.Now().Format("20060102-150405"), file.Filename)
+	filePath := filepath.Join(uploadDir, filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกโลโก้ได้"})
+		return
+	}
+	newLogoPath := fmt.Sprintf("/uploads/companyLogo/%s", filename)
+
+	// 7. อัปเดตโลโก้ในฐานข้อมูล
+	company.Logo = newLogoPath
+	if err := config.DB().Save(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถอัปเดตโลโก้ในฐานข้อมูลได้"})
+		return
+	}
+
+	// 8. ตอบกลับ
+	c.JSON(http.StatusOK, gin.H{
+		"message": "อัปเดตโลโก้สำเร็จ",
+		"logo":    newLogoPath,
+		"data":    company,
+	})
+}
 
 func GetCompanyByUserId(c *gin.Context) {
 	userID := c.Param("user_id")
@@ -147,4 +218,57 @@ func GetVerifyByUserId(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, verify)
+}
+
+func CreateSendVerify(c *gin.Context) {
+	var verify entity.Verify
+
+	userID := c.Param("user_id")
+	// รับค่าจากฟอร์ม
+	statusVerifyID := c.PostForm("status_verify_id")
+	reason := c.PostForm("reason")
+
+	// แปลง string เป็น uint
+	statusID, err := strconv.ParseUint(statusVerifyID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status_verify_id"})
+		return
+	}
+	uid, err := strconv.ParseUint(userID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+		return
+	}
+
+	file, err := c.FormFile("verification_document")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "กรุณาอัปโหลดเอกสาร"})
+		return
+	}
+
+	// ✅ เปลี่ยนชื่อไฟล์ใหม่ให้ปลอดภัย
+	ext := filepath.Ext(file.Filename)
+	newFileName := fmt.Sprintf("verify_%d_%d%s", uid, time.Now().Unix(), ext)
+	filePath := filepath.Join("public/uploads/verifyDocument", newFileName)
+	filePath = strings.ReplaceAll(filePath, "\\", "/")
+
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
+		return
+	}
+	// สร้าง Verify record
+	verify = entity.Verify{
+		VerificationDocument: filePath,
+		Reason:               reason,
+		StatusVerifyID:       uint(statusID),
+		UserID:               uint(uid),
+		AdminID:              nil,
+	}
+
+	if err := config.DB().Create(&verify).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกข้อมูลได้"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": verify})
 }

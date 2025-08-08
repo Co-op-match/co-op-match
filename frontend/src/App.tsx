@@ -30,6 +30,13 @@ import ProtectProfile from "./components/ProtectedProfile";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import LikedPosts from "./pages/LikedPost/LikedPosts";
+import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
+import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
+import AdminVerify from "./pages/Admin/verify/verify";
+import ChatInterface from "./Chat/ChatInterface";
+import ChatWebSocket from "./Chat/test";
+import AdvancedChatInterface from "./Chat/ChatInterface";
+
 
 function App() {
   return (
@@ -91,6 +98,19 @@ function App() {
               </ProtectedRoute>
             }
           />
+           <Route
+            path="/company-profile/:id"
+            element={
+                  <CompanyProfileView />
+            }
+          />                  
+          <Route
+            path="/c"
+            element={
+                  <ChatWebSocket />
+            }
+          />       
+          <Route path="/chat/:roomId/:userId" element={<AdvancedChatInterface />} />
           {/* <Route
             path="/student/add-profile"
             element={
@@ -129,13 +149,13 @@ function App() {
           <Route
             path="/student/applications/:postId"
             element={
-             
-                <ProtectedRoute allowedRoles={[3]}>
-                   <CheckUser> 
+
+              <ProtectedRoute allowedRoles={[3]}>
+                <CheckUser>
                   <AddApplication />
-                  </CheckUser>
-                </ProtectedRoute>
-             
+                </CheckUser>
+              </ProtectedRoute>
+
             }
           />
 
@@ -240,6 +260,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminPostManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/verify"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminVerify />
               </ProtectedRoute>
             }
           />

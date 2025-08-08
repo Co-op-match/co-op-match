@@ -41,7 +41,7 @@ type IntershipPost struct {
 
 	Benefits []Benefit `gorm:"many2many:intership_post_benefits;" json:"benefits"`
 
-	Applications []Application `gorm:"foreignKey:IntershipPostID"` // one-to-many
+	Applications []Application `gorm:"foreignKey:IntershipPostID"`
 
 	CompanyRequiredSkills []CompanyRequiredSkill `gorm:"foreignKey:IntershipPostID" json:"company_required_skills"`
 }

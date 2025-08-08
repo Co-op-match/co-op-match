@@ -53,7 +53,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
         },
       ],
     },
-  ///company/interview_appointments/confirm
+    { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์', },
     { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
     { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
   ];
@@ -66,7 +66,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     navigate(`/company/${key}`);
   };
     const handleLogout = () => {
-    localStorage.clear(); // เคลียร์ข้อมูล
+    localStorage.clear(); 
     navigate('/sign-in');
   };
   const logoutMenu = (
@@ -78,13 +78,12 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
 );
 const currentPath = location.pathname;
   
-  const currentPage = fullMenu.find(item => {
-    if (item.children) {
-      return item.children.some(child => currentPath.includes(child.key));
-    }
-    return currentPath.includes(item.key);
-  })?.key || 'dashboard';
-
+const currentPage = fullMenu.find(item => {
+  if (item.children) {
+    return item.children.some(child => currentPath.startsWith(`/company/${child.key}`));
+  }
+  return currentPath === `/company/${item.key} ?? '' `;
+})?.key;
   return (
     <Header
       style={{

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Card, Badge, Select } from "antd";
+import { Card, Select } from "antd";
 import { LeftOutlined, RightOutlined, CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./StudentCalendarCard.css";
-import { GetEventsByUserId } from "../../../services/https";
+import { GetEventsStudentByUserId } from "../../../services/https";
 
 interface EventItem {
   date: string;
@@ -22,9 +22,9 @@ useEffect(() => {
   const userId = userIdStr ? parseInt(userIdStr) : null;
   if (!userId) return;
 
-  GetEventsByUserId(userId).then((result) => {
+  GetEventsStudentByUserId(userId).then((result) => {
     console.log("✅ Loaded events:", result); // ⬅ เพิ่ม log
-    setEvents(result); // ✅ ไม่ต้อง .data อีก
+    setEvents(result); 
   });
 }, []);
 

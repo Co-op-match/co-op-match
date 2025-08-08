@@ -1,0 +1,736 @@
+/* /* ========================================
+   BASE LAYOUT
+   ======================================== */
+.company-layout {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(240, 248, 255, 1) 25%,
+    rgba(207, 234, 250, 1) 60%, 
+    rgba(159, 218, 252, 1) 100%
+  );
+  background-attachment: fixed; /* 🔒 ให้พื้นหลังอยู่กับที่ขณะ scroll */
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* ========================================
+   TITLE SECTION
+   ======================================== */
+.company-profile-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.company-profile-view-text {
+  font-weight: 700;
+  font-size: 28px;
+  color: #0d47a1;
+  white-space: nowrap;
+  margin-right: 14px;
+  margin-top: 1px;
+  margin-bottom: 3px;
+  letter-spacing: -0.3px;
+
+  animation: pulseTextShadow 2s ease-in-out infinite;
+}
+
+@keyframes pulseTextShadow {
+  0% {
+    text-shadow: 1px 1px 8px rgba(64, 156, 255, 0.6);
+  }
+  50% {
+    text-shadow: 1px 1px 16px rgba(120, 200, 255, 1),
+                 0 0 10px rgba(33, 150, 243, 0.8);
+  }
+  100% {
+    text-shadow: 1px 1px 8px rgba(64, 156, 255, 0.6);
+  }
+}
+
+
+.company-profile-line {
+  position: relative;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(33, 150, 243, 0.15); /* พื้นหลังบางๆ */
+}
+
+.company-profile-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #2196F3,
+    #00BCD4,
+    #2196F3,
+    transparent
+  );
+  animation: neon-run 2s ease-in-out infinite alternate;
+  border-radius: inherit;
+  opacity: 0.8;
+}
+
+@keyframes neon-run {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+
+/* ========================================
+   COMPANY CARD STYLING
+   ======================================== */
+.company-post-list-card {
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 16px rgba(13, 71, 161, 0.10),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(13, 71, 161, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, #fafcff 100%);
+  transition: all 0.3s ease;
+  margin-top: 16px;
+}
+
+/* ========================================
+   COMPANY MAIN LAYOUT
+   ======================================== */
+.company-main-section {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.company-left-card {
+  flex: 2;
+  min-width: 400px;
+}
+
+.company-review-card {
+  flex: 1;
+  min-width: 320px;
+}
+
+/* ========================================
+   COMPANY INFO SECTION
+   ======================================== */
+.company-profile-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  box-shadow: 
+    0 3px 12px rgba(13, 71, 161, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+  margin: 20px 20px 0px 20px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.company-profile-card .ant-card-body {
+  padding: 0;
+}
+.student-dashboard-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.application-list-wrapper {
+  flex: 1;
+  min-width: 0; /* สำคัญสำหรับให้ตารางหดได้ใน flex */
+}
+
+.calendar-card-wrapper {
+  flex-shrink: 0;
+}
+
+/* ========================================
+   REVIEW CARD - MATCHING COMPANY PROFILE
+   ======================================== */
+.company-review-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  box-shadow: 
+    0 3px 12px rgba(13, 71, 161, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+  margin: 0px 0px 0px 20px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  max-height: 470px;
+  min-height: 470px;
+  min-width: 800px;
+  margin-top: 20px;
+}
+
+.company-review-card .ant-card-body {
+  padding: 0;
+}
+
+
+
+/* Card Body with Scrollable Content */
+.company-review-card .ant-card-body {
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+.company-review-card .ant-card-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.company-review-card .ant-card-body::-webkit-scrollbar-track {
+  background: rgba(240, 248, 255, 0.3);
+  border-radius: 3px;
+}
+
+.company-review-card .ant-card-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border-radius: 3px;
+}
+
+.company-review-card .ant-card-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+}
+
+/* List Styling */
+.company-review-card .ant-list {
+  background: transparent;
+}
+
+.company-review-card .ant-list-item {
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(248, 252, 255, 0.9) 100%
+  );
+  border-radius: 10px;
+  border: 1px solid rgba(13, 71, 161, 0.06);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  padding: 16px !important;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  border-bottom: none !important;
+}
+
+.company-review-card .ant-list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 12px rgba(13, 71, 161, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.company-review-card .ant-list-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Review Text Styling */
+.company-review-card .ant-typography {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d47a1;
+  margin-bottom: 8px !important;
+}
+
+/* Rating Styling */
+.company-review-card .ant-rate {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.company-review-card .ant-rate-star {
+  margin-right: 2px;
+}
+
+.company-review-card .ant-rate-star-full .ant-rate-star-second,
+.company-review-card .ant-rate-star-full .ant-rate-star-first {
+  color: #faad14;
+}
+
+/* Review Comment Styling */
+.company-review-card p {
+  font-size: 12px;
+  color: #333;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  margin: 0;
+}
+
+/* Empty State Styling */
+.company-review-card .ant-list-empty-text {
+  color: #666;
+  font-size: 12px;
+  padding: 20px;
+  text-align: center;
+  background: rgba(240, 248, 255, 0.3);
+  border-radius: 6px;
+  border: 1px solid rgba(13, 71, 161, 0.06);
+}
+
+.company-review-card .review-summary {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.company-review-card .average-rating {
+  text-align: center;
+}
+
+.company-review-card .average-rating-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: #faad14;
+}
+
+.company-review-card .average-rating-text {
+  color: #666;
+  margin-top: 4px;
+}
+
+.company-review-card .rating-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.company-review-card .rating-label {
+  width: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.company-review-card .rating-bar {
+  flex: 1;
+  margin: 0 8px;
+}
+
+.company-review-card .rating-count {
+  width: 30px;
+  text-align: right;
+}
+
+.company-review-card .review-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.company-review-card .review-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.company-review-card .review-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.company-review-card .review-date {
+  color: #666;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.company-review-card .review-content {
+  margin-bottom: 12px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.company-review-card .review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.company-review-card .review-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #666;
+}
+
+.company-review-card .review-helpful {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.company-review-card .review-footer-note {
+  text-align: center;
+  margin-top: 16px;
+}
+
+
+/* ========================================
+   COMPANY PROFILE CONTAINER
+   ======================================== */
+.company-profile-container {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  padding: 16px;
+  flex-wrap: wrap;
+  min-height: 350px;  
+  align-items: center ;
+}
+
+/* Left Profile Section - Extra Compact */
+.company-profile-left {
+  text-align: center;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 350px;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(248, 252, 255, 0.9) 100%
+  );
+  border-radius: 10px;
+  border: 1px solid rgba(13, 71, 161, 0.06);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+.company-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0d47a1;
+  margin-bottom: 8px;
+}
+
+.company-logo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.company-logo-edit-icon {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 
+    0 0 0 2px white,
+    0 2px 8px rgba(24, 144, 255, 0.25);
+  cursor: pointer;
+}
+
+/* Avatar hover effect */
+.company-logo-container:hover .ant-avatar {
+  transform: scale(1.03);
+  box-shadow: 
+    0 4px 12px rgba(13, 71, 161, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.company-logo-container:hover .company-logo-edit-icon {
+  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+  transform: scale(1.05) rotate(3deg);
+}
+
+/* ========================================
+   DETAILS SECTION
+   ======================================== */
+/* Descriptions Styling - Extra Compact */
+.company-profile-details { 
+  flex: 1;
+  min-width: 350px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(13, 71, 161, 0.06);
+  background: linear-gradient(90deg, 
+    rgba(240, 248, 255, 0.2) 0%, 
+    transparent 100%
+  );
+  padding-left: 8px;
+  padding-right: 4px;
+  border-radius: 4px;
+}
+
+.section-header h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0d47a1;
+  margin: 0;
+  letter-spacing: -0.1px;
+}
+
+.edit-profile-button {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(24, 144, 255, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.edit-profile-button:hover {
+  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+  transform: translateY(-0.5px);
+  box-shadow: 
+    0 2px 6px rgba(24, 144, 255, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.company-profile-details .ant-descriptions {
+  margin-bottom: 4px;
+}
+
+.company-profile-details .ant-descriptions-item {
+  padding-bottom: 4px;
+}
+
+.company-profile-details .ant-descriptions-item-label {
+  font-weight: 600;
+  color: #0d47a1;
+  background: rgba(240, 248, 255, 0.3);
+  padding: 3px 7px;
+  border-radius: 4px;
+  margin-right: 5px;
+  font-size: 11px;
+  border: 1px solid rgba(13, 71, 161, 0.08);
+}
+
+.company-profile-details .ant-descriptions-item-content {
+  color: #333;
+  font-weight: 500;
+  padding: 3px 7px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+}
+
+/* ========================================
+   BADGE VERIFY - COMPACT STYLING
+   ======================================== */
+.verify-badge {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 1px 4px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(3px);
+  position: relative;
+  overflow: hidden;
+}
+
+.verify-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.15) 50%, 
+    transparent 100%);
+  transition: left 0.4s ease;
+}
+
+.verify-badge:hover::before {
+  left: 100%;
+}
+
+.verify-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 3px 8px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Status Dot Enhancements */
+.verify-badge .ant-badge-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  position: relative;
+}
+
+/* Text */
+.verify-badge .ant-badge-status-text {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+}
+
+/* ======== STATUS COLORS ======== */
+
+/* Success */
+.verify-badge .ant-badge-status-success + span {
+  color: #389e0d;
+}
+.verify-badge.ant-badge .ant-badge-status-dot.ant-badge-status-success {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+}
+.verify-badge:has(.ant-badge-status-success) {
+  background: linear-gradient(135deg, rgba(246, 255, 237, 0.8), rgba(237, 249, 218, 0.7));
+  border-color: rgba(82, 196, 26, 0.2);
+}
+
+/* Processing */
+.verify-badge .ant-badge-status-processing + span {
+  color: #1890ff;
+}
+.verify-badge.ant-badge .ant-badge-status-dot.ant-badge-status-processing {
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+}
+.verify-badge.ant-badge .ant-badge-status-dot.ant-badge-status-processing::after {
+  border: 1px solid #1890ff;
+  animation: antStatusProcessing 1.2s infinite ease-in-out;
+}
+.verify-badge:has(.ant-badge-status-processing) {
+  background: linear-gradient(135deg, rgba(240, 248, 255, 0.8), rgba(230, 247, 255, 0.7));
+  border-color: rgba(24, 144, 255, 0.2);
+}
+
+/* Error */
+.verify-badge .ant-badge-status-error + span {
+  color: #cf1322;
+}
+.verify-badge.ant-badge .ant-badge-status-dot.ant-badge-status-error {
+  background: linear-gradient(135deg, #ff4d4f, #ff7875);
+}
+.verify-badge:has(.ant-badge-status-error) {
+  background: linear-gradient(135deg, rgba(255, 241, 240, 0.85), rgba(255, 231, 230, 0.7));
+  border-color: rgba(255, 77, 79, 0.2);
+}
+
+/* Default */
+.verify-badge .ant-badge-status-default + span {
+  color: #8c8c8c;
+}
+.verify-badge.ant-badge .ant-badge-status-dot.ant-badge-status-default {
+  background: linear-gradient(135deg, #d9d9d9, #f0f0f0);
+}
+.verify-badge:has(.ant-badge-status-default) {
+  background: linear-gradient(135deg, rgba(250, 250, 250, 0.8), rgba(245, 245, 245, 0.7));
+  border-color: rgba(217, 217, 217, 0.2);
+}
+.chat-floating-wrapper {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+}
+
+.chat-floating-button {
+  width: 64px !important;
+  height: 64px;
+  font-size: 24px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+  box-shadow: 0 6px 20px rgba(24, 144, 255, 0.3);
+  transform: scale(1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulse 2s infinite;
+}
+
+.chat-floating-button.hovered {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  transform: scale(1.1);
+}
+
+.chat-floating-button:hover {
+  animation: none !important;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chat-floating-wrapper {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .chat-floating-button {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+}
+

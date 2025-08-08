@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"co-op-match.com/co-op-match/config"
@@ -81,6 +82,7 @@ func GetApplicationDetailsByStudentID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Printf("Applications: %+v\n", applications)
 
 	var response []map[string]interface{}
 	for _, app := range applications {
@@ -88,6 +90,7 @@ func GetApplicationDetailsByStudentID(c *gin.Context) {
 			"id":           app.ID,
 			"position":     app.IntershipPost.PostName,
 			"company":      app.IntershipPost.Company.CompanyName,
+			"company_id":   app.IntershipPost.Company.ID,
 			"company_name": app.IntershipPost.Company.CompanyName,
 			"status":       app.Status,
 			"date":         app.SubmitAt.Format("2006-01-02"),

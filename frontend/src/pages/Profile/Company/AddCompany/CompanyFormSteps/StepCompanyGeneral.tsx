@@ -1,21 +1,23 @@
 import React, { useEffect } from 'react';
-import { Form, Input, Upload, Avatar, message } from 'antd';
-import { EditOutlined, HomeOutlined } from '@ant-design/icons';
+import { Form, Input, Upload, Avatar, message, Row, Col, Tooltip, Tag } from 'antd';
+import { EditOutlined, FileTextOutlined, HomeOutlined, PaperClipOutlined, PictureOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd';
-
 export interface StepCompanyInfoProps {
   form: FormInstance<any>;
   imageFile: File | null;
   setImageFile: React.Dispatch<React.SetStateAction<File | null>>;
   previewUrl: string | null;
   setPreviewUrl: React.Dispatch<React.SetStateAction<string | null>>;
+  documentFile: File | null;
+  setDocumentFile: React.Dispatch<React.SetStateAction<File | null>>;
 }
-
 const StepCompanyGeneral: React.FC<StepCompanyInfoProps> = ({
+  imageFile,
   setImageFile,
   previewUrl,
   setPreviewUrl,
-  imageFile,
+  documentFile,
+  setDocumentFile,
 }) => {
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -70,15 +72,73 @@ useEffect(() => {
           </div>
         </Upload>
       </div>
+<Row gutter={100}>
+  {/* คอลัมน์ซ้าย: ชื่อบริษัท */}
+  <Col span={12}>
+    <Form.Item
+      name="company_name"
+      label="ชื่อบริษัท"
+      rules={[{ required: true, message: "กรุณากรอกชื่อบริษัท" }]}
+    >
+      <Input placeholder="กรอกชื่อบริษัท" />
+    </Form.Item>
+  </Col>
 
-      <Form.Item
-        name="company_name"
-        label="ชื่อบริษัท"
-        rules={[{ required: true, message: 'กรุณากรอกชื่อบริษัท' }]}
-      >
-        <Input placeholder="กรอกชื่อบริษัท" />
-      </Form.Item>
+  {/* คอลัมน์ขวา: อัปโหลดไฟล์ */}
+<Col span={12}>
+  <Form.Item
+    label="ไฟล์ยืนยันบริษัท (PDF หรือ รูปภาพ)"
+    required
+  >
+    <Upload
+      showUploadList={false} // ❗ ปิดรายการไฟล์ เพื่อให้ใช้ custom UI
+      beforeUpload={(file: File) => {
+        const isValidType =
+          file.type === "application/pdf" || file.type.startsWith("image/");
+        if (!isValidType) {
+          messageApi.error({
+            content: "รองรับเฉพาะไฟล์ PDF หรือ รูปภาพ",
+            style: { marginTop: "20vh" },
+            duration: 3,
+          });
+          return false;
+        }
+        setDocumentFile(file);
+        return false;
+      }}
+      accept=".pdf,image/*"
+    >
+      <div className="document-upload-button">
+        <PaperClipOutlined />
+        {documentFile ? "เปลี่ยนไฟล์ยืนยัน" : "คลิกเพื่ออัปโหลดไฟล์ยืนยัน"}
+      </div>
+    </Upload>
+
+    {/* แสดงชื่อไฟล์ที่อัปโหลดแล้ว */}
+    {documentFile && (
+      <div className="uploaded-file-wrapper">
+        <Tooltip title={documentFile.name}>
+          <div className="uploaded-file-tag">
+            {documentFile.type.startsWith('image/') ? (
+              <PictureOutlined className="uploaded-file-icon" />
+            ) : (
+              <FileTextOutlined className="uploaded-file-icon" />
+            )}
+            <span className="uploaded-file-name">
+              {documentFile.name.length > 30
+                ? documentFile.name.slice(0, 27) + '...'
+                : documentFile.name}
+            </span>
+          </div>
+        </Tooltip>
+      </div>
+    )}
+  </Form.Item>
+</Col>
+
+</Row>
     </>
+    
   );
 };
 

@@ -11,10 +11,16 @@ import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
 import type { CompanyInterface } from "../../interfaces/Company";
 import type { ContactInterface } from "../../interfaces/Contact";
+import type { ReviewPayload } from "../../interface/IReview";
+import type { VerifyInterface } from "../../interfaces/Verify";
+import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
+axios.defaults.withCredentials = true;
+
 const requestOptions = {
+   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Authorization: `${Bearer} ${Authorization}`,
@@ -24,6 +30,12 @@ const requestOptions = {
 async function SignIn(data: SignInInterface) {
   return await axios
     .post(`${apiUrl}/sign-in`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function SignUp(data: SignInInterface) {
+  return await axios
+    .post(`${apiUrl}/sign-up`, data, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -104,7 +116,7 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
 
 export async function UpdateStatusPost(postId: number, statusPostId: number) {
   return await axios
-    .put(`${apiUrl}/posts/update-status`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
+    .put(`${apiUrl}/update-status-posts`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
@@ -145,7 +157,68 @@ export async function GetInternshipPostsInAdminByIPostID(id: number) {
     .then((res) => res)
     .catch((e) => e.response);
 }
-
+//=============================== Verify ==============================//
+export async function GetAllVerifications() {
+  return await axios
+    .get(`${apiUrl}/verify`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetVerificationByID(id: number) {
+  return await axios
+    .get(`${apiUrl}/verify/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllStatusVerify() {
+  return await axios
+    .get(`${apiUrl}/verify/status`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
+}
+export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface) {
+  return await axios
+    .put(`${apiUrl}/verify/update-verify/${verifyId}`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error updating verification status:", e);
+      return e.response;
+    });
+}
+//=============================== Analysis ==============================//
+export async function GetAdminDashboardSummary () {
+  return await axios
+    .get(`${apiUrl}/analysis/dashboard-summary`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminDashboardOverview () {
+  return await axios
+    .get(`${apiUrl}/analysis/dashboard-overview`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminMonthlyApplicationStats () {
+  return await axios
+    .get(`${apiUrl}/analysis/monthly-application-stats`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminRecentActivities () {
+  return await axios
+    .get(`${apiUrl}/analysis/recent-activities`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminPendingPosts () {
+  return await axios
+    .get(`${apiUrl}/analysis/pending-posts`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
@@ -261,13 +334,43 @@ async function GetCompanyByUserId(user_id: number): Promise<CompanyInterface> {
     throw e.response || e;
   }
 }
-async function GetVerifyByUserId(user_id: number) {
+async function GetCompanyId(id: number): Promise<CompanyInterface> {
   try {
-    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/verify/${user_id}`, requestOptions);
+    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/${id}`, requestOptions);
     return res.data;
   } catch (e: any) {
     throw e.response || e;
   }
+}
+async function GetVerifyByUserId(user_id: number) {
+  try {
+    const res = await axios.get<VerifyInterface>(`${apiUrl}/company/verify/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function CreateSendVerify(user_id: number ,data: FormData) {
+  return await axios.post(`${apiUrl}/company/verify/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
+}
+async function UpdateCompanyLogo(user_id: number ,data: FormData) {
+  return await axios.put(`${apiUrl}/company/logo/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
 }
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
@@ -275,6 +378,12 @@ async function CreateContact(data:ContactInterface) {
     .post(`${apiUrl}/contact`, data, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
+}
+async function UpdateCompanyContact(user_id: number, data: ContactInterface) {
+  return await axios
+    .put(`${apiUrl}/contact/${user_id}`, data, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
 }
 async function GetContactByUserId(user_id: number): Promise<ContactInterface> {
   try {
@@ -455,10 +564,10 @@ async function SendEmailinterview(student_id: number,company_id: number, ) {
     .catch(e => e.response);
 }
 
-export async function GetRecommendedPosts(studentId: number, query: string = "") {
+async function GetRecommendedPosts(studentId: number, query: string = "") {
   const token = localStorage.getItem("token");
   if (!token) {
-    console.error("❌ ไม่มี token ใน localStorage");
+    console.error("ไม่มี token ใน localStorage");
     return;
   }
 
@@ -474,9 +583,15 @@ export async function GetRecommendedPosts(studentId: number, query: string = "")
       return e.response;
     });
 }
-async function GetEventsByUserId(user_id: number) {
+async function GetEventsStudentByUserId(user_id: number) {
   return await axios
-    .get(`${apiUrl}/notification/calendar/user/${user_id}`, requestOptions)
+    .get(`${apiUrl}/notification/calendar/student/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
+}
+async function GetEventsCompanyByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/notification/calendar/company/${user_id}`, requestOptions)
     .then((res) => res)
     .then((res) => res.data);
 }
@@ -489,8 +604,30 @@ async function GetApplicationsByUserID(user_id: number) {
       return []; 
     });
 }
-
-
+async function GetRwviewCompanyByUserId(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/${user_id}`, requestOptions)
+    .then((res) => res)
+    .then((res) => res.data);
+}
+export async function LikeReview(data: LikeReviewInput) {
+  return await axios
+    .post(`${apiUrl}/review/like`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function UnlikeReview(data: { user_id: number; review_id: number }) {
+  return await axios
+    .post(`${apiUrl}/review/unlike`, data, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
+export async function GetLikedReviews(userId: number) {
+  return await axios
+    .get(`${apiUrl}/review/liked/${userId}`, requestOptions)
+    .then(res => res)
+    .catch(e => e.response);
+}
 export async function Logout(email: string) {
   try {
     const response = await axios.post(
@@ -513,6 +650,113 @@ export async function GetLikedPostsByStudentID(studentId: number) {
 export async function DeleteLikedPost(studentId: number, postId: number) {
   return await axios.delete(`${apiUrl}/liked-post/${studentId}/${postId}`, requestOptions);
 }
+
+// ============================== Review =================================== //
+
+// ✅ สร้างรีวิว
+export async function CreateReview(data: ReviewPayload) {
+  return await axios
+    .post(`${apiUrl}/reviews`, data, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => {
+      console.error("❌ Failed to create review:", e);
+      throw e;
+    });
+}
+
+// ✅ ดึงรีวิวของบริษัท
+export async function GetReviewsByCompanyID(companyId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/company/${companyId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch company reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึงรีวิวของนักศึกษา (ถ้ามี)
+export async function GetReviewsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/student/${studentId}`, requestOptions)
+    .then((res) => res.data.data)
+    .catch((e) => {
+      console.error("❌ Failed to fetch student reviews:", e);
+      return [];
+    });
+}
+
+// ✅ ดึง Application ที่ผ่านแล้วของนักศึกษา
+export async function GetPassedApplicationsByStudentID(studentId: number) {
+  return await axios
+    .get(`${apiUrl}/reviews/application/passed/student/${studentId}`, requestOptions)
+    .then((res) => res.data) // หรือ res.data.data แล้วแต่ backend ส่งกลับมาแบบไหน
+    .catch((e) => {
+      console.error("❌ Failed to fetch passed applications:", e);
+      return [];
+    });
+}
+// ✅ สร้างห้องแชท (หรือคืนห้องเดิมถ้ามี)
+export async function CreateChatRoom(user1_id: number, user2_id: number) {
+  try {
+    const res = await axios.post(
+      `${apiUrl}/chat/room`,
+      { user1_id, user2_id },
+      requestOptions
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+
+// ✅ ดึงข้อความทั้งหมดของห้องแชท
+export async function GetMessagesByRoomId(roomId: number) {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/chat/messages/${roomId}`,
+      requestOptions
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+
+// ✅ อัปเดตข้อความว่าอ่านแล้ว
+export async function MarkMessagesAsRead(roomId: number, userId: number) {
+  try {
+    const res = await axios.patch(
+      `${apiUrl}/chat/messages/${roomId}/read`,
+      null,
+      {
+        params: { user_id: userId },
+        ...requestOptions,
+      }
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+
+// ✅ ดึงห้องแชททั้งหมดของผู้ใช้
+export async function GetChatRoomsByUserId(userId: number) {
+  try {
+    const res = await axios.get(
+      `${apiUrl}/chat/rooms/${userId}`,
+      requestOptions
+    );
+    return res.data;
+  } catch (e: any) {
+    return e.response;
+  }
+}
+export function CreateWebSocketConnection(roomId: number, userId: number): WebSocket {
+  const wsUrl = apiUrl.replace(/^http/, "ws");
+  return new WebSocket(`${wsUrl}/chat/ws?room_id=${roomId}&user_id=${userId}`);
+}
+
 
 
 export {
@@ -567,7 +811,14 @@ export {
   GetVerifyByUserId,
   SendEmailVerify,
   SendEmailinterview,
-  GetEventsByUserId,
+  GetEventsStudentByUserId,
   GetApplicationsByUserID,
+  CreateSendVerify,
+  GetRecommendedPosts,
+  GetEventsCompanyByUserId,
+  GetRwviewCompanyByUserId,
+  UpdateCompanyContact,
+  UpdateCompanyLogo,
+  GetCompanyId
 
 };

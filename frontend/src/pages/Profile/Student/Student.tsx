@@ -4,15 +4,12 @@ import {
   Avatar,
   Card,
   Descriptions,
-  Table,
-  Calendar,
-  Badge,
 } from "antd";
 import { BookOutlined, EditOutlined, EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
 import { GetStudentByUserId,UpdateProfileImage  } from "../../../services/https";
 import type { StudentInterface } from "../../../interfaces/Student";
 import "./StudentProfile.css";
-import CoopMatchHeader from "../../component/Coop_MatchHeader";
+import CoopMatchHeader from "../../Component/Coop_MatchHeader";
 import dayjs from "dayjs";
 import EditProfileModal from "../Student/Edit/Popup";
 import StudentCalendarCard from "./StudentCalendar";
@@ -88,11 +85,11 @@ const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => 
             {student?.first_name} {student?.last_name}
           </p>
           <p className="student-university-major">
-            {firstEducation?.University?.name_th || "Suranaree University Of Technology"} <br />
-            {firstEducation?.Faculty?.name_th || "คณะวิศวกรรมศาสตร์"} - {firstEducation?.Program?.name_th || "วิศวกรรมคอมพิวเตอร์"}
+            {firstEducation?.University?.name_th || "-"} <br />
+            {firstEducation?.Faculty?.name_th || "-"} - {firstEducation?.Program?.name_th || "-"}
           </p>
           <p className="student-major">
-            {firstEducation?.Faculty?.name_th || "Computer Engineering"}
+            {firstEducation?.Faculty?.name_th || "-"}
           </p>
         </div>
 
@@ -155,53 +152,6 @@ const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => 
     </Card>
   );
 };
-
-const JobTable: React.FC = () => {
-  const columns = [
-    { title: "ลำดับ", dataIndex: "index", key: "index" },
-    { title: "บริษัท", dataIndex: "company", key: "company" },
-    { title: "สถานะ", dataIndex: "status", key: "status" },
-    { title: "ข้อมูล", dataIndex: "info", key: "info" },
-  ];
-  const data = [
-    {
-      key: "1",
-      index: 1,
-      company: "ตัวอย่างบริษัท",
-      status: <span style={{ color: "orange" }}>รอสัมภาษณ์</span>,
-      info: "ดู",
-    },
-  ];
-  return <Table columns={columns} dataSource={data} pagination={false} />;
-};
-const events = [
-  { date: "2025-08-02", type: "warning", content: "ส่งเอกสารสหกิจ" },
-  { date: "2025-08-03", type: "success", content: "นัดสัมภาษณ์กับบริษัท A" },
-  { date: "2025-08-15", type: "error", content: "วันสุดท้ายอัปโหลดใบสมัคร" },
-];
-const dateCellRender = (value: dayjs.Dayjs) => {
-  const formattedDate = value.format("YYYY-MM-DD");
-  const dayEvents = events.filter((event) => event.date === formattedDate);
-
-  return (
-    <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-      {dayEvents.map((event, index) => (
-        <li key={index}>
-          <Badge status={event.type as any} text={event.content} />
-        </li>
-      ))}
-    </ul>
-  );
-};
-
-const CalendarCard: React.FC<{ dateCellRender: (value: dayjs.Dayjs) => React.ReactNode }> = ({ dateCellRender }) => (
-  <Card title="ปฏิทินแจ้งเตือน" bordered>
-    <Calendar fullscreen={false} dateCellRender={dateCellRender} />
-    <div className="student-calendar-footer">
-      <Badge status="success" text="ไม่มีรายการแจ้งเตือนใหม่" />
-    </div>
-  </Card>
-);
 
 const StudentProfile: React.FC = () => {
   const [student, setStudent] = useState<StudentInterface | undefined>(undefined);
