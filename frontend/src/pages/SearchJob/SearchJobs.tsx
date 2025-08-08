@@ -12,6 +12,7 @@ import {
   Col,
   Button,
   message,
+  Tooltip,
 } from 'antd';
 import {
   SearchOutlined,
@@ -19,6 +20,9 @@ import {
   DollarOutlined,
   UserOutlined,
   CalendarOutlined,
+  HeartFilled,
+  HeartOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 import type { BenefitInterface } from '../../interfaces/Benefit';
 import type { JobTypeInterface } from '../../interfaces/JobType';
@@ -33,7 +37,11 @@ import {
   GetStipends,
   GetWorkDay,
   GetWorkMode,
-  GetIntershipPost
+  GetIntershipPost,
+  GetLikedPostsByStudentID,
+  LikePost,
+  GetStudentByUserId,
+  DeleteLikedPost,
 } from '../../services/https';
 import { useNavigate } from 'react-router-dom';
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
@@ -56,14 +64,6 @@ interface FilterState {
   benefits: string[];
 }
 
-// Configuration for work mode colors
-const WORK_MODE_COLORS = {
-  Remote: '#722ed1',
-  'On-site': '#73d13d',
-  Hybrid: '#ff7875',
-  default: '#d9d9d9'
-} as const;
-
 function SearchJobs(){
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -78,6 +78,7 @@ function SearchJobs(){
   const [benefit, setBenefit] = useState<BenefitInterface[]>([]);
   const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
   const [rawProvinces, setRawProvinces] = useState<any[]>([]);
+  const [likedPosts, setLikedPosts] = useState<number[]>([]);
 
   // Filter states (consolidated)
   const [filters, setFilters] = useState<FilterState>({
@@ -182,13 +183,15 @@ function SearchJobs(){
         filtered = filtered.filter(post => post[field as keyof IntershipPostInterface] === value);
       }
     });
-
     // Benefits filter
-    if (filters.benefits.length > 0) {
-      filtered = filtered.filter(post =>
-        post.Benefit && filters.benefits.includes(post.Benefit.benefit)
-      );
-    }
+// ใน filterPosts
+if (filters.benefits.length > 0) {
+  filtered = filtered.filter(post =>
+    post.benefits?.some(b => filters.benefits.includes(b.benefit))
+  );
+}
+
+
     // Province filter
     if (filters.province) {
       filtered = filtered.filter(post =>
@@ -206,11 +209,6 @@ function SearchJobs(){
   };
 
   // Get work mode color
-  const getWorkModeColor = (workMode?: string) => {
-    if (!workMode) return WORK_MODE_COLORS.default;
-    return WORK_MODE_COLORS[workMode as keyof typeof WORK_MODE_COLORS] || WORK_MODE_COLORS.default;
-  };
-
   // Reusable Select component for filters
   const FilterSelect: React.FC<{
     label: string;
@@ -243,9 +241,124 @@ function SearchJobs(){
       </Select>
     </div>
   );
+  
+  // 2. แก้ไข handleToggleLike function
+  const handleToggleLike = async (postId: number) => {
+    try {
+      const userId = Number(localStorage.getItem("id"));
+      if (!userId) {
+        message.error("ไม่พบข้อมูลผู้ใช้");
+        return;
+      }
+      
+      // ✅ ใช้ GetStudentByUserId เพื่อให้ได้ student ID
+      const studentRes = await GetStudentByUserId(userId);
+      const studentId = (studentRes as any).ID;
+      
+      if (!studentId) {
+        message.error("ไม่พบข้อมูลนักศึกษา");
+        return;
+      }
+      
+      console.log("🎯 Toggle like for post:", postId, "student:", studentId);
+      
+      if (likedPosts.includes(postId)) {
+        // 👎 ลบ
+        await DeleteLikedPost(studentId, postId);
+        setLikedPosts(prev => prev.filter(id => id !== postId));
+        message.info("ลบโพสต์ออกจากรายการสนใจแล้ว");
+      } else {
+        // 👍 เพิ่ม
+        await LikePost({
+          StudentID: studentId,
+          IntershipPostID: postId,
+        });
+        
+        setLikedPosts(prev => [...prev, postId]);
+        message.success("เพิ่มโพสต์ในรายการสนใจแล้ว");
+      }
+    } catch (err) {
+      console.error("❌ Error toggling like:", err);
+      message.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    }
+  };
+  
+  const [likedLoaded, setLikedLoaded] = useState(false);
+  useEffect(() => {
+    const fetchLikedPosts = async () => {
+      try {
+        const userId = Number(localStorage.getItem("id"));
+        console.log("🔍 userId from localStorage:", userId);
+        
+        if (!userId) {
+          console.log("❌ No userId found");
+          return;
+        }
+
+        console.log("📡 Fetching student data for userId:", userId);
+        const studentRes = await GetStudentByUserId(userId);
+        const studentId = (studentRes as any)?.ID;
+
+        if (!studentId) {
+          console.error("❌ ไม่พบ student ID");
+          return;
+        }
+
+        console.log("📡 Fetching liked posts for studentId:", studentId);
+        const res = await GetLikedPostsByStudentID(studentId);
+        const likedData = (res as any)?.data;
+
+        if (Array.isArray(likedData)) {
+          const ids = likedData
+            .map((item: any) => {
+              const id = item?.IntershipPost?.ID;
+              console.log("📋 Liked post ID:", id);
+              return id;
+            })
+            .filter((id: number | undefined): id is number => id !== undefined);
+
+          console.log("✅ Final liked post IDs:", ids);
+          setLikedPosts(ids);
+        } else {
+          console.warn("⚠️ likedData is not an array:", likedData);
+          setLikedPosts([]);
+        }
+
+      } catch (error) {
+        console.error("❌ Error fetching liked posts:", error);
+        setLikedPosts([]);
+      } finally {
+        setLikedLoaded(true);
+      }
+    };
+
+    fetchLikedPosts();
+  }, []);
 
   // Job card component
-  const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => (
+const JobCard: React.FC<{
+  job: IntershipPostInterface;
+  likedPosts: number[];
+  onToggleLike: (postId: number) => void;
+}> = ({ job, likedPosts, onToggleLike }) => (
+    <div style={{ position: 'relative' }}>
+    {/* ❤️ ปุ่มหัวใจ */}
+    <Tooltip title="บันทึกโพสต์นี้">
+      <div
+        onClick={() => job.ID && onToggleLike(job.ID)}
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          zIndex: 2,
+          cursor: 'pointer',
+          fontSize: 20,
+          color: likedPosts.includes(job.ID!) ? '#ff4d4f' : '#d9d9d9',
+        }}
+      >
+        {likedPosts.includes(job.ID!) ? <HeartFilled /> : <HeartOutlined />}
+      </div>
+    </Tooltip>
     <Card
       hoverable
       style={{
@@ -302,6 +415,7 @@ function SearchJobs(){
         <Button
           type="primary"
           size="large"
+           icon={<SendOutlined />} // ⬅️ เพิ่มตรงนี้
           onClick={() => navigate(`/student/post-student/${job.ID}`)}
           style={{
             background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
@@ -333,6 +447,7 @@ function SearchJobs(){
         </Button>
       ]}
     >
+      
       <Card.Meta
         title={
           <div>
@@ -350,8 +465,11 @@ function SearchJobs(){
         description={
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Space>
-            <EnvironmentOutlined style={{ color: '#0050b3' }} />
               <Text style={{ color: '#434343' }}>{job.Company?.company_name}</Text>
+            </Space>
+            <Space>
+            <EnvironmentOutlined style={{ color: '#0050b3' }} />
+              <Text style={{ color: '#434343' }}>{job.Company?.Address?.Province?.name_th}</Text>
             </Space>
             <Space>
               <CalendarOutlined style={{ color: '#0050b3' }}/>
@@ -372,6 +490,7 @@ function SearchJobs(){
         }
       />
     </Card>
+      </div>
   );
 
   // Effects
@@ -380,9 +499,12 @@ function SearchJobs(){
     loadProvinces();
   }, []);
 
+  // แก้ไข useEffect ที่ filter posts ให้รอ liked posts โหลดเสร็จก่อน
   useEffect(() => {
-    filterPosts();
-  }, [posts, searchTerm, filters]);
+    if (likedLoaded) { // ✅ รอให้ liked posts โหลดเสร็จก่อน
+      filterPosts();
+    }
+  }, [posts, searchTerm, filters, likedLoaded]); // เพิ่ม likedLoaded เป็น dependency
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
@@ -472,13 +594,17 @@ function SearchJobs(){
               <div style={{ marginTop: 8 }}>
                 <Checkbox.Group
                   value={filters.benefits}
-                  onChange={(checkedValues) => updateFilter('benefits', checkedValues as string[])}
+                  onChange={(checkedValues) => {
+                    updateFilter('benefits', checkedValues as string[]);
+                  }}
                   style={{ display: 'flex', flexDirection: 'column' }}
                 >
                   {benefit.map((item) => (
                     <div key={item.ID} style={{ marginBottom: 8 }}>
-                      <Checkbox value={item.benefit}>{item.benefit}</Checkbox>
-                    </div>
+                      <Checkbox value={item.benefit}>
+                        {item.benefit}
+                      </Checkbox>
+                      </div>
                   ))}
                 </Checkbox.Group>
               </div>
@@ -512,14 +638,23 @@ function SearchJobs(){
           </div>
 
           <Row gutter={[16, 16]}>
-            {filteredPosts.map((job) => (
-              <Col xs={24} sm={12} lg={8} key={job.ID}>
-                <JobCard job={job} />
+            {likedLoaded ? (
+              filteredPosts.map((job) => (
+                <Col xs={24} sm={12} lg={8} key={job.ID}>
+                  <JobCard 
+                    job={job} 
+                    likedPosts={likedPosts} 
+                    onToggleLike={handleToggleLike}
+                  />
+                </Col>
+              ))
+            ) : (
+              // แสดง loading หรือ skeleton ระหว่างโหลด
+              <Col span={24} style={{ textAlign: 'center', padding: '48px 0' }}>
+                <Text>กำลังโหลดข้อมูล...</Text>
               </Col>
-            ))}
+            )}
           </Row>
-
-
           {filteredPosts.length === 0 && (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
               <Text type="secondary" style={{ fontSize: '16px' }}>

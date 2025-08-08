@@ -503,6 +503,16 @@ export async function Logout(email: string) {
     throw error.response?.data || error.message;
   }
 }
+export async function LikePost(data: { StudentID: number; IntershipPostID: number }) {
+  return await axios.post(`${apiUrl}/liked-post`, data, requestOptions);
+}
+export async function GetLikedPostsByStudentID(studentId: number) {
+  return await axios.get(`${apiUrl}/liked-posts/student/${studentId}`, requestOptions);
+}
+
+export async function DeleteLikedPost(studentId: number, postId: number) {
+  return await axios.delete(`${apiUrl}/liked-post/${studentId}/${postId}`, requestOptions);
+}
 
 
 export {

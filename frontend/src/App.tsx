@@ -29,6 +29,7 @@ import CreateInterviewAppointment from "../src/pages/company/appointment/Appoint
 import ProtectProfile from "./components/ProtectedProfile";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
+import LikedPosts from "./pages/LikedPost/LikedPosts";
 
 function App() {
   return (
@@ -143,6 +144,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <ApplicationHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/favorite-posts"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <LikedPosts />
               </ProtectedRoute>
             }
           />
