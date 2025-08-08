@@ -76,6 +76,11 @@ func main() {
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
+		router.GET("/interview_appointments", controller.ListInterviewAppointments)
+		router.POST("/liked-post", controller.LikePost)
+		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
+		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
+
 
 		studentGroup := router.Group("/students")
 		{

@@ -36,6 +36,7 @@ func SetupDatabase() {
 		&entity.User{},
 		&entity.Gender{},
 		&entity.Provinces{},
+		&entity.LikedPost{},
 		&entity.Address{},
 		&entity.Admin{},
 		&entity.Student{},
@@ -434,9 +435,9 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			Benefits: []entity.Benefit{
-				{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
-			},
+			//Benefits: []entity.Benefit{
+			//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			//},
 			WorkDayID: 1,
 			StipendID: 2,
 			JobTypeID: 1,
@@ -451,12 +452,9 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      2,
-			Benefits: []entity.Benefit{
-				{Model: gorm.Model{ID: 3}}, // Or whichever Benefit ID is appropriate
-			},
-			WorkDayID: 2,
-			StipendID: 3,
-			JobTypeID: 4,
+			WorkDayID:       2,
+			StipendID:       3,
+			JobTypeID:       4,
 		},
 		{
 			PostName:        "AI/ML Intern",
@@ -468,12 +466,9 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			Benefits: []entity.Benefit{
-				{Model: gorm.Model{ID: 2}}, // Or whichever Benefit ID is appropriate
-			},
-			WorkDayID: 3,
-			StipendID: 2,
-			JobTypeID: 4,
+			WorkDayID:       3,
+			StipendID:       2,
+			JobTypeID:       4,
 		},
 		{
 			PostName:        "Frontend Developer Intern",
@@ -485,9 +480,12 @@ func createSeedData(db *gorm.DB) {
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
-			Benefits: []entity.Benefit{
-				{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
-			},
+			WorkDayID:       1,
+			StipendID:       2,
+			JobTypeID:       1,
+			//Benefits: []entity.Benefit{
+				//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			//},
 			WorkDayID: 1,
 			StipendID: 2,
 			JobTypeID: 1,
@@ -618,10 +616,28 @@ func createSeedData(db *gorm.DB) {
 			AdminID:         1,
 		},
 	}
-
-	// Step 1: Create Posts
+	// ✅ สร้าง post และผูก benefits แยกต่างหาก
 	for i := range intershipPosts {
+		// 1. Create post
 		db.Create(&intershipPosts[i])
+
+		// 2. เลือก benefit ตาม post index
+		var benefitIDs []uint
+		switch i {
+		case 0:
+			benefitIDs = []uint{1} // Software Dev Intern
+		case 1:
+			benefitIDs = []uint{3} // Data Science Intern
+		case 2:
+			benefitIDs = []uint{2} // AI/ML Intern
+		case 3:
+			benefitIDs = []uint{1, 4} // Frontend Intern
+		}
+
+		// 3. ค้นหา benefit จริงจาก DB แล้วเชื่อมกับโพสต์
+		var benefits []entity.Benefit
+		db.Where("id IN ?", benefitIDs).Find(&benefits)
+		db.Model(&intershipPosts[i]).Association("Benefits").Replace(benefits)
 	}
 
 	// Step 2: Map post index → skills

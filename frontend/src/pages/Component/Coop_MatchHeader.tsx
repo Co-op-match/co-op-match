@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Avatar, Layout, Menu } from 'antd';
+import React, { useContext, useEffect, useState } from 'react';
+import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import {
   SearchOutlined,
   UserOutlined,
@@ -7,12 +7,16 @@ import {
   SettingOutlined,
   HomeOutlined,
   SolutionOutlined,
+  LogoutOutlined,
+  FolderOpenOutlined,
+  HeartFilled,
   DownOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
+import { UserContext } from '../../components/UserContext';
 
 const { Header } = Layout;
 
@@ -25,7 +29,12 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
+  const { logout } = useContext(UserContext);
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/sign-in");
+  };
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
     if (!userId || isNaN(userId)) return;
@@ -103,6 +112,29 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
             flex: '0 0 auto'
           }}
         />
+        <Dropdown
+          overlay={
+            <Menu
+              onClick={({ key }) => {
+                if (key === "logout") {
+                  handleLogout();
+                } else {
+                  navigate(`/student/${key}`);
+                }
+              }}
+            >
+              <Menu.Item key="favorite-posts" icon={<HeartFilled style={{ color: '#ff4de1ff' }} />}>
+                โพสต์งานที่สนใจ
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item key="logout" icon={<LogoutOutlined />} danger>
+                ออกจากระบบ
+              </Menu.Item>
+            </Menu>
+          }
+          placement="bottomRight"
+          trigger={['hover']}
+        >
         <Avatar
           size={40}
           src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
@@ -113,7 +145,8 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
             marginRight: 5,
             flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
           }}
-        />
+        />  
+        </Dropdown>
       </div>
     </Header>
   );

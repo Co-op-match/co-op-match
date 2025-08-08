@@ -19,19 +19,21 @@ import {
   Space,
   Alert,
   Divider,
-  Layout
+  Layout,
+  message
 } from 'antd';
 import { 
   TrophyOutlined, 
   BulbOutlined, 
   EnvironmentOutlined, 
   BookOutlined, 
-  UserOutlined,
   SettingOutlined,
   InfoCircleOutlined,
   HeartOutlined,
   StarOutlined
 } from '@ant-design/icons';
+import { GetLikedPostsByStudentID, GetRecommendedPosts,GetStudentByUserId,LikePost,DeleteLikedPost } from '../../services/https';
+const { Title, Text } = Typography;
 import { GetRecommendedPosts,GetStudentByUserId } from '../../services/https';
 import CoopMatchHeaderDefault from '../component/CoopMatchHeaderDefault';
 const { Title, Text, Paragraph } = Typography;
@@ -53,40 +55,40 @@ function StudentRecommendedPosts() {
     location_weight: 0.15,
     education_weight: 0.05
   });
-  
-const fetchRecommendations = async (customWeights?: MatchingWeights) => {
-  setLoading(true);
-  try {
-    const userId = Number(localStorage.getItem("id"));
-    if (!userId) {
-      console.error("❌ ไม่พบ user ID");
-      return;
-    }
+  const [likedPosts, setLikedPosts] = useState<number[]>([]);
 
-    // ✅ ใช้ student.ID (ตัวใหญ่)
-    const studentRes = await GetStudentByUserId(userId);
-    const studentId = (studentRes as any).ID;
+  const fetchRecommendations = async (customWeights?: MatchingWeights) => {
+    setLoading(true);
+    try {
+      const userId = Number(localStorage.getItem("id"));
+      if (!userId) {
+        console.error("❌ ไม่พบ user ID");
+        return;
+      }
 
-    const query = customWeights
-      ? `?gpa_weight=${customWeights.gpa_weight}&skills_weight=${customWeights.skills_weight}&interest_weight=${customWeights.interest_weight}&location_weight=${customWeights.location_weight}&education_weight=${customWeights.education_weight}`
-      : "";
+  // ✅ ใช้ student.ID (ตัวใหญ่)
+  const studentRes = await GetStudentByUserId(userId);
+  const studentId = (studentRes as any).ID;
 
-    const res = await GetRecommendedPosts(studentId, query);
+  const query = customWeights
+    ? `?gpa_weight=${customWeights.gpa_weight}&skills_weight=${customWeights.skills_weight}&interest_weight=${customWeights.interest_weight}&location_weight=${customWeights.location_weight}&education_weight=${customWeights.education_weight}`
+    : "";
+
+  const res = await GetRecommendedPosts(studentId, query);
     if (res?.status === 200 && res.data?.matches) {
       console.log("📦 ผลลัพธ์ที่ได้:", res.data);
       setRecommendedPosts(res.data.matches);
     } else {
       console.error("❌ Error loading recommended posts:", res?.data || res);
       setRecommendedPosts([]);
+      }
+    } catch (err) {
+      console.error("❌ Unexpected error:", err);
+      setRecommendedPosts([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("❌ Unexpected error:", err);
-    setRecommendedPosts([]);
-  } finally {
-    setLoading(false);
-  }
 };
-
 useEffect(() => {
   const userId = Number(localStorage.getItem("id"));
   if (!userId) return;
@@ -94,20 +96,24 @@ useEffect(() => {
   async function fetchData() {
     try {
       const student = await GetStudentByUserId(userId);
-      const studentId = (student as any).ID; // ✅ ใช้ ID ตัวใหญ่
+      const studentId = (student as any).ID;
 
+      // 🔹 โหลด Recommended Posts
       const res = await GetRecommendedPosts(studentId);
-      console.log("🎯 Recommended:", res);
-
       if (res?.status === 200 && Array.isArray(res.data?.matches)) {
         setRecommendedPosts(res.data.matches);
       } else {
         console.warn("⚠️ res.data.matches is not valid:", res);
-        setRecommendedPosts([]); // fallback
+        setRecommendedPosts([]);
       }
+
+      // ✅ โหลด LikedPosts
+      const likedRes = await GetLikedPostsByStudentID(studentId);
+      const likedIds = likedRes.data.map((item: any) => item.IntershipPostID); // แค่ ID
+      setLikedPosts(likedIds);
     } catch (err) {
       console.error("❌ Error fetching data", err);
-      setRecommendedPosts([]); // fallback
+      setRecommendedPosts([]);
     } finally {
       setLoading(false);
     }
@@ -115,8 +121,6 @@ useEffect(() => {
 
   fetchData();
 }, []);
-
-
 
   const getScoreColor = (score: number) => {
     if (score >= 0.8) return '#52c41a';
@@ -155,6 +159,114 @@ useEffect(() => {
     setWeights(defaultWeights);
   };
 
+  useEffect(() => {
+    
+  const fetchLikedPosts = async () => {
+    try {
+      const userId = Number(localStorage.getItem("id"));
+      if (!userId) return;
+
+      // ✅ ใช้ GetStudentByUserId เพื่อให้ได้ student ID
+      const studentRes = await GetStudentByUserId(userId);
+      const studentId = (studentRes as any).ID;
+
+      if (!studentId) {
+        console.error("❌ ไม่พบ student ID");
+        return;
+      }
+
+      const res = await GetLikedPostsByStudentID(studentId);
+      console.log("📌 Liked posts:", res);
+      
+      if (Array.isArray(res)) {
+        const ids = res.map((item: any) => item.intership_post_id);
+        setLikedPosts(ids);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching liked posts:", error);
+      setLikedPosts([]); // fallback
+    }
+  };
+
+  fetchLikedPosts();
+}, []);
+
+// 2. แก้ไข handleToggleLike function
+const handleToggleLike = async (postId: number) => {
+  try {
+    const userId = Number(localStorage.getItem("id"));
+    if (!userId) {
+      message.error("ไม่พบข้อมูลผู้ใช้");
+      return;
+    }
+
+    // ✅ ใช้ GetStudentByUserId เพื่อให้ได้ student ID
+    const studentRes = await GetStudentByUserId(userId);
+    const studentId = (studentRes as any).ID;
+
+    if (!studentId) {
+      message.error("ไม่พบข้อมูลนักศึกษา");
+      return;
+    }
+
+    console.log("🎯 Toggle like for post:", postId, "student:", studentId);
+
+    if (likedPosts.includes(postId)) {
+      // 👎 ลบ
+      await DeleteLikedPost(studentId, postId);
+      setLikedPosts(prev => prev.filter(id => id !== postId));
+      message.info("ลบโพสต์ออกจากรายการสนใจแล้ว");
+    } else {
+      // 👍 เพิ่ม
+      await LikePost({
+  StudentID: studentId,
+  IntershipPostID: postId,
+});
+
+      setLikedPosts(prev => [...prev, postId]);
+      message.success("เพิ่มโพสต์ในรายการสนใจแล้ว");
+    }
+  } catch (err) {
+    console.error("❌ Error toggling like:", err);
+    message.error("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+  }
+};
+
+
+// ✅ แยก actions ออกมาเป็น function แยก
+const getCardActions = (post: MatchResult) => [
+  <Button 
+    key="detail"
+    type="link" 
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedPost(post);
+      setDetailVisible(true);
+    }}
+  >
+    ดูรายละเอียด
+  </Button>,
+  <Button
+    key="like"
+    type="link"
+    icon={<HeartOutlined />}
+    loading={false} // ✅ เพิ่ม loading state ถ้าต้องการ
+    style={{
+      color: likedPosts.includes(post.post_id) ? '#eb2f96' : '#aaa',
+      fontWeight: 500,
+      transition: 'color 0.3s',
+    }}
+    onClick={(e) => {
+      e.stopPropagation();
+      e.preventDefault(); // ✅ เพิ่มบรรทัดนี้
+      console.log("💖 Like button clicked for post:", post.post_id);
+      handleToggleLike(post.post_id);
+    }}
+  >
+    {likedPosts.includes(post.post_id) ? 'ลบออก' : 'สนใจ'}
+  </Button>
+];
+
   return (
     <Layout style={{backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
       <CoopMatchHeaderDefault />
@@ -182,7 +294,7 @@ useEffect(() => {
       {!loading && recommendedPosts.length > 0 && (
         <Alert
           message="เคล็ดลับ"
-          description="คะแนนความเหมาะสมคำนวณจากทักษะ, GPA, ความสนใจ, และสถานที่ คุณสามารถปรับแต่งน้ำหนักแต่ละปัจจัยได้"
+          description="คะแนนนี้ดูจากสกิล เกรด ความชอบ แล้วก็โลเคชัน! อยากให้เรื่องไหนเด่น ปรับน้ำหนักได้ตามใจเลยจ้า 🎯"
           type="info"
           showIcon
           closable
@@ -242,33 +354,17 @@ useEffect(() => {
                   <Card
                     hoverable
                     style={{ height: '100%' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = '0 12px 40px rgba(24, 144, 255, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(24, 144, 255, 0.2)';
-                      }}
-                      onClick={() => {
-                        setSelectedPost(post);   // ต้องมี!
-                        setDetailVisible(true);
-                      }}
-                    actions={[
-                      <Button 
-                        type="link" 
-                        onClick={() => {
-                          setSelectedPost(post);
-                          setDetailVisible(true);
-                        }}
-                      >
-                        ดูรายละเอียด
-                      </Button>,
-                      <Button type="link" icon={<HeartOutlined />} >
-                        สนใจ
-                      </Button>
-                    ]}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 12px 40px rgba(24, 144, 255, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(24, 144, 255, 0.2)';
+                    }}
+                    actions={getCardActions(post)} // ✅ ใช้ function แยก
                   >
+                      
                     <div style={{ marginBottom: 12 }}>
                       <Title level={4} style={{ margin: 0, marginBottom: 4 }}>
                         {post.post_name}
@@ -490,7 +586,7 @@ useEffect(() => {
               <Col span={12}>
                 <Card size="small" title="เกณฑ์การรับ">
                   <p><strong>GPA ขั้นต่ำ:</strong> {selectedPost.min_gpa.toFixed(2)}</p>
-                  <p><strong>GPA ของคุณ:</strong> 
+                  <p><strong>GPA ของคุณ: </strong> 
                     <span style={{ color: selectedPost.gpa_matched ? '#52c41a' : '#f5222d' }}>
                       {selectedPost.gpa.toFixed(2)}
                     </span>
