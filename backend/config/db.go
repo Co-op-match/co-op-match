@@ -486,9 +486,6 @@ func createSeedData(db *gorm.DB) {
 			//Benefits: []entity.Benefit{
 				//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
 			//},
-			WorkDayID: 1,
-			StipendID: 2,
-			JobTypeID: 1,
 		}, {
 			PostName:        "Frontend Developer Intern",
 			PostDescription: "พัฒนา UI ด้วย React และ Ant Design",
