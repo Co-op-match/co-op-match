@@ -7,6 +7,7 @@ import (
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
+	"co-op-match.com/co-op-match/controller/analysis"
 	"co-op-match.com/co-op-match/controller/role"
 	"co-op-match.com/co-op-match/controller/searchjob"
 	"co-op-match.com/co-op-match/controller/users"
@@ -165,15 +166,31 @@ func main() {
 			contactGroup.GET("/:user_id", controller.GetContactByUserId)
 			contactGroup.PUT("/:user_id", controller.UpdateContactByUserID)
 		}
-	}
 
-	adminGroup := r.Group("/admin")
-	{
-		adminGroup.GET("/all", controller.GetAllAdmin)
-		adminGroup.GET("/user/:id", controller.GetAdminByUserID)
-		adminGroup.GET("/:id", controller.GetAdminByID)
-		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
-		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
+		adminGroup := r.Group("/admin")
+		{
+			adminGroup.GET("/all", controller.GetAllAdmin)
+			adminGroup.GET("/user/:id", controller.GetAdminByUserID)
+			adminGroup.GET("/:id", controller.GetAdminByID)
+			adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
+			adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
+		}
+		analysisGroup := r.Group("/analysis")
+		{
+			analysisGroup.GET("/dashboard-summary", analysis.GetAdminStatusSummaries)
+			analysisGroup.GET("/dashboard-overview", analysis.GetAdminDashboardOverview)
+			analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
+			analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
+			analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
+		}
+		verifyGroup := r.Group("/verify")
+		{
+			verifyGroup.GET("", controller.GetAllVerifications)
+			verifyGroup.GET("/:id", controller.GetVerificationByID)
+			verifyGroup.GET("/status", controller.GetAllStatusVerify)
+			verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
+			verifyGroup.PUT("/update-status-posts", controller.UpdateStatusPost)
+		}
 	}
 
 	r.GET("/", func(c *gin.Context) {

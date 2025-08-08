@@ -2,6 +2,7 @@ package users
 
 import (
 	"net/http"
+	"time"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
@@ -83,6 +84,18 @@ func SignIn(c *gin.Context) {
 	// ตั้งสถานะออนไลน์
 	db.Model(&user).Update("is_logged_in", true)
 
+	loginLog := entity.LoginLog{
+		IP:      c.ClientIP(),              // ได้ IP ของ client
+		Device:  c.GetHeader("User-Agent"), // ได้ user-agent (browser/device info)
+		LoginAt: time.Now(),
+		UserID:  user.ID,
+	}
+
+	if err := db.Create(&loginLog).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกข้อมูลการเข้าสู่ระบบได้"})
+		return
+	}
+
 	jwtWrapper := services.JwtWrapper{
 		SecretKey:       "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
 		Issuer:          "AuthService",
@@ -124,6 +137,18 @@ func Logout(c *gin.Context) {
 	// ตั้งสถานะออนไลน์เป็น false
 	db.Model(&user).Update("is_logged_in", false)
 
+	// 🟢 อัปเดต LogoutAt ใน LoginLog ล่าสุด
+	var latestLog entity.LoginLog
+	if err := db.
+		Where("user_id = ?", user.ID).
+		Order("login_at desc").
+		First(&latestLog).Error; err == nil {
+
+		now := time.Now()
+		db.Model(&latestLog).Update("logout_at", &now)
+		c.JSON(http.StatusOK, gin.H{"success": "ผ่านนนน"})
+	}
+	
 	c.JSON(http.StatusOK, gin.H{"message": "ออกจากระบบเรียบร้อยแล้ว"})
 }
 
