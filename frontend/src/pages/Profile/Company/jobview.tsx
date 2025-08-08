@@ -10,12 +10,14 @@ import {
 import { useNavigate } from 'react-router-dom';
 import type { IntershipPostInterface } from '../../../interfaces/IntershipPost';
 
+
 const { Text, Paragraph } = Typography;
 
 const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => {
   const navigate = useNavigate();
 
   return (
+    <div className='animation-scroll'>
     <Card
       hoverable
       style={{
@@ -121,6 +123,7 @@ const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => {
         }
       />
     </Card>
+    </div>
   );
 };
 

@@ -285,12 +285,15 @@ const handleLike = async (reviewId: number) => {
     setCurrentSlide(Math.max(0, Math.min(slideIndex, totalSlides - 1)));
   };
 
-  const starsDisplay = (rating: number) =>
-    Array(5)
-      .fill(0)
-      .map((_, i) => (
-        <FaStar key={i} color={i < rating ? "#ffd700" : "#ccc"} />
-      ));
+const starsDisplay = (rating: number) =>
+  Array(5)
+    .fill(0)
+    .map((_, i) => (
+      <FaStar
+        key={i}
+        className={`star-icon ${i < rating ? "filled" : "empty"}`}
+      />
+    ));
 
   const slideWidth = 350 + 20; // 350px card + 20px gap
   const translateX = -currentSlide * (slideWidth * reviewsPerSlide);
@@ -424,6 +427,7 @@ return (
             className="review-card fade-in"
             style={{ animationDelay: `${(idx % reviewsPerSlide) * 0.1}s` }}
           >
+             <div className="review-content">
             {/* Review Header */}
             <div className="review-header">
               <div>
@@ -471,15 +475,16 @@ return (
                 ))}
               </div>   
             )}
+              </div>
 
             {/* Review Footer */}
-            <div className="review-footer">
+        <div className="review-footer">
             <button
-            className={`like-button ${likedReviews.includes(review.id) ? "liked" : ""}`}
-            onClick={() => handleLike(review.id)}
-            data-count={review.helpful}
+              className={`like-button ${likedReviews.includes(review.id) ? "liked" : ""}`}
+              onClick={() => handleLike(review.id)}
+              data-count={review.helpful}
             >
-            <FaHeart />
+              <FaHeart />
             </button>
             </div>
           </div>

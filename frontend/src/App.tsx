@@ -31,6 +31,9 @@ import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
+import ChatInterface from "./Chat/ChatInterface";
+import ChatWebSocket from "./Chat/test";
+import AdvancedChatInterface from "./Chat/ChatInterface";
 
 
 function App() {
@@ -98,12 +101,14 @@ function App() {
             element={
                   <CompanyProfileView />
             }
-          />           <Route
-            path="/review"
+          />                  
+          <Route
+            path="/c"
             element={
-                  <CompanyReviewsSection />
+                  <ChatWebSocket />
             }
-          />
+          />       
+          <Route path="/chat/:roomId/:userId" element={<AdvancedChatInterface />} />
           {/* <Route
             path="/student/add-profile"
             element={

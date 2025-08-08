@@ -12,6 +12,21 @@
   transition: all 0.3s ease;
   margin: 0 20px;
 }
+.animation-scroll {
+  animation: fade-in1  linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 80%;
+}
+@keyframes fade-in1 {
+    from{
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    to{
+        opacity: 1;
+        transform: scale(1);
+    }
+}
 /* Main Reviews Section */
 .reviews-section {
   border-radius: 12px;
@@ -38,6 +53,9 @@
   text-align: center;
   position: relative;
   animation: pulseTextShadow 2s ease-in-out infinite;
+    animation: fade-in1  linear both;
+  animation-timeline: view();
+  animation-range: entry 10% entry 80%;
 }
 
 .section-post-title::after {
@@ -99,7 +117,6 @@
     color: #333;
     text-align: center;
     position: relative;
-     animation: pulseTextShadowYellow 2s ease-in-out infinite;
 }
 .section-title svg {
     filter: drop-shadow(0 4px 8px rgba(255, 217, 0, 0.3));
@@ -318,17 +335,33 @@
 
 /* Review Card Styles */
 .review-card {
-    min-width: 350px;
-    max-width: 350px;
-    flex-shrink: 0;
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0, 183, 255, 0.1);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    overflow: hidden;
+  display: flex; /* 👈 จำเป็น */
+  flex-direction: column; /* 👈 จัดแนวจากบนลงล่าง */
+  justify-content: space-between; /* 👈 ดัน footer ไปอยู่ล่าง */
+  
+  min-width: 350px;
+  max-width: 350px;
+  flex-shrink: 0;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 183, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  min-height: 280px; /* ให้ความสูงเท่ากันทุกกล่อง */
 }
+
+.review-content {
+  flex-grow: 1; /* 👈 ดันให้ content เต็มก่อน แล้ว footer จะอยู่ล่าง */
+}
+
+.review-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
 .review-card::before {
     content: '';
     position: absolute;
@@ -346,7 +379,7 @@
 }
 .review-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 15px 40px rgba(0, 183, 255, 0.233);
 }
 
 .review-header {
@@ -375,11 +408,19 @@
     border-radius: 12px;
 }
 
-.review-rating {
-    color: #ffd700;
-    margin-bottom: 10px;
-    font-size: 1.2rem;
-    filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
+.star-icon {
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+  margin-right: 1px;
+}
+
+.star-icon.filled {
+  color: #ffd700;
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
+}
+
+.star-icon.empty {
+  color: #ccc;
 }
 
 .review-text {
@@ -430,10 +471,7 @@
     box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
 }
 /* Like Button */
-.review-footer {
-  display: flex;
-  justify-content: flex-end; /* ดันปุ่มไปชิดขวา */
-}
+
 /* Like Button - Heart Style with Number Inside */
 .like-button {
     position: relative;

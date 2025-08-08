@@ -93,7 +93,7 @@ func SignIn(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return
 	}
-
+	c.SetCookie("auth_token", signedToken, 3600*24, "/", "localhost", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Login successful",
 		"token_type": "Bearer",
