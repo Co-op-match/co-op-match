@@ -3,6 +3,7 @@ import type { ProfileImageInterface } from "./ProfileImage";
 import type { StudentInterface } from "./Student";
 import type { CompanyInterface } from "./Company";
 import type { VerifyInterface } from "./Verify";
+import type { AcademicStaffInterface } from "./AcademicStaff";
 
 export interface UserInterface {
   ID: number;
@@ -15,4 +16,5 @@ export interface UserInterface {
   Company?: CompanyInterface[];
 
   Verifications?: VerifyInterface[];
+  AcademicStaff?: AcademicStaffInterface[];
 }

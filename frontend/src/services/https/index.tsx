@@ -33,6 +33,12 @@ async function SignIn(data: SignInInterface) {
     .then((res) => res)
     .catch((e) => e.response);
 }
+export async function SignUp(data: SignInInterface) {
+  return await axios
+    .post(`${apiUrl}/sign-up`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 async function GetRole() {
   return await axios
     .get(`${apiUrl}/roles`, requestOptions)
@@ -110,7 +116,7 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
 
 export async function UpdateStatusPost(postId: number, statusPostId: number) {
   return await axios
-    .put(`${apiUrl}/posts/update-status`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
+    .put(`${apiUrl}/update-status-posts`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
@@ -151,7 +157,68 @@ export async function GetInternshipPostsInAdminByIPostID(id: number) {
     .then((res) => res)
     .catch((e) => e.response);
 }
-
+//=============================== Verify ==============================//
+export async function GetAllVerifications() {
+  return await axios
+    .get(`${apiUrl}/verify`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetVerificationByID(id: number) {
+  return await axios
+    .get(`${apiUrl}/verify/${id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllStatusVerify() {
+  return await axios
+    .get(`${apiUrl}/verify/status`, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error fetching data:", e);
+      return e.response;
+    });
+}
+export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface) {
+  return await axios
+    .put(`${apiUrl}/verify/update-verify/${verifyId}`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => {
+      console.error("Error updating verification status:", e);
+      return e.response;
+    });
+}
+//=============================== Analysis ==============================//
+export async function GetAdminDashboardSummary () {
+  return await axios
+    .get(`${apiUrl}/analysis/dashboard-summary`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminDashboardOverview () {
+  return await axios
+    .get(`${apiUrl}/analysis/dashboard-overview`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminMonthlyApplicationStats () {
+  return await axios
+    .get(`${apiUrl}/analysis/monthly-application-stats`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminRecentActivities () {
+  return await axios
+    .get(`${apiUrl}/analysis/recent-activities`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdminPendingPosts () {
+  return await axios
+    .get(`${apiUrl}/analysis/pending-posts`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

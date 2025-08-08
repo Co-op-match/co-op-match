@@ -77,6 +77,15 @@ func SetupDatabase() {
 		&entity.StatusVerify{},
 		&entity.Tag{},
 		&entity.ReviewLike{},
+		&entity.Analysis{},
+		&entity.AnalysisType{},
+		&entity.LoginLog{},
+		&entity.SkillDemandAnalysis{},
+		&entity.ApplicationStatistics{},
+		&entity.StudentPerformanceAnalysis{},
+		&entity.CompanyReviewStats{},
+		&entity.InterestTrendAnalysis{},
+		&entity.UniversityApplicationAnalysis{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -915,6 +924,17 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, app := range applications {
 		db.Create(&app)
+	}
+
+	analysisTypes := []entity.AnalysisType{
+		{TypeCode: "application", TypeName: "การสมัคร"},
+		{TypeCode: "review", TypeName: "รีวิวบริษัท"},
+		{TypeCode: "matching", TypeName: "การจับคู่งาน"},
+		{TypeCode: "post", TypeName: "ข้อมูลโพสต์"},
+		{TypeCode: "login", TypeName: "รายงานการเข้าระบบ"},
+	}
+	for _, at := range analysisTypes {
+		db.FirstOrCreate(&at, entity.AnalysisType{TypeCode: at.TypeCode})
 	}
 
 }

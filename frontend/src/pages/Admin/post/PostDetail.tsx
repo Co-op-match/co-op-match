@@ -18,6 +18,8 @@ const { Title, Text } = Typography;
 
 const PostDetailPage = () => {
   const navigate = useNavigate();
+  const [messageApi, contextHolder] = message.useMessage();
+
   const { id } = useParams();
   const [post, setPost] = useState<IntershipPostInterface>();
   const [status, setStatus] = useState<StatusPostInterface[]>([]);
@@ -35,7 +37,7 @@ const PostDetailPage = () => {
         setPost(res_post.data);
         setStatus(res_status);
       } catch (error) {
-        message.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
+        messageApi.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
       } finally {
         setLoading(false);
       }
@@ -99,9 +101,9 @@ const PostDetailPage = () => {
           : prev
       );
 
-      message.success("อนุมัติโพสต์เรียบร้อยแล้ว");
+      messageApi.success("อนุมัติโพสต์เรียบร้อยแล้ว");
     } catch (error) {
-      message.error("ไม่สามารถอนุมัติโพสต์ได้");
+      messageApi.error("ไม่สามารถอนุมัติโพสต์ได้");
     } finally {
       setActionLoading(false);
     }
@@ -130,9 +132,9 @@ const PostDetailPage = () => {
           : prev
       );
 
-      message.success("ปิดรับสมัครเรียบร้อยแล้ว");
+      messageApi.success("ปิดรับสมัครเรียบร้อยแล้ว");
     } catch (error) {
-      message.error("ไม่สามารถปฏิเสธโพสต์ได้");
+      messageApi.error("ไม่สามารถปฏิเสธโพสต์ได้");
     } finally {
       setActionLoading(false);
     }
@@ -204,9 +206,10 @@ const PostDetailPage = () => {
   }[post.StatusPost?.status_post_th!] || <ExclamationCircleOutlined />;
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f0f2f5" }}>
+    <Layout>
+      {contextHolder}
       <AdminHeader />
-      <div style={{ padding: "2rem" }}>
+      <Layout className="adminpage-layout">
         {/* Header */}
         <Card
           style={{
@@ -267,7 +270,7 @@ const PostDetailPage = () => {
             <QuickStatsCard post={post} />
           </Col>
         </Row>
-      </div>
+      </Layout>
     </Layout>
   );
 };

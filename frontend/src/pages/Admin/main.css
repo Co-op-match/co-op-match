@@ -1,6 +1,239 @@
+.adminpage-layout {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(240, 248, 255, 1) 25%,
+    rgba(207, 234, 250, 1) 60%,
+    rgba(159, 218, 252, 1) 100%
+  );
+}
+/* Add subtle pattern overlay */
+.adminpage-layout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(24, 144, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(135, 208, 104, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(24, 144, 255, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Header Section */
+.adminpost-header-box {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  padding: 32px 40px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  box-shadow: 
+    0 8px 32px rgba(24, 144, 255, 0.2),
+    0 2px 8px rgba(24, 144, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header decorative elements */
+.adminpost-header-box::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.adminpost-header-box::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -5%;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+/* Header content styling */
+.adminpost-header-box .ant-typography h2 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+}
+.adminpost-header-box .ant-typography {
+  color: rgba(255, 255, 255, 0.9) !important;
+  position: relative;
+  z-index: 2;
+}
+.adminpost-header-box .ant-btn {
+  position: relative;
+  z-index: 2;
+}
+
+/*========================== dashboard ==========================*/
+/* Dashboard Header */
+.adminpage-dashboard-header {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  padding: 32px 40px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  box-shadow: 
+    0 8px 32px rgba(24, 144, 255, 0.2),
+    0 2px 8px rgba(24, 144, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+/* Header decorative elements */
+.adminpage-dashboard-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.adminpage-dashboard-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -5%;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.adminpage-dashboard-title {
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+.adminpage-dashboard-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
+/* Statistics Cards */
+.adminpage-dashboard-stats-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(24, 144, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 20px rgba(24, 144, 255, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.adminpage-dashboard-stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1890ff, #40a9ff, #69c0ff);
+  opacity: 0.8;
+}
+.adminpage-dashboard-stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 8px 32px rgba(24, 144, 255, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: rgba(24, 144, 255, 0.2);
+}
+.adminpage-dashboard-stats-card .ant-card-body {
+  padding: 24px;
+}
+/* Chart Cards */
+.adminpage-dashboard-chart-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(24, 144, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 20px rgba(24, 144, 255, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+.adminpage-dashboard-chart-card:hover {
+  box-shadow: 
+    0 8px 32px rgba(24, 144, 255, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+  border-color: rgba(24, 144, 255, 0.15);
+}
+.adminpage-dashboard-chart-card .ant-card-head {
+  background: linear-gradient(90deg, rgba(24, 144, 255, 0.02), rgba(64, 169, 255, 0.02));
+  border-bottom: 1px solid rgba(24, 144, 255, 0.08);
+  border-radius: 16px 16px 0 0;
+}
+.adminpage-dashboard-chart-card .ant-card-head-title {
+  color: #1890ff;
+  font-weight: 600;
+  font-size: 16px;
+}
+.adminpage-dashboard-chart-card .ant-card-body {
+  padding: 24px;
+}
+/* Activity Card */
+.adminpage-dashboard-activity-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(24, 144, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 20px rgba(24, 144, 255, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+  height: 100%;
+}
+
+.adminpage-dashboard-activity-card .ant-card-head {
+  background: linear-gradient(90deg, rgba(24, 144, 255, 0.02), rgba(64, 169, 255, 0.02));
+  border-bottom: 1px solid rgba(24, 144, 255, 0.08);
+  border-radius: 16px 16px 0 0;
+}
+
+.adminpage-dashboard-activity-card .ant-card-head-title {
+  color: #1890ff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.adminpage-dashboard-activity-card .ant-table {
+  background: transparent;
+}
+
+.adminpage-dashboard-activity-card .ant-table-thead > tr > th {
+  background: rgba(24, 144, 255, 0.04);
+  border-bottom: 1px solid rgba(24, 144, 255, 0.08);
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.adminpage-dashboard-activity-card .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(24, 144, 255, 0.06);
+}
+
+.adminpage-dashboard-activity-card .ant-table-tbody > tr:hover > td {
+  background: rgba(24, 144, 255, 0.02);
+}
+/*========================== user ==========================*/
 .adminpage-table .ant-table-container {
   animation: fadeIn 0.5s ease-in-out;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); 
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.3s ease;
 }
 
@@ -18,7 +251,7 @@
 }
 
 .fade-in-card:hover {
-  transform: translateY(-4px); 
+  transform: translateY(-4px);
 }
 
 @keyframes fadeIn {
@@ -47,4 +280,14 @@
 
 .adminpage-table .ant-table-tbody > tr:hover > td {
   background: rgba(22, 119, 255, 0.02);
+}
+
+/*========================== verify ==========================*/
+/* ปุ่มสถานะ */
+.adminpage-verify-status-button {
+  width: 120px;
+  height: 36px;
+  border-radius: 18px;
+  font-weight: 500;
+  font-size: 13px;
 }

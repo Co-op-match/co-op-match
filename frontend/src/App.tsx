@@ -31,6 +31,7 @@ import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
+import AdminVerify from "./pages/Admin/verify/verify";
 import ChatInterface from "./Chat/ChatInterface";
 import ChatWebSocket from "./Chat/test";
 import AdvancedChatInterface from "./Chat/ChatInterface";
@@ -250,6 +251,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminPostManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/verify"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminVerify />
               </ProtectedRoute>
             }
           />
