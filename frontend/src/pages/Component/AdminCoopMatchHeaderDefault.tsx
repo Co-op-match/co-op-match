@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Avatar,
   Button,
@@ -25,6 +25,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
+import { UserContext } from "../../components/UserContext";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -41,6 +42,8 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   const screens = useBreakpoint();
   const [user, setUser] = useState<UserInterface | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
+
+  const { logout } = useContext(UserContext);
 
   // Responsive breakpoints
   const isMobile = !screens.md;
@@ -60,14 +63,13 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       return;
     }
 
-    if (key === "users") return;
     navigate(`/admin/${key}`);
     setDrawerVisible(false); // Close drawer on mobile after navigation
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.clear();
-    
+    await logout();
     navigate("/sign-in");
     setDrawerVisible(false);
   };
@@ -85,6 +87,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "companies",
       "lecturers",
       "admins",
+      "users",
     ].find((key) => location.pathname.includes(key)) || "dashboard";
 
   const userDropdownItems: MenuProps["items"] = [
@@ -120,16 +123,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     {
       key: "users",
       icon: <TeamOutlined />,
-      label: isMobile ? (
-        "ผู้ใช้ทั้งหมด"
-      ) : (
-        <Dropdown menu={userMenuProps} trigger={["hover"]} disabled={isMobile}>
-          <Space>
-            <span style={{ cursor: "pointer" }}>ผู้ใช้ทั้งหมด</span>
-          </Space>
-        </Dropdown>
-      ),
-      children: isMobile ? userDropdownItems : undefined,
+      label: isMobile ? "ผู้ใช้" : "ผู้ใช้ทั้งหมด",
     },
     {
       key: "manage-posts",

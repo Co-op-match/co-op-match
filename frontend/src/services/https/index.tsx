@@ -81,6 +81,20 @@ async function GetUserById(user_id: number): Promise<UserInterface> {
   }
 }
 
+export async function GetAllUser() {
+  return await axios
+    .get(`${apiUrl}/all-users`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+export async function UpdateUser(id: number, data: UserInterface) {
+  return await axios
+    .put(`${apiUrl}/update-user/${id}`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 async function CreateProfileImage(data: FormData) {
   return await axios.post(`${apiUrl}/user/image`, data, {
     ...requestOptions,
@@ -188,6 +202,13 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
       return e.response;
     });
 }
+//=======================================AcademicStaffs============================================
+export async function GetAllAcademicStaff() {
+  return await axios
+    .get(`${apiUrl}/academic/all`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 //=============================== Analysis ==============================//
 export async function GetAdminDashboardSummary () {
   return await axios
@@ -198,6 +219,12 @@ export async function GetAdminDashboardSummary () {
 export async function GetAdminDashboardOverview () {
   return await axios
     .get(`${apiUrl}/analysis/dashboard-overview`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllLoginLogs () {
+  return await axios
+    .get(`${apiUrl}/all-login-logs`)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -219,6 +246,21 @@ export async function GetAdminPendingPosts () {
     .then((res) => res)
     .catch((e) => e.response);
 }
+export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'year'; year: number }) {
+  const { mode, year } = params;
+  return await axios
+    .get(`${apiUrl}/analysis/users-by-role-series`, { params: { mode, year } })
+    .then(res => res)
+    .catch(e => e.response);
+}
+export async function GetMonthlyUsersByRole () {
+  return await axios
+    .get(`${apiUrl}/analysis/monthly-user-by-role`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
+export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

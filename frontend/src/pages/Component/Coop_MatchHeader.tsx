@@ -29,6 +29,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
+  
   const { logout } = useContext(UserContext);
 
   const handleLogout = async () => {

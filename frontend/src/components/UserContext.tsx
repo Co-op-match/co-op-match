@@ -39,7 +39,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       const userData = await GetUserById(Number(userIdStr));
       setUser(userData);
-    } catch {
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        localStorage.removeItem("id");
+        localStorage.removeItem("token");
+        localStorage.removeItem("token_type");
+        localStorage.removeItem("roleId");
+        localStorage.removeItem("isLogin");
+      }
       setUser(null);
     } finally {
       setLoading(false);

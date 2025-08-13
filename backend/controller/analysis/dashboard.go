@@ -43,10 +43,10 @@ func GetAdminStatusSummaries(c *gin.Context) {
 		"status_posts":    postCounts,
 		"status_verifies": verifyCounts,
 		"user_roles": map[string]int64{
-			"students":       studentCount,
-			"companies":      companyCount,
-			"academicStaff":  academicStaffCount,
-			"admins":         adminCount,
+			"students":      studentCount,
+			"companies":     companyCount,
+			"academicStaff": academicStaffCount,
+			"admins":        adminCount,
 		},
 	})
 }
@@ -54,15 +54,14 @@ func GetAdminStatusSummaries(c *gin.Context) {
 // controller/dashboard.go
 func GetAdminDashboardOverview(c *gin.Context) {
 	var (
-		totalUsers     int64
-		totalStudents  int64
-		totalCompanies int64
-		totalStaff     int64
-		totalAdmins    int64
-		totalApps      int64
-		totalInterviews int64
+		totalUsers        int64
+		totalStudents     int64
+		totalCompanies    int64
+		totalStaff        int64
+		totalAdmins       int64
+		totalApps         int64
+		totalInterviews   int64
 		totalPendingPosts int64
-		totalPendingVerifications int64
 		totalRecentLogins int64
 	)
 
@@ -76,62 +75,70 @@ func GetAdminDashboardOverview(c *gin.Context) {
 	db.Model(&entity.Application{}).Count(&totalApps)
 	db.Model(&entity.InterviewAppointment{}).Count(&totalInterviews)
 
+	// Pending posts
 	db.Model(&entity.IntershipPost{}).
 		Joins("JOIN status_posts ON intership_posts.status_post_id = status_posts.id").
 		Where("status_posts.status_post = ?", "Pending").
 		Count(&totalPendingPosts)
 
-	db.Model(&entity.Verify{}).
-		Joins("JOIN status_verifies ON verifies.status_verify_id = status_verifies.id").
-		Where("status_verifies.status_verify = ?", "รอรับรอง").
-		Count(&totalPendingVerifications)
-
+	// Recent logins
 	db.Model(&entity.LoginLog{}).
 		Where("login_at >= ?", time.Now().Add(-24*time.Hour)).
 		Count(&totalRecentLogins)
 
+	// นับ Verify แยกตาม StatusVerify
+	type VerifyCount struct {
+		Status string `json:"status"`
+		Count  int64  `json:"count"`
+	}
+	var verifyCounts []VerifyCount
+	db.Model(&entity.Verify{}).
+		Select("status_verifies.status_verify AS status, COUNT(*) AS count").
+		Joins("JOIN status_verifies ON verifies.status_verify_id = status_verifies.id").
+		Group("status_verifies.status_verify").
+		Scan(&verifyCounts)
+
 	c.JSON(http.StatusOK, gin.H{
-		"total_users":       totalUsers,
-		"students":          totalStudents,
-		"companies":         totalCompanies,
-		"academic_staff":    totalStaff,
-		"admins":            totalAdmins,
-		"applications":      totalApps,
-		"interviews":        totalInterviews,
-		"pending_posts":     totalPendingPosts,
-		"pending_verifications": totalPendingVerifications,
-		"recent_logins":     totalRecentLogins,
+		"total_users":     totalUsers,
+		"students":        totalStudents,
+		"companies":       totalCompanies,
+		"academic_staff":  totalStaff,
+		"admins":          totalAdmins,
+		"applications":    totalApps,
+		"interviews":      totalInterviews,
+		"pending_posts":   totalPendingPosts,
+		"verify_statuses": verifyCounts,
+		"recent_logins":   totalRecentLogins,
 	})
 }
 
 type MonthlyApplicationStats struct {
-	Month           string `json:"month"`
-	Applications    int    `json:"applications"`
-	Interviews      int    `json:"interviews"`
-	Approved        int    `json:"approved"`
+	Month        string `json:"month"`
+	Applications int    `json:"applications"`
+	Interviews   int    `json:"interviews"`
+	Approved     int    `json:"approved"`
 }
 
 func GetAdminMonthlyApplicationStats(c *gin.Context) {
+	year := c.DefaultQuery("year", time.Now().Format("2006")) // ค.ศ.
 	var stats []MonthlyApplicationStats
 	db := config.DB()
 
-	// ตัวอย่างการใช้ raw SQL query (แนะนำให้ปรับปรุงให้รองรับ timezone และ month filter)
 	db.Raw(`
-		SELECT 
-			strftime('%m', submit_at) AS month,
-			COUNT(*) AS applications,
-			SUM(CASE WHEN status = 'นัดสัมภาษณ์แล้ว' THEN 1 ELSE 0 END) AS interviews,
-			SUM(CASE WHEN status = 'ผ่านการคัดเลือก' THEN 1 ELSE 0 END) AS approved
-		FROM applications
-		GROUP BY month
-		ORDER BY month
-	`).Scan(&stats)
+        SELECT 
+            strftime('%m', submit_at) AS month,
+            COUNT(*) AS applications,
+            SUM(CASE WHEN status = 'นัดสัมภาษณ์แล้ว' THEN 1 ELSE 0 END) AS interviews,
+            SUM(CASE WHEN status = 'ผ่านการคัดเลือก' THEN 1 ELSE 0 END) AS approved
+        FROM applications
+        WHERE strftime('%Y', submit_at) = ?
+        GROUP BY month
+        ORDER BY month
+    `, year).Scan(&stats)
 
-	// แปลงเลขเดือนเป็นชื่อไทย
 	for i := range stats {
 		stats[i].Month = convertMonthToThai(stats[i].Month)
 	}
-
 	c.JSON(http.StatusOK, stats)
 }
 

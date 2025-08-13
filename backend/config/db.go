@@ -87,6 +87,8 @@ func SetupDatabase() {
 		&entity.CompanyReviewStats{},
 		&entity.InterestTrendAnalysis{},
 		&entity.UniversityApplicationAnalysis{},
+		&entity.MonthlyUserRoleStat{},
+		&entity.VerificationStatusSnapshot{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -854,6 +856,21 @@ func createSeedData(db *gorm.DB) {
 	for _, v := range verifies {
 		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
+	}
+	
+	// ดึง user ทั้งหมดที่ยังไม่มี Verify
+	var users []entity.User
+	db.Where("id NOT IN (?)", db.Model(&entity.Verify{}).Select("user_id")).
+		Find(&users)
+	// สร้าง Verify สำหรับ user ที่เหลือ
+	for _, u := range users {
+		verify := entity.Verify{
+			StatusVerifyID:       1,
+			UserID:               u.ID,
+			VerificationDocument: "",
+			Reason:               "",
+		}
+		db.FirstOrCreate(&verify, entity.Verify{UserID: verify.UserID})
 	}
 
 	reviews := []entity.Review{

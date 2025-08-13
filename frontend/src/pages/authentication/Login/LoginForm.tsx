@@ -15,30 +15,30 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const { refetchUser } = useContext(UserContext);
 
-const location = useLocation();
+  const location = useLocation();
 
-useEffect(() => {
-  const isLogin = localStorage.getItem("isLogin") === "true";
-  const roleId = localStorage.getItem("roleId");
-  if (location.pathname === "/sign-in" && isLogin && roleId) {
-    switch (parseInt(roleId)) {
-      case 1:
-        navigate("/admin/dashboard");
-        break;
-      case 2:
-        navigate("/company/dashboard");
-        break;
-      case 3:
-        navigate("/student/dashboard");
-        break;
-      case 4:
-        navigate("/lecturer/dashboard");
-        break;
-      default:
-        navigate("/");
+  useEffect(() => {
+    const isLogin = localStorage.getItem("isLogin") === "true";
+    const roleId = localStorage.getItem("roleId");
+    if (location.pathname === "/sign-in" && isLogin && roleId) {
+      switch (parseInt(roleId)) {
+        case 1:
+          navigate("/admin/dashboard");
+          break;
+        case 2:
+          navigate("/company/dashboard");
+          break;
+        case 3:
+          navigate("/student/dashboard");
+          break;
+        case 4:
+          navigate("/lecturer/dashboard");
+          break;
+        default:
+          navigate("/");
+      }
     }
-  }
-}, [navigate, location.pathname]);
+  }, [navigate, location.pathname]);
 
   const onFinish = async (values: SignInInterface) => {
     setLoading(true);
@@ -82,6 +82,7 @@ useEffect(() => {
       }, 1000);
     } else {
       messageApi.error(res.data.error);
+      navigate("/sign-in");
     }
   };
 

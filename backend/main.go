@@ -69,6 +69,10 @@ func main() {
 	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/chat/ws", controller.ChatWebSocket)
 
+	r.GET("/all-users", controller.GetAllUser)
+	r.GET("/all-login-logs", controller.GetAllLoginLogs)
+	r.PUT("/update-user/:id", controller.UpdateUser)
+
 	// Protected Routes
 	router := r.Group("/")
 	{
@@ -204,6 +208,10 @@ func main() {
 			analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
 			analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
 			analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
+			analysisGroup.GET("/monthly-user-by-role", analysis.GetMonthlyUsersByRole)
+			analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
+			analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
+			analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
 		}
 		verifyGroup := r.Group("/verify")
 		{
@@ -212,6 +220,10 @@ func main() {
 			verifyGroup.GET("/status", controller.GetAllStatusVerify)
 			verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
 			verifyGroup.PUT("/update-status-posts", controller.UpdateStatusPost)
+		}
+		academicGroup := r.Group("/academic")
+		{
+			academicGroup.GET("all", controller.GetAllAcademicStaff)
 		}
 	}
 

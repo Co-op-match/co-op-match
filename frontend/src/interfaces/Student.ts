@@ -19,8 +19,9 @@ export interface StudentInterface {
   height?: number;
   weight?: number;
 
-  gender_id: number;
+  gender_id?: number;
   user_id?: number;
+  UserID?: number;
   address_id?: number;
   admin_id?: number;
 

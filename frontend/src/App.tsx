@@ -36,6 +36,7 @@ import AdminVerify from "./pages/Admin/verify/verify";
 import ChatInterface from "./Chat/ChatInterface";
 import ChatWebSocket from "./Chat/test";
 import AdvancedChatInterface from "./Chat/ChatInterface";
+import AdminUser from "./pages/Admin/user/main";
 
 
 function App() {
@@ -268,6 +269,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminVerify />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminUser />
               </ProtectedRoute>
             }
           />
