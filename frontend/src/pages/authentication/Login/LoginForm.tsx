@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Checkbox, Form, Input, Typography, message } from "antd";
 import { FacebookOutlined, TwitterOutlined } from "@ant-design/icons";
-import { SignIn } from "../../../services/https";
+import { GetUserByIdhaveStatusData, SignIn } from "../../../services/https";
 import type { SignInInterface } from "../../../interfaces/auth/SignIn";
 import "./login.css";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -17,11 +17,42 @@ function LoginForm() {
 
   const location = useLocation();
 
+  // อ่านค่าจาก localStorage ครั้งเดียวเพื่อใช้เป็น dependency ที่นิ่ง
+  const ls = useMemo(() => ({
+    isLogin: localStorage.getItem("isLogin") === "true",
+    roleId: localStorage.getItem("roleId"),
+    userID: Number(localStorage.getItem("id")),
+  }), []);
+
+  const didRedirectRef = useRef(false); // กัน navigate ซ้ำ
+
+  const fetchIsStuckUser = async (): Promise<boolean> => {
+    if (!ls.userID || Number.isNaN(ls.userID)) return false;
+    try {
+      const res = await GetUserByIdhaveStatusData(ls.userID);
+      // ถ้า service คืน axios response:
+      if (res?.status === 200) return true;
+      // ถ้าคืน data ตรง ให้ปรับเป็น: if (res) return true;
+      messageApi.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!");
+      return false;
+    } catch (err) {
+      console.error("Failed to fetch user", err);
+      return false;
+    }
+  };
+
   useEffect(() => {
-    const isLogin = localStorage.getItem("isLogin") === "true";
-    const roleId = localStorage.getItem("roleId");
-    if (location.pathname === "/sign-in" && isLogin && roleId) {
-      switch (parseInt(roleId)) {
+    // เงื่อนไข: อยู่หน้า /sign-in + เคย login + มี role
+    if (location.pathname !== "/sign-in") return;
+    if (!ls.isLogin || !ls.roleId) return;
+    if (didRedirectRef.current) return;
+
+    (async () => {
+      const ok = await fetchIsStuckUser();
+      if (!ok) return;
+
+      didRedirectRef.current = true;
+      switch (parseInt(ls.roleId!)) {
         case 1:
           navigate("/admin/dashboard");
           break;
@@ -37,7 +68,7 @@ function LoginForm() {
         default:
           navigate("/");
       }
-    }
+    })();
   }, [navigate, location.pathname]);
 
   const onFinish = async (values: SignInInterface) => {
@@ -82,7 +113,6 @@ function LoginForm() {
       }, 1000);
     } else {
       messageApi.error(res.data.error);
-      navigate("/sign-in");
     }
   };
 

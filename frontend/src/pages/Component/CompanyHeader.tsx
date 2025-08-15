@@ -113,7 +113,7 @@ const currentPage = fullMenu.find(item => {
 <div style={{ display: 'flex', alignItems: 'center' }}>
   <Menu
     mode="horizontal"
-    selectedKeys={[currentPage]}
+    selectedKeys={[currentPage!]}
     items={menuItems}
     onClick={handleMenuClick}
     style={{

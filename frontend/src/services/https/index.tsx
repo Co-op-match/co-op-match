@@ -81,6 +81,12 @@ async function GetUserById(user_id: number): Promise<UserInterface> {
   }
 }
 
+export async function GetUserByIdhaveStatusData(user_id: number){
+  return await axios
+    .get(`${apiUrl}/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 export async function GetAllUser() {
   return await axios
     .get(`${apiUrl}/all-users`, requestOptions)

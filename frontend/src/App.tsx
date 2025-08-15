@@ -40,6 +40,7 @@ import AdminUser from "./pages/Admin/user/main";
 
 
 function App() {
+  const isAuthenticated = !!localStorage.getItem('token'); // ตรวจสอบการเข้าสู่ระบบ
   return (
     <BrowserRouter>
       <UserProvider>
