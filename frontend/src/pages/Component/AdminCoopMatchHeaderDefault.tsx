@@ -47,7 +47,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
   const { logout } = useContext(UserContext);
 
-  // Responsive breakpoints
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
   
