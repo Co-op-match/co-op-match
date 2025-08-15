@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Avatar, Button, Dropdown, Layout, Menu } from 'antd';
 import {
   UserOutlined,
@@ -11,6 +11,7 @@ import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
 import { Link } from 'react-router-dom';
+import { UserContext } from '../../components/UserContext';
 
 
 const { Header } = Layout;
@@ -23,6 +24,14 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
+
+  const { logout } = useContext(UserContext);
+
+  const handleLogout = async () => {
+    await logout();
+    localStorage.clear(); 
+    navigate("/sign-in");
+  };
 
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
@@ -65,10 +74,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(`/company/${key}`);
   };
-    const handleLogout = () => {
-    localStorage.clear(); 
-    navigate('/sign-in');
-  };
+    
   const logoutMenu = (
   <Menu>
     <Menu.Item key="logout" danger onClick={handleLogout}>
@@ -107,7 +113,7 @@ const currentPage = fullMenu.find(item => {
 <div style={{ display: 'flex', alignItems: 'center' }}>
   <Menu
     mode="horizontal"
-    selectedKeys={[currentPage]}
+    selectedKeys={[currentPage!]}
     items={menuItems}
     onClick={handleMenuClick}
     style={{

@@ -4,18 +4,18 @@ import type { AdminInterface } from "./Admin";
 import type { GenderInterface } from "./Gender";
 
 export interface AcademicStaffInterface {
-  id: number;
-  academic_position: string;
-  age: number;
-  faculty: string;
-  department: string;
-  university: string;
-  verify: boolean;
+  ID?: number;
+  academic_position?: string;
+  age?: number;
+  faculty?: string;
+  department?: string;
+  university?: string;
+  birthday?: string;
 
-  user_id: number;
-  address_id: number;
-  AdminID: number;
-  gender_id: number;
+  UserID?: number;
+  address_id?: number;
+  AdminID?: number;
+  gender_id?: number;
 
   first_name?: string;
   last_name?: string;

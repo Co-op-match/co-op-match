@@ -6,10 +6,11 @@ import type { VerifyInterface } from "./Verify";
 import type { AcademicStaffInterface } from "./AcademicStaff";
 
 export interface UserInterface {
-  ID: number;
-  Email: string;
-  is_active: boolean;
-  RoleID: number;
+  ID?: number;
+  Email?: string;
+  is_active?: boolean;
+  is_logged_in?: boolean;
+  RoleID?: number;
   Role?: RoleInterface;
   ProfileImage?: ProfileImageInterface[];
   Student?: StudentInterface[];
@@ -17,4 +18,7 @@ export interface UserInterface {
 
   Verifications?: VerifyInterface[];
   AcademicStaff?: AcademicStaffInterface[];
+
+  CreatedAt?: string;
+  UpdatedAt?: string;
 }
