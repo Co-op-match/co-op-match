@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Space, Tag, message, Row, Col, Typography, Divider, Layout, Empty, Spin } from "antd";
 import { ArrowLeftOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/index";
+import { GetAdminById, GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
@@ -13,6 +13,8 @@ import CompanyInfoCard from "../../../components/adminpage/post/PDetail_CompanyI
 import ApplicationsCard from "../../../components/adminpage/post/PDetail_ApplicationsCard";
 import PostInfoCard from "../../../components/adminpage/post/PDetail_PostInfoCard";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
+import type { AdminInterface } from "../../../interfaces/Admin";
+
 
 const { Title, Text } = Typography;
 
@@ -20,7 +22,9 @@ const PostDetailPage = () => {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
 
+  const user_id = Number(localStorage.getItem("id"));
   const { id } = useParams();
+  const [admin, setAdmin] = useState<AdminInterface>();
   const [post, setPost] = useState<IntershipPostInterface>();
   const [status, setStatus] = useState<StatusPostInterface[]>([]);
 
@@ -34,8 +38,10 @@ const PostDetailPage = () => {
       try {
         const res_post = await GetInternshipPostsInAdminByIPostID(Number(id));
         const res_status = await GetStatusPosts();
-        setPost(res_post.data);
-        setStatus(res_status);
+        const res_admin = await GetAdminById(user_id);
+        if (res_post.status === 200) setPost(res_post.data);
+        if (res_post.status === 200) setStatus(res_status);
+        if (res_post.status === 200) setAdmin(res_admin.data);
       } catch (error) {
         messageApi.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
       } finally {
@@ -96,6 +102,7 @@ const PostDetailPage = () => {
                 ...prev.StatusPost,
                 status_post: openStatus.status_post,
                 status_post_th: openStatus.status_post_th,
+                AdminID: admin?.ID,
               },
             }
           : prev
@@ -127,6 +134,7 @@ const PostDetailPage = () => {
                 ...prev.StatusPost,
                 status_post: closedStatus.status_post,
                 status_post_th: closedStatus.status_post_th,
+                AdminID: admin?.ID,
               },
             }
           : prev
@@ -234,7 +242,7 @@ const PostDetailPage = () => {
                   <Title level={3} style={{ margin: 0, color: "#1677ff" }}>
                     รายละเอียดโพสต์ฝึกงาน
                   </Title>
-                  <Text type="secondary">ID: {post.ID}</Text>
+                  <Text type="secondary">รหัสโพสต์งาน: {post.ID}</Text>
                 </div>
               </Space>
             </Col>
