@@ -267,6 +267,25 @@ export async function GetMonthlyUsersByRole () {
 }
 export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
 export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+export const GetAdminApplicationStats = (params?: {
+  grain?: "day" | "week" | "month" | "quarter" | "year";
+  year?: string;
+  start?: string;
+  end?: string;
+}) =>
+axios.get(`${apiUrl}/analysis/application-stats`, {
+  ...requestOptions,
+  params,
+});
+export const GetAdminActivityStats = (params?: {
+  grain?: "day" | "week" | "month" | "quarter" | "year";
+  start?: string;
+  end?: string;
+}) =>
+axios.get(`${apiUrl}/analysis/activity-stats`, {
+  ...requestOptions,
+  params,
+});
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

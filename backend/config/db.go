@@ -89,6 +89,7 @@ func SetupDatabase() {
 		&entity.UniversityApplicationAnalysis{},
 		&entity.MonthlyUserRoleStat{},
 		&entity.VerificationStatusSnapshot{},
+		&entity.Activity{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")

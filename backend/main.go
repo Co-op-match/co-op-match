@@ -212,6 +212,8 @@ func main() {
 			analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
 			analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
 			analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
+			analysisGroup.GET("/application-stats", analysis.GetAdminApplicationStats)
+			analysisGroup.GET("/activity-stats", analysis.GetAdminActivityStats)
 		}
 		verifyGroup := r.Group("/verify")
 		{

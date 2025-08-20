@@ -142,36 +142,6 @@ func GetAdminMonthlyApplicationStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
-type ActivityLog struct {
-	UserName string `json:"user"`
-	Role     string `json:"type"`
-	Action   string `json:"action"`
-	Time     string `json:"time"`
-	Company  string `json:"company,omitempty"`
-	Post     string `json:"post,omitempty"`
-}
-
-func GetAdminRecentActivities(c *gin.Context) {
-	var logs []ActivityLog
-
-	db := config.DB()
-	db.Raw(`
-		SELECT u.email AS user, r.role_name AS type, 'สมัครงาน' AS action, 
-			strftime('%Y-%m-%d %H:%M', a.submit_at) AS time,
-			co.company_name AS company, ip.post_name AS post
-		FROM applications a
-		JOIN students s ON s.id = a.student_id
-		JOIN users u ON u.id = s.user_id
-		JOIN roles r ON r.id = u.role_id
-		JOIN intership_posts ip ON ip.id = a.intership_post_id
-		JOIN companies co ON co.id = ip.company_id
-		ORDER BY a.submit_at DESC
-		LIMIT 10
-	`).Scan(&logs)
-
-	c.JSON(http.StatusOK, logs)
-}
-
 type PendingPost struct {
 	Company   string `json:"company"`
 	Position  string `json:"position"`
@@ -197,6 +167,9 @@ func GetAdminPendingPosts(c *gin.Context) {
 
 	c.JSON(http.StatusOK, posts)
 }
+
+/****************************** 2 ********************************************/
+
 
 func convertMonthToThai(month string) string {
 	switch month {

@@ -37,7 +37,9 @@ import ChatInterface from "./Chat/ChatInterface";
 import ChatWebSocket from "./Chat/test";
 import AdvancedChatInterface from "./Chat/ChatInterface";
 import AdminUser from "./pages/Admin/user/main";
-
+import ApplicationStatsPage from "./pages/Admin/analysis/ApplicationStatsPage";
+import UserRoleStatsPage from "./pages/Admin/analysis/UserRoleStatsPage";
+import ActivitiesPage from "./pages/Admin/analysis/ActivitiesPage";
 
 function App() {
   return (
@@ -248,46 +250,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={[1]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/manage-posts"
-            element={
-              <ProtectedRoute allowedRoles={[1]}>
-                <AdminPostManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/verify"
-            element={
-              <ProtectedRoute allowedRoles={[1]}>
-                <AdminVerify />
-              </ProtectedRoute>
-            }
-          />
-           <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute allowedRoles={[1]}>
-                <AdminUser />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/manage-post/:id"
-            element={
-              <ProtectedRoute allowedRoles={[1]}>
-                <AdminPostDetailManagement />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={[1]}><AdminDashboard /></ProtectedRoute>}/>
+          <Route path="/admin/manage-posts" element={<ProtectedRoute allowedRoles={[1]}><AdminPostManagement /></ProtectedRoute>}/>
+          <Route path="/admin/verify" element={<ProtectedRoute allowedRoles={[1]}><AdminVerify /></ProtectedRoute>}/>
+          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={[1]}><AdminUser /></ProtectedRoute>}/>
+          <Route path="/admin/manage-post/:id" element={<ProtectedRoute allowedRoles={[1]}><AdminPostDetailManagement /></ProtectedRoute>}/>
+          <Route path="/admin/analytics/applications" element={<ProtectedRoute allowedRoles={[1]}><ApplicationStatsPage /></ProtectedRoute>}/>
+          <Route path="/admin/analytics/users" element={<ProtectedRoute allowedRoles={[1]}><UserRoleStatsPage /></ProtectedRoute>}/>
+          <Route path="/admin/analytics/activities" element={<ProtectedRoute allowedRoles={[1]}><ActivitiesPage /></ProtectedRoute>}/>
         </Routes>
       </UserProvider>
     </BrowserRouter>
