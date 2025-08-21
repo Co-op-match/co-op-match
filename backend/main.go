@@ -203,15 +203,16 @@ func main() {
 		}
 		analysisGroup := r.Group("/analysis")
 		{
-			analysisGroup.GET("/dashboard-summary", analysis.GetAdminStatusSummaries)
-			analysisGroup.GET("/dashboard-overview", analysis.GetAdminDashboardOverview)
-			analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
-			analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
-			analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
-			analysisGroup.GET("/monthly-user-by-role", analysis.GetMonthlyUsersByRole)
-			analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
-			analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
-			analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
+			/* analysisGroup.GET("/kpis", analysis.GetKPIs)
+			analysisGroup.GET("/applications/trend", analysis.GetApplicationTrend)
+			analysisGroup.GET("/applications/by-program", analysis.GetApplicationsByProgram)
+			analysisGroup.GET("/matching/success-rate", analysis.GetMatchingSuccessRate)
+			analysisGroup.GET("/reviews/summary", analysis.GetReviewsSummary)
+			analysisGroup.GET("/logins/summary", analysis.GetLoginsSummary) */
+			analysisGroup.GET("/kpis", analysis.GetKPIs)
+			analysisGroup.GET("/applications/trend", analysis.GetApplicationTrend)
+			analysisGroup.GET("/applications/by-program", analysis.GetApplicationsByProgram)
+			analysisGroup.GET("/reviews/company", analysis.GetCompanyReviewReport)
 		}
 		verifyGroup := r.Group("/verify")
 		{

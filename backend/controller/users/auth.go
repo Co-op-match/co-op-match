@@ -7,6 +7,7 @@ import (
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
 	"co-op-match.com/co-op-match/services"
+	"co-op-match.com/co-op-match/util"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -117,6 +118,27 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
+	// สร้าง session id
+	sid, err := util.NewSessionID(16)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot create session id"})
+		return
+	}
+
+	// สร้าง LoginEvent (success)
+	ev := entity.LoginEvent{
+		UserID:    user.ID,
+		IsSuccess: true,
+		IP:        c.ClientIP(),
+		UserAgent: c.GetHeader("User-Agent"),
+		LoggedAt:  time.Now(),
+		SessionID: sid,
+	}
+	if err := db.Create(&ev).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกเหตุการณ์ล็อกอินได้"})
+		return
+	}
+
 	jwtWrapper := services.JwtWrapper{
 		SecretKey:       "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
 		Issuer:          "AuthService",
@@ -127,7 +149,10 @@ func SignIn(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return
 	}
+
 	c.SetCookie("auth_token", signedToken, 3600*24, "/", "localhost", false, true)
+	c.SetCookie("session_id", sid, 3600*24, "/", "localhost", false, true)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Login successful",
 		"token_type": "Bearer",
@@ -135,15 +160,25 @@ func SignIn(c *gin.Context) {
 		"role":       user.Role.RoleName,
 		"roleId":     user.RoleID,
 		"id":         user.ID,
+		"session_id": sid,
 	})
 }
 
 func Logout(c *gin.Context) {
 	var request struct {
 		Email string `json:"email" binding:"required,email"`
+		SessionID string `json:"session_id"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ข้อมูลไม่ถูกต้อง"})
+		// ลองอ่านจาก cookie หาก body ว่าง
+		request.Email = c.PostForm("email")
+		request.SessionID, _ = c.Cookie("session_id")
+		return
+	}
+
+	if request.Email == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ข้อมูลไม่ถูกต้อง"})
 		return
 	}
@@ -170,6 +205,28 @@ func Logout(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": "ผ่านนนน"})
 	}
 	
+	// หา session_id จาก cookie ถ้า body ไม่มี
+	if request.SessionID == "" {
+		if sid, err := c.Cookie("session_id"); err == nil {
+			request.SessionID = sid
+		}
+	}
+
+	// อัปเดต LogoutAt ของ event ล่าสุดที่ยังไม่ปิด
+	var ev entity.LoginEvent
+	tx := db.Where("user_id = ? AND logout_at IS NULL", user.ID)
+	if request.SessionID != "" {
+		tx = tx.Where("session_id = ?", request.SessionID)
+	}
+	if err := tx.Order("logged_at desc").First(&ev).Error; err == nil {
+		now := time.Now()
+		db.Model(&ev).Update("logout_at", &now)
+	}
+
+	// ล้าง cookie (ถ้าต้องการ)
+	c.SetCookie("auth_token", "", -1, "/", "localhost", false, true)
+	c.SetCookie("session_id", "", -1, "/", "localhost", false, true)
+
 	c.JSON(http.StatusOK, gin.H{"message": "ออกจากระบบเรียบร้อยแล้ว"})
 }
 

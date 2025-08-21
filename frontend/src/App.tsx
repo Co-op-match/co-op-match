@@ -37,7 +37,7 @@ import ChatInterface from "./Chat/ChatInterface";
 import ChatWebSocket from "./Chat/test";
 import AdvancedChatInterface from "./Chat/ChatInterface";
 import AdminUser from "./pages/Admin/user/main";
-
+import AdminAnalysis from "./pages/Admin/analysis/main";
 
 function App() {
   return (
@@ -272,11 +272,19 @@ function App() {
               </ProtectedRoute>
             }
           />
-           <Route
+          <Route
             path="/admin/users"
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminUser />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/analysis"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminAnalysis />
               </ProtectedRoute>
             }
           />

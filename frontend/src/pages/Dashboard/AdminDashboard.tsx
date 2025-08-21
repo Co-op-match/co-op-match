@@ -67,16 +67,7 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import AdminHeader from "./../Component/AdminCoopMatchHeaderDefault";
-import {
-  GetAdminDashboardOverview,
-  GetAdminMonthlyApplicationStats,
-  GetAdminPendingPosts,
-  GetAdminRecentActivities,
-  GetMonthlyUsersByRole,
-  GetPopularCompanies,
-  GetTopJobs,
-  GetUsersByRoleSeries,
-} from "../../services/https";
+
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -204,71 +195,13 @@ const CoopDashboard = () => {
   }, [mode, yearBE]);
 
   const loadUsersByRoleSeries = async (m: typeof mode, yearAD: number) => {
-    const res = await GetUsersByRoleSeries({ mode: m, year: yearAD });
-    const series = Array.isArray(res?.data) ? res.data : [];
-    setUserRoleSeries(series);
-
-    // ---- สรุปยอดตามบทบาทจาก series ----
-    const sums = series.reduce(
-      (acc: any, p: any) => {
-        acc.students += p?.students ?? 0;
-        acc.companies += p?.companies ?? 0;
-        acc.academic_staff += p?.academic_staff ?? 0;
-        acc.admins += p?.admins ?? 0;
-        return acc;
-      },
-      { students: 0, companies: 0, academic_staff: 0, admins: 0 }
-    );
-
-    const rows = [
-      { name: "นักศึกษา", value: sums.students, color: "#1890ff" },
-      { name: "บริษัท", value: sums.companies, color: "#52c41a" },
-      { name: "อาจารย์", value: sums.academic_staff, color: "#722ed1" },
-      { name: "แอดมิน", value: sums.admins, color: "#faad14" },
-    ];
-    setUserRoleData(rows);
-    setUserRoleTotal(
-      sums.students + sums.companies + sums.academic_staff + sums.admins
-    );
   };
 
   const fetchData = async () => {
     try {
-      const [
-        overviewRes,
-        statsRes,
-        activitiesRes,
-        postsRes,
-        monthlyUsersRes,
-        topJobsRes,
-        popularCompaniesRes,
-      ] = await Promise.all([
-        GetAdminDashboardOverview(),
-        GetAdminMonthlyApplicationStats(),
-        GetAdminRecentActivities(),
-        GetAdminPendingPosts(),
-        GetMonthlyUsersByRole(),
-        GetTopJobs(),
-        GetPopularCompanies(),
-      ]);
+    
 
-      const overview = overviewRes.data;
-
-      setOverviewData(overview);
-      setApplicationData(statsRes.data);
-      setRecentActivities(activitiesRes.data);
-      setPendingPostsData(postsRes.data);
-      setMonthlyUserData(monthlyUsersRes.data || []);
-      setTopJobs(topJobsRes.data || []);
-      setPopularCompanies(popularCompaniesRes.data || []);
-
-      setUserRoleData([
-        { name: "นักศึกษา", value: overview.students, color: "#1890ff" },
-        { name: "บริษัท", value: overview.companies, color: "#52c41a" },
-        { name: "อาจารย์", value: overview.academic_staff, color: "#722ed1" },
-        { name: "แอดมิน", value: overview.admins, color: "#faad14" },
-      ]);
-
+     
       // Template ของทุกสถานะ + สี
       const statusTemplate = [
         { status: "ยังไม่ได้ส่งคำขอ", color: "#d9d9d9" },
@@ -276,16 +209,7 @@ const CoopDashboard = () => {
         { status: "รับรอง", color: "#52c41a" },
         { status: "ปฏิเสธ", color: "#ff4d4f" },
       ];
-      const verificationData = statusTemplate.map((tpl) => {
-        const found = overview.verify_statuses.find(
-          (v: any) => v.status === tpl.status
-        );
-        return {
-          status: tpl.status,
-          count: found ? found.count : 0,
-          color: tpl.color,
-        };
-      });
+    
       setVerificationData(verificationData);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);

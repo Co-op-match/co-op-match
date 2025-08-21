@@ -14,6 +14,8 @@ import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
+import { api } from "./api";
+import type { KPIResponse, MajorTrendResponse, ReviewSummary, TrendResponse } from "../../interfaces/Analysis";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -81,12 +83,13 @@ async function GetUserById(user_id: number): Promise<UserInterface> {
   }
 }
 
-export async function GetUserByIdhaveStatusData(user_id: number){
+export async function GetUserByIdhaveStatusData(user_id: number) {
   return await axios
-    .get(`${apiUrl}/user/${user_id}`, requestOptions)
+    .get(`/user/${user_id}`)
     .then((res) => res)
     .catch((e) => e.response);
 }
+
 export async function GetAllUser() {
   return await axios
     .get(`${apiUrl}/all-users`, requestOptions)
@@ -216,57 +219,89 @@ export async function GetAllAcademicStaff() {
     .catch((e) => e.response);
 }
 //=============================== Analysis ==============================//
-export async function GetAdminDashboardSummary () {
-  return await axios
-    .get(`${apiUrl}/analysis/dashboard-summary`)
-    .then((res) => res)
-    .catch((e) => e.response);
+/* export async function GetKPIs() { 
+  return await axios 
+  .get(`${apiUrl}/analysis/kpis`, requestOptions)
+  .then((res) => res)
+  .catch((e) => e.response); 
+} 
+export async function GetApplicationTrend(days: number) { 
+  return await axios .get(`${apiUrl}/analysis/applications/trend`, {
+      ...requestOptions,
+      params: { days },
+    })
+  .then((res) => res) 
+  .catch((e) => e.response); 
+} 
+export async function GetApplicationsByProgram() { 
+  return await axios 
+  .get(`${apiUrl}/analysis/applications/by-program`, requestOptions) 
+  .then((res) => res) 
+  .catch((e) => e.response); 
+} 
+export async function GetMatchingSuccessRate(days: number) { 
+  return await axios 
+  .get(`${apiUrl}/analysis/matching/success-rate`, {
+      ...requestOptions,
+      params: { days },
+    })
+  .then((res) => res) 
+  .catch((e) => e.response); 
+} 
+export async function GetReviewsSummary() { 
+  return await axios 
+    .get(`${apiUrl}/analysis/reviews/summary`, requestOptions) 
+    .then((res) => res) 
+    .catch((e) => e.response); 
+} 
+export async function GetLoginsSummary(days: number) { 
+  return await axios 
+    .get(`${apiUrl}/analysis/logins/summary`, {
+      ...requestOptions,
+      params: { days },
+    })
+    .then((res) => res) 
+    .catch((e) => e.response); 
+} */
+
+/************************************    2       *************************** */
+export async function GetKPIs() { 
+  return await axios 
+  .get(`${apiUrl}/analysis/kpis`, requestOptions)
+  .then((res) => res)
+  .catch((e) => e.response); 
+} 
+export async function GetApplicationTrend(days: number) { 
+  return await axios .get(`${apiUrl}/analysis/applications/trend`, {
+      ...requestOptions,
+      params: { days },
+    })
+  .then((res) => res) 
+  .catch((e) => e.response); 
+} 
+export async function GetApplicationsByProgram(params: {
+  start: string;
+  end: string;
+  top: number;
+}) {
+  return axios
+    .get(`${apiUrl}/analysis/applications/by-program`, {
+      ...requestOptions,
+      params,
+    })
+    .then(res => res.data)
+    .catch(e => Promise.reject(e.response));
 }
-export async function GetAdminDashboardOverview () {
-  return await axios
-    .get(`${apiUrl}/analysis/dashboard-overview`)
-    .then((res) => res)
-    .catch((e) => e.response);
+export async function GetCompanyReviewReport(company_id?: number) { 
+  return await axios 
+  .get(`${apiUrl}/analysis/reviews/company`, {
+    ...requestOptions,
+    params: company_id ? { company_id } : undefined,
+  })
+  .then((res) => res) 
+  .catch((e) => e.response); 
 }
-export async function GetAllLoginLogs () {
-  return await axios
-    .get(`${apiUrl}/all-login-logs`)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
-export async function GetAdminMonthlyApplicationStats () {
-  return await axios
-    .get(`${apiUrl}/analysis/monthly-application-stats`)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
-export async function GetAdminRecentActivities () {
-  return await axios
-    .get(`${apiUrl}/analysis/recent-activities`)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
-export async function GetAdminPendingPosts () {
-  return await axios
-    .get(`${apiUrl}/analysis/pending-posts`)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
-export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'year'; year: number }) {
-  const { mode, year } = params;
-  return await axios
-    .get(`${apiUrl}/analysis/users-by-role-series`, { params: { mode, year } })
-    .then(res => res)
-    .catch(e => e.response);
-}
-export async function GetMonthlyUsersByRole () {
-  return await axios
-    .get(`${apiUrl}/analysis/monthly-user-by-role`)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
-export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
-export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

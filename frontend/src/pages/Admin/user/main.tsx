@@ -64,7 +64,6 @@ import type { AcademicStaffInterface } from "../../../interfaces/AcademicStaff";
 import {
   GetAllAcademicStaff,
   GetAllCompany,
-  GetAllLoginLogs,
   GetAllStudent,
   GetAllUser,
   GetRole,
@@ -114,14 +113,12 @@ const AdminUserDetailsPage: React.FC = () => {
         studentsRes,
         companiesRes,
         academicRes,
-        logsRes,
         roleRes,
       ] = await Promise.all([
         GetAllUser(),
         GetAllStudent(),
         GetAllCompany(),
         GetAllAcademicStaff(),
-        GetAllLoginLogs(),
         GetRole(),
       ]);
 
@@ -132,8 +129,6 @@ const AdminUserDetailsPage: React.FC = () => {
       setStudents(studentsRes.data ?? []);
       setCompanies(companiesRes.data ?? []);
       setAcademicStaffs(academicRes.data ?? []);
-      setLoginLogs(logsRes.data ?? []);
-      setFilteredLoginLogs(logsRes.data ?? []);
       setRoles(roleRes.data ?? []);
     } catch (e) {
       console.error(e);
