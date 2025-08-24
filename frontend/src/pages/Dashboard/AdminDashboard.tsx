@@ -24,7 +24,7 @@ import {
   Timeline,
   Badge,
   Tabs,
-  notification,
+  Typography,
 } from "antd";
 import {
   BarChart,
@@ -72,6 +72,10 @@ import {
   GetAdminMonthlyApplicationStats,
   GetAdminPendingPosts,
   GetAdminRecentActivities,
+  GetApplicationTrendByProgram,
+  GetCompanyReviewReport,
+  GetCompanyReviewSummary,
+  GetMatchingSuccessRate,
   GetMonthlyUsersByRole,
   GetPopularCompanies,
   GetTopJobs,
@@ -84,6 +88,7 @@ const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 
 type ApplicationStats = {
   month: string;
@@ -141,6 +146,26 @@ type UserDetail = {
   company?: string;
 };
 
+type CompanyRatingRow = {
+  company_id: number;
+  company_name: string;
+  avg_rating: number;
+  reviews: number;
+};
+
+type ReviewDistributionBin = {
+  rating: number; // 1..5
+  count: number;
+};
+
+type CompanyReviewReport = {
+  avg_rating: number;
+  total_reviews: number;
+  distribution: ReviewDistributionBin[];
+  top_avg: CompanyRatingRow[]; // เรียงตามคะแนนเฉลี่ย
+  top_count: CompanyRatingRow[]; // เรียงตามจำนวนรีวิว
+};
+
 const CoopDashboard = () => {
   const navigate = useNavigate();
 
@@ -148,7 +173,6 @@ const CoopDashboard = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [userDetailDrawer, setUserDetailDrawer] = useState(false);
   const [postApprovalModal, setPostApprovalModal] = useState(false);
-  const [userManagementModal, setUserManagementModal] = useState(false);
   const [verificationModal, setVerificationModal] = useState(false);
   const [reportModal, setReportModal] = useState(false);
   const [systemSettingsModal, setSystemSettingsModal] = useState(false);
@@ -176,18 +200,21 @@ const CoopDashboard = () => {
   const [topJobs, setTopJobs] = useState<any[]>([]);
   const [popularCompanies, setPopularCompanies] = useState<any[]>([]);
 
-  // Filter states
-  const [userGrain, setUserGrain] = useState<"month" | "quarter" | "year">(
-    "month"
-  );
-  const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-
   const [mode, setMode] = useState<"month" | "quarter" | "year">("month");
   const [yearBE, setYearBE] = useState<number>(dayjs().year() + 543); // พ.ศ.
   const yearsBE = Array.from({ length: 6 }).map(
     (_, i) => dayjs().year() + 543 - i
   ); // ปีนี้ย้อนหลัง 5 ปี
+
+  const [matchingSeries, setMatchingSeries] = useState<any[]>([]);
+  const [matchingOverall, setMatchingOverall] = useState<number>(0);
+  const [programSeries, setProgramSeries] = useState<any[]>([]);
+  const [programOthers, setProgramOthers] = useState<any[]>([]);
+  const [reviewSummary, setReviewSummary] = useState<any>(null);
+
+  const [reviewReport, setReviewReport] = useState<CompanyReviewReport | null>(
+    null
+  );
 
   // Form instances
   const [form] = Form.useForm();
@@ -237,30 +264,40 @@ const CoopDashboard = () => {
       const [
         overviewRes,
         statsRes,
-        activitiesRes,
         postsRes,
         monthlyUsersRes,
         topJobsRes,
         popularCompaniesRes,
+        matchRes,
+        majorRes,
+        reviewRes,
       ] = await Promise.all([
         GetAdminDashboardOverview(),
         GetAdminMonthlyApplicationStats(),
-        GetAdminRecentActivities(),
         GetAdminPendingPosts(),
         GetMonthlyUsersByRole(),
         GetTopJobs(),
         GetPopularCompanies(),
+        GetMatchingSuccessRate({ days: 90 }),
+        GetApplicationTrendByProgram({ days: 90, top: 5 }),
+        GetCompanyReviewSummary({ days: 30 }),
+        GetCompanyReviewReport({ days: 30 }),
       ]);
-
       const overview = overviewRes.data;
 
       setOverviewData(overview);
       setApplicationData(statsRes.data);
-      setRecentActivities(activitiesRes.data);
       setPendingPostsData(postsRes.data);
       setMonthlyUserData(monthlyUsersRes.data || []);
       setTopJobs(topJobsRes.data || []);
       setPopularCompanies(popularCompaniesRes.data || []);
+
+      setMatchingSeries(matchRes.data.series || []);
+      setMatchingOverall(matchRes.data.successRate || 0);
+      setProgramSeries(majorRes.data.series || []);
+      setProgramOthers(majorRes.data.others || []);
+      setReviewSummary(reviewRes.data || null);
+      setReviewReport(reviewRes.data || null);
 
       setUserRoleData([
         { name: "นักศึกษา", value: overview.students, color: "#1890ff" },
@@ -491,6 +528,43 @@ const CoopDashboard = () => {
     },
   ];
 
+  // ---- Company Review UI helpers ----
+  const reviewColumns = [
+    {
+      title: "บริษัท",
+      dataIndex: "company_name",
+      key: "company_name",
+      render: (text: string) => <Text strong>{text}</Text>,
+    },
+    {
+      title: "รีวิว",
+      dataIndex: "reviews",
+      key: "reviews",
+      width: 100,
+      align: "center" as const,
+    },
+    {
+      title: "เรตติ้งเฉลี่ย",
+      dataIndex: "avg_rating",
+      key: "avg_rating",
+      width: 140,
+      align: "center" as const,
+      render: (v: number) => (
+        <Text strong style={{ color: "#1890ff" }}>
+          {v?.toFixed(2)}
+        </Text>
+      ),
+    },
+  ];
+
+  const pieColors = ["#1890ff", "#52c41a", "#faad14", "#f5222d", "#722ed1"];
+  const reviewDistributionData = (reviewReport?.distribution || []).map(
+    (d) => ({
+      name: `${d.rating} ดาว`,
+      value: d.count,
+    })
+  );
+
   if (!overviewData) {
     return (
       <Layout>
@@ -584,14 +658,6 @@ const CoopDashboard = () => {
             <Card
               title="สถิติการสมัครงานรายเดือน"
               className="adminpage-dashboard-chart-card"
-              extra={
-                <Button
-                  icon={<EyeOutlined />}
-                  onClick={() => showDetail("applications")}
-                >
-                  ดูรายละเอียด
-                </Button>
-              }
             >
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={applicationData}>
@@ -628,14 +694,6 @@ const CoopDashboard = () => {
             <Card
               title="สัดส่วนผู้ใช้ตามบทบาท"
               className="adminpage-dashboard-chart-card"
-              extra={
-                <Button
-                  icon={<EyeOutlined />}
-                  onClick={() => showDetail("users")}
-                >
-                  ดูรายละเอียด
-                </Button>
-              }
             >
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -688,40 +746,6 @@ const CoopDashboard = () => {
 
         {/* Charts Row 2 */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} lg={14}>
-            <Card
-              title="กิจกรรมล่าสุด"
-              className="adminpage-dashboard-activity-card"
-              extra={
-                <Space>
-                  <Search
-                    placeholder="ค้นหากิจกรรม"
-                    style={{ width: 200 }}
-                    onSearch={setSearchText}
-                  />
-                  <Button
-                    icon={<EyeOutlined />}
-                    onClick={() => showDetail("activities")}
-                  >
-                    ดูทั้งหมด
-                  </Button>
-                </Space>
-              }
-            >
-              <Table
-                dataSource={recentActivities}
-                columns={activityColumns}
-                pagination={{ pageSize: 5, showSizeChanger: true }}
-                size="small"
-                scroll={{ y: 280 }}
-                rowSelection={{
-                  selectedRowKeys: selectedRows,
-                  onChange: setSelectedRows,
-                }}
-              />
-            </Card>
-          </Col>
-
           <Col xs={24} lg={10}>
             <Card
               title="สถานะการยืนยันตัวตน"
@@ -770,11 +794,7 @@ const CoopDashboard = () => {
               </Button>
             </Card>
           </Col>
-        </Row>
-
-        {/* Pending Posts Table */}
-        <Row gutter={[16, 16]}>
-          <Col span={24}>
+          <Col span={14}>
             <Card
               title="โพสต์งานที่รอการอนุมัติ"
               className="adminpage-dashboard-chart-card"
@@ -792,7 +812,7 @@ const CoopDashboard = () => {
               <Table
                 dataSource={pendingPostsData}
                 columns={postColumns}
-                pagination={{ pageSize: 5, showSizeChanger: true }}
+                pagination={{ pageSize: 3, showSizeChanger: true }}
                 scroll={{ x: 800 }}
                 rowSelection={{
                   selectedRowKeys: selectedRows,
@@ -802,816 +822,267 @@ const CoopDashboard = () => {
             </Card>
           </Col>
         </Row>
-
-        {/* User Detail Drawer */}
-        <Drawer
-          title="รายละเอียดผู้ใช้"
-          width={600}
-          open={userDetailDrawer}
-          onClose={() => setUserDetailDrawer(false)}
-          extra={
-            <Space>
-              <Button icon={<EditOutlined />}>แก้ไข</Button>
-              <Button icon={<MailOutlined />}>ส่งอีเมล</Button>
-            </Space>
-          }
+        <Card
+          title="อัตราการจับคู่สำเร็จ (รายวัน)"
+          className="adminpage-dashboard-chart-card"
         >
-          {selectedUser && (
-            <div>
-              <div style={{ textAlign: "center", marginBottom: 24 }}>
-                <Avatar size={80} icon={<UserOutlined />} />
-                <h3 style={{ margin: "8px 0" }}>{selectedUser.name}</h3>
-                <Tag color="blue">{selectedUser.role}</Tag>
-              </div>
-
-              <Descriptions column={1} bordered>
-                <Descriptions.Item label="อีเมล">
-                  {selectedUser.email}
-                </Descriptions.Item>
-                <Descriptions.Item label="โทรศัพท์">
-                  {selectedUser.phone}
-                </Descriptions.Item>
-                <Descriptions.Item label="สถานะ">
-                  <Badge status="success" text={selectedUser.status} />
-                </Descriptions.Item>
-                <Descriptions.Item label="วันที่เข้าร่วม">
-                  {selectedUser.joinDate}
-                </Descriptions.Item>
-                <Descriptions.Item label="เข้าใช้ล่าสุด">
-                  {selectedUser.lastActive}
-                </Descriptions.Item>
-                {selectedUser.department && (
-                  <Descriptions.Item label="แผนก">
-                    {selectedUser.department}
-                  </Descriptions.Item>
-                )}
-                {selectedUser.company && (
-                  <Descriptions.Item label="บริษัท">
-                    {selectedUser.company}
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
-
-              <div style={{ marginTop: 24 }}>
-                <h4>กิจกรรมล่าสุด</h4>
-                <Timeline>
-                  <Timeline.Item color="green">
-                    เข้าสู่ระบบ - 2 ชั่วโมงที่แล้ว
-                  </Timeline.Item>
-                  <Timeline.Item color="blue">
-                    อัปเดตโปรไฟล์ - 1 วันที่แล้ว
-                  </Timeline.Item>
-                  <Timeline.Item>สมัครงาน - 3 วันที่แล้ว</Timeline.Item>
-                </Timeline>
-              </div>
-            </div>
-          )}
-        </Drawer>
-
-        {/* Post Approval Modal */}
-        <Modal
-          title="อนุมัติโพสต์งาน"
-          open={postApprovalModal}
-          onCancel={() => setPostApprovalModal(false)}
-          width={800}
-          footer={[
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={matchingSeries}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis yAxisId="left" />
+              <YAxis yAxisId="right" orientation="right" />
+              <Tooltip />
+              <Bar
+                yAxisId="left"
+                dataKey="total"
+                name="จำนวนสมัคร"
+                fill="#1890ff"
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="success_rate"
+                name="อัตราสำเร็จ"
+                dot={false}
+                stroke="#52c41a"
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <div style={{ marginTop: 8 }}>
+            อัตราสำเร็จรวมช่วงเวลา: <b>{(matchingOverall * 100).toFixed(1)}%</b>
             <Button
-              key="reject"
-              danger
-              onClick={() => handleRejectPost(selectedPost?.key!, "")}
-            >
-              ปฏิเสธ
-            </Button>,
-            <Button
-              key="approve"
-              type="primary"
-              onClick={() => handleApprovePost(selectedPost?.key!)}
-            >
-              อนุมัติ
-            </Button>,
-          ]}
-        >
-          {selectedPost && (
-            <Descriptions column={2} bordered>
-              <Descriptions.Item label="บริษัท" span={2}>
-                {selectedPost.company}
-              </Descriptions.Item>
-              <Descriptions.Item label="ตำแหน่ง">
-                {selectedPost.position}
-              </Descriptions.Item>
-              <Descriptions.Item label="วันที่ส่ง">
-                {selectedPost.submitted}
-              </Descriptions.Item>
-              <Descriptions.Item label="สถานะ">
-                <Tag color={getStatusColor(selectedPost.status)}>
-                  {selectedPost.status}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="เงินเดือน">
-                {selectedPost.salary || "ไม่ระบุ"}
-              </Descriptions.Item>
-              <Descriptions.Item label="สถานที่" span={2}>
-                {selectedPost.location || "ไม่ระบุ"}
-              </Descriptions.Item>
-              <Descriptions.Item label="รายละเอียดงาน" span={2}>
-                {selectedPost.description || "ไม่มีรายละเอียด"}
-              </Descriptions.Item>
-              <Descriptions.Item label="คุณสมบัติที่ต้องการ" span={2}>
-                {selectedPost.requirements || "ไม่ระบุ"}
-              </Descriptions.Item>
-            </Descriptions>
-          )}
-        </Modal>
-
-        {/* User Management Modal */}
-        <Modal
-          title="จัดการผู้ใช้"
-          open={userManagementModal}
-          onCancel={() => setUserManagementModal(false)}
-          width={1000}
-          footer={[
-            <Button key="close" onClick={() => setUserManagementModal(false)}>
-              ปิด
-            </Button>,
-          ]}
-        >
-          <div style={{ marginBottom: 16 }}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Search placeholder="ค้นหาผู้ใช้" onSearch={setSearchText} />
-              </Col>
-              <Col span={6}>
-                <Select
-                  placeholder="เลือกบทบาท"
-                  style={{ width: "100%" }}
-                  allowClear
-                >
-                  <Option value="Student">นักศึกษา</Option>
-                  <Option value="Company">บริษัท</Option>
-                  <Option value="AcademicStaff">อาจารย์</Option>
-                  <Option value="Admin">แอดมิน</Option>
-                </Select>
-              </Col>
-              <Col span={6}>
-                <Select
-                  placeholder="สถานะ"
-                  style={{ width: "100%" }}
-                  allowClear
-                >
-                  <Option value="Active">ใช้งาน</Option>
-                  <Option value="Inactive">ไม่ใช้งาน</Option>
-                  <Option value="Pending">รอยืนยัน</Option>
-                  <Option value="Suspended">ระงับการใช้งาน</Option>
-                </Select>
-              </Col>
-              <Col span={4}>
-                <Button type="primary" icon={<PlusOutlined />}>
-                  เพิ่มผู้ใช้
-                </Button>
-              </Col>
-            </Row>
-          </div>
-
-          <Table
-            dataSource={recentActivities.map((activity, index) => ({
-              key: index,
-              name: activity.user,
-              role: activity.type,
-              email: `${activity.user.toLowerCase()}@example.com`,
-              status: "Active",
-              lastActive: activity.time,
-            }))}
-            columns={[
-              {
-                title: "ชื่อ",
-                dataIndex: "name",
-                key: "name",
-                render: (text, record) => (
-                  <Space>
-                    <Avatar size="small" icon={<UserOutlined />} />
-                    {text}
-                  </Space>
-                ),
-              },
-              {
-                title: "บทบาท",
-                dataIndex: "role",
-                key: "role",
-                render: (role) => <Tag>{role}</Tag>,
-              },
-              {
-                title: "อีเมล",
-                dataIndex: "email",
-                key: "email",
-              },
-              {
-                title: "สถานะ",
-                dataIndex: "status",
-                key: "status",
-                render: (status) => (
-                  <Badge
-                    status={status === "Active" ? "success" : "default"}
-                    text={status}
-                  />
-                ),
-              },
-              {
-                title: "เข้าใช้ล่าสุด",
-                dataIndex: "lastActive",
-                key: "lastActive",
-              },
-              {
-                title: "การกระทำ",
-                key: "actions",
-                render: (record) => (
-                  <Space>
-                    <Button
-                      size="small"
-                      icon={<EyeOutlined />}
-                      onClick={() => {
-                        setUserManagementModal(false);
-                        showUserDetail(record);
-                      }}
-                    >
-                      ดู
-                    </Button>
-                    <Button size="small" icon={<EditOutlined />}>
-                      แก้ไข
-                    </Button>
-                    <Popconfirm
-                      title="คุณแน่ใจหรือไม่?"
-                      onConfirm={() => message.success("ลบผู้ใช้เรียบร้อย")}
-                    >
-                      <Button size="small" danger icon={<DeleteOutlined />}>
-                        ลบ
-                      </Button>
-                    </Popconfirm>
-                  </Space>
-                ),
-              },
-            ]}
-            pagination={{ pageSize: 10 }}
-          />
-        </Modal>
-
-        {/* Verification Modal */}
-        <Modal
-          title="จัดการการยืนยันตัวตน"
-          open={verificationModal}
-          onCancel={() => setVerificationModal(false)}
-          width={1000}
-          footer={[
-            <Button key="close" onClick={() => setVerificationModal(false)}>
-              ปิด
-            </Button>,
-          ]}
-        >
-          <Tabs defaultActiveKey="pending">
-            <TabPane
-              tab={`รอดำเนินการ (${verificationData[0]?.count || 0})`}
-              key="pending"
-            >
-              <Table
-                dataSource={Array.from({ length: 5 }, (_, index) => ({
-                  key: index,
-                  name: `ผู้ใช้ ${index + 1}`,
-                  type: ["Student", "Company"][index % 2],
-                  document: "บัตรประชาชน",
-                  submitted: "2024-01-15",
-                  status: "รอดำเนินการ",
-                }))}
-                columns={[
-                  {
-                    title: "ชื่อผู้ใช้",
-                    dataIndex: "name",
-                    key: "name",
-                    render: (text, record) => (
-                      <Space>
-                        {getRoleIcon(record.type)}
-                        {text}
-                      </Space>
-                    ),
-                  },
-                  {
-                    title: "ประเภท",
-                    dataIndex: "type",
-                    key: "type",
-                    render: (type) => <Tag>{type}</Tag>,
-                  },
-                  {
-                    title: "เอกสาร",
-                    dataIndex: "document",
-                    key: "document",
-                  },
-                  {
-                    title: "วันที่ส่ง",
-                    dataIndex: "submitted",
-                    key: "submitted",
-                  },
-                  {
-                    title: "สถานะ",
-                    dataIndex: "status",
-                    key: "status",
-                    render: (status) => <Tag color="orange">{status}</Tag>,
-                  },
-                  {
-                    title: "การกระทำ",
-                    key: "actions",
-                    render: (record) => (
-                      <Space>
-                        <Button size="small" icon={<EyeOutlined />}>
-                          ดูเอกสาร
-                        </Button>
-                        <Button
-                          size="small"
-                          type="primary"
-                          icon={<CheckOutlined />}
-                          onClick={() => {
-                            message.success("อนุมัติการยืนยันเรียบร้อย");
-                            fetchData();
-                          }}
-                        >
-                          อนุมัติ
-                        </Button>
-                        <Button
-                          size="small"
-                          danger
-                          icon={<CloseOutlined />}
-                          onClick={() => {
-                            message.error("ปฏิเสธการยืนยัน");
-                            fetchData();
-                          }}
-                        >
-                          ปฏิเสธ
-                        </Button>
-                      </Space>
-                    ),
-                  },
-                ]}
-                pagination={{ pageSize: 5 }}
-              />
-            </TabPane>
-            <TabPane tab="อนุมัติแล้ว" key="approved">
-              <Table
-                dataSource={[]}
-                columns={[
-                  { title: "ชื่อผู้ใช้", dataIndex: "name", key: "name" },
-                  { title: "ประเภท", dataIndex: "type", key: "type" },
-                  {
-                    title: "วันที่อนุมัติ",
-                    dataIndex: "approved",
-                    key: "approved",
-                  },
-                ]}
-                locale={{ emptyText: "ไม่มีข้อมูล" }}
-              />
-            </TabPane>
-            <TabPane tab="ปฏิเสธแล้ว" key="rejected">
-              <Table
-                dataSource={[]}
-                columns={[
-                  { title: "ชื่อผู้ใช้", dataIndex: "name", key: "name" },
-                  { title: "ประเภท", dataIndex: "type", key: "type" },
-                  { title: "เหตุผล", dataIndex: "reason", key: "reason" },
-                  {
-                    title: "วันที่ปฏิเสธ",
-                    dataIndex: "rejected",
-                    key: "rejected",
-                  },
-                ]}
-                locale={{ emptyText: "ไม่มีข้อมูล" }}
-              />
-            </TabPane>
-          </Tabs>
-        </Modal>
-
-        {/* Report Modal */}
-        <Modal
-          title="สร้างรายงาน"
-          open={reportModal}
-          onCancel={() => setReportModal(false)}
-          onOk={() => {
-            message.success("กำลังสร้างรายงาน...");
-            setReportModal(false);
-          }}
-          width={600}
-        >
-          <Form form={form} layout="vertical">
-            <Form.Item
-              name="reportType"
-              label="ประเภทรายงาน"
-              rules={[{ required: true, message: "กรุณาเลือกประเภทรายงาน" }]}
-            >
-              <Select placeholder="เลือกประเภทรายงาน">
-                <Option value="user_statistics">สstatติผู้ใช้</Option>
-                <Option value="application_report">รายงานการสมัครงาน</Option>
-                <Option value="company_report">รายงานบริษัท</Option>
-                <Option value="activity_log">บันทึกกิจกรรม</Option>
-                <Option value="verification_report">รายงานการยืนยัน</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              name="dateRange"
-              label="ช่วงเวลา"
-              rules={[{ required: true, message: "กรุณาเลือกช่วงเวลา" }]}
-            >
-              <RangePicker style={{ width: "100%" }} />
-            </Form.Item>
-
-            <Form.Item name="format" label="รูปแบบไฟล์" initialValue="excel">
-              <Select>
-                <Option value="excel">Excel (.xlsx)</Option>
-                <Option value="pdf">PDF (.pdf)</Option>
-                <Option value="csv">CSV (.csv)</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="includeCharts" valuePropName="checked">
-              <Space>
-                <input type="checkbox" />
-                รวมกราฟและแผนภูมิ
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Bulk Action Modal */}
-        <Modal
-          title="การกระทำแบบกลุ่ม"
-          open={bulkActionModal}
-          onCancel={() => setBulkActionModal(false)}
-          onOk={() => {
-            handleBulkAction("bulk_action", selectedRows);
-          }}
-          width={500}
-        >
-          <div style={{ marginBottom: 16 }}>
-            <p>เลือกรายการที่ต้องการดำเนินการ: {selectedRows.length} รายการ</p>
-          </div>
-
-          <Form layout="vertical">
-            <Form.Item label="เลือกการกระทำ" required>
-              <Select placeholder="เลือกการกระทำ">
-                <Option value="approve_all">อนุมัติทั้งหมด</Option>
-                <Option value="reject_all">ปฏิเสธทั้งหมด</Option>
-                <Option value="delete_all">ลบทั้งหมด</Option>
-                <Option value="export_selected">ส่งออกที่เลือก</Option>
-                <Option value="send_notification">ส่งการแจ้งเตือน</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item label="หมายเหตุ (ไม่บังคับ)">
-              <Input.TextArea
-                rows={3}
-                placeholder="เพิ่มหมายเหตุสำหรับการกระทำนี้..."
-              />
-            </Form.Item>
-          </Form>
-
-          <div
-            style={{
-              marginTop: 16,
-              padding: 12,
-              backgroundColor: "#fff2e8",
-              borderRadius: 6,
-            }}
-          >
-            <Space>
-              <WarningOutlined style={{ color: "#fa8c16" }} />
-              <span style={{ color: "#fa8c16" }}>
-                การกระทำนี้ไม่สามารถยกเลิกได้ กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ
-              </span>
-            </Space>
-          </div>
-        </Modal>
-
-        {/* System Settings Modal */}
-        <Modal
-          title="การตั้งค่าระบบ"
-          open={systemSettingsModal}
-          onCancel={() => setSystemSettingsModal(false)}
-          onOk={() => {
-            message.success("บันทึกการตั้งค่าเรียบร้อย");
-            setSystemSettingsModal(false);
-          }}
-          width={700}
-        >
-          <Tabs defaultActiveKey="general">
-            <TabPane tab="ทั่วไป" key="general">
-              <Form layout="vertical">
-                <Form.Item label="ชื่อระบบ" initialValue="CoopMatch">
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  label="อีเมลผู้ดูแลระบบ"
-                  initialValue="admin@coopmatch.com"
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item label="จำนวนรายการต่อหน้า" initialValue={10}>
-                  <Select>
-                    <Option value={5}>5</Option>
-                    <Option value={10}>10</Option>
-                    <Option value={20}>20</Option>
-                    <Option value={50}>50</Option>
-                  </Select>
-                </Form.Item>
-              </Form>
-            </TabPane>
-            <TabPane tab="การแจ้งเตือน" key="notifications">
-              <Form layout="vertical">
-                <Form.Item label="การแจ้งเตือนทางอีเมล">
-                  <Space direction="vertical">
-                    <label>
-                      <input type="checkbox" defaultChecked /> การสมัครงานใหม่
-                    </label>
-                    <label>
-                      <input type="checkbox" defaultChecked /> การอนุมัติโพสต์
-                    </label>
-                    <label>
-                      <input type="checkbox" /> การยืนยันตัวตน
-                    </label>
-                    <label>
-                      <input type="checkbox" /> รายงานรายสัปดาห์
-                    </label>
-                  </Space>
-                </Form.Item>
-              </Form>
-            </TabPane>
-            <TabPane tab="ความปลอดภัย" key="security">
-              <Form layout="vertical">
-                <Form.Item label="ระยะเวลาการล็อกอิน (นาที)" initialValue={60}>
-                  <Input type="number" />
-                </Form.Item>
-                <Form.Item
-                  label="จำนวนครั้งการล็อกอินที่ผิดพลาด"
-                  initialValue={5}
-                >
-                  <Input type="number" />
-                </Form.Item>
-                <Form.Item label="การล็อกกิจกรรม">
-                  <Space direction="vertical">
-                    <label>
-                      <input type="checkbox" defaultChecked />{" "}
-                      บันทึกการเข้าสู่ระบบ
-                    </label>
-                    <label>
-                      <input type="checkbox" defaultChecked />{" "}
-                      บันทึกการแก้ไขข้อมูล
-                    </label>
-                    <label>
-                      <input type="checkbox" /> บันทึกการลบข้อมูล
-                    </label>
-                  </Space>
-                </Form.Item>
-              </Form>
-            </TabPane>
-          </Tabs>
-        </Modal>
-
-        {/* Detail Modal (Original) */}
-        <Modal
-          title={`รายละเอียด${
-            currentDetail === "applications"
-              ? "การสมัครงาน"
-              : currentDetail === "users"
-              ? "ผู้ใช้"
-              : currentDetail === "activities"
-              ? "กิจกรรม"
-              : currentDetail === "verifications"
-              ? "การยืนยันตัวตน"
-              : currentDetail === "posts"
-              ? "โพสต์งาน"
-              : ""
-          }`}
-          open={detailModalVisible}
-          onCancel={() => setDetailModalVisible(false)}
-          width={800}
-          footer={[
-            <Button
-              key="export"
+              style={{ float: "right" }}
               icon={<DownloadOutlined />}
-              onClick={exportToExcel}
+              onClick={() =>
+                window.open(
+                  `${
+                    import.meta.env.VITE_API_BASE_URL
+                  }/analysis/matching/export.csv?days=90`,
+                  "_blank"
+                )
+              }
             >
-              Export Excel
-            </Button>,
-            <Button key="close" onClick={() => setDetailModalVisible(false)}>
-              ปิด
-            </Button>,
-          ]}
+              Export CSV
+            </Button>
+          </div>
+        </Card>
+        <Card
+          title="แนวโน้มการสมัครตามหลักสูตร (Top 5)"
+          className="adminpage-dashboard-chart-card"
         >
-          {currentDetail === "applications" && (
-            <div>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={applicationData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="applications"
-                    stroke="#1890ff"
-                    name="การสมัคร"
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              {programSeries.map((s, idx) => (
+                <Line
+                  key={s.program}
+                  data={s.data}
+                  dataKey="value"
+                  name={s.program}
+                  type="monotone"
+                  dot={false}
+                />
+              ))}
+              {/* others (option) */}
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+        <Card
+          title="รายงานผลการประเมินจากบริษัท (30 วัน)"
+          className="adminpage-dashboard-chart-card"
+        >
+          {reviewSummary && (
+            <>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Statistic
+                    title="คะแนนเฉลี่ย"
+                    value={reviewSummary.avg_rating?.toFixed(2)}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="interviews"
-                    stroke="#52c41a"
-                    name="การสัมภาษณ์"
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="จำนวนรีวิว"
+                    value={reviewSummary.total_reviews}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="approved"
-                    stroke="#722ed1"
-                    name="ผ่านการคัดเลือก"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <Table
-                dataSource={applicationData.map((item, index) => ({
-                  key: index,
-                  ...item,
-                }))}
-                columns={[
-                  { title: "เดือน", dataIndex: "month", key: "month" },
-                  {
-                    title: "การสมัคร",
-                    dataIndex: "applications",
-                    key: "applications",
-                  },
-                  {
-                    title: "การสัมภาษณ์",
-                    dataIndex: "interviews",
-                    key: "interviews",
-                  },
-                  {
-                    title: "ผ่านการคัดเลือก",
-                    dataIndex: "approved",
-                    key: "approved",
-                  },
-                ]}
-                pagination={false}
-                size="small"
-                style={{ marginTop: 16 }}
-              />
-            </div>
-          )}
-
-          {currentDetail === "users" && (
-            <div>
-              <div
-                style={{
-                  marginBottom: 12,
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Space
-                  wrap
-                  style={{
-                    justifyContent: "flex-end",
-                    width: "100%",
-                    marginBottom: 12,
-                  }}
-                >
-                  <Select
-                    value={yearBE}
-                    onChange={setYearBE}
-                    options={yearsBE.map((y) => ({ label: y, value: y }))}
-                    style={{ width: 120 }}
-                  />
-                  <Segmented
-                    value={mode}
-                    onChange={(v) => setMode(v as any)}
-                    options={[
-                      { label: "เดือน", value: "month" },
-                      { label: "ไตรมาส", value: "quarter" },
-                      { label: "ปี", value: "year" },
-                    ]}
-                  />
-                </Space>
+                </Col>
+              </Row>
+              <div style={{ marginTop: 16 }}>
+                <b>Distribution</b>
+                {reviewSummary.distribution?.map((d: any) => (
+                  <div
+                    key={d.rating}
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      marginTop: 6,
+                    }}
+                  >
+                    <span>{d.rating}★</span>
+                    <Progress
+                      percent={
+                        reviewSummary.total_reviews
+                          ? (d.count / reviewSummary.total_reviews) * 100
+                          : 0
+                      }
+                      showInfo={false}
+                    />
+                    <span>{d.count}</span>
+                  </div>
+                ))}
               </div>
-
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart
-                  data={(Array.isArray(userRoleSeries)
-                    ? userRoleSeries
-                    : []
-                  ).map((p: any) => ({
-                    name: p.label,
-                    students: p.students,
-                    companies: p.companies,
-                    academicStaff: p.academic_staff,
-                    admins: p.admins,
-                  }))}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="students"
-                    stackId="1"
-                    stroke="#1890ff"
-                    fill="#1890ff"
-                    name="นักศึกษา"
+              <Row gutter={16} style={{ marginTop: 16 }}>
+                <Col span={12}>
+                  <b>Top by Average</b>
+                  <Table
+                    size="small"
+                    dataSource={reviewSummary.top_avg}
+                    pagination={false}
+                    columns={[
+                      { title: "บริษัท", dataIndex: "company_name" },
+                      { title: "รีวิว", dataIndex: "reviews", width: 90 },
+                      {
+                        title: "เฉลี่ย",
+                        dataIndex: "avg_rating",
+                        width: 90,
+                        render: (v: number) => v?.toFixed(2),
+                      },
+                    ]}
+                    rowKey="company_id"
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="companies"
-                    stackId="1"
-                    stroke="#52c41a"
-                    fill="#52c41a"
-                    name="บริษัท"
+                </Col>
+                <Col span={12}>
+                  <b>Top by Count</b>
+                  <Table
+                    size="small"
+                    dataSource={reviewSummary.top_count}
+                    pagination={false}
+                    columns={[
+                      { title: "บริษัท", dataIndex: "company_name" },
+                      { title: "รีวิว", dataIndex: "reviews", width: 90 },
+                      {
+                        title: "เฉลี่ย",
+                        dataIndex: "avg_rating",
+                        width: 90,
+                        render: (v: number) => v?.toFixed(2),
+                      },
+                    ]}
+                    rowKey="company_id"
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="academicStaff"
-                    stackId="1"
-                    stroke="#722ed1"
-                    fill="#722ed1"
-                    name="อาจารย์"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="admins"
-                    stackId="1"
-                    stroke="#faad14"
-                    fill="#faad14"
-                    name="แอดมิน"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-
-              <Table
-                dataSource={userRoleData.map((item, index) => ({
-                  key: index,
-                  ...item,
-                }))}
-                columns={[
-                  { title: "บทบาท", dataIndex: "name", key: "name" },
-                  { title: "จำนวน", dataIndex: "value", key: "value" },
-                  {
-                    title: "เปอร์เซ็นต์",
-                    key: "percent",
-                    render: (record: any) =>
-                      `${((record.value / (userRoleTotal || 1)) * 100).toFixed(
-                        1
-                      )}%`,
-                  },
-                ]}
-                pagination={false}
-                size="small"
-                style={{ marginTop: 16 }}
-              />
-            </div>
+                </Col>
+              </Row>
+            </>
           )}
+        </Card><Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+  <Col xs={24} md={10}>
+    <Card
+      title="📊 สรุปผลการประเมินจากบริษัท (30 วัน)"
+      className="adminpage-dashboard-chart-card"
+    >
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: 16,
+          padding: "12px",
+          background:
+            "linear-gradient(135deg, rgba(24, 144, 255, 0.1) 0%, rgba(82, 196, 26, 0.1) 100%)",
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ fontSize: 16 }}>
+          คะแนนเฉลี่ยรวม:{" "}
+          <Text strong style={{ fontSize: 20, color: "#1890ff" }}>
+            {reviewReport?.avg_rating != null
+              ? reviewReport.avg_rating.toFixed(2)
+              : "-"}
+          </Text>{" "}
+          | รีวิวทั้งหมด:{" "}
+          <Text strong style={{ fontSize: 20, color: "#722ed1" }}>
+            {reviewReport?.total_reviews ?? 0}
+          </Text>
+        </Text>
+      </div>
 
-          {currentDetail === "activities" && (
-            <Table
-              dataSource={recentActivities}
-              columns={activityColumns}
-              pagination={{ pageSize: 10 }}
-            />
-          )}
-        </Modal>
-
-        {/* Quick Actions Floating Button */}
-        <div
-          style={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            zIndex: 1000,
-          }}
-        >
-          <Space direction="vertical">
-            <Button
-              type="primary"
-              shape="circle"
-              size="large"
-              icon={<PlusOutlined />}
-              onClick={() => setUserManagementModal(true)}
-              title="จัดการผู้ใช้"
-            />
-            <Button
-              type="default"
-              shape="circle"
-              size="large"
-              icon={<WarningOutlined />}
-              onClick={() => setVerificationModal(true)}
-              title="การยืนยันที่รอดำเนินการ"
-              style={{
-                backgroundColor: "#faad14",
-                borderColor: "#faad14",
-                color: "white",
+      <div
+        style={{
+          width: "100%",
+          height: 260,
+          background: "rgba(255, 255, 255, 0.5)",
+          borderRadius: 8,
+          padding: 8,
+        }}
+      >
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={reviewDistributionData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              labelLine={false}
+              label={({ cx, cy, midAngle, innerRadius, outerRadius, index }) => {
+                const RAD = Math.PI / 180;
+                const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+                const x = cx + r * Math.cos(-midAngle! * RAD);
+                const y = cy + r * Math.sin(-midAngle! * RAD);
+                const value = reviewDistributionData[index!]?.value ?? 0;
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize={12}
+                    fill="#fff"
+                  >
+                    {value}
+                  </text>
+                );
               }}
-            />
-          </Space>
-        </div>
+            >
+              {reviewDistributionData.map((_, idx) => (
+                <Cell key={idx} fill={pieColors[idx % pieColors.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
+  </Col>
+
+  <Col xs={24} md={14}>
+    <Card
+      title="🏆 บริษัทคะแนนสูงสุด (เรียงตามคะแนนเฉลี่ย)"
+      className="adminpage-dashboard-chart-card"
+      extra={
+        <Space>
+          {/* เผื่ออนาคตปุ่ม filter company_id หรือ export */}
+        </Space>
+      }
+    >
+      <Table
+        size="small"
+        rowKey="company_id"
+        columns={reviewColumns}
+        dataSource={reviewReport?.top_avg || []}
+        pagination={{ pageSize: 5, showSizeChanger: false }}
+        style={{
+          background: "rgba(255, 255, 255, 0.5)",
+          borderRadius: 8,
+        }}
+      />
+    </Card>
+  </Col>
+</Row>
       </Layout>
     </Layout>
   );

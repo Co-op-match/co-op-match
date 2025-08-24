@@ -212,6 +212,16 @@ func main() {
 			analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
 			analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
 			analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
+
+			analysisGroup.GET("/matching/success-rate", analysis.GetMatchingSuccessRate)
+			analysisGroup.GET("/matching/export.csv", analysis.ExportMatchingSuccessCSV)
+
+			// Majors / Programs
+			analysisGroup.GET("/majors", analysis.GetApplicationTrendByProgram)
+
+			// Reviews
+			analysisGroup.GET("/reviews/summary", analysis.GetCompanyReviewSummary)
+			analysisGroup.GET("/reviews/report", analysis.GetCompanyReviewReport)
 		}
 		verifyGroup := r.Group("/verify")
 		{

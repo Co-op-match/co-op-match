@@ -265,8 +265,44 @@ export async function GetMonthlyUsersByRole () {
     .then((res) => res)
     .catch((e) => e.response);
 }
-export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
-export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+export async function GetTopJobs() {
+  return await axios
+    .get(`${apiUrl}/analysis/top-jobs`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetPopularCompanies() {
+  return await axios
+    .get(`${apiUrl}/analysis/popular-companies`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+export async function GetMatchingSuccessRate(params?: { days?: number }) {
+  return await axios
+    .get(`${apiUrl}/analysis/matching/success-rate`, { ...requestOptions, params })
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetApplicationTrendByProgram(params?: { days?: number; top?: number }) {
+  return await axios
+    .get(`${apiUrl}/analysis/majors`, { ...requestOptions, params })
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetCompanyReviewSummary(params?: { days?: number; company_id?: number }) {
+  return await axios
+    .get(`${apiUrl}/analysis/reviews/summary`, { ...requestOptions, params })
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetCompanyReviewReport(params?: { days?: number; company_id?: number }) {
+  return await axios
+    .get(`${apiUrl}/analysis/reviews/report`, { ...requestOptions, params })
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
