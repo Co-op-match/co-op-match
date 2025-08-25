@@ -11,6 +11,7 @@ import (
 	"co-op-match.com/co-op-match/controller/role"
 	"co-op-match.com/co-op-match/controller/searchjob"
 	"co-op-match.com/co-op-match/controller/users"
+	"co-op-match.com/co-op-match/hub/notifyhub"
 	"co-op-match.com/co-op-match/middlewares"
 )
 
@@ -18,11 +19,13 @@ const PORT = "8000"
 
 func main() {
 	controller.InitChatHub()
+	notifyhub.Start()
+
 	config.ConnectionDB()
 	config.SetupDatabase()
 
 	r := gin.Default()
-	
+
 	r.Use(CORSMiddleware())
 	r.Static("/uploads", "./public/uploads")
 
@@ -59,6 +62,13 @@ func main() {
 	r.POST("/review/like", controller.LikeReview)
 	r.GET("/review/liked/:user_id", controller.GetLikedReviews)
 	r.POST("/review/unlike", controller.UnlikeReview)
+// วิเคราะห์
+	r.POST("/reviews/:id/analyze", controller.AnalyzeReview)
+	r.POST("/reviews/analyze/batch", controller.AnalyzeBatch)
+
+	// สรุป/แนวโน้ม (สำหรับ FE dashboard)
+	r.GET("/analysis/comments/summary", controller.GetCommentSummary)
+	r.GET("/analysis/comments/trend", controller.GetCommentTrend)
 
 	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
@@ -68,6 +78,16 @@ func main() {
 
 	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/chat/ws", controller.ChatWebSocket)
+	r.GET("/ws/notifications", controller.NotificationsWebSocket)
+	r.GET("/notifications/:userID", controller.GetNotificationsByUser)
+	r.POST("/debug/push", controller.DebugPush)
+	r.GET("/debug/hub-stats", controller.HubStats)
+	r.PATCH("/notifications/:id/read", controller.MarkNotificationAsRead)
+	// 📩 ดึงข้อความย้อนหลัง
+	r.GET("/chat/messages/:room_id", controller.GetMessagesByChatRoomID)
+
+	// ✅ อัปเดตข้อความว่าอ่านแล้ว
+	r.PATCH("/chat/messages/:room_id/read", controller.MarkMessagesAsRead)
 
 	// Protected Routes
 	router := r.Group("/")
@@ -139,14 +159,10 @@ func main() {
 
 		chatGroup := router.Group("/chat")
 		{
+			chatGroup.POST("/session", controller.CreateChatSession)
+
 			// 🔄 สร้างห้องแชท
 			chatGroup.POST("/room", controller.CreateChatRoom)
-
-			// 📩 ดึงข้อความย้อนหลัง
-			chatGroup.GET("/messages/:room_id", controller.GetMessagesByChatRoomID)
-
-			// ✅ อัปเดตข้อความว่าอ่านแล้ว
-			chatGroup.PATCH("/messages/:room_id/read", controller.MarkMessagesAsRead)
 
 			// 📋 ดึงห้องแชททั้งหมดของ user
 			chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
@@ -154,7 +170,6 @@ func main() {
 			// 🔌 WebSocket เชื่อมต่อ
 			// chatGroup.GET("/ws", controller.ChatWebSocket)
 		}
-
 
 		notificationGroup := router.Group("/notification")
 		{
@@ -174,7 +189,17 @@ func main() {
 			companyGroup.PUT("/logo/:user_id", controller.UpdateCompanyLogoByUserID)
 			companyGroup.GET("/user/:user_id", controller.GetCompanyByUserId)
 			companyGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
-			companyGroup.POST("/verify/:user_id", controller.CreateSendVerify)
+			companyGroup.POST("/verify/:user_id", controller.CreateSendVerifyCompany)
+		}
+		academicstaffGroup := router.Group("/academicstaff")
+		{
+			academicstaffGroup.GET("", controller.GetAllAcademicStaff)
+			academicstaffGroup.GET("/:id", controller.GetAcademicStaffByID)
+			academicstaffGroup.POST("", controller.CreateAcademicStaff)
+			academicstaffGroup.GET("/user/:user_id", controller.GetAcademicStaffByUserId)
+			academicstaffGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
+			academicstaffGroup.POST("/verify/:user_id", controller.CreateSendVerifyAcademicStaffy)
+			academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
 		}
 
 		contactGroup := router.Group("/contact")
@@ -232,6 +257,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 // func CORSMiddleware() gin.HandlerFunc {
 // 	return func(c *gin.Context) {
 // 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // ✅ ชี้ domain React
