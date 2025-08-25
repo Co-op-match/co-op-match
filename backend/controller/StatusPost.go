@@ -20,27 +20,24 @@ func GetAllStatusPosts(c *gin.Context) {
 }
 
 func UpdateStatusPost(c *gin.Context) {
-	type StatusUpdateInput struct {
-		PostID        uint `json:"post_id"`
-		StatusPostID  uint `json:"status_post_id"` // ID ของสถานะใหม่ เช่น "เปิดรับสมัคร"
-	}
-
-	var input StatusUpdateInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request", "details": err.Error()})
-		return
-	}
-
 	var post entity.IntershipPost
-	if err := config.DB().First(&post, input.PostID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+	id := c.Param("id")
+
+	db := config.DB()
+
+	result := db.First(&post, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "id not found"})
+		return
+	}
+	if err := c.ShouldBindJSON(&post); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request, unable to mappayload"})
 		return
 	}
 
-	// เปลี่ยน StatusPostID
-	post.StatusPostID = input.StatusPostID
-	if err := config.DB().Save(&post).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update status", "details": err.Error()})
+	result = db.Save(&post)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
 		return
 	}
 
