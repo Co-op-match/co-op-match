@@ -1,12 +1,5 @@
-<<<<<<< HEAD
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Avatar, Badge, Dropdown, Layout, Menu } from 'antd';
-=======
-
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Avatar, Badge, Dropdown, Layout, Menu } from 'antd';
-
->>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
 import {
   UserOutlined,
   HomeOutlined,
@@ -16,13 +9,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { createChatSession, createWsByToken, GetChatRoomsByUserId, GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
-import Notification from '../component/Notification';
-<<<<<<< HEAD
-=======
-import { Link } from 'react-router-dom';
-import { UserContext } from '../../components/UserContext';
-
->>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
+import Notification from '../Component/Notification';
 
 const { Header } = Layout;
 
@@ -41,17 +28,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     const sum = Array.from(unreadMapRef.current.values()).reduce((a, b) => a + (b || 0), 0);
     setTotalUnread(sum);
   };
-<<<<<<< HEAD
-=======
-
-  const { logout } = useContext(UserContext);
-
-  const handleLogout = async () => {
-    await logout();
-    localStorage.clear(); 
-    navigate("/sign-in");
-  };
->>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
 
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
@@ -227,33 +203,6 @@ const menuItems = minimalMenu
           defaultOpenKeys={openKey ? [openKey] : []}
           style={{ border: 'none', backgroundColor: 'transparent', minWidth: 160 }}
         />
-<<<<<<< HEAD
-=======
-
-        <Notification />
-
-        <Dropdown overlay={logoutMenu} placement="bottomRight" trigger={['click']}>
-          <Avatar
-            src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
-            icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-            style={{ cursor: "pointer", marginLeft: 16 }}
-          />
-        </Dropdown>
-      </div>
-{/* Menu + Avatar + Logout */}
-<div style={{ display: 'flex', alignItems: 'center' }}>
-  <Menu
-    mode="horizontal"
-    selectedKeys={[currentPage!]}
-    items={menuItems}
-    onClick={handleMenuClick}
-    style={{
-      border: 'none',
-      backgroundColor: 'transparent',
-      minWidth: 160,
-    }}
-  />
->>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
 
         <Notification />
 

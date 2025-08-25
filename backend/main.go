@@ -63,12 +63,12 @@ func main() {
 	r.GET("/review/liked/:user_id", controller.GetLikedReviews)
 	r.POST("/review/unlike", controller.UnlikeReview)
 // วิเคราะห์
-	r.POST("/reviews/:id/analyze", controller.AnalyzeReview)
-	r.POST("/reviews/analyze/batch", controller.AnalyzeBatch)
+	// r.POST("/reviews/:id/analyze", controller.AnalyzeReview)
+	// r.POST("/reviews/analyze/batch", controller.AnalyzeBatch)
 
 	// สรุป/แนวโน้ม (สำหรับ FE dashboard)
-	r.GET("/analysis/comments/summary", controller.GetCommentSummary)
-	r.GET("/analysis/comments/trend", controller.GetCommentTrend)
+	// r.GET("/analysis/comments/summary", controller.GetCommentSummary)
+	// r.GET("/analysis/comments/trend", controller.GetCommentTrend)
 
 	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
