@@ -122,7 +122,7 @@ func SignIn(c *gin.Context) {
 		Issuer:          "AuthService",
 		ExpirationHours: 24,
 	}
-	signedToken, err := jwtWrapper.GenerateToken(user.Email)
+	signedToken, err := jwtWrapper.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return
@@ -169,7 +169,7 @@ func Logout(c *gin.Context) {
 		db.Model(&latestLog).Update("logout_at", &now)
 		c.JSON(http.StatusOK, gin.H{"success": "ผ่านนนน"})
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "ออกจากระบบเรียบร้อยแล้ว"})
 }
 

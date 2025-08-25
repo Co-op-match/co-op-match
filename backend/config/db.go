@@ -86,6 +86,7 @@ func SetupDatabase() {
 		&entity.StudentPerformanceAnalysis{},
 		&entity.CompanyReviewStats{},
 		&entity.InterestTrendAnalysis{},
+		&entity.ReviewAnalysis{},
 		&entity.UniversityApplicationAnalysis{},
 		&entity.MonthlyUserRoleStat{},
 		&entity.VerificationStatusSnapshot{},
@@ -268,35 +269,51 @@ func createSeedData(db *gorm.DB) {
 
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
-		{
-			AcademicPosition: "อาจารย์", Age: 40, Faculty: "วิศวกรรมศาสตร์", Department: "คอมพิวเตอร์", University: "มหาวิทยาลัย A",
-			FirstName: "สมชาย", LastName: "วิศวกร", Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
-			UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
-		},
-		{
-			AcademicPosition: "อาจารย์", Age: 38, Faculty: "วิทยาศาสตร์", Department: "เคมี", University: "มหาวิทยาลัย B",
-			FirstName: "สุรีย์", LastName: "เคมี", Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
-			UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
-		},
-		{
-			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45, Faculty: "บริหารธุรกิจ", Department: "การตลาด", University: "มหาวิทยาลัย C",
-			FirstName: "สมพงษ์", LastName: "การตลาด", Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
-			UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
-		},
-		{
-			AcademicPosition: "รองศาสตราจารย์", Age: 50, Faculty: "ศิลปศาสตร์", Department: "ภาษาอังกฤษ", University: "มหาวิทยาลัย D",
-			FirstName: "อรทัย", LastName: "ภาษา", Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
-			UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
-		},
-		{
-			AcademicPosition: "อาจารย์", Age: 35, Faculty: "นิติศาสตร์", Department: "กฎหมายแพ่ง", University: "มหาวิทยาลัย E",
-			FirstName: "ธนพล", LastName: "นิติ", Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
-			UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
-		},
-	}
-	for _, staff := range staffs {
-		db.Unscoped().FirstOrCreate(&staff, entity.AcademicStaff{UserID: staff.UserID})
-	}
+	{
+		AcademicPosition: "อาจารย์", Age: 40,
+		FirstName: "สมชาย", LastName: "วิศวกร",
+		Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
+		UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
+		UniversityID: 1, FacultyID: 1, ProgramID: 1,
+	},
+	{
+		AcademicPosition: "อาจารย์", Age: 38,
+		FirstName: "สุรีย์", LastName: "เคมี",
+		Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
+		UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
+		UniversityID: 1, FacultyID: 1, ProgramID: 1,
+	},
+	{
+		AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
+		FirstName: "สมพงษ์", LastName: "การตลาด",
+		Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
+		UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
+		UniversityID: 1, FacultyID: 1, ProgramID: 1,
+	},
+	{
+		AcademicPosition: "รองศาสตราจารย์", Age: 50,
+		FirstName: "อรทัย", LastName: "ภาษา",
+		Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
+		UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
+		UniversityID: 1, FacultyID: 1, ProgramID: 1,
+	},
+	{
+		AcademicPosition: "อาจารย์", Age: 35,
+		FirstName: "ธนพล", LastName: "นิติ",
+		Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
+		UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
+		UniversityID: 1, FacultyID: 1, ProgramID: 1,
+	},
+}
+
+for _, s := range staffs {
+	// ถ้ามีอยู่แล้วตาม UserID ก็ไม่สร้างซ้ำ
+	db.Unscoped().
+		Where(entity.AcademicStaff{UserID: s.UserID}).
+		Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
+		FirstOrCreate(&entity.AcademicStaff{})
+}
+
 
 	students := []entity.Student{
 		{
@@ -880,7 +897,7 @@ func createSeedData(db *gorm.DB) {
 		{Rating: 5, Comment: "มีการอบรมและโค้ชตลอดฝึกงาน ได้ทำงานจริงแบบเต็มที่", Like: 13, CreatedAt: time.Date(2024, 1, 10, 14, 0, 0, 0, time.UTC), StudentID: 4, CompanyID: 1},
 		{Rating: 2, Comment: "ไม่มีคนดูแลชัดเจน ต้องหางานทำเอง", Like: 2, CreatedAt: time.Date(2023, 12, 15, 13, 0, 0, 0, time.UTC), StudentID: 5, CompanyID: 1},
 		{Rating: 4, Comment: "ได้ใช้เทคโนโลยีใหม่ๆ และเรียนรู้การทำงานเป็นทีม", Like: 9, CreatedAt: time.Date(2023, 12, 1, 15, 30, 0, 0, time.UTC), StudentID: 6, CompanyID: 1},
-		{Rating: 1, Comment: "งานไม่ตรงกับสายที่เรียน ไม่มีการประเมินผล", Like: 1, CreatedAt: time.Now(), StudentID: 7, CompanyID: 1},
+		{Rating: 1, Comment: "idiot", Like: 1, CreatedAt: time.Now(), StudentID: 7, CompanyID: 1},
 	}
 
 	for _, review := range reviews {
