@@ -14,6 +14,7 @@ import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
+import type { InternshipPostInterface } from "../../interface/IIntershipPost";
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -134,10 +135,10 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   }
 }
 
-export async function UpdateStatusPost(postId: number, statusPostId: number) {
+export async function UpdateStatusPost(postId: number, data: { StatusPostID: number; AdminID: number }) {
   return await axios
-    .put(`${apiUrl}/update-status-posts`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
-    .then((res) => res.data)
+    .put(`${apiUrl}/update-status-posts/${postId}`, data, requestOptions)
+    .then((res) => res)
     .catch((e) => e.response);
 }
 

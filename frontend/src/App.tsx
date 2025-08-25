@@ -37,7 +37,7 @@ import ChatInterface from "./Chat/ChatInterface";
 import ChatWebSocket from "./Chat/test";
 import AdvancedChatInterface from "./Chat/ChatInterface";
 import AdminUser from "./pages/Admin/user/main";
-
+import CompanyAnalysisPage from "./pages/company/analysis/analysis";
 
 function App() {
   return (
@@ -239,6 +239,14 @@ function App() {
             }
           />
 
+          <Route
+            path="/company/analysis"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CompanyAnalysisPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/lecturer/dashboard"
