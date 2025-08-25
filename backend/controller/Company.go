@@ -128,6 +128,7 @@ func CreateCompany(c *gin.Context) {
 		"data":    company,
 	})
 }
+
 func UpdateCompanyLogoByUserID(c *gin.Context) {
 	// 1. รับ user_id จาก URL
 	userIDStr := c.Param("user_id")
@@ -220,7 +221,7 @@ func GetVerifyByUserId(c *gin.Context) {
 	c.JSON(http.StatusOK, verify)
 }
 
-func CreateSendVerify(c *gin.Context) {
+func CreateSendVerifyCompany(c *gin.Context) {
 	var verify entity.Verify
 
 	userID := c.Param("user_id")
@@ -249,7 +250,7 @@ func CreateSendVerify(c *gin.Context) {
 	// ✅ เปลี่ยนชื่อไฟล์ใหม่ให้ปลอดภัย
 	ext := filepath.Ext(file.Filename)
 	newFileName := fmt.Sprintf("verify_%d_%d%s", uid, time.Now().Unix(), ext)
-	filePath := filepath.Join("public/uploads/verifyDocument", newFileName)
+	filePath := filepath.Join("public/uploads/verifyDocument/Company", newFileName)
 	filePath = strings.ReplaceAll(filePath, "\\", "/")
 
 	if err := c.SaveUploadedFile(file, filePath); err != nil {

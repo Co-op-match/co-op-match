@@ -30,11 +30,11 @@ import ProtectProfile from "./components/ProtectedProfile";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
-import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
+// import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
 import AdminVerify from "./pages/Admin/verify/verify";
-import ChatInterface from "./Chat/ChatInterface";
-import ChatWebSocket from "./Chat/test";
+// import ChatInterface from "./Chat/ChatInterface";
 import AdvancedChatInterface from "./Chat/ChatInterface";
+import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
 
 function App() {
@@ -47,6 +47,7 @@ function App() {
           {/* Public Routes */}
           <Route element={<Outlet />}>
             <Route path="/sign-in" element={<LoginForm />} />
+            <Route path="/academic" element={<AcademicStaffProfile />} />
             <Route path="/sign-up" element={<RegisterPage />} />
             <Route path="/role-select" element={<RoleSelectionPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -100,24 +101,11 @@ function App() {
            <Route
             path="/company-profile/:id"
             element={
-                  <CompanyProfileView />
+              <CompanyProfileView />
             }
-          />                  
-          <Route
-            path="/c"
-            element={
-                  <ChatWebSocket />
-            }
-          />       
-          <Route path="/chat/:roomId/:userId" element={<AdvancedChatInterface />} />
-          {/* <Route
-            path="/student/add-profile"
-            element={
-              <ProtectedRoute allowedRoles={[3]}>
-                <AddressForm />
-              </ProtectedRoute>
-            }
-          /> */}
+          />      
+          <Route path="/chat/session/:sid" element={<AdvancedChatInterface/>} />
+          <Route path="/chat" element={<AdvancedChatInterface/>} />      
           <Route
             path="/company/add-company"
             element={

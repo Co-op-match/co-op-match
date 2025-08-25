@@ -1,63 +1,77 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Send, Paperclip, Smile, MoreVertical, Phone, Video, Search, ArrowLeft,
-  User, Bot, Image, File, Mic, Camera, Check, CheckCheck, Settings, Bell, Moon, Sun, Reply, Copy
-} from 'lucide-react';
+// src/pages/AdvancedChatInterface.tsx
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Send, Search, ArrowLeft, Bot, Layout } from 'lucide-react';
 import './Chat.css';
-import { CreateWebSocketConnection, GetChatRoomsByUserId, GetMessagesByRoomId, MarkMessagesAsRead } from '../services/https';
-import { useParams } from 'react-router-dom';
+import {
+  createChatSession,
+  createWsByToken,
+  getMessagesByToken,
+  markReadByToken,
+  GetChatRoomsByUserId,
+} from '../services/https';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  saveChatToken,
+  loadChatToken,
+  readRidFromToken,
+} from '../utils/chatToken';
+import CoopMatchHeader from '../pages/Component/Coop_MatchHeader';
+import { Content } from 'antd/es/layout/layout';
 
 interface Message {
-  id: number;
+  id?: number;
   text: string;
   sender: 'user' | 'bot';
-  createdAt?: string;             // เวลาแท้จาก backend
+  createdAt?: string;
   type: 'text' | 'image' | 'file' | 'audio';
-  status?: 'sent' | 'delivered' | 'read';
-  replyTo?: number;
-  attachment?: {
-    type: string;
-    url: string;
-    name?: string;
-    size?: number;
-  };
 }
 
 interface ChatContact {
-  id: number;            // room id
-  name: string;          // ชื่ออีกฝั่ง
+  id: number;
+  other_user_id: number;
+  name: string;
   lastMessage: string;
-  timestamp: string;     // เวลา last message
+  timestamp: string;
   unread: number;
-  online: boolean;
-  avatar?: string;
-  typing?: boolean;
-  lastSeen?: string;
+  avatarUrl?: string;
 }
 
-const AdvancedChatInterface: React.FC = () => {
-  // ---------- helpers: map data จาก backend -> UI ----------
-const toUiMessage = (m: any, meId: number): Message => ({
-  id: m.ID ?? m.id,                              // gorm.Model.ID
-  text: m.Message ?? m.message ?? '',            // ChatMessage.Message
-  sender: m.UserID === meId ? 'user' : 'bot',    // ChatMessage.UserID
-  createdAt: m.CreatedAt ?? m.createdAt,         // gorm.Model.CreatedAt (string timestamp)
-  type: 'text',
-  status: m.Read ? 'read' : 'delivered',         // ChatMessage.Read
-});
-
-const toUiContact = (room: any, meId: number): ChatContact => {
-  const other = room.User1?.ID === meId ? room.User2 : room.User1; // ดูอีกฝั่ง
-  return {
-    id: room.ID ?? room.id,
-    name: other?.Email ?? `Room #${room.ID ?? room.id}`, // ใช้ Email ถ้ายังไม่มีชื่อ
-    lastMessage: room.last_message ?? room.Messages?.[room.Messages.length - 1]?.Message ?? '',
-    timestamp: room.last_message_time ??
-               room.Messages?.[room.Messages.length - 1]?.CreatedAt ?? '',
-    unread: room.unread_count ?? 0,              // ถ้า backend ยังไม่ส่งค่า ก็ 0 ไปก่อน
-    online: !!other?.IsLoggedIn,                 // User.IsLoggedIn → แสดงจุดเขียว
-  };
+// ---------- helpers ----------
+const normalizeUrl = (raw?: string | null) => {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  if (!s) return '';
+  return s.startsWith('http') ? s : `http://localhost:8000${s}`;
 };
+
+const AdvancedChatInterface: React.FC = () => {
+  // ---------- mapping helpers ----------
+  const toUiMessage = (m: any, meId: number): Message => ({
+    id: m.ID ?? m.id,
+    text: m.Message ?? m.message ?? m.text ?? '',
+    sender: (m.UserID ?? m.user_id) === meId ? 'user' : 'bot',
+    createdAt: m.CreatedAt ?? m.created_at ?? m.createdAt ?? m.timestamp,
+    type: 'text',
+  });
+
+  const toUiContact = (room: any): ChatContact => {
+    const fallbackAvatar =
+      room?.avatar_url ??
+      room?.company?.logo ??
+      room?.Company?.logo ??
+      room?.student?.User?.ProfileImage?.[0]?.image_url ??
+      room?.Student?.User?.ProfileImage?.[0]?.image_url ??
+      '';
+    return {
+      id: room.id,
+      other_user_id: room.other_user_id,
+      name: room.name,
+      lastMessage: room.last_message ?? '',
+      timestamp: room.last_message_time ?? '',
+      unread: room.unread_count ?? 0,
+      avatarUrl: fallbackAvatar,
+    };
+  };
 
   // ---------- state ----------
   const [messages, setMessages] = useState<Message[]>([]);
@@ -66,29 +80,24 @@ const toUiContact = (room: any, meId: number): ChatContact => {
 
   const [newMessage, setNewMessage] = useState('');
   const [showContactList, setShowContactList] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [darkMode, setDarkMode] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const { roomId, userId } = useParams<{ roomId: string; userId: string }>();
-  const parsedRoomId = Number(roomId);
-  const parsedUserId = Number(userId);
-  const meId = Number(localStorage.getItem('id'));
+  const navigate = useNavigate();
+  const { sid } = useParams<{ sid?: string }>(); // token ใน path: /chat/session/:sid
+  const isLobbyRoute = !sid; // /chat = true, /chat/session/:sid = false
 
-  // simple emoji list (ยังมีใน UI)
-  const emojis = [
-    '😀','😃','😄','😁','😅','😂','🤣','😊','😇','🙂',
-    '😉','😌','😍','🥰','😘','😗','👍','👎','❤️','🎉','🚀','✨','🔥','💯'
-  ];
+  const meId = Number(localStorage.getItem('id')) || 0;
+
+  // โทเคนที่ใช้งาน + ห้องปัจจุบัน (null = lobby)
+  const [chatToken, setChatToken] = useState<string | null>(sid ?? null);
+  const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
+
+  // ref เพื่อกัน stale closure บน WS
+  const currentRoomRef = useRef<number | null>(null);
+  useEffect(() => { currentRoomRef.current = activeRoomId; }, [activeRoomId]);
 
   // ---------- utils ----------
   const scrollToBottom = useCallback(() => {
@@ -102,112 +111,337 @@ const toUiContact = (room: any, meId: number): ChatContact => {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getStatusIcon = (status?: Message['status']) => {
-    switch (status) {
-      case 'sent': return <Check className="status-icon status-sent" />;
-      case 'delivered': return <CheckCheck className="status-icon status-delivered" />;
-      case 'read': return <CheckCheck className="status-icon status-read" />;
-      default: return null;
-    }
+  const fmtShortTime = (ts?: string) => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // ---------- effects ----------
-  // Connect WS
   useEffect(() => {
-    if (!parsedRoomId || !parsedUserId) return;
-
-    const ws = CreateWebSocketConnection(parsedRoomId, parsedUserId);
-    wsRef.current = ws;
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      // ให้ backend ส่งฟอร์แมตคล้าย GetMessagesByRoomId จะดีที่สุด
-      setMessages((prev) => [...prev, toUiMessage(data, meId)]);
-    };
-
-    return () => {
-      ws.close();
-      wsRef.current = null;
-    };
-  }, [parsedRoomId, parsedUserId, meId]);
-
-  // Load messages (จริง) เมื่อเปลี่ยนห้อง
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!parsedRoomId) return;
-      const data = await GetMessagesByRoomId(parsedRoomId);
-      if (Array.isArray(data)) {
-        setMessages(data.map((m: any) => toUiMessage(m, meId)));
-      } else {
-        setMessages([]);
-      }
-    };
-    fetchMessages();
-  }, [parsedRoomId, meId]);
-
-  // Mark as read
-  useEffect(() => {
-    if (messages.length && parsedRoomId && parsedUserId) {
-      MarkMessagesAsRead(parsedRoomId, parsedUserId);
+    if (activeRoomId != null) {
+      setSelectedContact(contacts.find(c => c.id === activeRoomId) ?? null);
+    } else {
+      setSelectedContact(null);
     }
-  }, [messages, parsedRoomId, parsedUserId]);
+  }, [contacts, activeRoomId]);
 
-  // Load contact list (จริง)
-  useEffect(() => {
-    const fetchChatRooms = async () => {
-      if (!meId) return;
-      const res = await GetChatRoomsByUserId(meId);
-      if (Array.isArray(res)) {
-        const items = res.map((r: any) => toUiContact(r, meId));
-        setContacts(items);
-        if (!selectedContact && items.length) setSelectedContact(items[0]);
+  // เรียงห้องตามเวลาล่าสุด
+  const sortByTime = (a: ChatContact, b: ChatContact) =>
+    (b.timestamp ? +new Date(b.timestamp) : 0) -
+    (a.timestamp ? +new Date(a.timestamp) : 0);
+
+  // helper: อัปเดต contacts แล้ว sort ทุกครั้ง
+  const updateContacts = (updater: (prev: ChatContact[]) => ChatContact[]) => {
+    setContacts(prev => {
+      const next = updater(prev);
+      return [...next].sort(sortByTime);
+    });
+  };
+
+  // ---------- throttle helper ----------
+  function throttle<T extends (...args:any[]) => void>(fn:T, wait:number) {
+    let last = 0, timer: any;
+    return (...args:any[]) => {
+      const now = Date.now();
+      const remain = wait - (now - last);
+      if (remain <= 0) { last = now; fn(...args); }
+      else {
+        clearTimeout(timer);
+        timer = setTimeout(() => { last = Date.now(); fn(...args); }, remain);
       }
     };
-    fetchChatRooms();
-  }, [meId, selectedContact]);
+  }
 
-  // Scroll bottom เมื่อมีข้อความใหม่
-  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
-
-  // (optional) typing simulation ถ้าอยากคงไว้
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (selectedContact?.typing) {
-        setIsTyping(true);
-        setTimeout(() => setIsTyping(false), 3000);
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [selectedContact]);
-
-  // ---------- actions ----------
-  const handleSendMessage = async (text?: string, type: Message['type'] = 'text') => {
-    const messageText = text || newMessage.trim();
-    if (!messageText && type === 'text') return;
-
-    // optimistic
-    const tempId = Date.now();
-    const optimistic: Message = {
-      id: tempId,
-      text: messageText,
-      sender: 'user',
-      createdAt: new Date().toISOString(),
-      type,
-      status: 'sent',
-    };
-    setMessages(prev => [...prev, optimistic]);
-    setNewMessage('');
-    setShowEmojiPicker(false);
-
-    // ส่งจริงผ่าน WS (backend ควร broadcast กลับ)
-    if (type === 'text' && wsRef.current?.readyState === WebSocket.OPEN) {
+  // ---------- outbox ----------
+  const outbox = useRef<string[]>([]);
+  const flushOutbox = useCallback(() => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    if (activeRoomId == null) return; // lobby ไม่ส่งข้อความ
+    while (outbox.current.length) {
+      const text = outbox.current.shift()!;
       wsRef.current.send(JSON.stringify({
-        message: messageText,   // field backend
-        room_id: parsedRoomId,
-        user_id: meId,          // field backend
+        event: 'message',
+        message: text,
         type: 'text',
       }));
     }
+  }, [activeRoomId]);
+
+  useEffect(() => {
+    const id = setInterval(flushOutbox, 150);
+    return () => clearInterval(id);
+  }, [flushOutbox]);
+
+  // ---------- read receipts ----------
+  const lastReadSentRef = useRef<{ roomId: number | null; upToId: number | null }>({ roomId: null, upToId: null });
+
+  const sendReadReceiptRaw = useCallback(() => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    const roomId = currentRoomRef.current;
+    if (roomId == null) return;
+
+    const lastOtherId = [...messages]
+      .filter(m => m.sender !== 'user' && m.id != null)
+      .map(m => m.id as number)
+      .sort((a, b) => b - a)[0] ?? 0;
+
+    if (lastReadSentRef.current.roomId === roomId &&
+        lastReadSentRef.current.upToId === lastOtherId) {
+      return;
+    }
+
+    wsRef.current.send(JSON.stringify({
+      event: 'read',
+      up_to_id: lastOtherId,
+    }));
+    lastReadSentRef.current = { roomId, upToId: lastOtherId };
+  }, [messages]);
+
+  const sendReadReceipt = useMemo(() => throttle(sendReadReceiptRaw, 250), [sendReadReceiptRaw]);
+
+  // ---------- sync activeRoomId จาก token ----------
+  useEffect(() => {
+    if (!chatToken) { setActiveRoomId(null); return; }
+    if (isLobbyRoute) { setActiveRoomId(null); return; }  // ← บังคับว่างเมื่อ /chat
+    const rid = readRidFromToken(chatToken);
+    setActiveRoomId(rid && rid > 0 ? rid : null);
+  }, [chatToken, isLobbyRoute]);
+
+  // ---------- Bootstrap token + WebSocket ----------
+  useEffect(() => {
+    if (!meId) return;
+
+    const ensureToken = async (): Promise<string | null> => {
+      if (!isLobbyRoute && sid) {
+        setChatToken(sid);
+        saveChatToken(sid);
+        return sid;
+      }
+
+      // อยู่ /chat: ใช้ lobby เท่านั้น
+      // ถ้าของเดิมเป็น rid>0 ให้ทิ้ง แล้ว mint lobby ใหม่
+      const saved = loadChatToken();
+      const savedRid = saved ? readRidFromToken(saved) : null;
+      if (saved && savedRid === 0) {
+        setChatToken(saved);
+        return saved;
+      }
+
+      const { token } = await createChatSession(0); // rid=0
+      setChatToken(token);
+      saveChatToken(token);
+      return token;
+    };
+
+    let ws: WebSocket | null = null;
+
+    (async () => {
+      const token = await ensureToken();
+      if (!token) return;
+
+      // ปิด WS เก่าก่อนเปิดใหม่
+      if (wsRef.current) { try { wsRef.current.close(); } catch {} wsRef.current = null; }
+
+      ws = createWsByToken(token);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        flushOutbox?.();
+        const ridNow = currentRoomRef.current; // null เมื่อ /chat
+        if (ridNow && ridNow > 0) {
+          markReadByToken(token, ridNow).catch(() => {});
+        }
+      };
+
+      ws.onmessage = async (event) => {
+        if (wsRef.current !== ws) return;
+
+        let raw = '';
+        if (typeof event.data === 'string') raw = event.data;
+        else if (event.data instanceof ArrayBuffer) raw = new TextDecoder().decode(event.data);
+        else if (event.data instanceof Blob) raw = await event.data.text();
+        else return;
+
+        for (const chunk of raw.split('\n')) {
+          const line = chunk.trim();
+          if (!line) continue;
+          let data: any; try { data = JSON.parse(line); } catch { continue; }
+
+          if (data.event === 'room_meta') {
+            const ts = String(data.timestamp ?? data.created_at ?? '');
+            const lastMsg = String(data.last_message ?? '');
+            const unreadCount = Number(data.unread ?? data.count ?? NaN);
+
+            updateContacts(prev => prev.map(c => {
+              if (c.id !== data.room_id) return c;
+              return {
+                ...c,
+                lastMessage: lastMsg || c.lastMessage,
+                timestamp: ts || c.timestamp,
+                unread: Number.isFinite(unreadCount) ? unreadCount : c.unread,
+              };
+            }));
+            continue;
+          }
+
+          if (data.event === 'unread') {
+            const next = Number(data.count ?? data.unread) || 0;
+            updateContacts(prev => prev.map(c =>
+              c.id === data.room_id ? { ...c, unread: next } : c
+            ));
+            continue;
+          }
+
+          if (data.event === 'message') {
+            const ridNow = currentRoomRef.current;
+            const msgRoom = Number(data.chat_room_id);
+            const fromMe = !!data.user_id && Number(data.user_id) === meId;
+
+            if (ridNow && msgRoom === ridNow) {
+              // อัพเดตหน้าห้องปัจจุบัน
+              setMessages(prev => {
+                if (fromMe) {
+                  for (let i = prev.length - 1; i >= 0; i--) {
+                    const m = prev[i];
+                    if (m.sender === 'user' && !m.id && m.text === data.message) {
+                      const clone = [...prev];
+                      clone[i] = { id: data.id, text: data.message, sender: 'user', createdAt: data.created_at, type: data.type };
+                      return clone;
+                    }
+                  }
+                }
+                return [...prev, { id: data.id, text: data.message, sender: fromMe ? 'user' : 'bot', createdAt: data.created_at, type: data.type }];
+              });
+
+              // อัปเดต meta รายชื่อห้อง
+              updateContacts(prev => prev.map(c =>
+                c.id === ridNow
+                  ? { ...c, lastMessage: data.message, timestamp: data.created_at, ...(fromMe ? {} : { unread: 0 }) }
+                  : c
+              ));
+
+              requestAnimationFrame(() => scrollToBottom());
+              if (!fromMe) markReadByToken(token, ridNow).catch(()=>{});
+            } else {
+              // ห้องอื่น -> อัพเดตแล้ว SORT ให้เด้งขึ้นบน
+              updateContacts(prev => prev.map(c =>
+                c.id === msgRoom
+                  ? { ...c, lastMessage: data.message, timestamp: data.created_at, unread: fromMe ? c.unread : c.unread + 1 }
+                  : c
+              ));
+            }
+          }
+        }
+      };
+
+      ws.onclose = () => { if (wsRef.current === ws) wsRef.current = null; };
+    })();
+
+    // cleanup เมื่อ unmount
+    return () => {
+      if (wsRef.current) { try { wsRef.current.close(); } catch {} wsRef.current = null; }
+    };
+  }, [meId, sid, flushOutbox, scrollToBottom]);
+
+  // ---------- โหลดข้อความเมื่อเข้าห้องจริง ----------
+  useEffect(() => {
+    const load = async () => {
+      if (!chatToken) return;
+      const rid = readRidFromToken(chatToken);
+      if (!rid || rid <= 0) { setMessages([]); return; }
+
+      const data = await getMessagesByToken(chatToken, rid);
+      setMessages(Array.isArray(data) ? data.map((m:any)=>toUiMessage(m, meId)) : []);
+      await markReadByToken(chatToken, rid).catch(()=>{});
+      updateContacts(prev => prev.map(c => c.id === rid ? { ...c, unread: 0 } : c));
+      requestAnimationFrame(() => scrollToBottom());
+    };
+    load();
+  }, [chatToken, meId, scrollToBottom]);
+
+  // ---------- ส่ง read เมื่อสลับห้อง/มีข้อความใหม่/โฟกัสแท็บ ----------
+  useEffect(() => {
+    if (activeRoomId == null) return;
+    sendReadReceipt();
+  }, [activeRoomId, sendReadReceipt]);
+
+  useEffect(() => {
+    if (activeRoomId == null) return;
+    sendReadReceipt();
+  }, [messages.length, activeRoomId, sendReadReceipt]);
+
+  useEffect(() => {
+    const onFocus = () => sendReadReceipt();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [sendReadReceipt]);
+
+  // ---------- Scroll bottom ----------
+  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
+
+  // ---------- โหลดรายการห้อง + sync selectedContact ----------
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!meId) return;
+      const res = await GetChatRoomsByUserId(meId);
+      if (Array.isArray(res)) {
+        const items = res.map(toUiContact).sort(sortByTime);
+        setContacts(items);
+
+        if (!isLobbyRoute) {
+          const rid = activeRoomId ?? readRidFromToken(chatToken ?? '') ?? null;
+          setSelectedContact(rid ? (items.find(c => c.id === rid) || null) : null);
+        } else {
+          setSelectedContact(null); // อยู่ /chat ให้ว่างเสมอ
+        }
+      }
+    };
+    fetchRooms();
+  }, [meId, chatToken, activeRoomId, isLobbyRoute]);
+
+  // ---------- actions ----------
+  const bumpContactOnMessage = (roomId: number, text: string, ts?: string, fromMe?: boolean) => {
+    updateContacts(prev => prev.map(c => c.id !== roomId ? c : ({
+      ...c,
+      lastMessage: text,
+      timestamp: ts ?? c.timestamp,
+      unread: (fromMe || selectedContact?.id === roomId) ? c.unread : c.unread + 1,
+    })));
+  };
+
+  const handleSendMessage = (text?: string) => {
+    if (activeRoomId == null) return; // lobby ห้ามส่ง
+    const messageText = (text ?? newMessage).trim();
+    if (!messageText) return;
+
+    setMessages(prev => [...prev, {
+      text: messageText,
+      sender: 'user',
+      createdAt: new Date().toISOString(),
+      type: 'text',
+    }]);
+
+    bumpContactOnMessage(activeRoomId, messageText, new Date().toISOString(), true);
+    setNewMessage('');
+
+    outbox.current.push(messageText);
+    flushOutbox();
+  };
+
+  const handleContactClick = async (contact: ChatContact) => {
+    setSelectedContact(contact);
+    setMessages([]);
+    if (window.innerWidth < 768) setShowContactList(false);
+
+    try {
+      const { token } = await createChatSession(contact.id);
+      setChatToken(token);
+      saveChatToken(token);
+      setActiveRoomId(readRidFromToken(token) ?? contact.id);
+      // ตอนนี้ค่อยเปลี่ยน URL ให้เป็นแบบเจาะห้อง
+      navigate(`/chat/session/${token}`, { replace: true });
+    } catch {}
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -217,123 +451,47 @@ const toUiContact = (room: any, meId: number): ChatContact => {
     }
   };
 
-  const handleEmojiSelect = (emoji: string) => {
-    setNewMessage(prev => prev + emoji);
-    setShowEmojiPicker(false);
-    inputRef.current?.focus();
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const fileMessage: Message = {
-      id: Date.now(),
-      text: `📎 ${file.name}`,
-      sender: 'user',
-      createdAt: new Date().toISOString(),
-      type: 'file',
-      status: 'sent',
-      attachment: {
-        type: file.type,
-        url: URL.createObjectURL(file),
-        name: file.name,
-        size: file.size
-      }
-    };
-    setMessages(prev => [...prev, fileMessage]);
-    setShowAttachmentMenu(false);
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const imageMessage: Message = {
-      id: Date.now(),
-      text: `🖼️ ส่งรูปภาพ`,
-      sender: 'user',
-      createdAt: new Date().toISOString(),
-      type: 'image',
-      status: 'sent',
-      attachment: {
-        type: file.type,
-        url: URL.createObjectURL(file),
-        name: file.name,
-        size: file.size
-      }
-    };
-    setMessages(prev => [...prev, imageMessage]);
-    setShowAttachmentMenu(false);
-  };
-
-  const toggleRecording = () => {
-    setIsRecording(v => !v);
-    if (!isRecording) {
-      setTimeout(() => {
-        setIsRecording(false);
-        handleSendMessage('🎤 ข้อความเสียง 0:05', 'audio');
-      }, 3000);
-    }
-  };
-
-  // ---------- derived ----------
-  const filteredContacts = contacts.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // ---------- render ----------
   return (
-    <div className={`chat-container ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-      {/* Sidebar */}
-      <div className={`sidebar ${showContactList ? 'visible' : 'hidden'} ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-        <div className={`sidebar-header ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-          <div className="sidebar-title">💬 แชท AI Pro</div>
-          <div className="sidebar-controls">
-            <button onClick={() => setDarkMode(!darkMode)} className="sidebar-btn">
-              {darkMode ? <Sun size={20}/> : <Moon size={20}/>}
-            </button>
-            <button className="sidebar-btn"><Settings size={20}/></button>
-            <button className="sidebar-btn"><Bell size={20}/></button>
-          </div>
+    <>
+       <CoopMatchHeader  />
+       <div style={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <div className="chat-container light-mode">
 
+      {/* Sidebar */}
+      <div className={`sidebar ${showContactList ? 'visible' : 'hidden'} light-mode`}>
+        <div className="sidebar-header light-mode">
+          <div className="sidebar-title">💬 แชท</div>
           <div className="search-container">
             <Search className="search-icon" size={16}/>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="ค้นหาการสนทนา..."
-              className="search-input"
-            />
+            <input onChange={() => {}} placeholder="ค้นหาการสนทนา..." className="search-input"/>
           </div>
         </div>
 
         <div className="contact-list">
-          {filteredContacts.map((contact) => (
+          {contacts.map((contact) => (
             <div
               key={contact.id}
-              onClick={() => {
-                setSelectedContact(contact);
-                if (window.innerWidth < 768) setShowContactList(false);
-              }}
-              className={`contact-item ${darkMode ? 'dark-mode' : 'light-mode'} ${selectedContact?.id === contact.id ? 'selected' : ''}`}
+              onClick={() => handleContactClick(contact)}
+              className={`contact-item light-mode ${selectedContact?.id === contact.id ? 'selected' : ''}`}
             >
               <div className="contact-info">
                 <div className="contact-avatar">
-                  <div className="avatar">{contact.name.split(' ')[0].charAt(0)}</div>
-                  {contact.online && <div className="online-indicator"></div>}
+                  {normalizeUrl(contact.avatarUrl) ? (
+                    <img src={normalizeUrl(contact.avatarUrl)} alt={contact.name} className="avatar" />
+                  ) : (
+                    <div className="avatar">
+                      {contact?.name?.split(' ')[0]?.charAt(0) || '?'}
+                    </div>
+                  )}
                 </div>
-
                 <div className="contact-details">
                   <div className="contact-header">
-                    <h3 className={`contact-name ${darkMode ? 'dark-mode' : 'light-mode'}`}>{contact.name}</h3>
-                    <span className="contact-time">{contact.timestamp}</span>
+                    <h3 className="contact-name light-mode">{contact.name}</h3>
+                    <span className="contact-time">{fmtShortTime(contact.timestamp)}</span>
                   </div>
                   <div className="contact-message-row">
-                    <p className={`contact-message ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-                      {contact.typing ? (
-                        <span className="typing-indicator"><span className="typing-dot">●</span><span>กำลังพิมพ์...</span></span>
-                      ) : contact.lastMessage}
-                    </p>
+                    <p className="contact-message light-mode">{contact.lastMessage}</p>
                     {contact.unread > 0 && <div className="unread-badge">{contact.unread}</div>}
                   </div>
                 </div>
@@ -343,184 +501,107 @@ const toUiContact = (room: any, meId: number): ChatContact => {
         </div>
       </div>
 
-      {/* Main Chat Area */}
+      {/* Main Chat */}
       <div className="chat-main">
-        {/* Chat Header */}
-        <div className={`chat-header ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-          <div className="chat-header-info">
-            <button onClick={() => setShowContactList(!showContactList)} className={`back-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-              <ArrowLeft size={20}/>
-            </button>
-
-            <div className="chat-avatar">
-              <div className="avatar">{selectedContact?.name?.split(' ')[0].charAt(0) ?? '?'}</div>
-              {selectedContact?.online && <div className="online-indicator"></div>}
-            </div>
-
-            <div className="chat-contact-info">
-              <h3 className={darkMode ? 'dark-mode' : 'light-mode'}>{selectedContact?.name ?? 'เลือกห้องแชท'}</h3>
-              <p className={`chat-status ${darkMode ? 'dark-mode' : 'light-mode'} ${selectedContact?.typing ? 'typing' : ''}`}>
-                {selectedContact?.typing ? (
-                  <span className="typing-indicator"><span className="typing-dot">●</span>กำลังพิมพ์...</span>
-                ) : selectedContact?.online ? 'ออนไลน์' : (selectedContact?.lastSeen || 'ออฟไลน์')}
-              </p>
+        {activeRoomId == null ? (
+          <div className="empty-state light-mode">
+            <div className="empty-inner">
+              <div className="empty-icon">💬</div>
+              <h3>เลือกห้องแชททางซ้าย</h3>
+              <p>คลิกรายชื่อเพื่อเริ่มสนทนา</p>
             </div>
           </div>
-
-          <div className="chat-actions">
-            <button className={`action-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}><Search size={20}/></button>
-            <button className={`action-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}><Phone size={20}/></button>
-            <button className={`action-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}><Video size={20}/></button>
-            <button className={`action-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}><MoreVertical size={20}/></button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className={`messages-area ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-          {messages.map((message) => (
-            <div key={message.id} className={`message-group ${message.sender}`}>
-              <div className={`message-container ${message.sender}`}>
-                <div className={`message-avatar ${message.sender}`}>
-                  {message.sender === 'user' ? <User size={16}/> : <Bot size={16}/>}
+        ) : (
+          <>
+            <div className="chat-header light-mode">
+              <div className="chat-header-info">
+                <button
+                  onClick={() => setShowContactList(!showContactList)}
+                  className="back-btn light-mode"
+                >
+                  <ArrowLeft size={20}/>
+                </button>
+                <div className="chat-avatar">
+                  {normalizeUrl(selectedContact?.avatarUrl) ? (
+                    <img
+                      src={normalizeUrl(selectedContact?.avatarUrl)}
+                      alt={selectedContact?.name || "avatar"}
+                      className="avatar"
+                    />
+                  ) : (
+                    <div className="avatar">
+                      {selectedContact?.name?.split(' ')[0]?.charAt(0) ?? '?'}
+                    </div>
+                  )}
                 </div>
+                <div className="chat-contact-info">
+                  <h3 className="light-mode">
+                    {selectedContact?.name ?? 'เลือกห้องแชท'}
+                  </h3>
+                </div>
+              </div>
+            </div>
 
-                <div className="message-wrapper">
-                  <div className={`message-bubble ${message.sender} ${message.sender === 'bot' ? (darkMode ? 'dark-mode' : 'light-mode') : ''}`}>
-                    {message.type === 'image' && message.attachment ? (
-                      <div className="image-attachment">
-                        <img src={message.attachment.url} alt="Shared image"/>
+            <div className="messages-area light-mode">
+              {messages.map((m, idx) => (
+                <div key={m.id ?? `tmp-${idx}`} className={`message-group ${m.sender}`}>
+                  <div className={`message-container ${m.sender}`}>
+                    {m.sender === 'bot' && (
+                      <div className={`message-avatar ${m.sender}`}>
+                        {normalizeUrl(selectedContact?.avatarUrl) ? (
+                          <img
+                            src={normalizeUrl(selectedContact?.avatarUrl)}
+                            alt={selectedContact?.name || 'user'}
+                            className="avatar"
+                          />
+                        ) : (
+                          <Bot size={16}/>
+                        )}
                       </div>
-                    ) : message.type === 'file' && message.attachment ? (
-                      <div className="file-attachment">
-                        <File size={32}/>
-                        <div className="file-info">
-                          <div className="file-name">{message.attachment.name}</div>
-                          <div className="file-size">{message.attachment.size ? `${(message.attachment.size / 1024).toFixed(1)} KB` : ''}</div>
+                    )}
+
+                    <div className="message-wrapper">
+                      <div className={`message-bubble ${m.sender}`}>
+                        <p className="message-content">{m.text}</p>
+                        <div className="message-footer">
+                          <p className={`message-time ${m.sender}`}>
+                            {formatTime(m.createdAt)}
+                          </p>
                         </div>
                       </div>
-                    ) : null}
-
-                    <p className="message-content">{message.text}</p>
-                    <div className="message-footer">
-                      <p className={`message-time ${message.sender} ${message.sender === 'bot' ? (darkMode ? 'dark-mode' : 'light-mode') : ''}`}>
-                        {formatTime(message.createdAt)}
-                      </p>
-                      {message.sender === 'user' && <div className="message-status">{getStatusIcon(message.status)}</div>}
-                    </div>
-
-                    <div className="message-actions">
-                      <button className={`message-action-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}><Reply size={12}/></button>
-                      <button className={`message-action-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}><Copy size={12}/></button>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-
-          {isTyping && (
-            <div className="typing-container">
-              <div className="typing-message">
-                <div className="message-avatar bot"><Bot size={16}/></div>
-                <div className={`typing-bubble ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-                  <div className="typing-dots">
-                    <div className={`typing-dot ${darkMode ? 'dark-mode' : 'light-mode'}`}></div>
-                    <div className={`typing-dot ${darkMode ? 'dark-mode' : 'light-mode'}`}></div>
-                    <div className={`typing-dot ${darkMode ? 'dark-mode' : 'light-mode'}`}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef}/>
-        </div>
-
-        {/* Emoji Picker */}
-        {showEmojiPicker && (
-          <div className={`emoji-picker ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-            <div className="emoji-grid">
-              {emojis.map((e, i) => (
-                <button key={i} onClick={() => handleEmojiSelect(e)} className={`emoji-btn ${darkMode ? 'dark-mode' : 'light-mode'}`} title={e}>
-                  {e}
-                </button>
               ))}
+              <div ref={messagesEndRef}/>
             </div>
-          </div>
+
+            {/* Input Area */}
+            <div className="input-area light-mode">
+              <div className="input-container">
+                <div className="input-btn-wrapper" />
+                <div className="input-wrapper">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="พิมพ์ข้อความ... ✨"
+                    className="message-input light-mode"
+                  />
+                </div>
+                <button onClick={() => handleSendMessage()} className="input-btn send-btn">
+                  <Send size={20}/>
+                </button>
+              </div>
+            </div>
+          </>
         )}
-
-        {/* Attachment Menu */}
-        {showAttachmentMenu && (
-          <div className={`attachment-menu ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-            <button onClick={() => imageInputRef.current?.click()} className={`attachment-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-              <Image size={20} style={{ color: '#10b981' }}/>
-              <span className={darkMode ? 'dark-mode' : 'light-mode'}>รูปภาพ</span>
-            </button>
-            <button onClick={() => fileInputRef.current?.click()} className={`attachment-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-              <File size={20} style={{ color: '#3b82f6' }}/>
-              <span className={darkMode ? 'dark-mode' : 'light-mode'}>เอกสาร</span>
-            </button>
-            <button onClick={() => {}} className={`attachment-btn ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-              <Camera size={20} style={{ color: '#8b5cf6' }}/>
-              <span className={darkMode ? 'dark-mode' : 'light-mode'}>กรอง</span>
-            </button>
-          </div>
-        )}
-
-        {/* Input Area */}
-        <div className={`input-area ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-          <div className="input-container">
-            <div className="input-btn-wrapper">
-              <button onClick={() => setShowAttachmentMenu(!showAttachmentMenu)} className={`input-btn attachment-btn-input ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-                <Paperclip size={20} />
-              </button>
-            </div>
-
-            <div className="input-wrapper">
-              <input
-                ref={inputRef}
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="พิมพ์ข้อความ... ✨"
-                className={`message-input ${darkMode ? 'dark-mode' : 'light-mode'}`}
-              />
-            </div>
-
-            <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={`input-btn emoji-btn-input ${darkMode ? 'dark-mode' : 'light-mode'}`}>
-              <Smile size={20}/>
-            </button>
-
-            {newMessage.trim() ? (
-              <button onClick={() => handleSendMessage()} className="input-btn send-btn">
-                <Send size={20}/>
-              </button>
-            ) : (
-              <button onClick={toggleRecording} className={`input-btn voice-btn ${isRecording ? 'recording' : ''}`}>
-                <Mic size={20}/>
-              </button>
-            )}
-          </div>
-
-          {isRecording && (
-            <div className="recording-indicator">
-              <div className="recording-dot"></div>
-              <span className="recording-text">🎤 กำลังบันทึกเสียง... กดเพื่อหยุด</span>
-              <div className="recording-dot"></div>
-            </div>
-          )}
-        </div>
-
-        {/* Hidden inputs */}
-        <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip,.rar" onChange={handleFileUpload} className="hidden"/>
-        <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden"/>
       </div>
-
-      {(showEmojiPicker || showAttachmentMenu) && (
-        <div className="popup-overlay" onClick={() => { setShowEmojiPicker(false); setShowAttachmentMenu(false); }}/>
-      )}
     </div>
+    </div>
+    </>
   );
 };
 

@@ -1,103 +1,73 @@
+// services/jwt_wrapper.go
 package services
 
 import (
 	"errors"
-
+	"fmt"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-// JwtWrapper wraps the signing key and the issuer
-
-
 type JwtWrapper struct {
-	SecretKey string
-
-	Issuer string
-
+	SecretKey       string
+	Issuer          string
 	ExpirationHours int64
 }
 
-// JwtClaim adds email as a claim to the token
-
-type JwtClaim struct {
-	Email string
-
-	jwt.StandardClaims
+type JwtClaims struct {
+	Email string `json:"email,omitempty"`
+	jwt.RegisteredClaims
 }
 
-// Generate Token generates a jwt token
-
-func (j *JwtWrapper) GenerateToken(email string) (signedToken string, err error) {
-
-	claims := &JwtClaim{
-
+// สร้าง token: ใส่ userID ลงใน Subject (sub) + แนบ email ไว้ด้วย
+func (j *JwtWrapper) GenerateToken(userID uint, email string) (string, error) {
+	now := time.Now()
+	claims := &JwtClaims{
 		Email: email,
-
-		StandardClaims: jwt.StandardClaims{
-
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours)).Unix(),
-
-			Issuer: j.Issuer,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   fmt.Sprintf("%d", userID),                // sub = userID
+			Issuer:    j.Issuer,                                 // iss
+			IssuedAt:  jwt.NewNumericDate(now),                  // iat
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour *    // exp
+				time.Duration(j.ExpirationHours))),
 		},
 	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	signedToken, err = token.SignedString([]byte(j.SecretKey))
-
-	if err != nil {
-
-		return
-
-	}
-
-	return
-
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return t.SignedString([]byte(j.SecretKey))
 }
 
-// Validate Token validates the jwt token
-
-func (j *JwtWrapper) ValidateToken(signedToken string) (claims *JwtClaim, err error) {
-
-	token, err := jwt.ParseWithClaims(
-
-		signedToken,
-
-		&JwtClaim{},
-
-		func(token *jwt.Token) (interface{}, error) {
-
-			return []byte(j.SecretKey), nil
-
-		},
+// ตรวจ token: ทำให้ “เข้ม” เหมือนเวอร์ชันเก่า
+func (j *JwtWrapper) ValidateToken(signedToken string) (*JwtClaims, error) {
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 	)
 
+	token, err := parser.ParseWithClaims(
+		signedToken,
+		&JwtClaims{},
+		func(t *jwt.Token) (interface{}, error) {
+			return []byte(j.SecretKey), nil
+		},
+	)
 	if err != nil {
-
-		return
-
+		return nil, err
 	}
 
-	claims, ok := token.Claims.(*JwtClaim)
-
-	if !ok {
-
-		err = errors.New("Couldn't parse claims")
-
-		return
-
+	claims, ok := token.Claims.(*JwtClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("couldn't parse claims or token invalid")
 	}
 
-	if claims.ExpiresAt < time.Now().Local().Unix() {
-
-		err = errors.New("JWT is expired")
-
-		return
-
+	// ====== ตรวจหมดอายุแบบของเดิม ======
+	if claims.ExpiresAt == nil || time.Now().After(claims.ExpiresAt.Time) {
+		return nil, errors.New("JWT is expired")
 	}
 
-	return
+	// (ทางเลือก) ตรวจ issuer ให้ตรง
+	if j.Issuer != "" && claims.Issuer != j.Issuer {
+		return nil, errors.New("invalid issuer")
+	}
 
+	return claims, nil
 }

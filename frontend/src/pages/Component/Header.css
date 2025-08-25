@@ -1,0 +1,16 @@
+/* ซ่อนสกอร์บาร์ใน Chrome/Safari */
+.menu-scroll::-webkit-scrollbar { display: none; }
+
+/* ลดช่องไฟและฟอนต์ลงแบบ responsive */
+:root {
+  --menu-pad: clamp(8px, 0.9vw, 16px);
+  --menu-font: clamp(12px, 1.05vw, 14px);
+}
+.ant-menu-horizontal > .ant-menu-item,
+.ant-menu-horizontal > .ant-menu-submenu {
+  padding-inline: var(--menu-pad);
+}
+.ant-menu-horizontal .ant-menu-title-content {
+  font-size: var(--menu-font);
+  white-space: nowrap;
+}
