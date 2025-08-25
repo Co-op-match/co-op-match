@@ -273,3 +273,4 @@ func CreateSendVerifyCompany(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": verify})
 }
+

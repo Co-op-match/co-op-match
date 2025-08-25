@@ -29,6 +29,7 @@ import CreateInterviewAppointment from "../src/pages/company/appointment/Appoint
 import ProtectProfile from "./components/ProtectedProfile";
 import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
+import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 // import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
 import AdminVerify from "./pages/Admin/verify/verify";
@@ -36,6 +37,8 @@ import AdminVerify from "./pages/Admin/verify/verify";
 import AdvancedChatInterface from "./Chat/ChatInterface";
 import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
+import AdminUser from "./pages/Admin/user/main";
+import CompanyAnalysisPage from "./pages/company/analysis/analysis";
 
 function App() {
   return (
@@ -154,6 +157,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/student/favorite-posts"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <LikedPosts />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/company/dashboard"
@@ -217,6 +228,14 @@ function App() {
             }
           />
 
+          <Route
+            path="/company/analysis"
+            element={
+              <ProtectedRoute allowedRoles={[2]}>
+                <CompanyAnalysisPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/lecturer/dashboard"
@@ -247,6 +266,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[1]}>
                 <AdminVerify />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminUser />
               </ProtectedRoute>
             }
           />

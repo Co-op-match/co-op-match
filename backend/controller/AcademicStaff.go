@@ -457,151 +457,168 @@ func UpdateAcademicStaff(c *gin.Context) {
 		"data":    staff,
 	})
 }
+type CurrentInternshipDTO struct {
+	CompanyName  string     `json:"company_name"`
+	Position     string     `json:"position"`
+	ProvinceName string     `json:"province_name"`
+	Status       string     `json:"status"`
+}
 
-// func GetAdviseeStudents(c *gin.Context) {
-// 	db := config.DB()
-// 	userIDStr := c.Param("userId")
-// 	userID, err := strconv.Atoi(userIDStr)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid userId"})
-// 		return
-// 	}
+type StudentForAdvisorDTO struct {
+	ID          uint                  `json:"id"`
+	FirstName   string                `json:"first_name"`
+	LastName    string                `json:"last_name"`
+	ProgramName string                `json:"program_name,omitempty"`
+	FacultyName string                `json:"faculty_name,omitempty"`
+	Year        *int                  `json:"year,omitempty"`
+	GPA         *float64              `json:"gpa,omitempty"`
+	AvatarURL   string                `json:"avatar_url,omitempty"`
+	CurrentInt  *CurrentInternshipDTO `json:"current_internship,omitempty"`
+}
 
-// 	// 1) หา AcademicStaff จาก user_id
-// 	var staff entity.AcademicStaff
-// 	if err := db.Preload("Program").Where("user_id = ?", userID).First(&staff).Error; err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			c.JSON(http.StatusOK, gin.H{"students": []StudentForAdvisorDTO{}})
-// 			return
-// 		}
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	if staff.ProgramID == 0 {
-// 		// ถ้า staff ยังไม่ผูก Program ก็คืนว่างๆ ไปก่อน
-// 		c.JSON(http.StatusOK, gin.H{"students": []StudentForAdvisorDTO{}})
-// 		return
-// 	}
+type CompanySummaryItemDTO struct {
+	CompanyID    uint                    `json:"company_id"`
+	CompanyName  string                  `json:"company_name"`
+	LogoURL      string                  `json:"logo_url,omitempty"`
+	StudentCount int                     `json:"student_count"`
+	Students     []StudentForAdvisorDTO  `json:"students"`
+}
 
-// 	// 2) ดึง student_id ที่อยู่ในโปรแกรมเดียวกับ staff
-// 	var eduRows []entity.Education
-// 	if err := db.Select("DISTINCT student_id").
-// 		Where("program_id = ?", staff.ProgramID).
-// 		Find(&eduRows).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	if len(eduRows) == 0 {
-// 		c.JSON(http.StatusOK, gin.H{"students": []StudentForAdvisorDTO{}})
-// 		return
-// 	}
-// 	ids := make([]uint, 0, len(eduRows))
-// 	seen := map[uint]bool{}
-// 	for _, e := range eduRows {
-// 		if !seen[e.StudentID] {
-// 			seen[e.StudentID] = true
-// 			ids = append(ids, e.StudentID)
-// 		}
-// 	}
+// ====== Handler: รายชื่อนักศึกษาที่ดูแล ======
 
-// 	// 3) ดึง Student ชุดนั้น
-// 	var students []entity.Student
-// 	if err := db.
-// 		Preload("User").
-// 		Where("id IN ?", ids).
-// 		Find(&students).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
+func GetAdviseeStudents(c *gin.Context) {
+	db := config.DB()
+	userIDStr := c.Param("userId")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid userId"})
+		return
+	}
 
-// 	// 4) สร้าง DTO
-// 	out := make([]StudentForAdvisorDTO, 0, len(students))
-// 	for _, s := range students {
-// 		// 4.1) การศึกษาล่าสุด (สำหรับปี/เกรด/โปรแกรม/คณะ)
-// 		var latestEdu entity.Education
-// 		_ = db.
-// 			Preload("Program").
-// 			Preload("Faculty").
-// 			Where("student_id = ?", s.ID).
-// 			Order("year DESC, id DESC").
-// 			First(&latestEdu).Error
+	// 1) หา AcademicStaff จาก user_id
+	var staff entity.AcademicStaff
+	if err := db.Preload("Program").Where("user_id = ?", userID).First(&staff).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusOK, gin.H{"students": []StudentForAdvisorDTO{}})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if staff.ProgramID == 0 {
+		// ถ้า staff ยังไม่ผูก Program ก็คืนว่างๆ ไปก่อน
+		c.JSON(http.StatusOK, gin.H{"students": []StudentForAdvisorDTO{}})
+		return
+	}
 
-// 		// 4.2) ใบสมัครล่าสุด (ใช้เป็น current internship)
-// 		var latestApp entity.Application
-// 		_ = db.
-// 			Preload("IntershipPost").
-// 			Preload("IntershipPost.Company").
-// 			Where("student_id = ?", s.ID).
-// 			Order("updated_at DESC, id DESC").
-// 			First(&latestApp).Error
+	// 2) ดึง student_id ที่อยู่ในโปรแกรมเดียวกับ staff
+	var eduRows []entity.Education
+	if err := db.Select("DISTINCT student_id").
+		Where("university_id = ?", staff.UniversityID).
+		Find(&eduRows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if len(eduRows) == 0 {
+		c.JSON(http.StatusOK, gin.H{"students": []StudentForAdvisorDTO{}})
+		return
+	}
+	ids := make([]uint, 0, len(eduRows))
+	seen := map[uint]bool{}
+	for _, e := range eduRows {
+		if !seen[e.StudentID] {
+			seen[e.StudentID] = true
+			ids = append(ids, e.StudentID)
+		}
+	}
 
-// 		// Map ค่าต่างๆ
-// 		var yearPtr *int
-// 		if latestEdu.ID != 0 {
-// 			y := latestEdu.Year
-// 			yearPtr = &y
-// 		}
-// 		var gpaPtr *float64
-// 		if latestEdu.ID != 0 {
-// 			g := latestEdu.Grade
-// 			gpaPtr = &g
-// 		}
+	// 3) ดึง Student ชุดนั้น
+	var students []entity.Student
+	if err := db.
+		Preload("User").
+		Where("id IN ?", ids).
+		Find(&students).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-// 		// รหัสนักศึกษา: ลองใช้จาก User.Username ถ้ามี (แก้ให้ตรง schema คุณ)
-// 		studentCode := ""
-// 		if s.User.ID != 0 {
-// 			// TODO: ปรับเป็นฟิลด์ที่คุณใช้จริง เช่น s.User.Username หรือ s.User.StudentCode
-// 			// studentCode = s.User.Username
-// 		}
+	// 4) สร้าง DTO
+	out := make([]StudentForAdvisorDTO, 0, len(students))
+	for _, s := range students {
+		// 4.1) การศึกษาล่าสุด (สำหรับปี/เกรด/โปรแกรม/คณะ)
+		var latestEdu entity.Education
+		_ = db.
+			Preload("Program").
+			Preload("Faculty").
+			Where("student_id = ?", s.ID).
+			Order("year DESC, id DESC").
+			First(&latestEdu).Error
 
-// 		dto := StudentForAdvisorDTO{
-// 			ID:          s.ID,
-// 			FirstName:   s.FirstName,
-// 			LastName:    s.LastName,
-// 			ProgramName: "", // เผื่อไม่มีข้อมูล
-// 			FacultyName: "",
-// 			Year:        yearPtr,
-// 			GPA:         gpaPtr,
-// 			AvatarURL:   "", // TODO: ใส่รูปจาก s.User.ProfileImage[0].image_url ถ้ามี
-// 			StudentID:   studentCode,
-// 		}
-// 		if latestEdu.ID != 0 && latestEdu.Program.ID != 0 {
-// 			// TODO: ถ้า Program มีฟิลด์ชื่ออื่น เช่น NameTH ให้เปลี่ยน
-// 			// dto.ProgramName = latestEdu.Program.Name
-// 			dto.ProgramName = latestEdu.Program.ProgramName
-// 		}
-// 		if latestEdu.ID != 0 && latestEdu.Faculty.ID != 0 {
-// 			// TODO: เปลี่ยนฟิลด์ให้ตรง schema
-// 			// dto.FacultyName = latestEdu.Faculty.Name
-// 			dto.FacultyName = latestEdu.Faculty.FacultyName
-// 		}
+		// 4.2) ใบสมัครล่าสุด (ใช้เป็น current internship)
+		var latestApp entity.Application
+		_ = db.
+			Preload("IntershipPost").
+			Preload("IntershipPost.Company").
+			Where("student_id = ?", s.ID).
+			Order("updated_at DESC, id DESC").
+			First(&latestApp).Error
 
-// 		// current_internship
-// 		if latestApp.ID != 0 && latestApp.IntershipPost.ID != 0 {
-// 			companyName := ""
-// 			logoURL := ""
-// 			if latestApp.IntershipPost.Company.ID != 0 {
-// 				// TODO: เปลี่ยน CompanyName / LogoURL ตาม schema จริง
-// 				companyName = latestApp.IntershipPost.Company.CompanyName
-// 				logoURL = latestApp.IntershipPost.Company.LogoURL
-// 				_ = logoURL // ไม่ใช้ในแท็บนี้ แต่กัน unused
-// 			}
-// 			position := latestApp.IntershipPost.PostName
-// 			province := latestApp.IntershipPost.Province
+		// Map ค่าต่างๆ
+		var yearPtr *int
+		if latestEdu.ID != 0 {
+			y := latestEdu.Year
+			yearPtr = &y
+		}
+		var gpaPtr *float64
+		if latestEdu.ID != 0 {
+			g := latestEdu.Grade
+			gpaPtr = &g
+		}
 
-// 			dto.CurrentInt = &CurrentInternshipDTO{
-// 				CompanyName:  companyName,
-// 				Position:     position,
-// 				ProvinceName: province,
-// 				Status:       latestApp.Status,
-// 				// ไม่มีวันเริ่ม/สิ้นสุดใน schema ที่ให้มา → ปล่อย nil ไปให้ UI โชว์ "-"
-// 				StartDate: nil,
-// 				EndDate:   nil,
-// 			}
-// 		}
+		dto := StudentForAdvisorDTO{
+			ID:          s.ID,
+			FirstName:   s.FirstName,
+			LastName:    s.LastName,
+			ProgramName: "", // เผื่อไม่มีข้อมูล
+			FacultyName: "",
+			Year:        yearPtr,
+			GPA:         gpaPtr,
+			AvatarURL:   "", // TODO: ใส่รูปจาก s.User.ProfileImage[0].image_url ถ้ามี
+		}
+		if latestEdu.ID != 0 && latestEdu.Program.ID != 0 {
+			// TODO: ถ้า Program มีฟิลด์ชื่ออื่น เช่น NameTH ให้เปลี่ยน
+			// dto.ProgramName = latestEdu.Program.Name
+			dto.ProgramName = latestEdu.Program.NameTH
+		}
+		if latestEdu.ID != 0 && latestEdu.Faculty.ID != 0 {
+			// TODO: เปลี่ยนฟิลด์ให้ตรง schema
+			// dto.FacultyName = latestEdu.Faculty.Name
+			dto.FacultyName = latestEdu.Faculty.NameTH
+		}
 
-// 		out = append(out, dto)
-// 	}
+		// current_internship
+		if latestApp.ID != 0 && latestApp.IntershipPost.ID != 0 {
+			companyName := ""
+			logoURL := ""
+			if latestApp.IntershipPost.Company.ID != 0 {
+				// TODO: เปลี่ยน CompanyName / LogoURL ตาม schema จริง
+				companyName = latestApp.IntershipPost.Company.CompanyName
+				logoURL = latestApp.IntershipPost.Company.Logo
+				_ = logoURL
+			}
+			position := latestApp.IntershipPost.PostName
+			province := latestApp.IntershipPost.Province
 
-// 	c.JSON(http.StatusOK, gin.H{"students": out})
-// }
+			dto.CurrentInt = &CurrentInternshipDTO{
+				CompanyName:  companyName,
+				Position:     position,
+				ProvinceName: province,
+				Status:       latestApp.Status,
+			}
+		}
+
+		out = append(out, dto)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"students": out})
+}

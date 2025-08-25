@@ -14,7 +14,13 @@ import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
+<<<<<<< HEAD
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+=======
+
+import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+import type { InternshipPostInterface } from "../../interface/IIntershipPost";
+>>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -82,6 +88,26 @@ async function GetUserById(user_id: number): Promise<UserInterface> {
   }
 }
 
+export async function GetUserByIdhaveStatusData(user_id: number){
+  return await axios
+    .get(`${apiUrl}/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllUser() {
+  return await axios
+    .get(`${apiUrl}/all-users`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+export async function UpdateUser(id: number, data: UserInterface) {
+  return await axios
+    .put(`${apiUrl}/update-user/${id}`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 async function CreateProfileImage(data: FormData) {
   return await axios.post(`${apiUrl}/user/image`, data, {
     ...requestOptions,
@@ -115,10 +141,10 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   }
 }
 
-export async function UpdateStatusPost(postId: number, statusPostId: number) {
+export async function UpdateStatusPost(postId: number, data: { StatusPostID: number; AdminID: number }) {
   return await axios
-    .put(`${apiUrl}/update-status-posts`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
-    .then((res) => res.data)
+    .put(`${apiUrl}/update-status-posts/${postId}`, data, requestOptions)
+    .then((res) => res)
     .catch((e) => e.response);
 }
 
@@ -189,6 +215,13 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
       return e.response;
     });
 }
+//=======================================AcademicStaffs============================================
+export async function GetAllAcademicStaff() {
+  return await axios
+    .get(`${apiUrl}/academic/all`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 //=============================== Analysis ==============================//
 export async function GetAdminDashboardSummary () {
   return await axios
@@ -199,6 +232,12 @@ export async function GetAdminDashboardSummary () {
 export async function GetAdminDashboardOverview () {
   return await axios
     .get(`${apiUrl}/analysis/dashboard-overview`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllLoginLogs () {
+  return await axios
+    .get(`${apiUrl}/all-login-logs`)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -220,6 +259,21 @@ export async function GetAdminPendingPosts () {
     .then((res) => res)
     .catch((e) => e.response);
 }
+export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'year'; year: number }) {
+  const { mode, year } = params;
+  return await axios
+    .get(`${apiUrl}/analysis/users-by-role-series`, { params: { mode, year } })
+    .then(res => res)
+    .catch(e => e.response);
+}
+export async function GetMonthlyUsersByRole () {
+  return await axios
+    .get(`${apiUrl}/analysis/monthly-user-by-role`)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
+export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
@@ -700,6 +754,16 @@ export async function Logout(email: string) {
   } catch (error: any) {
     throw error.response?.data || error.message;
   }
+}
+export async function LikePost(data: { StudentID: number; IntershipPostID: number }) {
+  return await axios.post(`${apiUrl}/liked-post`, data, requestOptions);
+}
+export async function GetLikedPostsByStudentID(studentId: number) {
+  return await axios.get(`${apiUrl}/liked-posts/student/${studentId}`, requestOptions);
+}
+
+export async function DeleteLikedPost(studentId: number, postId: number) {
+  return await axios.delete(`${apiUrl}/liked-post/${studentId}/${postId}`, requestOptions);
 }
 
 // ============================== Review =================================== //

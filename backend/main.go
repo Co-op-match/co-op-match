@@ -89,6 +89,12 @@ func main() {
 	// ✅ อัปเดตข้อความว่าอ่านแล้ว
 	r.PATCH("/chat/messages/:room_id/read", controller.MarkMessagesAsRead)
 
+	r.GET("/all-users", controller.GetAllUser)
+	r.GET("/all-login-logs", controller.GetAllLoginLogs)
+	r.PUT("/update-user/:id", controller.UpdateUser)
+	r.PUT("/update-status-posts/:id", controller.UpdateStatusPost)
+
+
 	// Protected Routes
 	router := r.Group("/")
 	{
@@ -96,6 +102,11 @@ func main() {
 
 		router.GET("/intership-posts", searchjob.GetAllIntershipPosts)
 		router.GET("/students/recommended-posts/:id", controller.GetRecommendedPosts)
+		router.GET("/interview_appointments", controller.ListInterviewAppointments)
+		router.POST("/liked-post", controller.LikePost)
+		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
+		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
+
 
 		studentGroup := router.Group("/students")
 		{
@@ -199,6 +210,8 @@ func main() {
 			academicstaffGroup.GET("/user/:user_id", controller.GetAcademicStaffByUserId)
 			academicstaffGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 			academicstaffGroup.POST("/verify/:user_id", controller.CreateSendVerifyAcademicStaffy)
+			academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
+
 		}
 
 		contactGroup := router.Group("/contact")
@@ -223,6 +236,10 @@ func main() {
 			analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
 			analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
 			analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
+			analysisGroup.GET("/monthly-user-by-role", analysis.GetMonthlyUsersByRole)
+			analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
+			analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
+			analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
 		}
 		verifyGroup := r.Group("/verify")
 		{
@@ -230,7 +247,10 @@ func main() {
 			verifyGroup.GET("/:id", controller.GetVerificationByID)
 			verifyGroup.GET("/status", controller.GetAllStatusVerify)
 			verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
-			verifyGroup.PUT("/update-status-posts", controller.UpdateStatusPost)
+		}
+		academicGroup := r.Group("/academic")
+		{
+			academicGroup.GET("all", controller.GetAllAcademicStaff)
 		}
 	}
 
