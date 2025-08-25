@@ -7,16 +7,20 @@ import {
   SolutionOutlined,
   HistoryOutlined,
   MessageOutlined, // 👈 แชท
+<<<<<<< HEAD
+=======
   LogoutOutlined,
   FolderOpenOutlined,
   HeartFilled,
   DownOutlined,
 
+>>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
+import Notification from '../component/Notification';
 
 import Notification from '../component/Notification';
 import { UserContext } from '../../components/UserContext';
@@ -108,6 +112,10 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           overflowedIndicator={null}
         />
 
+<<<<<<< HEAD
+        <Notification />
+
+=======
 
         <Notification />
         <Dropdown
@@ -133,6 +141,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           placement="bottomRight"
           trigger={['hover']}
         >
+>>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
         <Avatar
           size={36}
           shape="circle"

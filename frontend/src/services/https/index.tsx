@@ -14,9 +14,13 @@ import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
+<<<<<<< HEAD
+import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+=======
 
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
 import type { InternshipPostInterface } from "../../interface/IIntershipPost";
+>>>>>>> 9b715b6bcd6db21fd2fc5e3aebd62a59fd17d2fc
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");

@@ -92,8 +92,8 @@ func main() {
 	r.GET("/all-users", controller.GetAllUser)
 	r.GET("/all-login-logs", controller.GetAllLoginLogs)
 	r.PUT("/update-user/:id", controller.UpdateUser)
-
 	r.PUT("/update-status-posts/:id", controller.UpdateStatusPost)
+
 
 	// Protected Routes
 	router := r.Group("/")
@@ -211,6 +211,7 @@ func main() {
 			academicstaffGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 			academicstaffGroup.POST("/verify/:user_id", controller.CreateSendVerifyAcademicStaffy)
 			academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
+
 		}
 
 		contactGroup := router.Group("/contact")
