@@ -37,17 +37,41 @@ type AnalysisType struct {
 	Analyses []Analysis `gorm:"foreignKey:AnalysisTypeID"`
 }
 
-type LoginLog struct {
+type MonthlyUserRoleStat struct {
+  gorm.Model
+  Year          int       `json:"year"  gorm:"not null;uniqueIndex:ux_year_month,priority:1"`
+  Month         int       `json:"month" gorm:"not null;uniqueIndex:ux_year_month,priority:2"`
+  Students      int       `json:"students"`
+  Companies     int       `json:"companies"`
+  AcademicStaff int       `json:"academic_staff"`
+  Admins        int       `json:"admins"`
+  Cumulative    bool      `json:"cumulative"`
+  SnapshotAt    time.Time `json:"snapshot_at"`
+}
+type VerificationStatusSnapshot struct {
 	gorm.Model
-	IP       string     `json:"ip"`
-	Device   string     `json:"device"`
-	LoginAt  time.Time  `json:"login_at"`
-	LogoutAt *time.Time `json:"logout_at"`
-
-	UserID uint `json:"user_id"`
-	User   User `gorm:"foreignKey:UserID"`
+	AsOfDate   time.Time `json:"as_of_date" gorm:"index"` // วัน/ชั่วโมงที่สรุป
+	Pending    int       `json:"pending"`
+	Approved   int       `json:"approved"`
+	Rejected   int       `json:"rejected"`
+	NotSent    int       `json:"not_sent"`
 }
 
+/* type TopJob struct {
+	Name  string `json:"name"`
+	Count int64  `json:"count"`
+}
+
+type PopularCompany struct {
+	Company    string `json:"company"`
+	Openings   int64  `json:"openings"`
+	Applicants int64  `json:"applicants"`
+	Interviews int64  `json:"interviews"`
+	Accepted   int64  `json:"accepted"`
+	Completed  int64  `json:"completed"`
+} */
+
+/*************************************** ยังไม่ใช้ ******************************************/
 // วิเคราะห์ทักษะที่บริษัทต้องการมากที่สุด
 type SkillDemandAnalysis struct {
 	gorm.Model

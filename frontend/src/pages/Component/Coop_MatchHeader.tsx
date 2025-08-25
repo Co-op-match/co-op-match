@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Avatar, Layout, Menu } from 'antd';
+import React, { useContext, useEffect, useState } from 'react';
+import { Avatar, Dropdown, Layout, Menu } from 'antd';
 import {
   SearchOutlined,
   UserOutlined,
@@ -7,12 +7,20 @@ import {
   SolutionOutlined,
   HistoryOutlined,
   MessageOutlined, // 👈 แชท
+  LogoutOutlined,
+  FolderOpenOutlined,
+  HeartFilled,
+  DownOutlined,
+
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
+
 import Notification from '../component/Notification';
+import { UserContext } from '../../components/UserContext';
+
 
 const { Header } = Layout;
 
@@ -27,6 +35,13 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const [user, setUser] = useState<UserInterface | null>(null);
   const userId = Number(localStorage.getItem("id"));
 
+  const { logout } = useContext(UserContext);
+
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/sign-in");
+  };
   useEffect(() => {
     if (!userId || isNaN(userId)) return;
     GetUserById(userId).then(setUser).catch(err => console.error("Failed to fetch user", err));
@@ -93,8 +108,31 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           overflowedIndicator={null}
         />
 
-        <Notification />
 
+        <Notification />
+        <Dropdown
+          overlay={
+            <Menu
+              onClick={({ key }) => {
+                if (key === "logout") {
+                  handleLogout();
+                } else {
+                  navigate(`/student/${key}`);
+                }
+              }}
+            >
+              <Menu.Item key="favorite-posts" icon={<HeartFilled style={{ color: '#ff4de1ff' }} />}>
+                โพสต์งานที่สนใจ
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item key="logout" icon={<LogoutOutlined />} danger>
+                ออกจากระบบ
+              </Menu.Item>
+            </Menu>
+          }
+          placement="bottomRight"
+          trigger={['hover']}
+        >
         <Avatar
           size={36}
           shape="circle"
@@ -118,7 +156,8 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
             overflow: 'hidden',
             flexShrink: 0,
           }}
-        />
+        />  
+        </Dropdown>
       </div>
     </Header>
   );

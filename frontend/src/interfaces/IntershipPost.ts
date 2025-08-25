@@ -1,13 +1,14 @@
 import type { ApplicationInterface } from "../interface/IApplication";
 import type { StatusPostInterface } from "../interface/IStatusPost";
 import type { CompanyInterface } from "./Company";
+import type { BenefitInterface } from "./Benefit";
 
 export interface IntershipPostInterface {
   WorkModeID?: number;
   WorkDayID?: number;
   StipendID?: number;
   JobTypeID?: number;
-  Benefits: any;
+  //Benefits: any;
   ID?: number;
   post_name?: string;
   post_description?: string;
@@ -30,9 +31,7 @@ export interface IntershipPostInterface {
   StatusPostID?: number;
   AdminID?: number;
   BenefitID?: number;
-  Benefit?: {
-    benefit: string;
-    };
+ benefits?: BenefitInterface[];
 
   StatusPost?: StatusPostInterface;
   Applications?: ApplicationInterface[];
@@ -43,4 +42,5 @@ export interface IntershipPostInterface {
   province: string;
 
   CreatedAt: string;
+  
 }

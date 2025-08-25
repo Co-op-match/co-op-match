@@ -1,7 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Table, Space, Tag, Input, Row, Col, Typography, Layout, Tabs, Empty, message } from "antd";
-import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Table,
+  Space,
+  Tag,
+  Input,
+  Row,
+  Col,
+  Typography,
+  Layout,
+  Tabs,
+  Empty,
+  message,
+} from "antd";
+import {
+  FileTextOutlined,
+  TeamOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  CloseOutlined,
+  SearchOutlined,
+  LinkOutlined,
+  UserOutlined,
+  StarOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 
 import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
@@ -19,21 +43,62 @@ import "../main.css";
 
 const { Title, Text } = Typography;
 
-const getStatusTabs = ({ activeTab, onChange }: { activeTab: string; onChange: (key: string) => void; }) => {
+const getStatusTabs = ({
+  activeTab,
+  onChange,
+}: {
+  activeTab: string;
+  onChange: (key: string) => void;
+}) => {
   const items = [
-    { key: "all", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><FileTextOutlined /> ทั้งหมด</span>)},
-    { key: "pending", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><ClockCircleOutlined style={{ color: "#faad14" }} /> รอตรวจสอบ</span>)},
-    { key: "approved", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><CheckCircleOutlined style={{ color: "#52c41a" }} /> เปิดรับสมัคร</span>)},
-    { key: "rejected", label: ( <span style={{ fontSize: "14px", fontWeight: "500" }}><CloseOutlined style={{ color: "#ff4d4f" }} /> ปิดรับสมัคร</span>)},
+    {
+      key: "all",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <FileTextOutlined /> ทั้งหมด
+        </span>
+      ),
+    },
+    {
+      key: "pending",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <ClockCircleOutlined style={{ color: "#faad14" }} /> รอตรวจสอบ
+        </span>
+      ),
+    },
+    {
+      key: "approved",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <CheckCircleOutlined style={{ color: "#52c41a" }} /> เปิดรับสมัคร
+        </span>
+      ),
+    },
+    {
+      key: "rejected",
+      label: (
+        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+          <CloseOutlined style={{ color: "#ff4d4f" }} /> ปิดรับสมัคร
+        </span>
+      ),
+    },
   ];
 
-  return ( <Tabs activeKey={activeTab} onChange={onChange} size="large" items={items} /> );
+  return (
+    <Tabs
+      activeKey={activeTab}
+      onChange={onChange}
+      size="large"
+      items={items}
+    />
+  );
 };
 
 const ManagePostsPage = () => {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
-  
+
   const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<IntershipPostInterface[]>(
     []
@@ -47,11 +112,17 @@ const ManagePostsPage = () => {
 
   const [pagination, setPagination] = useState({ current: 1, pageSize: 8 });
 
-    // Calculate statistics
+  // Calculate statistics
   const totalPosts = posts.length;
-  const pendingPosts = posts.filter( (p) => p.StatusPost?.status_post === "Pending Approval").length;
-  const approvedPosts = posts.filter( (p) => p.StatusPost?.status_post === "Open").length;
-  const rejectedPosts = posts.filter( (p) => p.StatusPost?.status_post === "Closed").length;
+  const pendingPosts = posts.filter(
+    (p) => p.StatusPost?.status_post === "Pending Approval"
+  ).length;
+  const approvedPosts = posts.filter(
+    (p) => p.StatusPost?.status_post === "Open"
+  ).length;
+  const rejectedPosts = posts.filter(
+    (p) => p.StatusPost?.status_post === "Closed"
+  ).length;
 
   useEffect(() => {
     loadPosts();
@@ -110,7 +181,10 @@ const ManagePostsPage = () => {
                 return 99;
             }
           };
-          return getPriority(a.StatusPost?.status_post) - getPriority(b.StatusPost?.status_post);
+          return (
+            getPriority(a.StatusPost?.status_post) -
+            getPriority(b.StatusPost?.status_post)
+          );
         });
     }
 
@@ -121,8 +195,7 @@ const ManagePostsPage = () => {
           (post.post_name || "")
             .toLowerCase()
             .includes(searchText.toLowerCase()) ||
-          post.Company?.company_name
-            .toLowerCase()
+          post.Company?.company_name?.toLowerCase()
             .includes(searchText.toLowerCase()) ||
           post.JobType?.job_type
             .toLowerCase()
@@ -353,10 +426,10 @@ const ManagePostsPage = () => {
   ];
 
   return (
-    <Layout >
+    <Layout>
       {contextHolder}
       <AdminHeader />
-      <Layout className="adminpage-layout" >
+      <Layout className="adminpage-layout">
         <div className="adminpost-header-box">
           <Row justify="space-between" align="middle">
             <Col>

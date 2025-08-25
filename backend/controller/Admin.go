@@ -36,7 +36,7 @@ func GetAllAdmin(c *gin.Context) {
 
 func GetAdminByID(c *gin.Context) {
     id := c.Param("id")
-    var admin []entity.Admin
+    var admin entity.Admin
 
     if err := config.DB().
 		Preload("Permission").
@@ -136,7 +136,8 @@ func GetInternshipPostsInAdminByIPostID(c *gin.Context) {
 		Preload("StatusPost").
 		Preload("Benefits").
 		Preload("Admin.User.Role").
-		Preload("Applications.Student").
+		Preload("Applications.Student.Education").
+
 		First(&post, id).Error
 
 	if err != nil {

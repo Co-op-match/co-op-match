@@ -1,8 +1,20 @@
 import React, { useState } from "react";
-import { Card, Descriptions, Typography, Tag, Space, Button, Modal } from "antd";
-import { EditOutlined, UserOutlined, StarOutlined, DesktopOutlined, CalendarOutlined, GiftOutlined, DollarOutlined, EnvironmentOutlined, CheckOutlined, StopOutlined } from "@ant-design/icons";
+import { Card, Descriptions, Typography, Tag, Space, Button, Modal, Avatar } from "antd";
+import { 
+  EditOutlined, 
+  UserOutlined, 
+  StarOutlined, 
+  DesktopOutlined, 
+  CalendarOutlined, 
+  GiftOutlined, 
+  DollarOutlined, 
+  EnvironmentOutlined, 
+  CheckOutlined, 
+  StopOutlined,
+  CrownOutlined 
+} from "@ant-design/icons";
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 interface PostInfoCardProps {
   post: any;
@@ -18,16 +30,71 @@ interface PostInfoCardProps {
   status: { status_post: string; status_post_th: string }[];
 }
 
-const PostInfoCard: React.FC<PostInfoCardProps> = ({ post, statusStyle, statusIcon, actionLoading, handleApprove, handleReject, status }) => {
+const PostInfoCard: React.FC<PostInfoCardProps> = ({ 
+  post, 
+  statusStyle, 
+  statusIcon, 
+  actionLoading, 
+  handleApprove, 
+  handleReject, 
+  status 
+}) => {
   const [approveModalVisible, setApproveModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
 
   const handleApproveOk = () => { setApproveModalVisible(false); handleApprove(); };
   const handleRejectOk = () => { setRejectModalVisible(false); handleReject(); };
 
+  // ฟังก์ชันสำหรับแสดงข้อมูลผู้อนุมัติ
+  const renderApprovalInfo = () => {
+    if (post.StatusPost?.status_post === "Open" || post.StatusPost?.status_post === "Closed") {
+      const admin = post.Admin || post.StatusPost?.Admin;
+      if (admin) {
+        return (
+          <Descriptions.Item label="ผู้อนุมัติ">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div>
+                <Text>
+                  {admin.first_name} {admin.last_name}
+                </Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  รหัสประจำตัว: {admin.id || admin.ID}
+                </Text>
+              </div>
+            </div>
+          </Descriptions.Item>
+        );
+      }
+    }
+    return null;
+  };
+
+  // ฟังก์ชันสำหรับแสดงวันที่อนุมัติ
+  const renderApprovalDate = () => {
+    if (post.StatusPost?.status_post === "Open" || post.StatusPost?.status_post === "Closed") {
+      const updatedAt = post.StatusPost?.UpdatedAt || post.UpdatedAt;
+      if (updatedAt) {
+        return (
+          <Descriptions.Item label="วันที่อนุมัติ">
+            <Text>
+              {new Date(updatedAt).toLocaleDateString("th-TH", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </Descriptions.Item>
+        );
+      }
+    }
+    return null;
+  };
+
   return (
     <>
-      {" "}
       <Card
         title={
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -159,6 +226,12 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({ post, statusStyle, statusIc
               minute: "2-digit",
             })}
           </Descriptions.Item>
+          
+          {/* แสดงข้อมูลผู้อนุมัติ */}
+          {renderApprovalInfo()}
+          
+          {/* แสดงวันที่อนุมัติ */}
+          {renderApprovalDate()}
         </Descriptions>
 
         <div style={{ marginTop: "20px", justifySelf: "end" }}>
@@ -193,6 +266,7 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({ post, statusStyle, statusIc
           )}
         </div>
       </Card>
+      
       {/* Approve Modal */}
       <Modal
         title={
@@ -225,6 +299,7 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({ post, statusStyle, statusIc
           คุณแน่ใจหรือไม่ว่าต้องการเปิดรับสมัครสำหรับโพสต์นี้?
         </p>
       </Modal>
+      
       {/* Reject Modal */}
       <Modal
         title={
