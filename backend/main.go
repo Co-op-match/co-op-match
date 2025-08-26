@@ -50,6 +50,7 @@ func main() {
 	r.GET("/getpost", controller.ListIntershipPosts)
 	r.GET("/getpost/:id", controller.GetInternshipPostById)
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
+	r.DELETE("/post/:id", controller.DeleteInternshipPost)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
 	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
@@ -106,7 +107,6 @@ func main() {
 		router.POST("/liked-post", controller.LikePost)
 		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
 		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
-
 
 		studentGroup := router.Group("/students")
 		{

@@ -8,6 +8,18 @@ import CoopMatchHeader from '../../Component/Coop_MatchHeader';
 import dayjs from 'dayjs';
 import ReviewModalContainer from '../Review/Review';
 
+// ----------------- helper สำหรับประกอบลิงก์ไฟล์อย่างปลอดภัย -----------------
+const getApiBase = () => {
+  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8000';
+  return String(base).replace(/\/$/, '');
+};
+const toFileURL = (p?: string | null) => {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;        // absolute อยู่แล้ว
+  const safePath = encodeURI(p);                 // กันช่องว่าง/อักขระพิเศษ
+  return `${getApiBase()}${safePath.startsWith('/') ? '' : '/'}${safePath}`;
+};
+// -------------------------------------------------------------------------------
 
 // กำหนดประเภทของสถานะ
 type Status = 'รอนัดสัมภาษณ์' | 'นัดสัมภาษณ์แล้ว' | 'กำลังพิจารณา' | 'ไม่ผ่าน' | 'ผ่าน'
@@ -67,9 +79,11 @@ const ApplicationHistory: React.FC = () => {
 
   const handleViewDetails = async (record: ApplicationInterface) => {
     try {
-      const response = await GetApplicationById(record.id!)
+      const response = await GetApplicationById(record.id!);
       if (response?.status === 200) {
-        setSelectedApplication(response.data);
+        // <<<<<< สำคัญ: ดึง object ด้านใน ถ้า backend ห่อไว้ด้วย key "application"
+        const data = response.data?.application ?? response.data;
+        setSelectedApplication(data);
         setIsModalVisible(true);
       } else {
         message.error("ไม่พบข้อมูลการสมัครนี้");
@@ -280,15 +294,23 @@ const ApplicationDetailModal: React.FC<{
   application: ApplicationInterface | null;
 }> = ({ visible, onClose, application }) => {
 
-  const fileBaseURL = 'http://localhost:8000';
+  // ครอบคลุมทั้งกรณี object ตรง ๆ และกรณีห่อใน key "application"
+  const appAny = application as any;
+  const inner = appAny?.application ?? appAny;
 
-  const resumeURL = application?.resume_url
-    ? `${fileBaseURL}${application.resume_url}`
-    : '';
+  const resumeURL = toFileURL(
+    inner?.resume_url ??
+    inner?.resume ??
+    inner?.ResumeUrl ??
+    ''
+  );
 
-  const transcriptURL = application?.TranscriptUrl
-    ? `${fileBaseURL}${application.TranscriptUrl}`
-    : '';
+  const transcriptURL = toFileURL(
+    inner?.TranscriptUrl ??
+    inner?.transcript ??
+    inner?.transcript_url ??
+    ''
+  );
 
   return (
     <Modal
@@ -299,10 +321,7 @@ const ApplicationDetailModal: React.FC<{
       width={700}
       style={{ top: 40, padding: 0, backgroundColor: 'transparent' }}
       styles={{
-        body: {
-          padding: 0,
-          backgroundColor: 'unset',
-        },
+        body: { padding: 0, backgroundColor: 'unset' },
       }}
     >
       <div style={modalContainerStyle}>
@@ -317,45 +336,41 @@ const ApplicationDetailModal: React.FC<{
             <div style={{ padding: '30px' }}>
               <div style={detailRowStyle}>
                 <span style={detailLabelStyle}>ตำแหน่งที่สมัคร:</span>
-                <span style={detailValueStyle}>{application.IntershipPost?.post_name || 'Frontend Developer'}</span>
+                <span style={detailValueStyle}>{inner?.IntershipPost?.post_name || 'Frontend Developer'}</span>
               </div>
 
               <div style={detailRowStyle}>
                 <span style={detailLabelStyle}>บริษัท:</span>
-                <span style={detailValueStyle}>{application.IntershipPost?.Company?.company_name || 'ABC Tech Co., Ltd.'}</span>
+                <span style={detailValueStyle}>{inner?.IntershipPost?.Company?.company_name || 'ABC Tech Co., Ltd.'}</span>
               </div>
 
               <div style={detailRowStyle}>
                 <span style={detailLabelStyle}>วันที่สมัคร:</span>
-                <span style={detailValueStyle}>{application.formatted_date || '05/05/2025'}</span>
+                <span style={detailValueStyle}>{inner?.formatted_date || '05/05/2025'}</span>
               </div>
 
               <div style={{ marginTop: '30px' }}>
                 <div style={detailLabelStyle}>เอกสารแนบ:</div>
                 <div style={{ marginTop: '15px' }}>
-                  {resumeURL ? (
-                    <div style={fileItemStyle}>
+                  <div style={fileItemStyle}>
+                    {resumeURL ? (
                       <a href={resumeURL} target="_blank" rel="noopener noreferrer" style={fileLinkStyle}>
-                        📄 Resume.pdf
+                        📎 ดูไฟล์ Resume
                       </a>
-                    </div>
-                  ) : (
-                    <div style={fileItemStyle}>
-                      <span style={fileNameStyle}>📄 Resume.pdf</span>
-                    </div>
-                  )}
+                    ) : (
+                      <span style={fileNameStyle}>📄 Resume -</span>
+                    )}
+                  </div>
 
-                  {transcriptURL ? (
-                    <div style={fileItemStyle}>
+                  <div style={fileItemStyle}>
+                    {transcriptURL ? (
                       <a href={transcriptURL} target="_blank" rel="noopener noreferrer" style={fileLinkStyle}>
-                        📊 Transcript.pdf
+                        📎 ดูไฟล์ Transcript
                       </a>
-                    </div>
-                  ) : (
-                    <div style={fileItemStyle}>
-                      <span style={fileNameStyle}>📊 Transcript.pdf</span>
-                    </div>
-                  )}
+                    ) : (
+                      <span style={fileNameStyle}>📊 Transcript -</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -364,46 +379,46 @@ const ApplicationDetailModal: React.FC<{
                   <span style={detailLabelStyle}>สถานะปัจจุบัน:</span>
                   <span style={{
                     ...detailValueStyle,
-                    color: application.status === 'รอนัดสัมภาษณ์' ? '#28a745' :
-                      application.status === 'กำลังพิจารณา' ? '#8B4513' :
-                        application.status === 'ผ่าน' ? '#28a745' : '#dc3545',
+                    color: inner?.status === 'รอนัดสัมภาษณ์' ? '#28a745' :
+                      inner?.status === 'กำลังพิจารณา' ? '#8B4513' :
+                        inner?.status === 'ผ่าน' ? '#28a745' : '#dc3545',
                     fontWeight: 'bold',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                   }}>
-                    {application.status === 'รอนัดสัมภาษณ์' && '🏆 รอนัดสัมภาษณ์'}
-                    {application.status === 'นัดสัมภาษณ์แล้ว' && '📅 นัดสัมภาษณ์แล้ว'}
-                    {application.status === 'กำลังพิจารณา' && '🔍 กำลังพิจารณา'}
-                    {application.status === 'ไม่ผ่าน' && '❌ ไม่ได้ผ่านการคัดเลือก'}
-                    {application.status === 'ผ่าน' && '✅ ผ่านการคัดเลือก'}
+                    {inner?.status === 'รอนัดสัมภาษณ์' && '🏆 รอนัดสัมภาษณ์'}
+                    {inner?.status === 'นัดสัมภาษณ์แล้ว' && '📅 นัดสัมภาษณ์แล้ว'}
+                    {inner?.status === 'กำลังพิจารณา' && '🔍 กำลังพิจารณา'}
+                    {inner?.status === 'ไม่ผ่าน' && '❌ ไม่ได้ผ่านการคัดเลือก'}
+                    {inner?.status === 'ผ่าน' && '✅ ผ่านการคัดเลือก'}
                   </span>
                 </div>
 
-                {application.status === 'นัดสัมภาษณ์แล้ว' && (
+                {inner?.status === 'นัดสัมภาษณ์แล้ว' && (
                   <>
                     <div style={detailRowStyle}>
                       <span style={detailLabelStyle}>วันสัมภาษณ์:</span>
                       <span style={detailValueStyle}>
-                        {application.interview_appointment?.appointment_date
-                          ? dayjs(application.interview_appointment.appointment_date).format("DD-MM-YYYY HH:mm")
+                        {inner?.interview_appointment?.appointment_date
+                          ? dayjs(inner.interview_appointment.appointment_date).format("DD-MM-YYYY HH:mm")
                           : "-"}
                       </span>
                     </div>
                     <div style={detailRowStyle}>
                       <span style={detailLabelStyle}>ช่องทาง:</span>
                       <span style={detailValueStyle}>
-                        {application.interview_appointment?.mode || "-"}
+                        {inner?.interview_appointment?.mode || "-"}
                       </span>
                     </div>
                   </>
                 )}
 
-                {application.status === 'กำลังพิจารณา' && (
+                {inner?.status === 'กำลังพิจารณา' && (
                   <>
                     <div style={detailRowStyle}>
                       <span style={detailLabelStyle}>ประวัติการดำเนินการ:</span>
-                      <span style={detailValueStyle}>สมัครเรียบร้อย ({application.formatted_date})</span>
+                      <span style={detailValueStyle}>สมัครเรียบร้อย ({inner?.formatted_date})</span>
                     </div>
                     <div style={detailRowStyle}>
                       <span style={detailLabelStyle}></span>
@@ -412,16 +427,16 @@ const ApplicationDetailModal: React.FC<{
                   </>
                 )}
 
-                {application.status === 'ไม่ผ่าน' && (
+                {inner?.status === 'ไม่ผ่าน' && (
                   <div style={detailRowStyle}>
                     <span style={detailLabelStyle}>หมายเหตุจากบริษัท:</span>
                     <span style={detailValueStyle}>
-                      {application.company_note || '"คุณสมบัติยังไม่ตรงตามที่กำหนดขณะนี้ต้องการ..."'}
+                      {inner?.company_note || '"คุณสมบัติยังไม่ตรงตามที่กำหนดขณะนี้ต้องการ..."'}
                     </span>
                   </div>
                 )}
 
-                {application.status === 'ผ่าน' && (
+                {inner?.status === 'ผ่าน' && (
                   <div style={detailRowStyle}>
                     <span style={detailLabelStyle}>สถานะ:</span>
                     <span style={{ ...detailValueStyle, color: '#28a745', fontWeight: 'bold' }}>
@@ -430,11 +445,11 @@ const ApplicationDetailModal: React.FC<{
                   </div>
                 )}
 
-                {application.status !== 'ไม่ผ่าน' && application.company_note && (
+                {inner?.status !== 'ไม่ผ่าน' && inner?.company_note && (
                   <div style={{ marginTop: '20px' }}>
                     <div style={detailLabelStyle}>หมายเหตุจากบริษัท:</div>
                     <div style={companyNoteStyle}>
-                      {application.company_note}
+                      {inner?.company_note}
                     </div>
                   </div>
                 )}
@@ -443,10 +458,7 @@ const ApplicationDetailModal: React.FC<{
 
             {/* Footer */}
             <div style={modalFooterStyle}>
-              <Button
-                onClick={onClose}
-                style={closeButtonStyle}
-              >
+              <Button onClick={onClose} style={closeButtonStyle}>
                 ปิดหน้าต่าง
               </Button>
             </div>
