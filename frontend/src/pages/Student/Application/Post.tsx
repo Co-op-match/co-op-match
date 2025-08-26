@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Typography, Button, Row, Col, Tag, Badge } from 'antd';
 import {
   EnvironmentOutlined,
@@ -18,13 +18,34 @@ import {
   SendOutlined,
   EyeOutlined
 } from '@ant-design/icons';
-import { GetPostById } from '../../../services/https/post/index';
-import { GetPostByCompanyId } from '../../../services/https/post/index';
-import { useNavigate } from 'react-router-dom';
+import { GetPostById, GetPostByCompanyId } from '../../../services/https/post/index';
 import './AddApplication.css';
 
-
 const { Title, Text, Paragraph } = Typography;
+
+/* ---------- helper: ประกอบ URL ให้วิ่งที่ backend:8000 เสมอ ---------- */
+const getApiBase = () => {
+  // ถ้ามี env ก็ใช้ได้เลย, ไม่มีก็ fallback เป็น 8000
+  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8000';
+  return String(base).replace(/\/$/, '');
+};
+
+const toFileURL = (p?: string | null) => {
+  if (!p) return '';
+  const base = getApiBase();
+
+  // ถ้าพลาดเก็บเป็น URL ฝั่ง frontend (5173) → บังคับเปลี่ยน origin เป็น 8000
+  if (/^https?:\/\/localhost:5173\//i.test(p)) {
+    return p.replace(/^https?:\/\/localhost:5173/i, base);
+  }
+
+  // ถ้าเป็น absolute URL อยู่แล้ว (http/https) → ใช้ตามนั้น
+  if (/^https?:\/\//i.test(p)) return p;
+
+  // ถ้าเป็น path relative เช่น /uploads/...
+  return `${base}${p.startsWith('/') ? '' : '/'}${encodeURI(p)}`;
+};
+/* --------------------------------------------------------------------- */
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -34,14 +55,21 @@ const PostDetails = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (id) {
-      setLoading(true);
-      GetPostById(Number(id)).then((res) => {
-        if (res?.data) {
-          setPost(res.data);
+    if (!id) return;
+    setLoading(true);
 
-          // โหลดโพสต์อื่น ๆ ของบริษัทเดียวกัน
-          const companyId = res.data.company_id;
+    GetPostById(Number(id)).then((res) => {
+      if (res?.data) {
+        setPost(res.data);
+
+        // โหลดโพสต์อื่น ๆ ของบริษัทเดียวกัน
+        const companyId =
+          res.data?.CompanyID ||
+          res.data?.company_id ||
+          res.data?.Company?.ID ||
+          res.data?.company?.id;
+
+        if (companyId) {
           GetPostByCompanyId(companyId).then((relatedRes) => {
             if (relatedRes?.data) {
               const others = relatedRes.data.filter((p: any) => p.id !== Number(id));
@@ -49,9 +77,13 @@ const PostDetails = () => {
             }
             setLoading(false);
           });
+        } else {
+          setLoading(false);
         }
-      });
-    }
+      } else {
+        setLoading(false);
+      }
+    });
   }, [id]);
 
   if (loading) {
@@ -64,6 +96,17 @@ const PostDetails = () => {
   }
 
   if (!post) return <div style={styles.loadingContainer}>ไม่พบข้อมูล</div>;
+
+  // ✅ รองรับทั้ง post.Company และ post.company
+  const company = post?.Company || post?.company;
+
+  // ✅ ดึงโลโก้ดิบจากออบเจ็กต์บริษัท แล้ว normalize ให้ชี้ 8000 เสมอ
+  const rawLogoPath: string | undefined = company?.logo;
+  const logoURL = rawLogoPath ? toFileURL(rawLogoPath) : '';
+
+  // log ไว้ให้ดูใน DevTools
+  console.log('[PostDetails] company logo raw =', rawLogoPath);
+  console.log('[PostDetails] company logo url =', logoURL);
 
   return (
     <div className="full-page-background">
@@ -84,24 +127,31 @@ const PostDetails = () => {
           <div style={styles.header}>
             <div style={styles.logoContainer}>
               <img
-                src={post?.Company?.logo || '/logo.png'}
-                alt=""
+                src={logoURL || '/logo.png'}  // 👈 ใช้ URL ที่ normalize แล้ว
+                alt="Company Logo"
                 style={styles.logo}
+                onError={(e) => {
+                  console.warn('[PostDetails] logo load error from:', logoURL);
+                  (e.currentTarget as HTMLImageElement).src = '/logo.png';
+                }}
               />
               <Badge count="HIRING" style={styles.hiringBadge} />
+              {/* 🔎 แสดง path ที่กำลังใช้ เพื่อดีบัก */}
+              <div style={{ marginTop: 6, maxWidth: 260 }}>
+                
+              </div>
             </div>
+
             <div style={styles.companyInfo}>
               <Title
                 level={2}
-                style={{ ...styles.companyName, cursor: "pointer" }}
+                style={{ ...styles.companyName, cursor: 'pointer' }}
                 onClick={() => {
-                  const companyId = post?.Company?.ID || post?.Company?.id;
-                  if (companyId) {
-                    navigate(`/company-profile/${companyId}`);
-                  }
+                  const companyId = company?.ID || company?.id;
+                  if (companyId) navigate(`/company-profile/${companyId}`);
                 }}
               >
-                {post?.Company?.company_name}
+                {company?.company_name || 'ไม่ระบุชื่อบริษัท'}
               </Title>
               <div style={styles.addressContainer}>
                 <EnvironmentOutlined style={styles.addressIcon} />
@@ -111,7 +161,6 @@ const PostDetails = () => {
                     .join(' • ')}
                 </Text>
               </div>
-
             </div>
           </div>
         </Card>
@@ -182,7 +231,7 @@ const PostDetails = () => {
             </Paragraph>
           </Card>
 
-          {/* Work Schedule - Updated to match first code style */}
+          {/* Work Schedule */}
           <Card style={styles.detailCard}>
             <SectionHeader icon={<CalendarOutlined />} title="วัน-เวลาทำงาน" />
             <div style={styles.workScheduleContainer}>
@@ -203,12 +252,10 @@ const PostDetails = () => {
             </div>
           </Card>
 
-          {/* Qualifications & Requirements - Updated to match first code style */}
+          {/* Qualifications */}
           <Card style={styles.detailCard}>
             <SectionHeader icon={<UserOutlined />} title="คุณสมบัติผู้สมัคร" />
             <div style={styles.qualificationsContainer}>
-
-              {/* GPA Requirement */}
               {post?.min_gpa && (
                 <div style={styles.qualificationItem}>
                   <StarOutlined style={styles.qualificationIcon} />
@@ -218,21 +265,21 @@ const PostDetails = () => {
                       {Number(post.min_gpa).toFixed(2)}
                     </Tag>
                   </div>
-
                 </div>
               )}
 
-              {/* Skills */}
               {post?.company_required_skills && post.company_required_skills.length > 0 && (
                 <div style={styles.qualificationItem}>
                   <div style={styles.skillsSection}>
                     <Text strong style={styles.qualificationLabel}>ทักษะที่ต้องการ:</Text>
                     <div style={styles.skillsContainer}>
-                      {post.company_required_skills.map((item: { Skill: { skill_name: any; }; }, index: React.Key | null | undefined) => (
-                        <Tag key={index} color="purple" style={styles.skillTag}>
-                          {item.Skill?.skill_name || "ไม่ระบุ"}
-                        </Tag>
-                      ))}
+                      {post.company_required_skills.map(
+                        (item: { Skill: { skill_name: string } }, index: number) => (
+                          <Tag key={index} color="purple" style={styles.skillTag}>
+                            {item.Skill?.skill_name || 'ไม่ระบุ'}
+                          </Tag>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -245,7 +292,7 @@ const PostDetails = () => {
             <SectionHeader icon={<GiftOutlined />} title="สิทธิประโยชน์" />
             <div style={styles.benefitsContainer}>
               {post?.benefits && post.benefits.length > 0 ? (
-                post.benefits.map((benefit: { benefit: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }, index: React.Key | null | undefined) => (
+                post.benefits.map((benefit: { benefit: string }, index: number) => (
                   <div key={index} style={styles.benefitItem}>
                     <div style={styles.benefitDot}></div>
                     <Text style={styles.benefitText}>{benefit.benefit}</Text>
@@ -261,35 +308,35 @@ const PostDetails = () => {
           <Card style={styles.detailCard}>
             <SectionHeader icon={<PhoneOutlined />} title="ติดต่อ" />
             <div style={styles.contactInfo}>
-              {post?.Company?.Contact?.phone_number && (
+              {company?.Contact?.phone_number && (
                 <div style={styles.contactItem}>
                   <PhoneOutlined style={styles.contactIcon} />
-                  <Text style={styles.contactText}>{post.Company.Contact.phone_number}</Text>
+                  <Text style={styles.contactText}>{company.Contact.phone_number}</Text>
                 </div>
               )}
 
-              {post?.Company?.Contact?.email && (
+              {company?.Contact?.email && (
                 <div style={styles.contactItem}>
                   <MailOutlined style={styles.contactIcon} />
-                  <Text style={styles.contactText}>{post.Company.Contact.email}</Text>
+                  <Text style={styles.contactText}>{company.Contact.email}</Text>
                 </div>
               )}
 
-              {post?.Company?.Contact?.website && (
+              {company?.Contact?.website && (
                 <div style={styles.contactItem}>
                   <GlobalOutlined style={styles.contactIcon} />
                   <a
-                    href={post.Company.Contact.website}
+                    href={company.Contact.website}
                     target="_blank"
                     rel="noreferrer"
                     style={styles.contactLink}
                   >
-                    {post.Company.Contact.website}
+                    {company.Contact.website}
                   </a>
                 </div>
               )}
 
-              {post?.Company?.Contact?.facebook && (
+              {company?.Contact?.facebook && (
                 <div style={styles.contactItem}>
                   <img
                     src="https://cdn-icons-png.flaticon.com/512/145/145802.png"
@@ -297,7 +344,7 @@ const PostDetails = () => {
                     style={{ width: 20, marginRight: 12 }}
                   />
                   <a
-                    href={post.Company.Contact.facebook}
+                    href={company.Contact.facebook}
                     target="_blank"
                     rel="noreferrer"
                     style={styles.contactLink}
@@ -307,19 +354,18 @@ const PostDetails = () => {
                 </div>
               )}
 
-              {post?.Company?.Contact?.line && (
+              {company?.Contact?.line && (
                 <div style={styles.contactItem}>
                   <img
                     src="https://cdn-icons-png.flaticon.com/512/2111/2111532.png"
                     alt="LINE"
                     style={{ width: 20, marginRight: 12 }}
                   />
-                  <Text style={styles.contactText}>{post.Company.Contact.line}</Text>
+                  <Text style={styles.contactText}>{company.Contact.line}</Text>
                 </div>
               )}
             </div>
           </Card>
-
         </div>
 
         {/* Related Jobs */}
@@ -336,7 +382,7 @@ const PostDetails = () => {
                       <Button
                         type="link"
                         icon={<EyeOutlined />}
-                        onClick={() => navigate(`/post-detail/${item.id}`)}
+                        onClick={() => navigate(`/post/${id}`)}
                         style={styles.viewButton}
                       >
                         ดูรายละเอียด
@@ -398,7 +444,7 @@ const SectionHeader = ({ icon, title }: { icon: React.ReactNode; title: string }
   </div>
 );
 
-// Styles
+// ===== Styles (เดิมของคุณ) =====
 const styles = {
   container: {
     maxWidth: 1200,
@@ -406,9 +452,8 @@ const styles = {
     padding: '20px',
     backgroundColor: '#f0f7ff',
     minHeight: '100vh',
-    paddingBottom: '100px', // Space for floating button
+    paddingBottom: '100px',
   },
-
   loadingContainer: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -417,7 +462,6 @@ const styles = {
     height: '50vh',
     backgroundColor: '#f0f7ff',
   },
-
   loadingSpinner: {
     width: 40,
     height: 40,
@@ -426,7 +470,6 @@ const styles = {
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
-
   backButton: {
     marginBottom: 24,
     color: '#87ceeb',
@@ -437,7 +480,6 @@ const styles = {
     borderRadius: '8px',
     transition: 'all 0.3s ease',
   },
-
   headerCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
@@ -446,18 +488,15 @@ const styles = {
     boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
     overflow: 'hidden',
   },
-
   header: {
     display: 'flex',
     alignItems: 'center',
     padding: '8px 0',
   },
-
   logoContainer: {
     marginRight: 20,
     position: 'relative' as const,
   },
-
   logo: {
     width: 90,
     height: 90,
@@ -466,7 +505,6 @@ const styles = {
     border: '3px solid #b8e6ff',
     boxShadow: '0 4px 12px rgba(135, 206, 235, 0.2)',
   },
-
   hiringBadge: {
     position: 'absolute' as const,
     top: -8,
@@ -478,42 +516,35 @@ const styles = {
     fontSize: '10px',
     fontWeight: 'bold',
   },
-
   companyInfo: {
     flex: 1,
   },
-
   companyName: {
     margin: '0 0 8px 0',
     color: '#2c5282',
     fontSize: '28px',
     fontWeight: 600,
   },
-
   addressContainer: {
     display: 'flex',
     alignItems: 'center',
   },
-
   addressIcon: {
     color: '#87ceeb',
     fontSize: '16px',
     marginRight: 8,
   },
-
   addressText: {
     color: '#4a5568',
     fontSize: '16px',
   },
-
   titleCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
     marginBottom: 24,
     border: '1px solid #b8e6ff',
     boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
-  },
-
+  } as any,
   jobTitleContainer: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -522,7 +553,6 @@ const styles = {
     flexWrap: 'wrap' as const,
     gap: '16px',
   },
-
   jobTitle: {
     margin: 0,
     color: '#2c5282',
@@ -530,13 +560,11 @@ const styles = {
     fontWeight: 600,
     flex: 1,
   },
-
   quickInfoGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '20px',
   },
-
   quickInfoItem: {
     display: 'flex',
     alignItems: 'flex-start',
@@ -545,32 +573,27 @@ const styles = {
     borderRadius: '12px',
     border: '1px solid #b8e6ff',
   },
-
   quickIcon: {
     fontSize: '20px',
     color: '#87ceeb',
     marginRight: 12,
     marginTop: 2,
   },
-
   quickLabel: {
     color: '#2c5282',
     fontSize: '14px',
     fontWeight: 600,
   },
-
   quickValue: {
     color: '#4a5568',
     fontSize: '14px',
   },
-
   detailsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
     gap: '24px',
     marginBottom: 24,
   },
-
   detailCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
@@ -578,7 +601,6 @@ const styles = {
     boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   },
-
   sectionHeader: {
     display: 'flex',
     alignItems: 'center',
@@ -586,7 +608,6 @@ const styles = {
     paddingBottom: 12,
     borderBottom: '2px solid #f0f7ff',
   },
-
   sectionIcon: {
     color: '#87ceeb',
     fontSize: '18px',
@@ -595,64 +616,52 @@ const styles = {
     backgroundColor: '#f0f7ff',
     borderRadius: '8px',
   },
-
   sectionTitle: {
     margin: 0,
     color: '#2c5282',
     fontSize: '18px',
     fontWeight: 600,
   },
-
   sectionContent: {
     color: '#4a5568',
     fontSize: '15px',
     lineHeight: 1.6,
     margin: 0,
   },
-
-  // Updated Work Schedule styles to match first code
   workScheduleContainer: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
   },
-
   workScheduleItem: {
     display: 'flex',
     alignItems: 'center',
   },
-
   workScheduleIcon: {
     color: '#87ceeb',
     fontSize: '16px',
     marginRight: 12,
     minWidth: '16px',
   },
-
   workScheduleLabel: {
     color: '#333',
     fontSize: '14px',
     fontWeight: 600,
     marginRight: 8,
   },
-
   workScheduleValue: {
     color: '#4a5568',
     fontSize: '14px',
   },
-
-  // Updated Qualifications styles to match first code
   qualificationsContainer: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '16px',
   },
-
   qualificationItem: {
     display: 'flex',
     alignItems: 'flex-start',
   },
-
   qualificationIcon: {
     color: '#87ceeb',
     fontSize: '16px',
@@ -660,20 +669,17 @@ const styles = {
     marginTop: 2,
     minWidth: '16px',
   },
-
   qualificationContent: {
     display: 'flex',
     alignItems: 'center',
     flexWrap: 'wrap' as const,
     gap: '8px',
   },
-
   qualificationLabel: {
     color: '#333',
     fontSize: '14px',
     fontWeight: 600,
   },
-
   gpaTag: {
     backgroundColor: '#87ceeb',
     color: 'white',
@@ -682,18 +688,13 @@ const styles = {
     fontSize: '13px',
     fontWeight: 500,
   },
-
-  skillsSection: {
-    width: '100%',
-  },
-
+  skillsSection: { width: '100%' },
   skillsContainer: {
     display: 'flex',
     flexWrap: 'wrap' as const,
     gap: '8px',
     marginTop: '8px',
   },
-
   skillTag: {
     backgroundColor: '#9c27b0',
     color: 'white',
@@ -703,18 +704,15 @@ const styles = {
     fontWeight: 500,
     padding: '4px 8px',
   },
-
   benefitsContainer: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
   },
-
   benefitItem: {
     display: 'flex',
     alignItems: 'flex-start',
   },
-
   benefitDot: {
     width: 8,
     height: 8,
@@ -724,19 +722,16 @@ const styles = {
     marginTop: 6,
     flexShrink: 0,
   },
-
   benefitText: {
     color: '#4a5568',
     fontSize: '15px',
     lineHeight: 1.6,
   },
-
   contactInfo: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
   },
-
   contactItem: {
     display: 'flex',
     alignItems: 'center',
@@ -744,25 +739,14 @@ const styles = {
     backgroundColor: '#f0f7ff',
     borderRadius: '6px',
   },
-
   contactIcon: {
     color: '#87ceeb',
     fontSize: '16px',
     marginRight: 12,
     width: 20,
   },
-
-  contactText: {
-    color: '#4a5568',
-    fontSize: '15px',
-  },
-
-  contactLink: {
-    color: '#87ceeb',
-    fontSize: '15px',
-    textDecoration: 'none',
-  },
-
+  contactText: { color: '#4a5568', fontSize: '15px' },
+  contactLink: { color: '#87ceeb', fontSize: '15px', textDecoration: 'none' },
   relatedCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
@@ -770,41 +754,21 @@ const styles = {
     boxShadow: '0 4px 20px rgba(135, 206, 235, 0.15)',
     marginTop: 24,
   },
-
   relatedJobCard: {
     borderRadius: '12px',
     border: '1px solid #b8e6ff',
     transition: 'all 0.3s ease',
   },
-
-  relatedJobTitle: {
-    color: '#2c5282',
-    fontSize: '16px',
-  },
-
+  relatedJobTitle: { color: '#2c5282', fontSize: '16px' },
   relatedJobInfo: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '8px',
     marginTop: 8,
   },
-
-  relatedJobDetail: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-
-  relatedJobIcon: {
-    color: '#87ceeb',
-    fontSize: '14px',
-    marginRight: 8,
-  },
-
-  viewButton: {
-    color: '#87ceeb',
-    fontWeight: 500,
-  },
-
+  relatedJobDetail: { display: 'flex', alignItems: 'center' },
+  relatedJobIcon: { color: '#87ceeb', fontSize: '14px', marginRight: 8 },
+  viewButton: { color: '#87ceeb', fontWeight: 500 },
   floatingButtonContainer: {
     position: 'fixed' as const,
     bottom: 20,

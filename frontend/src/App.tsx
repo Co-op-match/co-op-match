@@ -31,7 +31,6 @@ import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
-import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
 import AdminVerify from "./pages/Admin/verify/verify";
 import ChatInterface from "./Chat/ChatInterface";
 import ChatWebSocket from "./Chat/test";
@@ -197,7 +196,7 @@ function App() {
           <Route
             path="/post/:id"
             element={
-              <ProtectedRoute allowedRoles={[2]}>
+              <ProtectedRoute allowedRoles={[2,3]}>
                 <PostDetails />
               </ProtectedRoute>
             }

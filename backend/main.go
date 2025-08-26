@@ -22,7 +22,7 @@ func main() {
 	config.SetupDatabase()
 
 	r := gin.Default()
-	
+
 	r.Use(CORSMiddleware())
 	r.Static("/uploads", "./public/uploads")
 
@@ -47,6 +47,7 @@ func main() {
 	r.GET("/getpost", controller.ListIntershipPosts)
 	r.GET("/getpost/:id", controller.GetInternshipPostById)
 	r.GET("/posts/company/:id", controller.GetPostsByCompanyID)
+	r.DELETE("/post/:id", controller.DeleteInternshipPost)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
 	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
@@ -84,7 +85,6 @@ func main() {
 		router.POST("/liked-post", controller.LikePost)
 		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
 		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
-
 
 		studentGroup := router.Group("/students")
 		{
@@ -163,7 +163,6 @@ func main() {
 			// 🔌 WebSocket เชื่อมต่อ
 			// chatGroup.GET("/ws", controller.ChatWebSocket)
 		}
-
 
 		notificationGroup := router.Group("/notification")
 		{
@@ -249,6 +248,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 // func CORSMiddleware() gin.HandlerFunc {
 // 	return func(c *gin.Context) {
 // 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // ✅ ชี้ domain React
