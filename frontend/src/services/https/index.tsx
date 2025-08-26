@@ -14,6 +14,9 @@ import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
+import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+import type { InternshipPostInterface } from "../../interface/IIntershipPost";
+
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -134,10 +137,10 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   }
 }
 
-export async function UpdateStatusPost(postId: number, statusPostId: number) {
+export async function UpdateStatusPost(postId: number, data: { StatusPostID: number; AdminID: number }) {
   return await axios
-    .put(`${apiUrl}/update-status-posts`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
-    .then((res) => res.data)
+    .put(`${apiUrl}/update-status-posts/${postId}`, data, requestOptions)
+    .then((res) => res)
     .catch((e) => e.response);
 }
 
@@ -420,6 +423,60 @@ async function UpdateCompanyLogo(user_id: number ,data: FormData) {
   .then(res => res)
   .catch(e => e.response);
 }
+//=======================================Company============================================
+async function CreateAcademicStaff(data: FormData) {
+await axios.post(`${apiUrl}/academicstaff`, data, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `${Bearer} ${Authorization}`, // ✅ สำคัญ
+  },
+})
+  .then(res => res)
+  .catch(e => e.response);
+}
+
+async function GetAcademicStaffByUserId(user_id: number): Promise<AcademicStaffInterface> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+// async function UpdateGetAllAcademicStaff(id: number, data: FormData) {
+//   return await axios
+//     .put(`${apiUrl}/students/${id}`, data, requestOptions)
+//     .then((res) => res)
+//     .catch((e) => e.response);
+// }
+async function GetAcademicStaffId(id: number): Promise<AcademicStaffInterface> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/${id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function GetVerifAcademicStaffyByUserId(user_id: number) {
+  try {
+    const res = await axios.get<VerifyInterface>(`${apiUrl}/academicstaff/verify/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function CreateSendVerifyAcademicStaff(user_id: number ,data: FormData) {
+  return await axios.post(`${apiUrl}/academicstaff/verify/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
+}
+
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
   return await axios
@@ -758,53 +815,54 @@ export async function CreateChatRoom(user1_id: number, user2_id: number) {
   }
 }
 
-// ✅ ดึงข้อความทั้งหมดของห้องแชท
-export async function GetMessagesByRoomId(roomId: number) {
-  try {
-    const res = await axios.get(
-      `${apiUrl}/chat/messages/${roomId}`,
-      requestOptions
-    );
-    return res.data;
-  } catch (e: any) {
-    return e.response;
-  }
+const jsonHeaders = {
+  "Content-Type": "application/json",
+};
+
+// ========== Chat session (JWT สำหรับ chat) ==========
+export async function createChatSession(roomId: number): Promise<{ token: string }> {
+  const res = await axios.post(
+    `${apiUrl}/chat/session`,
+    { room_id: roomId },
+    requestOptions
+  );
+  return res.data;
 }
 
-// ✅ อัปเดตข้อความว่าอ่านแล้ว
-export async function MarkMessagesAsRead(roomId: number, userId: number) {
-  try {
-    const res = await axios.patch(
-      `${apiUrl}/chat/messages/${roomId}/read`,
-      null,
-      {
-        params: { user_id: userId },
-        ...requestOptions,
-      }
-    );
-    return res.data;
-  } catch (e: any) {
-    return e.response;
-  }
+// ========== WebSocket ==========
+export function createWsByToken(chatToken: string): WebSocket {
+  // รองรับ http→ws, https→wss
+  const wsBase = apiUrl.replace(/^http/i, (m) => (m.toLowerCase() === 'https' ? 'wss' : 'ws'));
+  const url = `${wsBase}/chat/ws?token=${encodeURIComponent(chatToken)}`;
+  return new WebSocket(url);
 }
 
-// ✅ ดึงห้องแชททั้งหมดของผู้ใช้
+// ========== Messages (ต้องส่ง Authorization: Bearer <chatToken>) ==========
+export async function getMessagesByToken(chatToken: string, roomId: number) {
+  const res = await axios.get(`${apiUrl}/chat/messages/${roomId}`, {
+    withCredentials: true,
+    headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+  });
+  return res.data;
+}
+
+export async function markReadByToken(chatToken: string, roomId: number) {
+  const res = await axios.patch(
+    `${apiUrl}/chat/messages/${roomId}/read`,
+    null,
+    {
+      withCredentials: true,
+      headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+    }
+  );
+  return res.data;
+}
+
+// ========== Rooms list (ยังใช้ cookie auth เดิม) ==========
 export async function GetChatRoomsByUserId(userId: number) {
-  try {
-    const res = await axios.get(
-      `${apiUrl}/chat/rooms/${userId}`,
-      requestOptions
-    );
-    return res.data;
-  } catch (e: any) {
-    return e.response;
-  }
+  const res = await axios.get(`${apiUrl}/chat/rooms/${userId}`, requestOptions);
+  return res.data;
 }
-export function CreateWebSocketConnection(roomId: number, userId: number): WebSocket {
-  const wsUrl = apiUrl.replace(/^http/, "ws");
-  return new WebSocket(`${wsUrl}/chat/ws?room_id=${roomId}&user_id=${userId}`);
-}
-
 
 
 export {
@@ -867,6 +925,11 @@ export {
   GetRwviewCompanyByUserId,
   UpdateCompanyContact,
   UpdateCompanyLogo,
-  GetCompanyId
+  GetCompanyId,
+  CreateSendVerifyAcademicStaff,
+  GetVerifAcademicStaffyByUserId,
+  GetAcademicStaffId,
+  GetAcademicStaffByUserId,
+  CreateAcademicStaff,
 
 };

@@ -303,7 +303,7 @@ const starsDisplay = (rating: number) =>
 return (
   <div className="reviews-section">
     {/* ===== SECTION HEADER ===== */}
-    <h2 className="section-title">
+    <h2 className="section-title-reviwew">
       <FaStar color="#ffd700" /> รีวิวจากนักศึกษา
     </h2>
 

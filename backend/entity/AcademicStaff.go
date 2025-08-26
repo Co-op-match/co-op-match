@@ -13,9 +13,14 @@ type AcademicStaff struct {
 	LastName  			string    	`json:"last_name"`
 	Birthday  			time.Time 	`json:"birthday"`
 	Age              	int    		`json:"age"`
-	Faculty          	string 		`json:"faculty"`
-	Department       	string 		`json:"department"`
-	University       	string 		`json:"university"`
+	UniversityID     uint       `json:"university_id"`
+	University       University `gorm:"foreignKey:UniversityID"`
+
+	FacultyID        uint     `json:"faculty_id"`
+	Faculty          Faculty  `gorm:"foreignKey:FacultyID"`
+
+	ProgramID        uint     `json:"program_id"`
+	Program          Program  `gorm:"foreignKey:ProgramID"`
 
 	UserID    uint  `json:"user_id"`
 	User      User   `gorm:"foreignKey:UserID"`

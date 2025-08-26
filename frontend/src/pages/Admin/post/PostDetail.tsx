@@ -1,7 +1,30 @@
 import { useState, useEffect } from "react";
-import { Card, Button, Space, Tag, message, Row, Col, Typography, Divider, Layout, Empty, Spin } from "antd";
-import { ArrowLeftOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { GetAdminById, GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/index";
+import {
+  Card,
+  Button,
+  Space,
+  Tag,
+  message,
+  Row,
+  Col,
+  Typography,
+  Divider,
+  Layout,
+  Empty,
+  Spin,
+} from "antd";
+import {
+  ArrowLeftOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
+import {
+  GetAdminById,
+  GetInternshipPostsInAdminByIPostID,
+  UpdateStatusPost,
+} from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
@@ -14,7 +37,6 @@ import ApplicationsCard from "../../../components/adminpage/post/PDetail_Applica
 import PostInfoCard from "../../../components/adminpage/post/PDetail_PostInfoCard";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import type { AdminInterface } from "../../../interfaces/Admin";
-
 
 const { Title, Text } = Typography;
 
@@ -40,8 +62,8 @@ const PostDetailPage = () => {
         const res_status = await GetStatusPosts();
         const res_admin = await GetAdminById(user_id);
         if (res_post.status === 200) setPost(res_post.data);
-        if (res_post.status === 200) setStatus(res_status);
-        if (res_post.status === 200) setAdmin(res_admin.data);
+        setStatus(res_status);
+        if (res_admin.status === 200) setAdmin(res_admin.data);
       } catch (error) {
         messageApi.error("ไม่สามารถโหลดข้อมูลโพสต์ได้");
       } finally {
@@ -84,98 +106,89 @@ const PostDetailPage = () => {
     }
   };
 
-  const handleApprove = async () => {
+  const handleUpdateStatus = async (next: "Open" | "Closed") => {
     if (!post) return;
+    if (!admin?.ID) {
+      messageApi.error("ไม่พบบัญชีแอดมิน");
+      return;
+    }
     setActionLoading(true);
     try {
-      // หาค่า status_post_id ที่ตรงกับ "เปิดรับสมัคร"
-      const openStatus = status.find((s) => s.status_post === "Open");
-      if (!openStatus) throw new Error("ไม่พบสถานะ 'เปิดรับสมัคร'");
+      const target = status.find((s) => s.status_post === next);
+      if (!target) throw new Error(`ไม่พบสถานะ '${next}'`);
 
-      await UpdateStatusPost(post.ID!, openStatus.ID!);
+      const res = await UpdateStatusPost(post.ID!, {
+        StatusPostID: target.ID!,
+        AdminID: admin.ID,
+      });
+      if (res.status !== 200) throw new Error();
 
+      // sync UI
       setPost((prev) =>
         prev
           ? {
               ...prev,
               StatusPost: {
                 ...prev.StatusPost,
-                status_post: openStatus.status_post,
-                status_post_th: openStatus.status_post_th,
-                AdminID: admin?.ID,
+                status_post: target.status_post,
+                status_post_th: target.status_post_th,
               },
+              AdminID: admin.ID,
             }
           : prev
       );
 
-      messageApi.success("อนุมัติโพสต์เรียบร้อยแล้ว");
-    } catch (error) {
-      messageApi.error("ไม่สามารถอนุมัติโพสต์ได้");
+      messageApi.success(
+        next === "Open"
+          ? "อนุมัติโพสต์เรียบร้อยแล้ว"
+          : "ปิดรับสมัครเรียบร้อยแล้ว"
+      );
+    } catch {
+      messageApi.error(
+        next === "Open" ? "ไม่สามารถอนุมัติโพสต์ได้" : "ไม่สามารถปิดรับสมัครได้"
+      );
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleReject = async () => {
-    if (!post) return;
-    setActionLoading(true);
-    try {
-      // หาค่า status_post_id ที่ตรงกับ "ปิดรับสมัคร"
-      const closedStatus = status.find((s) => s.status_post === "Closed");
-      if (!closedStatus) throw new Error("ไม่พบสถานะ 'ปิดรับสมัคร'");
-
-      await UpdateStatusPost(post.ID!, closedStatus.ID!);
-
-      setPost((prev) =>
-        prev
-          ? {
-              ...prev,
-              StatusPost: {
-                ...prev.StatusPost,
-                status_post: closedStatus.status_post,
-                status_post_th: closedStatus.status_post_th,
-                AdminID: admin?.ID,
-              },
-            }
-          : prev
-      );
-
-      messageApi.success("ปิดรับสมัครเรียบร้อยแล้ว");
-    } catch (error) {
-      messageApi.error("ไม่สามารถปฏิเสธโพสต์ได้");
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const handleApprove = () => handleUpdateStatus("Open");
+  const handleReject = () => handleUpdateStatus("Closed");
 
   const applicationColumns: ColumnsType<ApplicationInterface> = [
     {
       title: "ชื่อ-นามสกุล",
-      dataIndex: "student_name",
       key: "student_name",
+      render: (_, record) => {
+        const first = record.Student?.first_name ?? "-";
+        const last = record.Student?.last_name ?? "";
+        return `${first} ${last}`.trim();
+      },
     },
     {
       title: "รหัสนักศึกษา",
       dataIndex: "student_id",
       key: "student_id",
+      render: (_, record) => record.Student?.user_id ?? "-",
     },
     {
       title: "GPA",
-      dataIndex: "gpa",
-      key: "gpa",
-      render: (gpa) => <span style={{ fontWeight: 600 }}>{gpa}</span>,
+      dataIndex: "grade",
+      key: "grade",
+      render: (_, record) => record.Student?.Education?.[0]?.grade ?? "-",
     },
     {
       title: "วันที่สมัคร",
-      dataIndex: "applied_date",
-      key: "applied_date",
-      render: (date) => new Date(date).toLocaleDateString("th-TH"),
+      dataIndex: "submit_at",
+      key: "submit_at",
+      render: (dt?: string) =>
+        dt ? new Date(dt).toLocaleDateString("th-TH") : "-",
     },
     {
       title: "สถานะ",
       dataIndex: "status",
       key: "status",
-      render: (status) => <Tag color="processing">{status}</Tag>,
+      render: (val) => <Tag color="processing">{val}</Tag>,
     },
   ];
 
