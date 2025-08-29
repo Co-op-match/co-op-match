@@ -219,37 +219,37 @@ export async function GetAllAcademicStaff() {
 //=============================== Analysis ==============================//
 export async function GetAdminDashboardSummary () {
   return await axios
-    .get(`${apiUrl}/analysis/dashboard-summary`)
+    .get(`${apiUrl}/analysis/dashboard-summary`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminDashboardOverview () {
   return await axios
-    .get(`${apiUrl}/analysis/dashboard-overview`)
+    .get(`${apiUrl}/analysis/dashboard-overview`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAllLoginLogs () {
   return await axios
-    .get(`${apiUrl}/all-login-logs`)
+    .get(`${apiUrl}/all-login-logs`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminMonthlyApplicationStats () {
   return await axios
-    .get(`${apiUrl}/analysis/monthly-application-stats`)
+    .get(`${apiUrl}/analysis/monthly-application-stats`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminRecentActivities () {
   return await axios
-    .get(`${apiUrl}/analysis/recent-activities`)
+    .get(`${apiUrl}/analysis/recent-activities`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminPendingPosts () {
   return await axios
-    .get(`${apiUrl}/analysis/pending-posts`)
+    .get(`${apiUrl}/analysis/pending-posts`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -262,12 +262,53 @@ export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'ye
 }
 export async function GetMonthlyUsersByRole () {
   return await axios
-    .get(`${apiUrl}/analysis/monthly-user-by-role`)
+    .get(`${apiUrl}/analysis/monthly-user-by-role`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
 export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+
+export async function getOverview (companyId: number, days=30) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/overview?days=${days}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function getTrend (companyId: number, start?: string, end?: string, days=30) {
+  const url =
+    start && end
+      ? `${apiUrl}/analysis/company/${companyId}/trend?start=${encodeURIComponent(
+          start
+        )}&end=${encodeURIComponent(end)}`
+      : `${apiUrl}/analysis/company/${companyId}/trend?days=${days}`;
+
+  try {
+    const res = await axios.get(url, requestOptions);
+    return res.data as { date: string; value: number }[];
+  } catch (err: any) {
+    // หากอยากให้ฝั่งเรียกใช้เช็ค error ได้ง่าย แนะนำ throw ต่อ
+    throw err?.response?.data || err;
+  }
+}
+export async function getPipeline (companyId: number, days=30) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/pipeline?days=${days}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function getPostPerf (companyId: number, days=30) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/posts/performance?days=${days}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function getInterviewStats (companyId: number, days=30) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/interviews?days=${days}`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

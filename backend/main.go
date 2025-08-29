@@ -215,6 +215,14 @@ func main() {
 			analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
 			analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
 		}
+		analysisCompanyGroup := r.Group("/analysis/company/:companyId")
+		{
+			analysisCompanyGroup.GET("/overview",   analysis.CompanyOverview)
+			analysisCompanyGroup.GET("/trend",      analysis.CompanyTrend)
+			analysisCompanyGroup.GET("/pipeline",   analysis.CompanyPipeline)
+			analysisCompanyGroup.GET("/posts/performance", analysis.CompanyPostsPerformance)
+			analysisCompanyGroup.GET("/interviews", analysis.CompanyInterviewStats)
+		}
 		verifyGroup := r.Group("/verify")
 		{
 			verifyGroup.GET("", controller.GetAllVerifications)
