@@ -211,7 +211,7 @@ const InterviewDashboard: React.FC = () => {
                 }
 
                 // ✅ 3. Simulate delay (optional)
-                await new Promise((resolve) => setTimeout(resolve, 2000));
+                await new Promise((resolve) => setTimeout(resolve, 1000));
 
                 // ✅ 4. Send Email
                 const emailRes = await SendEmailinterview(

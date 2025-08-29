@@ -86,6 +86,22 @@ export async function GetPostByCompanyId(companyId: number) {
     .catch((e) => e.response);
 }
 
+export async function DeletePost(postId: number) {
+  return await axios
+    .delete(`${apiUrl}/post/${postId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+// services/https/Application.ts
+export async function GetCompanyByID(id: number) {
+  return await axios
+    .get(`${apiUrl}/company/${id}`, requestOptions) // ✅ ต้องเป็น /company/:id
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+
 
 export {
   GetWorkModes,

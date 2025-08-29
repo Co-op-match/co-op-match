@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Layout, Menu } from 'antd';
 import {
-  SearchOutlined,
   UserOutlined,
   BellOutlined,
   SettingOutlined,

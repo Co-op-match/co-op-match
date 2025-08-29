@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
@@ -18,62 +20,143 @@ import (
 
 var H = hub.NewHub()
 
-type JwtWrapper struct {
-	SecretKey       string
-	Issuer          string
-	ExpirationHours int64
+type WSIn struct {
+	Event   string `json:"event"`    // "message" | "read"
+	Message string `json:"message"`  // เฉพาะ event=message
+	Type    string `json:"type"`     // "text" ...
+	UpToID  uint   `json:"up_to_id"` // เฉพาะ event=read
 }
 
-func InitChatHub() {
-	go H.Run()
+type WSOut struct {
+	Event      string `json:"event"`
+	ID         uint   `json:"id,omitempty"`
+	Message    string `json:"message,omitempty"`
+	Type       string `json:"type,omitempty"`
+	UserID     uint   `json:"user_id"`
+	ChatRoomID uint   `json:"chat_room_id"`
+	CreatedAt  string `json:"created_at"`
+	UpToID     uint   `json:"up_to_id,omitempty"`
 }
+
+func InitChatHub() { go H.Run() }
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func ChatWebSocket(c *gin.Context) {
-	roomIDStr := c.Query("room_id")
-	userIDStr := c.Query("user_id")
-	roomID, _ := strconv.Atoi(roomIDStr)
-	userID, _ := strconv.Atoi(userIDStr)
-	fmt.Println("❌ room:", roomIDStr)
+func isMember(userID, roomID uint) bool {
+	if roomID == 0 {
+		return true
+	}
+	var r entity.ChatRoom
+	if err := config.DB().First(&r, roomID).Error; err != nil {
+		return false
+	}
+	return r.User1ID == userID || r.User2ID == userID
+}
 
-	// ✅ ดึง JWT จาก Cookie
+func getBearer(c *gin.Context) string {
+	ah := c.GetHeader("Authorization")
+	const p = "Bearer "
+	if len(ah) > len(p) && strings.HasPrefix(ah, p) {
+		return strings.TrimSpace(ah[len(p):])
+	}
+	return ""
+}
+
+// ---------- 1) สร้าง Chat Session Token ----------
+
+type chatSessionReq struct {
+	RoomID uint `json:"room_id"`
+}
+
+func CreateChatSession(c *gin.Context) {
+	// ดึง user หลักจาก cookie JWT (ของระบบคุณ)
 	tokenStr, err := c.Cookie("auth_token")
 	if err != nil {
-		fmt.Println("❌ Cookie not found:", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: missing token"})
 		return
 	}
-
-	fmt.Println("✅ Token from cookie:", tokenStr)
-	// ✅ ตรวจสอบความถูกต้องของ Token
 	jwtWrapper := services.JwtWrapper{
 		SecretKey:       "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
 		Issuer:          "AuthService",
 		ExpirationHours: 24,
 	}
-	_, err = jwtWrapper.ValidateToken(tokenStr)
-
+	claims, err := jwtWrapper.ValidateToken(tokenStr)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: invalid token"})
 		return
 	}
+	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
+	userID := uint(userID64)
 
-	// ✅ อัปเกรด WebSocket
+	var req chatSessionReq
+	_ = c.ShouldBindJSON(&req)
+	fmt.Println("CreateChatSession room:", req.RoomID, "user:", userID)
+
+	// ตรวจสิทธิ์ในห้อง (ยกเว้น lobby = 0)
+	if !isMember(userID, req.RoomID) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not a member"})
+		return
+	}
+
+	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
+	tok, err := chatTok.Mint(userID, req.RoomID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "cannot mint chat token"})
+		return
+	}
+	c.JSON(200, gin.H{"token": tok})
+}
+
+// แทนทั้งฟังก์ชัน ChatWebSocket เดิม
+func ChatWebSocket(c *gin.Context) {
+	// รับ chat token จาก query
+	tokenStr := c.Query("token")
+	if tokenStr == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+		return
+	}
+
+	// parse chat token
+	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
+	claims, err := chatTok.Parse(tokenStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+
+	// user จาก sub, room จาก rid
+	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
+	userID := uint(userID64)
+	roomID := claims.Rid
+	// ยืนยันสิทธิ์ในห้อง (roomID=0 คือ lobby)
+	if ridStr := c.Query("rid"); ridStr != "" {
+        if qRid, err := strconv.ParseUint(ridStr, 10, 64); err == nil && uint(qRid) != roomID {
+            c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "rid mismatch; use token rid"})
+            return
+        }
+    }
+
+    if !isMember(userID, roomID) {
+        c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
+        return
+    }
+
+	// อัปเกรดเป็น WS
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
 	}
 
-	// ✅ สร้าง Client
-	client := &hub.Client{
-		ID:     uint(userID),
-		RoomID: uint(roomID),
-		Conn:   conn,
-		Send:   make(chan []byte),
-	}
+	conn.SetReadLimit(1 << 20)
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+
+	client := hub.NewClient(userID, roomID, conn)
 	H.Register <- client
 
 	go readMessages(client)
@@ -92,50 +175,147 @@ func readMessages(client *hub.Client) {
 			fmt.Println("❌ WebSocket read error:", err)
 			break
 		}
-		fmt.Println("📩 Received:", string(msgBytes))
 
-		var payload struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(msgBytes, &payload); err != nil {
+		var in WSIn
+		if err := json.Unmarshal(msgBytes, &in); err != nil {
 			fmt.Println("❌ JSON parse error:", err)
 			continue
 		}
 
-		// 🐞 Debug payload
-		fmt.Printf("📦 Saving Message: %s | UserID=%d | RoomID=%d\n", payload.Message, client.ID, client.RoomID)
+		switch in.Event {
+		case "message":
+			rec := entity.ChatMessage{
+				Message:    in.Message,
+				Read:       false,
+				ChatRoomID: client.RoomID,
+				UserID:     client.UserID,
+			}
+			if err := config.DB().Create(&rec).Error; err != nil {
+				fmt.Println("❌ DB Save error:", err)
+				continue
+			}
 
-		// ✅ บันทึกลง DB
-		err = config.DB().Create(&entity.ChatMessage{
-			Message:    payload.Message,
-			Read:       false,
-			ChatRoomID: client.RoomID,
-			UserID:     client.ID,
-		}).Error
-		if err != nil {
-			fmt.Println("❌ DB Save error:", err)
-		} else {
-			fmt.Println("✅ Message saved")
-		}
+			// broadcast message ในห้อง (คงไว้)
+			out := WSOut{
+				Event:      "message",
+				ID:         rec.ID,
+				Message:    rec.Message,
+				Type:       in.Type,
+				UserID:     rec.UserID,
+				ChatRoomID: rec.ChatRoomID,
+				CreatedAt:  rec.CreatedAt.Format(time.RFC3339),
+			}
+			payload, _ := json.Marshal(out)
+			H.Broadcast <- hub.MessagePayload{RoomID: client.RoomID, Message: payload}
 
-		// 📡 ส่งต่อให้ทุกคนในห้อง
-		H.Broadcast <- hub.MessagePayload{
-			Message: msgBytes,
-			RoomID:  client.RoomID,
+			// หาอีกฝั่ง + นับ unread ของอีกฝั่ง
+			var room entity.ChatRoom
+			if err := config.DB().First(&room, client.RoomID).Error; err == nil {
+				var other uint
+				if room.User1ID == client.UserID {
+					other = room.User2ID
+				} else {
+					other = room.User1ID
+				}
+
+				var unreadOther int64
+				_ = config.DB().Model(&entity.ChatMessage{}).
+					Where("chat_room_id = ? AND user_id <> ? AND read = false", client.RoomID, other).
+					Count(&unreadOther).Error
+
+				// ✅ แจ้งอีกฝั่ง (ลิสต์ห้อง และ/หรือแท็บที่เปิดห้อง)
+				H.BroadcastUnread(client.RoomID, other, int(unreadOther))
+				// ✅ แจ้งอีกฝั่ง (target = other)
+				H.BroadcastRoomMeta(client.RoomID, other, rec.Message, rec.CreatedAt, int(unreadOther))
+
+				// ✅ อัปเดตฝั่งผู้ส่ง (target = client.UserID, unread = 0)
+				H.BroadcastRoomMeta(client.RoomID, client.UserID, rec.Message, rec.CreatedAt, 0)
+			}
+
+		case "read":
+			q := config.DB().Model(&entity.ChatMessage{}).
+				Where("chat_room_id = ? AND user_id <> ? AND read = false", client.RoomID, client.UserID)
+			if in.UpToID != 0 {
+				q = q.Where("id <= ?", in.UpToID)
+			}
+			if err := q.Update("read", true).Error; err != nil {
+				fmt.Println("❌ DB update read error:", err)
+				continue
+			}
+
+			// read receipt เดิม
+			out := WSOut{
+				Event:      "read",
+				UserID:     client.UserID,
+				ChatRoomID: client.RoomID,
+				UpToID:     in.UpToID,
+				CreatedAt:  time.Now().Format(time.RFC3339),
+			}
+			payload, _ := json.Marshal(out)
+			H.Broadcast <- hub.MessagePayload{RoomID: client.RoomID, Message: payload}
+
+			// ==== ⬇️ เพิ่มส่วนนี้: ยิง room_meta ให้ "ผู้อ่าน" → unread = 0 ====
+			var last entity.ChatMessage
+			_ = config.DB().
+				Where("chat_room_id = ?", client.RoomID).
+				Order("created_at DESC").
+				First(&last).Error
+			// ----- ภายใต้ case "read": หลังดึง last สำเร็จ -----
+			H.BroadcastRoomMeta(client.RoomID, client.UserID, last.Message, last.CreatedAt, 0)
+
 		}
 	}
 }
-
 
 func writeMessages(client *hub.Client) {
-	defer client.Conn.Close()
-	for msg := range client.Send {
-		err := client.Conn.WriteMessage(websocket.TextMessage, msg)
-		if err != nil {
-			return
+	ticker := time.NewTicker(30 * time.Second)
+	defer func() {
+		ticker.Stop()
+		client.Conn.Close()
+	}()
+
+	for {
+		select {
+		case msg, ok := <-client.Send:
+			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if !ok {
+				_ = client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			w, err := client.Conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				return
+			}
+			if _, err := w.Write(msg); err != nil {
+				w.Close()
+				return
+			}
+
+			// batch ของค้างใน channel
+			n := len(client.Send)
+			for i := 0; i < n; i++ {
+				_, _ = w.Write([]byte("\n"))
+				more := <-client.Send
+				if _, err := w.Write(more); err != nil {
+					w.Close()
+					return
+				}
+			}
+			if err := w.Close(); err != nil {
+				return
+			}
+
+		case <-ticker.C:
+			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
 		}
 	}
 }
+
+// ---------- HTTP ----------
 
 // สร้างห้องแชทระหว่าง user1 กับ user2
 func CreateChatRoom(c *gin.Context) {
@@ -187,11 +367,27 @@ func CreateChatRoom(c *gin.Context) {
 		"room_id": newRoom.ID,
 	})
 }
+
 func GetMessagesByChatRoomID(c *gin.Context) {
 	roomIDStr := c.Param("room_id")
-	roomID, err := strconv.Atoi(roomIDStr)
+	roomID64, err := strconv.ParseUint(roomIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room_id"})
+		return
+	}
+	roomID := uint(roomID64)
+
+	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
+	claims, err := chatTok.Parse(getBearer(c))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid chat token"})
+		return
+	}
+	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
+	userID := uint(userID64)
+
+	if !isMember(userID, roomID) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
 		return
 	}
 
@@ -204,12 +400,26 @@ func GetMessagesByChatRoomID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot fetch messages"})
 		return
 	}
-
 	c.JSON(http.StatusOK, messages)
 }
+
 func MarkMessagesAsRead(c *gin.Context) {
-	roomID, _ := strconv.Atoi(c.Param("room_id"))
-	userID, _ := strconv.Atoi(c.Query("user_id"))
+	roomID64, _ := strconv.ParseUint(c.Param("room_id"), 10, 64)
+	roomID := uint(roomID64)
+
+	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
+	claims, err := chatTok.Parse(getBearer(c))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid chat token"})
+		return
+	}
+	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
+	userID := uint(userID64)
+
+	if !isMember(userID, roomID) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
+		return
+	}
 
 	if err := config.DB().Model(&entity.ChatMessage{}).
 		Where("chat_room_id = ? AND user_id != ? AND read = false", roomID, userID).
@@ -218,8 +428,20 @@ func MarkMessagesAsRead(c *gin.Context) {
 		return
 	}
 
+	// push unread=0 + room_meta
+	H.BroadcastUnread(roomID, userID, 0)
+
+	var last entity.ChatMessage
+	_ = config.DB().Where("chat_room_id = ?", roomID).
+		Order("created_at DESC").
+		First(&last).Error
+	if last.ID != 0 {
+		H.BroadcastRoomMeta(userID, roomID, last.Message, last.CreatedAt, 0)
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Marked as read"})
 }
+
 func GetChatRoomsByUserID(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
@@ -229,12 +451,104 @@ func GetChatRoomsByUserID(c *gin.Context) {
 
 	var rooms []entity.ChatRoom
 	if err := config.DB().
-		Preload("User1").Preload("User2").
+		// ✅ preload รูปด้วย
+		Preload("User1").Preload("User1.Company").Preload("User1.Student").Preload("User1.ProfileImage").
+		Preload("User2").Preload("User2.Company").Preload("User2.Student").Preload("User2.ProfileImage").
 		Where("user1_id = ? OR user2_id = ?", userID, userID).
 		Find(&rooms).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot fetch chat rooms"})
 		return
 	}
 
-	c.JSON(http.StatusOK, rooms)
+	type RoomDTO struct {
+		ID              uint       `json:"id"`
+		User1ID         uint       `json:"user1_id"`
+		User2ID         uint       `json:"user2_id"`
+		Name            string     `json:"name"`
+		Online          bool       `json:"online"`
+		LastMessage     string     `json:"last_message"`
+		LastMessageTime *time.Time `json:"last_message_time,omitempty"`
+		UnreadCount     int64      `json:"unread_count"`
+		AvatarURL       string     `json:"avatar_url"` // ✅ เพิ่มฟิลด์รูป
+	}
+
+	out := make([]RoomDTO, 0, len(rooms))
+
+	for _, r := range rooms {
+		other := r.User1
+		if r.User1ID == uint(userID) {
+			other = r.User2
+		}
+
+		// ---------- ชื่อ ----------
+		name := other.Email
+		if len(other.Company) > 0 && other.Company[0].CompanyName != "" {
+			name = other.Company[0].CompanyName
+		} else if len(other.Student) > 0 {
+			fn := strings.TrimSpace(other.Student[0].FirstName)
+			ln := strings.TrimSpace(other.Student[0].LastName)
+			full := strings.TrimSpace(fn + " " + ln)
+			if full != "" {
+				name = full
+			}
+		}
+		if name == "" {
+			name = fmt.Sprintf("User #%d", other.ID)
+		}
+
+		// ---------- last message / unread ----------
+		var last entity.ChatMessage
+		_ = config.DB().
+			Where("chat_room_id = ?", r.ID).
+			Order("created_at DESC").
+			First(&last).Error
+
+		var unread int64
+		_ = config.DB().Model(&entity.ChatMessage{}).
+			Where("chat_room_id = ? AND user_id != ? AND read = false", r.ID, userID).
+			Count(&unread).Error
+
+		// ---------- avatar ----------
+		avatarURL := ""
+		// 1) company logo มาก่อน (ถ้ามี)
+		if len(other.Company) > 0 {
+			// ปรับชื่อฟิลด์ให้ตรงกับ model ของคุณ เช่น Logo / LogoPath / Image
+			if other.Company[0].Logo != "" {
+				avatarURL = other.Company[0].Logo
+			}
+		}
+		// 2) ถ้าไม่มีโลโก้ ใช้รูปโปรไฟล์ของ User
+		if avatarURL == "" && len(other.ProfileImage) > 0 {
+			// ฟิลด์ใน JSON ตัวอย่างชื่อ image_url
+			if other.ProfileImage[0].ImageURL != "" {
+				avatarURL = other.ProfileImage[0].ImageURL
+			}
+		}
+
+		// ถ้าเก็บเป็น path ไม่ใช่ URL เต็ม จะต่อ base เองฝั่ง UI ก็ได้
+		// หรือจะบังคับต่อที่นี่:
+		// if avatarURL != "" && !strings.HasPrefix(avatarURL, "http") {
+		//     avatarURL = "http://localhost:8000" + avatarURL
+		// }
+
+		dto := RoomDTO{
+			ID:          r.ID,
+			User1ID:     r.User1ID,
+			User2ID:     r.User2ID,
+			Name:        name,
+			Online:      other.IsLoggedIn,
+			LastMessage: last.Message,
+			UnreadCount: unread,
+			AvatarURL:   avatarURL, // ✅ ใส่ค่า
+		}
+		if !last.CreatedAt.IsZero() {
+			t := last.CreatedAt
+			dto.LastMessageTime = &t
+		}
+
+		out = append(out, dto)
+	}
+
+	c.JSON(http.StatusOK, out)
 }
+

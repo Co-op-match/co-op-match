@@ -20,6 +20,7 @@ const ApplicationListCard: React.FC = () => {
         .then((data) => {
           if (Array.isArray(data)) {
             setApplications(data);
+            console.table(data)
           } else {
             console.error("Expected array but got:", data);
             setApplications([]);

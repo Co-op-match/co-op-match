@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicStaff Profile - Co-op Match</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .navbar {
+            background: white;
+            padding: 12px 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2196F3;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #2196F3;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            color: #2196F3;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 80px auto 20px;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 2em;
+            color: #2196F3;
+            font-weight: 600;
+            border-bottom: 3px solid #2196F3;
+            display: inline-block;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        .profile-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            min-height: 600px;
+        }
+
+        .profile-sidebar {
+            background: #fafbfc;
+            border-right: 1px solid #e9ecef;
+            padding: 30px;
+        }
+
+        .profile-main {
+            padding: 30px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+            color: #888;
+            font-size: 48px;
+        }
+
+        .edit-avatar {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 32px;
+            height: 32px;
+            background: #2196F3;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .profile-name {
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .profile-status {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            text-align: center;
+            margin-bottom: 25px;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .section-tabs {
+            display: flex;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            color: #2196F3;
+            border-bottom-color: #2196F3;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .info-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 20px;
+            height: 20px;
+            background: #2196F3;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #6c757d;
+            flex: 1;
+        }
+
+        .edit-button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            float: right;
+            margin-top: -5px;
+        }
+
+        .edit-button:hover {
+            background: #1976d2;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-internship {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-graduated {
+            background: #cce5ff;
+            color: #0056b3;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 0.9em;
+            min-width: 200px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .certification-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .certification-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .cert-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .cert-details {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .cert-date {
+            color: #28a745;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 1024px) {
+            .profile-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+                margin-top: 70px;
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .search-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .data-table {
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">CM</div>
+            Co-op Match
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#" class="nav-item"><span class="nav-icon"></span>หน้าหลัก</a></li>
+            <li><a href="#" class="nav-item"><span class="nav-icon"></span>รับสมัคร</a></li>
+            <li><a href="#" class="nav-item"><span class="nav-icon"></span>โปรไฟล์</a></li>
+            <li><a href="#" class="nav-item"><span class="nav-icon"></span>แชท</a></li>
+            <li><a href="#" class="nav-icon"></a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">AcademicStaff Profile</h1>
+        </div>
+
+        <!-- Profile Container -->
+        <div class="profile-container">
+            <div class="profile-sections">
+                <!-- Sidebar -->
+                <div class="profile-sidebar">
+                    <div class="profile-avatar">
+                        👤
+                        <div class="edit-avatar">✏️</div>
+                    </div>
+                    <h2 class="profile-name">สมชาย วิศวกร</h2>
+                    <div class="profile-status">สถานะการทำงาน: รอยีรอง</div>
+
+                    <!-- ข้อมูลติดต่อ -->
+                    <div class="info-section">
+                        <h3><span class="section-icon">📧</span>ที่อยู่ <button class="edit-button">แก้ไข</button></h3>
+                        <div class="info-row">
+                            <span class="info-label">บ้านเลขที่:</span>
+                            <span class="info-value">123</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">หมู่บ้าน:</span>
+                            <span class="info-value">หมู่บ้าน ABC</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">ซอย:</span>
+                            <span class="info-value">ซอยรองมรร</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">ตำบล:</span>
+                            <span class="info-value">ตำบลศุภานนท์</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">อำเภอ:</span>
+                            <span class="info-value">พระนครศรีอยุธยา</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">จังหวัด:</span>
+                            <span class="info-value">กรุงเทพมหานคร</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">รหัสไปรษณีย์:</span>
+                            <span class="info-value">10200</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="profile-main">
+                    <!-- Section Tabs -->
+                    <div class="section-tabs">
+                        <button class="tab-button active" onclick="showTab('personal')">ข้อมูลส่วนตัว</button>
+                        <button class="tab-button" onclick="showTab('certifications')">ข้อมูลการรับรอง</button>
+                        <button class="tab-button" onclick="showTab('students')">นักศึกษาที่ดูแล</button>
+                        <button class="tab-button" onclick="showTab('companies')">บริษัทฝึกงาน</button>
+                        <button class="tab-button" onclick="showTab('statistics')">สถิติ</button>
+                    </div>
+
+                    <!-- ข้อมูลส่วนตัว -->
+                    <div id="personal" class="tab-content active">
+                        <div class="info-section">
+                            <h3><span class="section-icon">👤</span>ข้อมูลส่วนบุคคล <button class="edit-button">แก้ไข</button></h3>
+                            <div class="info-row">
+                                <span class="info-label">เก้นให้:</span>
+                                <span class="info-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">ใต้:</span>
+                                <span class="info-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">นายข้:</span>
+                                <span class="info-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">นิสิตบ่อน:</span>
+                                <span class="info-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">อื่น:</span>
+                                <span class="info-value">-</span>
+                            </div>
+                        </div>
+
+                        <div class="info-grid" style="margin-top: 20px;">
+                            <div class="info-section">
+                                <h3><span class="section-icon">🎓</span>วุฒิการศึกษา</h3>
+                                <div class="info-row">
+                                    <span class="info-label">ปริญญาเอก:</span>
+                                    <span class="info-value">Ph.D. วิทยาการคอมพิวเตอร์, จุฬาลงกรณ์มหาวิทยาลัย</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">ปริญญาโท:</span>
+                                    <span class="info-value">M.Eng. วิศวกรรมคอมพิวเตอร์, มหาวิทยาลัยเกษตรศาสตร์</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">ปริญญาตรี:</span>
+                                    <span class="info-value">B.Eng. วิศวกรรมคอมพิวเตอร์, มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี</span>
+                                </div>
+                            </div>
+
+                            <div class="info-section">
+                                <h3><span class="section-icon">🏢</span>ข้อมูลการทำงาน</h3>
+                                <div class="info-row">
+                                    <span class="info-label">ตำแหน่ง:</span>
+                                    <span class="info-value">ผู้ช่วยศาสตราจารย์</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">ภาควิชา:</span>
+                                    <span class="info-value">วิทยาการคอมพิวเตอร์</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">คณะ:</span>
+                                    <span class="info-value">วิทยาศาสตร์และเทคโนโลยี</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">อีเมล:</span>
+                                    <span class="info-value">somchai.v@university.ac.th</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">โทรศัพท์:</span>
+                                    <span class="info-value">02-123-4567 ต่อ 1234</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ข้อมูลการรับรอง -->
+                    <div id="certifications" class="tab-content">
+                        <h3>ใบรับรองและการอบรมวิชาชีพ</h3>
+                        
+                        <div class="certification-item">
+                            <div class="cert-name">AWS Solutions Architect Professional</div>
+                            <div class="cert-details">Amazon Web Services - ใบรับรองด้านสถาปัตยกรรมคลาวด์ระดับมืออาชีพ</div>
+                            <div class="cert-date">หมดอายุ: มกราคม 2026</div>
+                        </div>
+
+                        <div class="certification-item">
+                            <div class="cert-name">Microsoft Azure AI Engineer Associate</div>
+                            <div class="cert-details">Microsoft Corporation - ใบรับรองด้าน AI และ Machine Learning</div>
+                            <div class="cert-date">หมดอายุ: มิถุนายน 2025</div>
+                        </div>
+
+                        <div class="certification-item">
+                            <div class="cert-name">Google Cloud Professional Data Engineer</div>
+                            <div class="cert-details">Google Cloud Platform - ใบรับรองวิศวกรข้อมูลระดับมืออาชีพ</div>
+                            <div class="cert-date">หมดอายุ: ธันวาคม 2025</div>
+                        </div>
+
+                        <div class="certification-item">
+                            <div class="cert-name">Project Management Professional (PMP)</div>
+                            <div class="cert-details">Project Management Institute - ใบรับรองการบริหารโครงการ</div>
+                            <div class="cert-date">หมดอายุ: กรกฎาคม 2026</div>
+                        </div>
+
+                        <div class="certification-item">
+                            <div class="cert-name">การอบรมหลักสูตรผู้ประเมินคุณภาพการศึกษา</div>
+                            <div class="cert-details">สำนักงานคณะกรรมการการอุดมศึกษา (สกอ.)</div>
+                            <div class="cert-date">เสร็จสิ้นการอบรม: พฤษภาคม 2024</div>
+                        </div>
+                    </div>
+
+                    <!-- นักศึกษาที่ดูแล -->
+                    <div id="students" class="tab-content">
+                        <h3>รายชื่อนักศึกษาที่อยู่ในการดูแล</h3>
+                        
+                        <div class="search-controls">
+                            <input type="text" class="search-input" placeholder="ค้นหานักศึกษา..." id="studentSearch">
+                            <select class="filter-select" id="studentFilter">
+                                <option value="">ทุกสถานะ</option>
+                                <option value="active">กำลังศึกษา</option>
+                                <option value="internship">ฝึกงาน</option>
+                                <option value="graduated">จบการศึกษา</option>
+                            </select>
+                        </div>
+
+                        <table class="data-table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>รหัสนักศึกษา</th>
+                                    <th>ชื่อ-สกุล</th>
+                                    <th>สาขา</th>
+                                    <th>ชั้นปี</th>
+                                    <th>สถานะ</th>
+                                    <th>บริษัทฝึกงาน</th>
+                                    <th>GPA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>64010001</td>
+                                    <td>สมศักดิ์ ใจดี</td>
+                                    <td>วิทยาการคอมพิวเตอร์</td>
+                                    <td>4</td>
+                                    <td><span class="status-badge status-internship">ฝึกงาน</span></td>
+                                    <td>บริษัท เทคโนโลยี อินโนเวชั่น จำกัด</td>
+                                    <td>3.25</td>
+                                </tr>
+                                <tr>
+                                    <td>64010002</td>
+                                    <td>สมหญิง รักเรียน</td>
+                                    <td>วิทยาการคอมพิวเตอร์</td>
+                                    <td>4</td>
+                                    <td><span class="status-badge status-active">กำลังศึกษา</span></td>
+                                    <td>-</td>
+                                    <td>3.67</td>
+                                </tr>
+                                <tr>
+                                    <td>63010015</td>
+                                    <td>วิชาญ สมาร์ท</td>
+                                    <td>วิทยาการคอมพิวเตอร์</td>
+                                    <td>จบแล้ว</td>
+                                    <td><span class="status-badge status-graduated">จบการศึกษา</span></td>
+                                    <td>บริษัท ไมโครซอฟท์ (ประเทศไทย)</td>
+                                    <td>3.89</td>
+                                </tr>
+                                <tr>
+                                    <td>65010008</td>
+                                    <td>นิราภรณ์ เก่งโค้ด</td>
+                                    <td>วิทยาการคอมพิวเตอร์</td>
+                                    <td>3</td>
+                                    <td><span class="status-badge status-active">กำลังศึกษา</span></td>
+                                    <td>-</td>
+                                    <td>3.45</td>
+                                </tr>
+                                <tr>
+                                    <td>64010023</td>
+                                    <td>ธนกฤต ไอทีเก่ง</td>
+                                    <td>วิทยาการคอมพิวเตอร์</td>
+                                    <td>4</td>
+                                    <td><span class="status-badge status-internship">ฝึกงาน</span></td>
+                                    <td>บริษัท แอดวานซ์ อินโฟร์ เซอร์วิส จำกัด</td>
+                                    <td>3.12</td>
+                                </tr>
+                                <tr>
+                                    <td>65010012</td>
+                                    <td>ปริญญา ดาต้าเก่ง</td>
+                                    <td>วิทยาการคอมพิวเตอร์</td>
+                                    <td>3</td>
+                                    <td><span class="status-badge status-active">กำลังศึกษา</span></td>
+                                    <td>-</td>
+                                    <td>3.78</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- บริษัทฝึกงาน -->
+                    <div id="companies" class="tab-content">
+                        <h3>รายชื่อบริษัทที่นักศึกษาไปฝึกงาน</h3>
+                        
+                        <div class="search-controls">
+                            <input type="text" class="search-input" placeholder="ค้นหาบริษัท..." id="companySearch">
+                            <select class="filter-select" id="companyTypeFilter">
+                                <option value="">ทุกประเภท</option>
+                                <option value="tech">เทคโนโลยี</option>
+                                <option value="finance">การเงิน</option>
+                                <option value="manufacturing">อุตสาหกรรม</option>
+                                <option value="startup">สตาร์ทอัพ</option>
+                            </select>
+                        </div>
+
+                        <table class="data-table" id="companiesTable">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อบริษัท</th>
+                                    <th>ประเภทธุรกิจ
