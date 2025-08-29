@@ -5,7 +5,6 @@ import axios from "axios";
 import type { UserInterface } from "../../interfaces/User";
 import type { ProfileImageInterface } from "../../interfaces/ProfileImage";
 import type { GenderInterface } from "../../interfaces/Gender";
-import type { EducationInterface } from "../../interfaces/Education";
 import type { AddressInterface } from "../../interfaces/Address";
 import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
@@ -15,7 +14,6 @@ import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
-import type { InternshipPostInterface } from "../../interface/IIntershipPost";
 
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");

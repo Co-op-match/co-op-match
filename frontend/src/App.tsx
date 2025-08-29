@@ -19,7 +19,7 @@ import CompanyProfile from "./pages/Profile/Company/Company";
 import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
-import PostDetailsStudent from './pages/Student/Application/Post';
+import PostDetailsStudent from './pages/Student/Application/postDetail';
 import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
 import AddApplication from './pages/Student/Application/AddApplication';
 import ApplicationHistory from "./pages/Student/Application/History";
@@ -100,14 +100,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-           <Route
+          <Route
             path="/company-profile/:id"
             element={
               <CompanyProfileView />
             }
-          />      
-          <Route path="/chat/session/:sid" element={<AdvancedChatInterface/>} />
-          <Route path="/chat" element={<AdvancedChatInterface/>} />      
+          />
+          <Route path="/chat/session/:sid" element={<AdvancedChatInterface />} />
+          <Route path="/chat" element={<AdvancedChatInterface />} />
           <Route
             path="/company/add-company"
             element={
@@ -185,8 +185,17 @@ function App() {
           <Route
             path="/post/:id"
             element={
-              <ProtectedRoute allowedRoles={[2,3]}>
+              <ProtectedRoute allowedRoles={[2, 3]}>
                 <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/post-student/:id"
+            element={
+              <ProtectedRoute allowedRoles={[2, 3]}>
+                <PostDetailsStudent />
               </ProtectedRoute>
             }
           />
@@ -268,7 +277,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-           <Route
+          <Route
             path="/admin/users"
             element={
               <ProtectedRoute allowedRoles={[1]}>

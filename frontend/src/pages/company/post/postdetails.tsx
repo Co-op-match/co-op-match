@@ -13,7 +13,7 @@ import {
   StarOutlined,
   TeamOutlined
 } from '@ant-design/icons';
-import { GetPostById, GetCompanyByID } from '../../../services/https/post/index';
+import { GetPostById } from '../../../services/https/post/index';
 import type { BenefitInterface } from '../../../interface/IBenefit';
 
 const { Title, Text, Paragraph } = Typography;
