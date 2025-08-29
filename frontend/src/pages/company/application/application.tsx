@@ -4,8 +4,6 @@ import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../servi
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
-
-
 interface ApplicationInterface {
     post_name: ReactNode;
     id?: number;
@@ -51,15 +49,14 @@ const Dashboard = () => {
 
     const handleScheduleInterview = (application: ApplicationInterface) => {
         navigate("/company/interview_appointments", {
-          state: {
-            studentId: application.id,
-            studentName: application.name,
-            postName: application.post_name,
-            internshipPostId: application.internship_post_id,
-          },
+            state: {
+                studentId: application.id,
+                studentName: application.name,
+                postName: application.post_name,
+                internshipPostId: application.internship_post_id,
+            },
         });
-      };
-
+    };
 
     const fetchApplications = async () => {
         if (!postId) return;
@@ -89,8 +86,8 @@ const Dashboard = () => {
 
 
     useEffect(() => {
-  calculateStats(applications);             // ✅ ถูกต้อง
-}, [applications]);
+        calculateStats(applications);             // ✅ ถูกต้อง
+    }, [applications]);
 
 
     const calculateStats = (data: ApplicationInterface[]) => {
@@ -149,22 +146,22 @@ const Dashboard = () => {
             <div style={summaryCardStyle}>
                 <h3 style={headingStyle}>📊 สรุปผลคำขอ</h3>
                 <div style={summaryFieldsStyle}>
-                    <div style={{...summaryItemStyle, ...summaryItemTotalStyle}}>
+                    <div style={{ ...summaryItemStyle, ...summaryItemTotalStyle }}>
                         <div style={iconStyle}>📋</div>
                         <h4>คำขอทั้งหมด</h4>
                         <p style={statsNumberStyle}>{applications.length}</p>
                     </div>
-                    <div style={{...summaryItemStyle, ...summaryItemApprovedStyle}}>
+                    <div style={{ ...summaryItemStyle, ...summaryItemApprovedStyle }}>
                         <div style={iconStyle}>✅</div>
                         <h4>อนุมัติ</h4>
                         <p style={statsNumberStyle}>{approvalStats.approved}</p>
                     </div>
-                    <div style={{...summaryItemStyle, ...summaryItemPendingStyle}}>
+                    <div style={{ ...summaryItemStyle, ...summaryItemPendingStyle }}>
                         <div style={iconStyle}>⏳</div>
                         <h4>รอการอนุมัติ</h4>
                         <p style={statsNumberStyle}>{approvalStats.pending}</p>
                     </div>
-                    <div style={{...summaryItemStyle, ...summaryItemRejectedStyle}}>
+                    <div style={{ ...summaryItemStyle, ...summaryItemRejectedStyle }}>
                         <div style={iconStyle}>❌</div>
                         <h4>ไม่อนุมัติ</h4>
                         <p style={statsNumberStyle}>{approvalStats.rejected}</p>
@@ -178,21 +175,21 @@ const Dashboard = () => {
                 <div style={searchBoxContainerStyle}>
                     <div style={searchInputWrapperStyle}>
                         <label style={searchLabelStyle}>🔍 ค้นหาชื่อผู้สมัครหรือตำแหน่ง</label>
-                        <input 
-                            type="text" 
-                            value={searchTerm} 
-                            onChange={(e) => setSearchTerm(e.target.value)} 
-                            style={searchInputStyle} 
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={searchInputStyle}
                             placeholder="พิมพ์ชื่อหรือตำแหน่ง..."
                         />
                     </div>
                     <div style={searchInputWrapperStyle}>
                         <label style={searchLabelStyle}>📅 ค้นหาวันที่</label>
-                        <input 
-                            type="date" 
-                            value={searchDate} 
-                            onChange={(e) => setSearchDate(e.target.value)} 
-                            style={searchInputStyle} 
+                        <input
+                            type="date"
+                            value={searchDate}
+                            onChange={(e) => setSearchDate(e.target.value)}
+                            style={searchInputStyle}
                         />
                     </div>
                 </div>
@@ -243,33 +240,33 @@ const Dashboard = () => {
                                         </td>
                                         <td style={tdStyle}>
                                             <div style={actionButtonsStyle}>
-                                                <button 
-                                                    style={approveButtonStyle} 
+                                                <button
+                                                    style={approveButtonStyle}
                                                     onClick={() => handleApproval(application, 'รอการนัดสัมภาษณ์')}
                                                     onMouseEnter={(e) => {
                                                         const target = e.target as HTMLButtonElement;
                                                         target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                      }}
-                                                      onMouseLeave={(e) => {
+                                                    }}
+                                                    onMouseLeave={(e) => {
                                                         const target = e.target as HTMLButtonElement;
                                                         target.style.transform = 'translateY(0) scale(1)';
-                                                      }}
-                                                      
+                                                    }}
+
                                                 >
                                                     ✅ อนุมัติ
                                                 </button>
-                                                <button 
-                                                    style={rejectButtonStyle} 
+                                                <button
+                                                    style={rejectButtonStyle}
                                                     onClick={() => handleApproval(application, 'ไม่ได้รับเลือก')}
                                                     onMouseEnter={(e) => {
                                                         const target = e.target as HTMLButtonElement;
                                                         target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                      }}
-                                                      onMouseLeave={(e) => {
+                                                    }}
+                                                    onMouseLeave={(e) => {
                                                         const target = e.target as HTMLButtonElement;
                                                         target.style.transform = 'translateY(0) scale(1)';
-                                                      }}
-                                                      
+                                                    }}
+
                                                 >
                                                     ❌ ไม่อนุมัติ
                                                 </button>
@@ -319,28 +316,28 @@ const Dashboard = () => {
                                     <td style={tdStyle}>
                                         {app.status === 'รอการนัดสัมภาษณ์' && (
                                             <button
-                                            onClick={() => handleScheduleInterview(app)}
-                                            style={{
-                                                ...interviewButtonStyle,
-                                                backgroundColor: app.status === 'รอการนัดสัมภาษณ์' ? '#2196f3' : '#cccccc',
-                                                cursor: app.status === 'รอการนัดสัมภาษณ์' ? 'pointer' : 'not-allowed',
-                                                opacity: app.status === 'รอการนัดสัมภาษณ์' ? 1 : 0.5,
-                                            }}
-                                            disabled={app.status !== 'รอการนัดสัมภาษณ์'}
-                                            onMouseEnter={(e) => {
-                                                const target = e.target as HTMLButtonElement;
-                                                if (app.status === 'รอการนัดสัมภาษณ์') {
-                                                    target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                const target = e.target as HTMLButtonElement;
-                                                target.style.transform = 'translateY(0) scale(1)';
-                                            }}
-                                        >
-                                            🗓️ นัดสัมภาษณ์
-                                        </button>
-                                        
+                                                onClick={() => handleScheduleInterview(app)}
+                                                style={{
+                                                    ...interviewButtonStyle,
+                                                    backgroundColor: app.status === 'รอการนัดสัมภาษณ์' ? '#2196f3' : '#cccccc',
+                                                    cursor: app.status === 'รอการนัดสัมภาษณ์' ? 'pointer' : 'not-allowed',
+                                                    opacity: app.status === 'รอการนัดสัมภาษณ์' ? 1 : 0.5,
+                                                }}
+                                                disabled={app.status !== 'รอการนัดสัมภาษณ์'}
+                                                onMouseEnter={(e) => {
+                                                    const target = e.target as HTMLButtonElement;
+                                                    if (app.status === 'รอการนัดสัมภาษณ์') {
+                                                        target.style.transform = 'translateY(-2px) scale(1.05)';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    const target = e.target as HTMLButtonElement;
+                                                    target.style.transform = 'translateY(0) scale(1)';
+                                                }}
+                                            >
+                                                🗓️ นัดสัมภาษณ์
+                                            </button>
+
                                         )}
                                     </td>
                                 </tr>
@@ -373,33 +370,33 @@ const Dashboard = () => {
                             rows={4}
                         />
                         <div style={modalActionsStyle}>
-                            <button 
-                                onClick={confirmApproval} 
+                            <button
+                                onClick={confirmApproval}
                                 style={modalConfirmButtonStyle}
                                 onMouseEnter={(e) => {
                                     const target = e.target as HTMLButtonElement;
                                     target.style.transform = 'translateY(-2px) scale(1.05)';
-                                  }}
-                                  onMouseLeave={(e) => {
+                                }}
+                                onMouseLeave={(e) => {
                                     const target = e.target as HTMLButtonElement;
                                     target.style.transform = 'translateY(0) scale(1)';
-                                  }}
-                                  
+                                }}
+
                             >
                                 ✅ ยืนยัน
                             </button>
-                            <button 
-                                onClick={() => setShowModal(false)} 
+                            <button
+                                onClick={() => setShowModal(false)}
                                 style={modalCancelButtonStyle}
                                 onMouseEnter={(e) => {
                                     const target = e.target as HTMLButtonElement;
                                     target.style.transform = 'translateY(-2px) scale(1.05)';
-                                  }}
-                                  onMouseLeave={(e) => {
+                                }}
+                                onMouseLeave={(e) => {
                                     const target = e.target as HTMLButtonElement;
                                     target.style.transform = 'translateY(0) scale(1)';
-                                  }}
-                                  
+                                }}
+
                             >
                                 ❌ ยกเลิก
                             </button>
@@ -591,8 +588,8 @@ const thStyle: React.CSSProperties = {
 const tableRowStyle: React.CSSProperties = {
     transition: 'background-color 0.2s ease',
     cursor: 'pointer',
-  };
-  
+};
+
 
 const tdStyle: React.CSSProperties = {
     padding: '12px 16px',

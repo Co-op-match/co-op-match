@@ -382,7 +382,7 @@ const PostDetails = () => {
                       <Button
                         type="link"
                         icon={<EyeOutlined />}
-                        onClick={() => navigate(`/post/${id}`)}
+                        onClick={() => navigate(`/post-student/${id}`)}
                         style={styles.viewButton}
                       >
                         ดูรายละเอียด
