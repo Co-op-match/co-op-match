@@ -1,12 +1,11 @@
 // src/components/adminpage/ExportExcelButton.tsx
 import React from "react";
-import { Button, Dropdown, Menu, Space } from "antd";
+import { Button, Dropdown } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
 import type { UserInterface } from "../../../interfaces/User";
 import type { LoginLogInterface } from "../../../interfaces/LoginLog";
-import { downloadWorkbook, sheetFromRows } from "../../../components/adminpage/exportExcel";
 
 type Variant = "users" | "logs" | "both";
 

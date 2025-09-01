@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Descriptions, Typography, Tag, Space, Button, Modal, Avatar } from "antd";
+import { Card, Descriptions, Typography, Tag, Space, Button, Modal } from "antd";
 import { 
   EditOutlined, 
   UserOutlined, 
@@ -10,8 +10,7 @@ import {
   DollarOutlined, 
   EnvironmentOutlined, 
   CheckOutlined, 
-  StopOutlined,
-  CrownOutlined 
+  StopOutlined
 } from "@ant-design/icons";
 
 const { Title, Paragraph, Text } = Typography;

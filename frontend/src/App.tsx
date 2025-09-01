@@ -37,7 +37,6 @@ import AdvancedChatInterface from "./Chat/ChatInterface";
 import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
 import AdminUser from "./pages/Admin/user/main";
-import CompanyAnalysisPage from "./pages/company/analysis/analysis";
 
 function App() {
   return (
@@ -232,15 +231,6 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[2]}>
                 <ConfirmInterviewAppointment />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/company/analysis"
-            element={
-              <ProtectedRoute allowedRoles={[2]}>
-                <CompanyAnalysisPage />
               </ProtectedRoute>
             }
           />

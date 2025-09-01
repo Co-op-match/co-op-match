@@ -1,81 +1,17 @@
-import {
-  Card,
-  Descriptions,
-  Table,
-  Tag,
-  Tabs,
-  Avatar,
-  Badge,
-  Row,
-  Col,
-  Statistic,
-  Timeline,
-  Empty,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Switch,
-  Space,
-  Tooltip,
-  Divider,
-  Layout,
-  Typography,
-} from "antd";
-import {
-  UserOutlined,
-  LoginOutlined,
-  LogoutOutlined,
-  EditOutlined,
-  EyeOutlined,
-  SafetyOutlined,
-  TeamOutlined,
-  BankOutlined,
-  BookOutlined,
-  SettingOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  GlobalOutlined,
-  FileTextOutlined,
-} from "@ant-design/icons";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
+import { Card, Descriptions, Table, Tag, Tabs, Avatar, Badge, Row, Col, Statistic, Button, Modal, Form, Input, Select, Switch, Space, Divider, Layout, Typography } from "antd";
+import { UserOutlined, LoginOutlined, EditOutlined, EyeOutlined, SafetyOutlined, TeamOutlined, CheckCircleOutlined, CloseCircleOutlined, GlobalOutlined } from "@ant-design/icons";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState, type Key } from "react";
 import type { UserInterface } from "../../../interfaces/User";
-import type { StudentInterestInterface } from "../../../interfaces/StudentInterest";
 import type { CompanyInterface } from "../../../interfaces/Company";
 import type { StudentInterface } from "../../../interfaces/Student";
 import type { AcademicStaffInterface } from "../../../interfaces/AcademicStaff";
-import {
-  GetAllAcademicStaff,
-  GetAllCompany,
-  GetAllLoginLogs,
-  GetAllStudent,
-  GetAllUser,
-  GetRole,
-  UpdateUser,
-} from "../../../services/https";
+import { GetAllAcademicStaff, GetAllCompany, GetAllLoginLogs, GetAllStudent, GetAllUser, GetRole, UpdateUser } from "../../../services/https";
 import type { RoleInterface } from "../../../interfaces/Role";
 import type { LoginLogInterface } from "../../../interfaces/LoginLog";
 import type { ColumnsType, TableProps } from "antd/es/table";
-import { width } from "@fortawesome/free-solid-svg-icons/fa0";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
-import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
 import ExportExcelButton from "./ExportExcelButton";
 
 const { TabPane } = Tabs;
@@ -580,7 +516,7 @@ const loginLogColumns: ColumnsType<LoginLogInterface> = [
                   <Descriptions.Item label="อายุ">
                     {(profileData as AcademicStaffInterface).age} ปี
                   </Descriptions.Item>
-                  <Descriptions.Item label="คณะ">
+{/*                   <Descriptions.Item label="คณะ">
                     {(profileData as AcademicStaffInterface).faculty}
                   </Descriptions.Item>
                   <Descriptions.Item label="ภาควิชา">
@@ -588,7 +524,7 @@ const loginLogColumns: ColumnsType<LoginLogInterface> = [
                   </Descriptions.Item>
                   <Descriptions.Item label="มหาวิทยาลัย" span={2}>
                     {(profileData as AcademicStaffInterface).university}
-                  </Descriptions.Item>
+                  </Descriptions.Item> */}
                 </>
               )}
             </Descriptions>

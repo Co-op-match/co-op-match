@@ -269,9 +269,9 @@ export async function GetMonthlyUsersByRole () {
 export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
 export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
 
-export async function getOverview (companyId: number, days=30) {
+export async function getOverview (companyId: number) {
   return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/overview?days=${days}`, requestOptions)
+    .get(`${apiUrl}/analysis/company/${companyId}/overview`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
@@ -291,21 +291,21 @@ export async function getTrend (companyId: number, start?: string, end?: string,
     throw err?.response?.data || err;
   }
 }
-export async function getPipeline (companyId: number, days=30) {
+export async function getPipeline (companyId: number) {
   return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/pipeline?days=${days}`, requestOptions)
+    .get(`${apiUrl}/analysis/company/${companyId}/pipeline`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
-export async function getPostPerf (companyId: number, days=30) {
+export async function getPostPerf (companyId: number) {
   return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/posts/performance?days=${days}`, requestOptions)
+    .get(`${apiUrl}/analysis/company/${companyId}/posts/performance`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
-export async function getInterviewStats (companyId: number, days=30) {
+export async function getInterviewStats (companyId: number) {
   return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/interviews?days=${days}`, requestOptions)
+    .get(`${apiUrl}/analysis/company/${companyId}/interviews`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
