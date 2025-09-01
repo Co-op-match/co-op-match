@@ -16,6 +16,8 @@ type InterviewAppointment struct {
 	CompanyID uint    `valid:"required~CompanyID is required"`
 	Company   Company `gorm:"foreignKey:CompanyID" valid:"-"`
 
-	StudentID uint    `valid:"required~StudentID is required"`
-	Student   Student `gorm:"foreignKey:StudentID" valid:"-"`
+	StudentID uint
+	Student   Student `gorm:"foreignKey:StudentID"`
+	// ✅ เพิ่ม status (เช่น "รอดำเนินการ" | "ผ่าน" | "ไม่ผ่าน")
+	Status string `json:"status" gorm:"column:status;size:50"`
 }

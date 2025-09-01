@@ -7,9 +7,11 @@ import (
 
 	"co-op-match.com/co-op-match/services"
 
+	"sync"
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
-
 
 var HashKey = []byte("very-secret")
 
@@ -87,4 +89,64 @@ func Authorizes() gin.HandlerFunc {
 
 	}
 
+}
+
+// middleware/ratelimit.go
+
+type bucket struct {
+	last  time.Time
+	count int
+}
+
+var rlMu sync.Mutex
+var emailBuckets = map[string]*bucket{} // key = email
+var ipBuckets = map[string]*bucket{}    // key = ip
+
+func RateLimitForgotPassword() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		email := c.PostForm("email")
+		if email == "" {
+			var body struct {
+				Email string `json:"email"`
+			}
+			_ = c.ShouldBindJSON(&body)
+			email = body.Email
+		}
+		ip := c.ClientIP()
+
+		// config
+		window := time.Minute
+		maxPerWindow := 3
+
+		rlMu.Lock()
+		defer rlMu.Unlock()
+
+		now := time.Now()
+		check := func(m map[string]*bucket, k string) bool {
+			b, ok := m[k]
+			if !ok || now.Sub(b.last) > window {
+				m[k] = &bucket{last: now, count: 1}
+				return true
+			}
+			if b.count >= maxPerWindow {
+				return false
+			}
+			b.count++
+			b.last = now
+			return true
+		}
+
+		if email != "" && !check(emailBuckets, email) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": true, "message": "ขอรีเซ็ตบ่อยเกินไป ลองใหม่ภายหลัง"})
+			c.Abort()
+			return
+		}
+		if !check(ipBuckets, ip) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": true, "message": "ขอรีเซ็ตบ่อยเกินไป ลองใหม่ภายหลัง"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
 }

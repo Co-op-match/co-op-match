@@ -33,6 +33,7 @@ func SetupDatabase() {
 		&entity.Role{},
 		&entity.Permission{},
 		&entity.RolePermission{},
+		&entity.PasswordResetToken{},
 		&entity.User{},
 		&entity.Gender{},
 		&entity.Provinces{},
@@ -56,6 +57,7 @@ func SetupDatabase() {
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
+		&entity.Article{},
 		&entity.ApplicationDetails{},
 		&entity.JobMatch{},
 		&entity.Review{},
@@ -97,6 +99,7 @@ func SetupDatabase() {
 	ImportDistrictsCSV(db, "./config/data/address/districts.csv")
 	ImportPostcodesCSV(db, "./config/data/address/postcode.csv")
 	ImportSubDistrictsCSV(db, "./config/data/address/subdistricts.csv")
+	SeedArticles(db)
 }
 
 func createSeedData(db *gorm.DB) {
@@ -503,7 +506,7 @@ for _, s := range staffs {
 			StipendID:       2,
 			JobTypeID:       1,
 			//Benefits: []entity.Benefit{
-				//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
 			//},
 		}, {
 			PostName:        "Frontend Developer Intern",
@@ -1190,4 +1193,107 @@ func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
 		db.FirstOrCreate(&subDistrict, entity.SubDistrict{NameTH: subDistrict.NameTH, DistrictID: subDistrict.DistrictID})
 	}
 	log.Println("✅ SubDistricts imported")
+}
+func SeedArticles(db *gorm.DB) error {
+	now := time.Now()
+	yes := true
+	no := false
+
+	articles := []entity.Article{
+		// -------- News --------
+		{
+			Title:       "เปิดรับสมัครนักศึกษาฝึกงาน ประจำภาคฤดูร้อน 2568",
+			Subtitle:    "เตรียมเรซูเม่และทรานสคริปต์ให้พร้อม",
+			Body:        "บริษัทชั้นนำหลายแห่งเริ่มเปิดรับสมัครนักศึกษาฝึกงานแล้ว นักศึกษาที่สนใจควรเตรียมเอกสารให้พร้อม เช่น Resume, Transcript และจดหมายแนะนำตัว",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "โครงการจับคู่สถานประกอบการกับนักศึกษา",
+			Subtitle:    "มหาวิทยาลัยร่วมมือบริษัทพันธมิตร",
+			Body:        "มหาวิทยาลัยร่วมกับบริษัทพันธมิตร เปิดโครงการ Coop Match เพื่อช่วยจับคู่สถานประกอบการที่เหมาะสมกับนักศึกษา",
+			Category:    "กิจกรรม",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "ประกาศ! เพิ่มตำแหน่งฝึกงานด้าน Data Engineer",
+			Subtitle:    "โอกาสใหม่ในสายงาน Big Data",
+			Body:        "บริษัทด้านไอทีเพิ่มตำแหน่งฝึกงานใหม่ สายงาน Data Engineer เพื่อรองรับการเติบโตด้าน Big Data และ AI",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "เชิญร่วมงาน Career Day Online",
+			Subtitle:    "พบกับบริษัทมากกว่า 50 แห่ง",
+			Body:        "งาน Career Day จะจัดในรูปแบบออนไลน์ นักศึกษาสามารถสมัครเข้าร่วมเพื่อพบกับบริษัทต่างๆ และสัมภาษณ์เบื้องต้นได้ทันที",
+			Category:    "กิจกรรม",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+		{
+			Title:       "ประกาศเลื่อนกำหนดส่งใบสมัครฝึกงาน",
+			Subtitle:    "เลื่อนออกไปอีก 1 สัปดาห์",
+			Body:        "กำหนดส่งเอกสารฝึกงานภาคฤดูร้อน ขยายเวลาออกไปอีก 1 สัปดาห์ เพื่อเปิดโอกาสให้นักศึกษาที่เตรียมตัวไม่ทัน",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+
+		// -------- Career Articles --------
+		{
+			Title:       "5 เคล็ดลับเขียนเรซูเม่ให้โดนใจบริษัท",
+			Subtitle:    "Resume ที่ดีคือใบเบิกทาง",
+			Body:        "การฝึกงานเริ่มต้นที่เรซูเม่ บทความนี้แนะนำวิธีเขียนเรซูเม่ที่กระชับ ชัดเจน และดึงดูด HR",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "เตรียมตัวอย่างไร ก่อนสัมภาษณ์ฝึกงานครั้งแรก",
+			Subtitle:    "แชร์เทคนิคการตอบคำถามยอดฮิต",
+			Body:        "บทความนี้รวมเทคนิคการตอบคำถามสัมภาษณ์ เช่น 'แนะนำตัวเอง' หรือ 'ทำไมถึงอยากฝึกงานที่นี่' เพื่อให้คุณมั่นใจมากขึ้น",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "รวมเว็บไซต์และแหล่งหางานฝึกงานที่นักศึกษาควรรู้",
+			Subtitle:    "LinkedIn, JobsDB, Coop Match",
+			Body:        "รวมเว็บไซต์และแพลตฟอร์มหางานฝึกงาน เช่น Coop Match, LinkedIn, JobsDB และเว็บไซต์ของมหาวิทยาลัย",
+			Category:    "แหล่งข้อมูล",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+		{
+			Title:       "Soft Skills ที่บริษัทมองหาในนักศึกษาฝึกงาน",
+			Subtitle:    "มากกว่าความรู้คือทักษะที่ใช้ได้จริง",
+			Body:        "บริษัทมักมองหาทักษะนอกห้องเรียน เช่น การทำงานเป็นทีม การสื่อสารที่ดี ความรับผิดชอบ และความยืดหยุ่นในการทำงาน",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "Checklist ก่อนเริ่มวันแรกของการฝึกงาน",
+			Subtitle:    "เตรียมตัวให้พร้อมก่อนเริ่มจริง",
+			Body:        "สิ่งที่ควรเตรียม เช่น เสื้อผ้า, เอกสาร, วิธีเดินทาง และการทำความรู้จักทีมล่วงหน้า",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+	}
+
+	return db.Create(&articles).Error
 }

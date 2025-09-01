@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv" // << เพิ่ม
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/controller"
@@ -18,6 +21,10 @@ import (
 const PORT = "8000"
 
 func main() {
+	// 1) โหลด .env (ถ้ามี)
+	_ = godotenv.Load()
+	// 2) พิมพ์ log ค่า SMTP (ไม่โชว์รหัสผ่าน) เพื่อเช็คว่าอ่าน ENV ได้จริง
+	logSMTPEnv()
 	controller.InitChatHub()
 	notifyhub.Start()
 
@@ -32,9 +39,13 @@ func main() {
 	// Public Routes
 	r.POST("/sign-up", users.SignUp)
 	r.POST("/sign-in", users.SignIn)
-	r.POST("/reset-password", users.SimpleResetPassword)
+	//r.POST("/reset-password", users.SimpleResetPassword)
 	r.POST("/logout", users.Logout)
-
+	auth := r.Group("/auth/password")
+	{
+		auth.POST("/forgot", users.SendResetPasswordEmail)  // body: { "email": "..." }
+		auth.POST("/reset-otp", users.ResetPasswordWithOTP) // body: { "email":"...", "otp":"123456", "new_password":"..." }
+	}
 	r.GET("/roles", role.GetAll)
 	r.GET("/provinces", searchjob.GetAllProvinces)
 	r.GET("/universities", controller.GetUniversities)
@@ -107,6 +118,7 @@ func main() {
 		router.POST("/liked-post", controller.LikePost)
 		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
 		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
+
 
 		studentGroup := router.Group("/students")
 		{
@@ -265,6 +277,16 @@ func main() {
 	})
 
 	r.Run("localhost:" + PORT)
+}
+
+func logSMTPEnv() {
+	host := os.Getenv("SMTP_HOST")
+	port := os.Getenv("SMTP_PORT")
+	user := os.Getenv("SMTP_USERNAME")
+	from := os.Getenv("FROM_EMAIL")
+	insecure := os.Getenv("DEV_SMTP_INSECURE")
+	fmt.Printf("[smtp:init] host=%s port=%s user=%s from=%s dev_insecure=%s\n",
+		host, port, user, from, insecure)
 }
 
 func CORSMiddleware() gin.HandlerFunc {
