@@ -74,7 +74,7 @@ func main() {
 	r.POST("/review/like", controller.LikeReview)
 	r.GET("/review/liked/:user_id", controller.GetLikedReviews)
 	r.POST("/review/unlike", controller.UnlikeReview)
-// วิเคราะห์
+	// วิเคราะห์
 	// r.POST("/reviews/:id/analyze", controller.AnalyzeReview)
 	// r.POST("/reviews/analyze/batch", controller.AnalyzeBatch)
 
@@ -106,7 +106,6 @@ func main() {
 	r.PUT("/update-user/:id", controller.UpdateUser)
 	r.PUT("/update-status-posts/:id", controller.UpdateStatusPost)
 
-
 	// Protected Routes
 	router := r.Group("/")
 	{
@@ -118,7 +117,6 @@ func main() {
 		router.POST("/liked-post", controller.LikePost)
 		router.GET("/liked-posts/student/:id", controller.GetLikedPostsByStudentID)
 		router.DELETE("/liked-post/:student_id/:post_id", controller.DeleteLikedPost)
-
 
 		studentGroup := router.Group("/students")
 		{
@@ -255,9 +253,9 @@ func main() {
 		}
 		analysisCompanyGroup := r.Group("/analysis/company/:companyId")
 		{
-			analysisCompanyGroup.GET("/overview",   analysis.CompanyOverview)
-			analysisCompanyGroup.GET("/trend",      analysis.CompanyTrend)
-			analysisCompanyGroup.GET("/status-application",   analysis.CompanyStatusApplication)
+			analysisCompanyGroup.GET("/overview", analysis.CompanyOverview)
+			analysisCompanyGroup.GET("/trend", analysis.CompanyTrend)
+			analysisCompanyGroup.GET("/status-application", analysis.CompanyStatusApplication)
 		}
 		verifyGroup := r.Group("/verify")
 		{
@@ -270,6 +268,13 @@ func main() {
 		{
 			academicGroup.GET("all", controller.GetAllAcademicStaff)
 		}
+	}
+	articles := router.Group("/articles")
+	{
+		articles.GET("", controller.ListArticles)
+		articles.POST("", controller.CreateArticle)
+		articles.PUT("/:id", controller.UpdateArticle)
+		articles.DELETE("/:id", controller.DeleteArticle)
 	}
 
 	r.GET("/", func(c *gin.Context) {

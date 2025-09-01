@@ -13,14 +13,15 @@ import {
 } from "@ant-design/icons";
 import type { Article } from "../../interfaces/Article";
 import { ListArticles, CreateArticle, UpdateArticle, DeleteArticle } from "../../services/https/Articles";
-
+import AdminHeader from "./../Component/AdminCoopMatchHeaderDefault";
 const { Content } = Layout;
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
 const AdminArticlesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [ messageApi,contextHolder] = message.useMessage();
+  const [saving] = useState(false);
   const [items, setItems] = useState<Article[]>([]);
   const [filterType, setFilterType] = useState<'news'|'career'|undefined>();
   const [search, setSearch] = useState<string>("");
@@ -70,68 +71,68 @@ const AdminArticlesPage: React.FC = () => {
     form.resetFields();
     setOpenModal(false);
   };
+  
   const onSubmit = async () => {
-    try {
-      const v = await form.validateFields();
-      const fd = new FormData();
-      fd.append("title", v.title);
-      if (v.subtitle) fd.append("subtitle", v.subtitle);
-      if (v.body) fd.append("body", v.body);
-      if (v.category) fd.append("category", v.category);
-      fd.append("type", v.type);
-      fd.append("media_type", v.media_type);
-      fd.append("is_published", v.is_published ? "true" : "false");
+  try {
+    const v = await form.validateFields();
+    const fd = new FormData();
+    fd.append("title", v.title);
+    if (v.subtitle) fd.append("subtitle", v.subtitle);
+    if (v.body) fd.append("body", v.body);
+    if (v.category) fd.append("category", v.category);
+    fd.append("type", v.type);
+    fd.append("media_type", v.media_type);
+    fd.append("is_published", v.is_published ? "true" : "false");
 
-      const fileList = form.getFieldValue("cover_image") as any[];
-      if (fileList && fileList.length > 0 && fileList[0]?.originFileObj) {
-        fd.append("cover_image", fileList[0].originFileObj);
-      }
-
-      // 🔎 LOG: ดูค่าที่จะส่ง
-      const debug: Record<string, any> = {};
-      fd.forEach((val, key) => {
-        // @ts-ignore
-        debug[key] = (val instanceof File) ? `[File:${val.name}]` : val;
-      });
-      console.log(editing?.ID ? "UPDATE payload:" : "CREATE payload:", debug);
-
-      if (editing?.ID) {
-        const res = await UpdateArticle(editing.ID, fd);
-        console.log("UPDATE response:", res?.status, res?.data);
-        if (res?.status >= 200 && res?.status < 300) {
-          message.success("อัปเดตเรียบร้อย");
-        } else {
-          message.error(`อัปเดตไม่สำเร็จ: ${res?.status || "-"} ${res?.data?.error || ""}`);
-          return; // ไม่ปิดโมดัลถ้าพลาด
-        }
-      } else {
-        const res = await CreateArticle(fd);
-        console.log("CREATE response:", res?.status, res?.data);
-        if (res?.status >= 200 && res?.status < 300) {
-          message.success("สร้างเรียบร้อย");
-        } else {
-          message.error(`สร้างไม่สำเร็จ: ${res?.status || "-"} ${res?.data?.error || ""}`);
-          return; // ไม่ปิดโมดัลถ้าพลาด
-        }
-      }
-
-      closeModal();
-      fetchData();
-    } catch (e: any) {
-      console.warn("Submit error:", e);
+    const fileList = form.getFieldValue("cover_image") as any[];
+    if (fileList && fileList.length > 0 && fileList[0]?.originFileObj) {
+      fd.append("cover_image", fileList[0].originFileObj);
     }
-  };
+
+    // 🔎 LOG
+    const debug: Record<string, any> = {};
+    fd.forEach((val, key) => {
+      // @ts-ignore
+      debug[key] = val instanceof File ? `[File:${val.name}]` : val;
+    });
+    console.log(editing?.ID ? "UPDATE payload:" : "CREATE payload:", debug);
+
+    if (editing?.ID) {
+      const res = await UpdateArticle(editing.ID, fd);
+      console.log("UPDATE response:", res?.status, res?.data);
+      if (res?.status >= 200 && res?.status < 300) {
+        messageApi.success("อัปเดตเรียบร้อย");
+      } else {
+        messageApi.error(
+          `อัปเดตไม่สำเร็จ: ${res?.status || "-"} ${res?.data?.error || ""}`
+        );
+        return;
+      }
+    } else {
+      const res = await CreateArticle(fd);
+      console.log("CREATE response:", res?.status, res?.data);
+      if (res?.status >= 200 && res?.status < 300) {
+        messageApi.success(res?.data?.message || "สร้างเรียบร้อย");
+      }
+    }
+
+    closeModal();
+    fetchData();
+  } catch (e: any) {
+    console.warn("Submit error:", e);
+  }
+};
 
   const handleDelete = async (row: Article) => {
-    try {
-      if (!row.ID) return;
-      await DeleteArticle(row.ID);
-      message.success("ลบเรียบร้อย");
-      fetchData();
-    } catch {
-      message.error("ลบไม่สำเร็จ");
-    }
-  };
+  try {
+    if (!row.ID) return;
+    await DeleteArticle(row.ID);
+    messageApi.success("ลบเรียบร้อย");
+    fetchData();
+  } catch {
+    messageApi.error("ลบไม่สำเร็จ");
+  }
+};
 
   // สถิติข้อมูล
   const statistics = useMemo(() => {
@@ -145,7 +146,7 @@ const AdminArticlesPage: React.FC = () => {
   const columns = [
     {
       title: "หัวข้อ",
-      width: 200,
+      width: 250,
       dataIndex: "title",
       render: (title: string, record: Article) => (
         <div>
@@ -156,7 +157,7 @@ const AdminArticlesPage: React.FC = () => {
     },
     {
       title: (<Space><TagOutlined style={{ color: '#3b82f6' }} />หมวดหมู่</Space>),
-      width: 200,
+      width: 175,
       dataIndex: "category",
       render: (category?: string) =>
         category ? (
@@ -175,7 +176,7 @@ const AdminArticlesPage: React.FC = () => {
     {
       title: "ประเภท",
       dataIndex: "type",
-      width: 200,
+      width: 175,
       render: (t: string) => {
         const config = t === "news"
           ? {
@@ -284,10 +285,13 @@ const AdminArticlesPage: React.FC = () => {
   ];
 
   return (
+     <>
+    {contextHolder} {/* วางบนสุดของ return ภายใน Fragment */}
     <Layout style={{
       minHeight: "100vh",
       background: '#f8fafc'
     }}>
+      <AdminHeader />
       <Content
         style={{
           padding: 24,
@@ -725,6 +729,7 @@ const AdminArticlesPage: React.FC = () => {
         </Modal>
       </Content>
     </Layout>
+    </>
   );
 };
 

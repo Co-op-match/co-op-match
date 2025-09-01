@@ -67,7 +67,11 @@ func CreateArticle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "create failed"})
 		return
 	}
-	c.JSON(http.StatusCreated, article)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Article created successfully",
+		"article": article,
+	})
+
 }
 
 // controller/article.go
@@ -173,7 +177,11 @@ func UpdateArticle(c *gin.Context) {
 		return
 	}
 	db.First(&art, "id = ?", id)
-	c.JSON(http.StatusOK, art)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Article updated successfully",
+		"article": art,
+	})
+
 }
 
 func GetArticle(c *gin.Context) {
@@ -222,5 +230,8 @@ func DeleteArticle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
 		return
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Article deleted successfully",
+	})
+
 }

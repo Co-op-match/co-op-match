@@ -205,7 +205,8 @@ func SignIn(c *gin.Context) {
 		Issuer:          "AuthService",
 		ExpirationHours: 24,
 	}
-	signedToken, err := jwtWrapper.GenerateToken(user.Email)
+	//signedToken, err := jwtWrapper.GenerateToken(user.Email)
+	signedToken, err := jwtWrapper.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return
