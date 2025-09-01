@@ -293,7 +293,7 @@ export async function getTrend (companyId: number, start?: string, end?: string,
 }
 export async function getPipeline (companyId: number) {
   return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/pipeline`, requestOptions)
+    .get(`${apiUrl}/analysis/company/${companyId}/status-application`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
