@@ -33,9 +33,10 @@ import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
 import AdminVerify from "./pages/Admin/verify/verify";
-import ChatInterface from "./Chat/ChatInterface";
-import ChatWebSocket from "./Chat/test";
-import AdvancedChatInterface from "./Chat/ChatInterface";
+import ChatInterface from "./logo.png/ChatInterface";
+import ChatWebSocket from "./logo.png/test";
+import AdvancedChatInterface from "./logo.png/ChatInterface";
+import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 
 
 function App() {
@@ -95,6 +96,14 @@ function App() {
                 <CheckUser>
                   <CompanyProfile />
                 </CheckUser>
+              </ProtectedRoute>
+            }
+          />
+            <Route
+            path="/admin/articles"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                  <AdminArticlesPage />
               </ProtectedRoute>
             }
           />

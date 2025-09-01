@@ -8,9 +8,8 @@ import {
   HomeOutlined,
   SolutionOutlined,
   LogoutOutlined,
-  FolderOpenOutlined,
-  HeartFilled,
   DownOutlined,
+  HeartOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -22,8 +21,23 @@ const { Header } = Layout;
 
 interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
-  postId?: number; // 👈 เพิ่มเพื่อให้ dynamic ได้ภายหลัง
+  postId?: number;
 }
+
+// ---- helper: flatten keys (รองรับ children) ----
+type MenuItem = Required<React.ComponentProps<typeof Menu>>['items'][number];
+
+const flattenKeys = (items: MenuItem[] = []): string[] => {
+  const res: string[] = [];
+  items.forEach((it: any) => {
+    if (!it) return;
+    if (it.key) res.push(String(it.key));
+    if (Array.isArray(it.children)) {
+      res.push(...flattenKeys(it.children));
+    }
+  });
+  return res;
+};
 
 const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
@@ -35,6 +49,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
     await logout();
     navigate("/sign-in");
   };
+
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
     if (!userId || isNaN(userId)) return;
@@ -44,41 +59,64 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
       .catch(err => console.error("Failed to fetch user", err));
   }, []);
 
-  const fullMenu = [
+  // --- เมนูหลัก พร้อมเมนูย่อยใต้ "โปรไฟล์" ---
+  const fullMenu: MenuItem[] = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
     { key: 'recommendations', icon: <SolutionOutlined />, label: 'งานแนะนำ' },
-    {key: 'applications/history',label: 'ประวัติการสมัคร',},
-    { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
-    { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
-    { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
+    { key: 'applications/history', label: 'ประวัติการสมัคร' },
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: (
+        <span>
+          โปรไฟล์ <DownOutlined style={{ fontSize: 10, marginLeft: 6 }} />
+        </span>
+      ),
+      children: [
+        { key: 'profile', icon: <UserOutlined />, label: 'ดูโปรไฟล์' },
+        {
+          key: 'favorite-posts',
+          icon: <HeartOutlined  />,
+          label: 'โพสต์งานที่สนใจ',
+        },
+        { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
+        { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
+      ],
+    },
   ];
 
   const menuItems = minimalMenu
-    ? [fullMenu.find((item) => item.key === 'profile')!]
+    ? [fullMenu.find((item: any) => item?.key === 'profile')!]
     : fullMenu;
 
-  const availableKeys = menuItems.map(item => item.key);
-  const currentPage =
-    availableKeys.find((key) => location.pathname.includes(key)) || availableKeys[0];
+  // --- คำนวณ current key ให้รองรับ path กับเมนูย่อย ---
+  const allKeys = flattenKeys(menuItems);
+  // หา key ที่ path ปัจจุบันมีคำนี้อยู่
+  const currentKey =
+    allKeys.find((k) => location.pathname.includes(k)) ||
+    // fallback: ถ้าอยู่หน้า /student/profile/... ให้ active 'profile'
+    (location.pathname.includes('/student/profile') ? 'profile' : allKeys[0]);
 
   const handleMenuClick = ({ key }: { key: string }) => {
+    // นำทางตาม key เดิม
     navigate(`/student/${key}`);
   };
 
   return (
     <Header
       style={{
-        background: '#fff',
-        padding: '0 24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-      }}
+  background: '#fff',
+  padding: '0 24px',
+  borderBottom: '1px solid #e5e7eb', // ⬅️ ใช้เส้นบางๆ แทนเงา
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1000,
+}}
+
     >
       {/* Logo */}
       <div
@@ -102,16 +140,18 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
       }}>
         <Menu
           mode="horizontal"
-          selectedKeys={[currentPage]}
+          selectedKeys={[currentKey!]}
           items={menuItems}
           onClick={handleMenuClick}
           style={{
             border: 'none',
             backgroundColor: 'transparent',
-            minWidth: minimalMenu ? 'auto' : 680, // ปรับ minWidth ตาม mode
+            minWidth: minimalMenu ? 'auto' : 600,
             flex: '0 0 auto'
           }}
         />
+
+        {/* Dropdown ที่ Avatar: เหลือเฉพาะออกจากระบบ */}
         <Dropdown
           overlay={
             <Menu
@@ -122,30 +162,26 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
                   navigate(`/student/${key}`);
                 }
               }}
-            >
-              <Menu.Item key="favorite-posts" icon={<HeartFilled style={{ color: '#ff4de1ff' }} />}>
-                โพสต์งานที่สนใจ
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item key="logout" icon={<LogoutOutlined />} danger>
-                ออกจากระบบ
-              </Menu.Item>
-            </Menu>
+              items={[
+                { type: 'divider' as const },
+                { key: 'logout', icon: <LogoutOutlined />, label: 'ออกจากระบบ', danger: true },
+              ]}
+            />
           }
           placement="bottomRight"
           trigger={['hover']}
         >
-        <Avatar
-          size={40}
-          src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
-          icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-          style={{ 
-            cursor: "pointer", 
-            marginLeft: 5,
-            marginRight: 5,
-            flex: '0 0 auto' // ป้องกัน avatar โดนบีบ
-          }}
-        />  
+          <Avatar
+            size={40}
+            src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
+            icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+            style={{
+              cursor: "pointer",
+              marginLeft: 5,
+              marginRight: 5,
+              flex: '0 0 auto'
+            }}
+          />
         </Dropdown>
       </div>
     </Header>
