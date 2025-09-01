@@ -1,30 +1,11 @@
-import React, { useEffect, useState } from "react";
-import {
-  Avatar,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Space,
-  Drawer,
-  Grid,
-  type MenuProps,
-} from "antd";
-import {
-  UserOutlined,
-  BellOutlined,
-  SettingOutlined,
-  HomeOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  MenuOutlined,
-  LogoutOutlined,
-  CheckCircleOutlined,
-} from "@ant-design/icons";
+import React, { useContext, useEffect, useState } from "react";
+import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
+import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
-import { GetUserById } from "../../services/https";
+import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
+import { UserContext } from "../../components/UserContext";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -36,23 +17,42 @@ interface CoopMatchHeaderDefaultProps {
 const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   minimalMenu = false,
 }) => {
+  const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const location = useLocation();
   const screens = useBreakpoint();
   const [user, setUser] = useState<UserInterface | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
-  // Responsive breakpoints
+  const { logout } = useContext(UserContext);
+
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
+  
+  const userID = Number(localStorage.getItem("id"));
+
+  const fetchUser = async () => {
+    if (!userID || Number.isNaN(userID)) return;
+
+    try {
+      const res = await GetUserByIdhaveStatusData(userID);
+      setUser(res);
+      if (res.status === 200) {
+        setUser(res.data);
+      }else {
+        messageApi.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!");
+      }
+    } catch (err) {
+      console.error("Failed to fetch user", err);
+    }
+  };
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("id"));
-    if (!userId || isNaN(userId)) return;
-    GetUserById(userId)
-      .then(setUser)
-      .catch((err) => console.error("Failed to fetch user", err));
-  }, []);
+    console.log("Welcome to Admin Dashboard")
+    if (userID) {
+      fetchUser();
+    }
+  }, [userID]);
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === "logout") {
@@ -60,14 +60,13 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       return;
     }
 
-    if (key === "users") return;
     navigate(`/admin/${key}`);
     setDrawerVisible(false); // Close drawer on mobile after navigation
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.clear();
-    
+    await logout();
     navigate("/sign-in");
     setDrawerVisible(false);
   };
@@ -85,31 +84,8 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "companies",
       "lecturers",
       "admins",
+      "users",
     ].find((key) => location.pathname.includes(key)) || "dashboard";
-
-  const userDropdownItems: MenuProps["items"] = [
-    {
-      label: "นักศึกษา",
-      key: "students",
-    },
-    {
-      label: "บริษัท",
-      key: "companies",
-    },
-    {
-      label: "อาจารย์",
-      key: "lecturers",
-    },
-    {
-      label: "ผู้ดูแลระบบ",
-      key: "admins",
-    },
-  ];
-
-  const userMenuProps = {
-    items: userDropdownItems,
-    onClick: handleMenuClick,
-  };
 
   const fullMenu = [
     {
@@ -120,16 +96,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     {
       key: "users",
       icon: <TeamOutlined />,
-      label: isMobile ? (
-        "ผู้ใช้ทั้งหมด"
-      ) : (
-        <Dropdown menu={userMenuProps} trigger={["hover"]} disabled={isMobile}>
-          <Space>
-            <span style={{ cursor: "pointer" }}>ผู้ใช้ทั้งหมด</span>
-          </Space>
-        </Dropdown>
-      ),
-      children: isMobile ? userDropdownItems : undefined,
+      label: isMobile ? "ผู้ใช้" : "ผู้ใช้ทั้งหมด",
     },
     {
       key: "manage-posts",
@@ -189,6 +156,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
   return (
     <>
+      {contextHolder}
       <Header
         style={{
           background: "#fff",

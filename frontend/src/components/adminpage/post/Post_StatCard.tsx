@@ -1,11 +1,6 @@
 import React from "react";
 import { Row, Col, Card } from "antd";
-import {
-  FileTextOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+import { FileTextOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseOutlined } from "@ant-design/icons";
 import type { StatusPostInterface } from "../../../interface/IStatusPost";
 
 interface StatusCardProps {

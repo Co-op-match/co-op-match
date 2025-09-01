@@ -5,7 +5,6 @@ import axios from "axios";
 import type { UserInterface } from "../../interfaces/User";
 import type { ProfileImageInterface } from "../../interfaces/ProfileImage";
 import type { GenderInterface } from "../../interfaces/Gender";
-import type { EducationInterface } from "../../interfaces/Education";
 import type { AddressInterface } from "../../interfaces/Address";
 import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
@@ -14,6 +13,8 @@ import type { ContactInterface } from "../../interfaces/Contact";
 import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
+import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
@@ -81,6 +82,26 @@ async function GetUserById(user_id: number): Promise<UserInterface> {
   }
 }
 
+export async function GetUserByIdhaveStatusData(user_id: number){
+  return await axios
+    .get(`${apiUrl}/user/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllUser() {
+  return await axios
+    .get(`${apiUrl}/all-users`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
+export async function UpdateUser(id: number, data: UserInterface) {
+  return await axios
+    .put(`${apiUrl}/update-user/${id}`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 async function CreateProfileImage(data: FormData) {
   return await axios.post(`${apiUrl}/user/image`, data, {
     ...requestOptions,
@@ -114,10 +135,10 @@ async function GetProfileImageByUserID(user_id: number): Promise<ProfileImageInt
   }
 }
 
-export async function UpdateStatusPost(postId: number, statusPostId: number) {
+export async function UpdateStatusPost(postId: number, data: { StatusPostID: number; AdminID: number }) {
   return await axios
-    .put(`${apiUrl}/update-status-posts`, { post_id: postId, status_post_id: statusPostId }, requestOptions)
-    .then((res) => res.data)
+    .put(`${apiUrl}/update-status-posts/${postId}`, data, requestOptions)
+    .then((res) => res)
     .catch((e) => e.response);
 }
 
@@ -188,35 +209,92 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
       return e.response;
     });
 }
+//=======================================AcademicStaffs============================================
+export async function GetAllAcademicStaff() {
+  return await axios
+    .get(`${apiUrl}/academic/all`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 //=============================== Analysis ==============================//
 export async function GetAdminDashboardSummary () {
   return await axios
-    .get(`${apiUrl}/analysis/dashboard-summary`)
+    .get(`${apiUrl}/analysis/dashboard-summary`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminDashboardOverview () {
   return await axios
-    .get(`${apiUrl}/analysis/dashboard-overview`)
+    .get(`${apiUrl}/analysis/dashboard-overview`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAllLoginLogs () {
+  return await axios
+    .get(`${apiUrl}/all-login-logs`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminMonthlyApplicationStats () {
   return await axios
-    .get(`${apiUrl}/analysis/monthly-application-stats`)
+    .get(`${apiUrl}/analysis/monthly-application-stats`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminRecentActivities () {
   return await axios
-    .get(`${apiUrl}/analysis/recent-activities`)
+    .get(`${apiUrl}/analysis/recent-activities`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminPendingPosts () {
   return await axios
-    .get(`${apiUrl}/analysis/pending-posts`)
+    .get(`${apiUrl}/analysis/pending-posts`, requestOptions)
     .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'year'; year: number }) {
+  const { mode, year } = params;
+  return await axios
+    .get(`${apiUrl}/analysis/users-by-role-series`, { params: { mode, year } })
+    .then(res => res)
+    .catch(e => e.response);
+}
+export async function GetMonthlyUsersByRole () {
+  return await axios
+    .get(`${apiUrl}/analysis/monthly-user-by-role`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
+export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+
+export async function getOverview (companyId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/overview`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function getTrend (companyId: number, start?: string, end?: string, days=30) {
+  const url =
+    start && end
+      ? `${apiUrl}/analysis/company/${companyId}/trend?start=${encodeURIComponent(
+          start
+        )}&end=${encodeURIComponent(end)}`
+      : `${apiUrl}/analysis/company/${companyId}/trend?days=${days}`;
+
+  try {
+    const res = await axios.get(url, requestOptions);
+    return res.data as { date: string; value: number }[];
+  } catch (err: any) {
+    // หากอยากให้ฝั่งเรียกใช้เช็ค error ได้ง่าย แนะนำ throw ต่อ
+    throw err?.response?.data || err;
+  }
+}
+export async function getPipeline (companyId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/status-application`, requestOptions)
+    .then((res) => res.data)
     .catch((e) => e.response);
 }
 //=============================== SearchJobs ==============================//
@@ -372,6 +450,60 @@ async function UpdateCompanyLogo(user_id: number ,data: FormData) {
   .then(res => res)
   .catch(e => e.response);
 }
+//=======================================Company============================================
+async function CreateAcademicStaff(data: FormData) {
+await axios.post(`${apiUrl}/academicstaff`, data, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `${Bearer} ${Authorization}`, // ✅ สำคัญ
+  },
+})
+  .then(res => res)
+  .catch(e => e.response);
+}
+
+async function GetAcademicStaffByUserId(user_id: number): Promise<AcademicStaffInterface> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+// async function UpdateGetAllAcademicStaff(id: number, data: FormData) {
+//   return await axios
+//     .put(`${apiUrl}/students/${id}`, data, requestOptions)
+//     .then((res) => res)
+//     .catch((e) => e.response);
+// }
+async function GetAcademicStaffId(id: number): Promise<AcademicStaffInterface> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/${id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function GetVerifAcademicStaffyByUserId(user_id: number) {
+  try {
+    const res = await axios.get<VerifyInterface>(`${apiUrl}/academicstaff/verify/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function CreateSendVerifyAcademicStaff(user_id: number ,data: FormData) {
+  return await axios.post(`${apiUrl}/academicstaff/verify/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
+}
+
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
   return await axios
@@ -710,53 +842,54 @@ export async function CreateChatRoom(user1_id: number, user2_id: number) {
   }
 }
 
-// ✅ ดึงข้อความทั้งหมดของห้องแชท
-export async function GetMessagesByRoomId(roomId: number) {
-  try {
-    const res = await axios.get(
-      `${apiUrl}/chat/messages/${roomId}`,
-      requestOptions
-    );
-    return res.data;
-  } catch (e: any) {
-    return e.response;
-  }
+const jsonHeaders = {
+  "Content-Type": "application/json",
+};
+
+// ========== Chat session (JWT สำหรับ chat) ==========
+export async function createChatSession(roomId: number): Promise<{ token: string }> {
+  const res = await axios.post(
+    `${apiUrl}/chat/session`,
+    { room_id: roomId },
+    requestOptions
+  );
+  return res.data;
 }
 
-// ✅ อัปเดตข้อความว่าอ่านแล้ว
-export async function MarkMessagesAsRead(roomId: number, userId: number) {
-  try {
-    const res = await axios.patch(
-      `${apiUrl}/chat/messages/${roomId}/read`,
-      null,
-      {
-        params: { user_id: userId },
-        ...requestOptions,
-      }
-    );
-    return res.data;
-  } catch (e: any) {
-    return e.response;
-  }
+// ========== WebSocket ==========
+export function createWsByToken(chatToken: string): WebSocket {
+  // รองรับ http→ws, https→wss
+  const wsBase = apiUrl.replace(/^http/i, (m) => (m.toLowerCase() === 'https' ? 'wss' : 'ws'));
+  const url = `${wsBase}/chat/ws?token=${encodeURIComponent(chatToken)}`;
+  return new WebSocket(url);
 }
 
-// ✅ ดึงห้องแชททั้งหมดของผู้ใช้
+// ========== Messages (ต้องส่ง Authorization: Bearer <chatToken>) ==========
+export async function getMessagesByToken(chatToken: string, roomId: number) {
+  const res = await axios.get(`${apiUrl}/chat/messages/${roomId}`, {
+    withCredentials: true,
+    headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+  });
+  return res.data;
+}
+
+export async function markReadByToken(chatToken: string, roomId: number) {
+  const res = await axios.patch(
+    `${apiUrl}/chat/messages/${roomId}/read`,
+    null,
+    {
+      withCredentials: true,
+      headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+    }
+  );
+  return res.data;
+}
+
+// ========== Rooms list (ยังใช้ cookie auth เดิม) ==========
 export async function GetChatRoomsByUserId(userId: number) {
-  try {
-    const res = await axios.get(
-      `${apiUrl}/chat/rooms/${userId}`,
-      requestOptions
-    );
-    return res.data;
-  } catch (e: any) {
-    return e.response;
-  }
+  const res = await axios.get(`${apiUrl}/chat/rooms/${userId}`, requestOptions);
+  return res.data;
 }
-export function CreateWebSocketConnection(roomId: number, userId: number): WebSocket {
-  const wsUrl = apiUrl.replace(/^http/, "ws");
-  return new WebSocket(`${wsUrl}/chat/ws?room_id=${roomId}&user_id=${userId}`);
-}
-
 
 
 export {
@@ -819,6 +952,11 @@ export {
   GetRwviewCompanyByUserId,
   UpdateCompanyContact,
   UpdateCompanyLogo,
-  GetCompanyId
+  GetCompanyId,
+  CreateSendVerifyAcademicStaff,
+  GetVerifAcademicStaffyByUserId,
+  GetAcademicStaffId,
+  GetAcademicStaffByUserId,
+  CreateAcademicStaff,
 
 };

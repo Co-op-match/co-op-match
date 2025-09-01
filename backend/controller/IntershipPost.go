@@ -143,11 +143,10 @@ func ListIntershipPosts(c *gin.Context) {
 		StatusPostName  string    `json:"status_post"`
 		BenefitID       uint      `json:"benefit_id"`
 		BenefitName     string    `json:"benefit"`
-		// ✅ ฟิลด์ที่เพิ่มใหม่
-		LocationDetail string `json:"location_detail"`
-		Subdistrict    string `json:"subdistrict"`
-		District       string `json:"district"`
-		Province       string `json:"province"`
+		LocationDetail  string    `json:"location_detail"`
+		Subdistrict     string    `json:"subdistrict"`
+		District        string    `json:"district"`
+		Province        string    `json:"province"`
 	}
 
 	db := config.DB()
@@ -172,8 +171,6 @@ func ListIntershipPosts(c *gin.Context) {
             status_posts.status_post as status_post_name,
             benefits.id as benefit_id, 
             benefits.benefit as benefit,
-
-			 
             intership_posts.location_detail,
             intership_posts.subdistrict,
             intership_posts.district,
@@ -185,6 +182,7 @@ func ListIntershipPosts(c *gin.Context) {
 		Joins("left join work_modes on work_modes.id = intership_posts.work_mode_id").
 		Joins("left join status_posts on status_posts.id = intership_posts.status_post_id").
 		Joins("left join benefits on benefits.id = intership_posts.benefit_id").
+		Where("intership_posts.deleted_at IS NULL").
 		Scan(&intershipPosts)
 
 	if results.Error != nil {
@@ -249,20 +247,6 @@ func UpdateInternshipPost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Internship post updated successfully", "data": internshipPost})
 }
 
-// DELETE /internship_posts/:id - Delete a specific internship post entry
-func DeleteInternshipPost(c *gin.Context) {
-	id := c.Param("id")
-
-	db := config.DB()
-
-	if tx := db.Exec("DELETE FROM internship_posts WHERE id = ?", id); tx.RowsAffected == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Internship post not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Internship post deleted successfully"})
-}
-
 // GET /interview_appointments/company/:company_id - Get interview appointments by company ID
 func GetInterviewAppointmentsByCompanyID(c *gin.Context) {
 	companyID := c.Param("company_id")
@@ -310,4 +294,40 @@ func GetPostsByCompanyID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, posts)
+}
+
+// DELETE /post/:id - Soft delete internship post
+func DeleteInternshipPost(c *gin.Context) {
+	id := c.Param("id")
+	db := config.DB()
+
+	var post entity.IntershipPost
+	if err := db.Preload("Benefits").
+		Preload("CompanyRequiredSkills").
+		First(&post, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Internship post not found"})
+		return
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		// ล้างความสัมพันธ์ก่อน (pivot / 1:N)
+		if err := tx.Model(&post).Association("Benefits").Clear(); err != nil {
+			return err
+		}
+		if err := tx.Where("intership_post_id = ?", post.ID).
+			Delete(&entity.CompanyRequiredSkill{}).Error; err != nil {
+			return err
+		}
+
+		// 👇 Soft delete (เพราะใช้ gorm.Model/DeletedAt)
+		if err := tx.Delete(&post).Error; err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete internship post"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Internship post deleted successfully"})
 }

@@ -21,6 +21,8 @@ func GetAllUser(c *gin.Context) {
 
 	err := config.DB().
 		Preload("Role").
+		Preload("ProfileImage").
+		Preload("Company").
 		Find(&users).Error
 
 	if err != nil {
@@ -249,4 +251,30 @@ func GetProfileImageByUserID(c *gin.Context) {
 		"status": "success",
 		"data":   image,
 	})
+}
+
+func UpdateUser(c *gin.Context) {
+	var payload entity.User
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+		return
+	}
+	id := c.Param("id")
+
+	var user entity.User
+	if err := config.DB().First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	user.Email = payload.Email
+	user.RoleID = payload.RoleID
+	user.IsActive = payload.IsActive
+
+	if err := config.DB().Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }

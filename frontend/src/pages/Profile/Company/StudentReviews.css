@@ -109,7 +109,7 @@
 
 
 /* Section Title with Underline */
-.section-title {
+.section-title-reviwew {
     margin-bottom: 50px;
     margin-top: 10px;
     font-size: 1.8rem;
@@ -118,7 +118,7 @@
     text-align: center;
     position: relative;
 }
-.section-title svg {
+.section-title-reviwew svg {
     filter: drop-shadow(0 4px 8px rgba(255, 217, 0, 0.3));
     animation: sparkle 2s ease-in-out infinite;
 }
@@ -127,7 +127,7 @@
     0%, 100% { transform: scale(1) rotate(0deg); }
     50% { transform: scale(1.1) rotate(5deg); }
 }
-.section-title::after {
+.section-title-reviwew::after {
     content: '';
     position: absolute;
     bottom: -15px;

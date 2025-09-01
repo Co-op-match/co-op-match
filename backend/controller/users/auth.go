@@ -592,6 +592,27 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
+	// ดึง StatusVerify ID ของ "ยังไม่ได้ส่งคำขอ"
+	var status entity.StatusVerify
+	if err := db.Where("status_verify = ?", "ยังไม่ได้ส่งคำขอ").First(&status).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Default verify status not found"})
+		return
+	}
+
+	// สร้าง Verify record ผูกกับ user
+	verify := entity.Verify{
+		StatusVerifyID: status.ID,
+		UserID:         user.ID,
+		VerificationDocument: "", // ตอนสมัครยังไม่มีเอกสาร
+		Reason:               "",
+		VerifiedAt:           nil,
+		AdminID:              nil,
+	}
+	if err := db.Create(&verify).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create verification record"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "Signup successful"})
 }
 
@@ -640,7 +661,7 @@ func SignIn(c *gin.Context) {
 		Issuer:          "AuthService",
 		ExpirationHours: 24,
 	}
-	signedToken, err := jwtWrapper.GenerateToken(user.Email)
+	signedToken, err := jwtWrapper.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return

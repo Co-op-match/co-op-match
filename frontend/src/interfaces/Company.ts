@@ -8,18 +8,19 @@ import type { ReviewInterface } from "./Review";
 import type { VerifyInterface } from "./Verify";
 
 export interface CompanyInterface {
-  data: CompanyInterface | PromiseLike<CompanyInterface>;
+  data?: CompanyInterface | PromiseLike<CompanyInterface>;
   ID?: number;
-  company_name: string;
-  logo: string;
+  company_name?: string;
+  logo?: string;
 
-  user_id: number;
+  user_id?: number;
+  UserID?: number;
   User?: UserInterface;
 
-  address_id: number;
+  address_id?: number;
   Address?: AddressInterface;
 
-  admin_id: number;
+  admin_id?: number;
   Admin?: AdminInterface;
 
   Contact?: ContactInterface;
