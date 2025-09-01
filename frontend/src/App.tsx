@@ -32,11 +32,10 @@ import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 import AdminVerify from "./pages/Admin/verify/verify";
-// import ChatInterface from "./Chat/ChatInterface";
-import AdvancedChatInterface from "./Chat/ChatInterface";
-import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
+import AdvancedChatInterface from "./logo.png/ChatInterface";
 
 import AdminUser from "./pages/Admin/user/main";
+import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
 function App() {
   return (
@@ -99,7 +98,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
+           <Route
             path="/company-profile/:id"
             element={
               <CompanyProfileView />
