@@ -17,7 +17,7 @@ type Props = {
   companyId: number;
   defaultDays?: number; // ค่าเริ่มต้นเมื่อยังไม่เลือกช่วงเอง (เช่น 30)
   height?: number;
-  title?: string;
+  title?: string; 
 };
 
 const { RangePicker } = DatePicker;
