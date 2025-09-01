@@ -5,7 +5,7 @@ type Row = Record<string, any>;
 const fitColumns = (rows: Row[]) => {
   if (!rows.length) return [];
   const headers = Object.keys(rows[0]);
-  const colWidths = headers.map((h, i) => {
+  const colWidths = headers.map((h) => {
     const headerLen = String(h).length;
     const maxCell = rows.reduce((max, r) => {
       const v = r[h];

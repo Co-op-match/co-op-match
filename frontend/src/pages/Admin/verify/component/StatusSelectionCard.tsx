@@ -26,7 +26,6 @@ const StatusSelectionCard: React.FC<Props> = ({
   loading,
   isReadOnlyStatus,
   verifyForm,
-  rejectReason,
   setRejectReason,
 }) => {
   return (

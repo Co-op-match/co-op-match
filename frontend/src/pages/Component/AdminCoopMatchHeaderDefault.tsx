@@ -1,30 +1,9 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
-import {
-  Avatar,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Space,
-  Drawer,
-  Grid,
-  type MenuProps,
-  message,
-} from "antd";
-import {
-  UserOutlined,
-  BellOutlined,
-  SettingOutlined,
-  HomeOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  MenuOutlined,
-  LogoutOutlined,
-  CheckCircleOutlined,
-} from "@ant-design/icons";
+import React, { useContext, useEffect, useState } from "react";
+import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
+import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
-import { GetUserById, GetUserByIdhaveStatusData } from "../../services/https";
+import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
 
@@ -107,30 +86,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "admins",
       "users",
     ].find((key) => location.pathname.includes(key)) || "dashboard";
-
-  const userDropdownItems: MenuProps["items"] = [
-    {
-      label: "นักศึกษา",
-      key: "students",
-    },
-    {
-      label: "บริษัท",
-      key: "companies",
-    },
-    {
-      label: "อาจารย์",
-      key: "lecturers",
-    },
-    {
-      label: "ผู้ดูแลระบบ",
-      key: "admins",
-    },
-  ];
-
-  const userMenuProps = {
-    items: userDropdownItems,
-    onClick: handleMenuClick,
-  };
 
   const fullMenu = [
     {
