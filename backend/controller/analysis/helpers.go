@@ -4,8 +4,6 @@ package analysis
 import (
 	"strconv"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 func safeDivide(a, b int64) float64 {
@@ -42,8 +40,4 @@ func betweenStartEnd(startStr, endStr string) (time.Time, time.Time, error) {
 	s = s.Truncate(24 * time.Hour)
 	e = e.Truncate(24 * time.Hour)
 	return s, e, nil
-}
-
-func postsByCompany(db *gorm.DB, companyId uint) *gorm.DB {
-	return db.Table("intership_posts").Where("company_id = ?", companyId)
 }

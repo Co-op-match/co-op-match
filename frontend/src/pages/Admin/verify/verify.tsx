@@ -1,37 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  Card,
-  Table,
-  Button,
-  Typography,
-  Input,
-  message,
-  Row,
-  Col,
-  Avatar,
-  Tooltip,
-  Layout,
-  Form,
-  Select,
-} from "antd";
-import {
-  EyeOutlined,
-  FileTextOutlined,
-  UserOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  BuildOutlined,
-  TeamOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
-import {
-  GetAdminByUserId,
-  GetAllStatusVerify,
-  GetAllVerifications,
-  SendEmailVerify,
-  UpdateVerifyStatus,
-} from "../../../services/https";
+import { Card, Table, Button, Typography, Input, message, Row, Col, Avatar, Tooltip, Layout, Form, Select } from "antd";
+import { EyeOutlined, FileTextOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, StopOutlined, BuildOutlined, TeamOutlined, SearchOutlined } from "@ant-design/icons";
+import { GetAdminByUserId, GetAllStatusVerify, GetAllVerifications, SendEmailVerify, UpdateVerifyStatus } from "../../../services/https";
 import type { StatusVerifyInterface } from "../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";

@@ -245,9 +245,7 @@ func main() {
 		{
 			analysisCompanyGroup.GET("/overview",   analysis.CompanyOverview)
 			analysisCompanyGroup.GET("/trend",      analysis.CompanyTrend)
-			analysisCompanyGroup.GET("/pipeline",   analysis.CompanyPipeline)
-			analysisCompanyGroup.GET("/posts/performance", analysis.CompanyPostsPerformance)
-			analysisCompanyGroup.GET("/interviews", analysis.CompanyInterviewStats)
+			analysisCompanyGroup.GET("/status-application",   analysis.CompanyStatusApplication)
 		}
 		verifyGroup := r.Group("/verify")
 		{

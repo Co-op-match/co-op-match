@@ -1,17 +1,6 @@
-// src/pages/company/analysis/component/overview.tsx
 import React from "react";
 import { Card, Row, Col, Statistic, Typography } from "antd";
-import {
-  RiseOutlined,
-  FallOutlined,
-  TrophyOutlined,
-  UserOutlined,
-  StarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  DashboardOutlined,
-} from "@ant-design/icons";
+import { RiseOutlined, FallOutlined, TrophyOutlined, UserOutlined, StarOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, DashboardOutlined } from "@ant-design/icons";
 import type { OverviewInterface } from "../../../interfaces/Analysis";
 
 const { Title } = Typography;

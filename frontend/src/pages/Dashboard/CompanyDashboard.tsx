@@ -1,49 +1,26 @@
 import { useEffect, useState } from "react";
-import {
-  Row,
-  Col,
-  Typography,
-  Space,
-  ConfigProvider,
-  message,
-  Layout,
-  Badge,
-} from "antd";
-import {
-  CalendarOutlined,
-  DashboardOutlined,
-  BuildOutlined,
-} from "@ant-design/icons";
+import { Row, Col, Typography, Space, ConfigProvider, message, Layout, Badge } from "antd";
+import { CalendarOutlined, DashboardOutlined, BuildOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import type {
-  InterviewStatsInterface,
-  OverviewInterface,
-  PipelineBucketInterface,
-  PostPerfRowInterface,
-} from "../../interfaces/Analysis";
+import type { OverviewInterface, PipelineBucketInterface, TopPostItem } from "../../interfaces/Analysis";
 import { GetCompanyByUserID } from "../../services/https/Application";
 import { GetPostByCompanyId } from "../../services/https/post";
-import {
-  getInterviewStats,
-  getOverview,
-  getPipeline,
-  getPostPerf,
-} from "../../services/https";
+import { getOverview, getPipeline } from "../../services/https";
 import Overview from "../company/analysis/Overview";
 import TrendChart from "../company/analysis/TrendChart";
 import PipelineFunnel from "../company/analysis/PipelineFunnel";
-import PostPerformanceTable from "../company/analysis/PostPerformanceTable";
-import InterviewStatsCard from "../company/analysis/InterviewStatsCard";
 import type { CompanyInterface } from "../../interfaces/Company";
 import CompanyHeader from "../Component/CompanyHeader";
+import TopPostsCard from "../company/analysis/TopPostsCard";
+import { useNavigate } from "react-router-dom";
 
 dayjs.extend(isBetween);
 
 const { Text, Title } = Typography;
 
 // -------------------- Utils --------------------
-function downloadCSV(filename: string, rows: any[]) {
+/* function downloadCSV(filename: string, rows: any[]) {
   if (!rows || rows.length === 0) return;
   const headers = Object.keys(rows[0] || {});
   const csv = [headers.join(",")]
@@ -67,7 +44,7 @@ function downloadCSV(filename: string, rows: any[]) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
-}
+} */
 
 // -------------------- Component --------------------
 const CompanyDashboard = () => {
@@ -78,11 +55,6 @@ const CompanyDashboard = () => {
   // data states
   const [overview, setOverview] = useState<OverviewInterface | null>(null);
   const [funnelData, setFunnelData] = useState<PipelineBucketInterface[]>([]);
-  const [postPerf, setPostPerf] = useState<PostPerfRowInterface[]>([]);
-  const [interview, setInterview] = useState<InterviewStatsInterface | null>(
-    null
-  );
-
   const [company, setCompany] = useState<CompanyInterface>();
 
   // สรุปสถานะโพสต์ (นับจากรายการโพสต์จริงของบริษัท)
@@ -91,6 +63,19 @@ const CompanyDashboard = () => {
     closed: 0,
     pending: 0,
   });
+
+  const navigate = useNavigate();
+  const topPosts: TopPostItem[] =
+    overview?.topPosts ??
+    (overview?.topPost
+      ? [
+          {
+            postId: overview.topPost.postId,
+            postName: overview.topPost.postName,
+            applications: overview.topPost.applications,
+          },
+        ]
+      : []);
 
   // โหลดนับสถานะโพสต์ (อิงจากโพสต์จริง)
   useEffect(() => {
@@ -136,20 +121,16 @@ const CompanyDashboard = () => {
         setCompany(compRes);
 
         // 3) ยิงทุก analytics พร้อมกัน + ดึงโพสต์เพื่อนับสถานะ
-        const [overview, pipeline, postPerf, interviewStats, postByCompanyId] =
+        const [overview, pipeline, postByCompanyId] =
           await Promise.all([
             getOverview(compRes.ID),
             getPipeline(compRes.ID),
-            getPostPerf(compRes.ID),
-            getInterviewStats(compRes.ID),
             GetPostByCompanyId(compRes.ID),
           ]);
 
         // 4) เซ็ต state
         setOverview(overview ?? null);
         setFunnelData(Array.isArray(pipeline) ? pipeline : []);
-        setPostPerf(Array.isArray(postPerf) ? postPerf : []);
-        setInterview(interviewStats ?? null);
 
         if (
           postByCompanyId?.status === 200 &&
@@ -174,8 +155,6 @@ const CompanyDashboard = () => {
       }
     })();
   }, []);
-
-  const onExportPosts = () => downloadCSV("posts_performance.csv", postPerf);
 
   const customStyles = `
     .adminpage-layout {
@@ -496,23 +475,22 @@ const CompanyDashboard = () => {
 
               {/* POSTS PERFORMANCE + INTERVIEW STATS */}
               <Row gutter={[16, 16]}>
-                <Col xs={24} lg={14}>
-                  <PostPerformanceTable
-                    loading={loading}
-                    data={postPerf} // PostPerfRowInterface[]
-                    onExport={onExportPosts} // ฟังก์ชันเดิมของคุณ
-                  />
+                <Col xs={24} lg={16}>
+                  {/* TREND DATA */}
+                  <TrendChart companyId={Number(company?.ID)} />
                 </Col>
-                <Col xs={24} lg={10}>
-                  <InterviewStatsCard
+                <Col xs={24} lg={8}>
+                  <TopPostsCard
                     loading={loading}
-                    interview={interview} // InterviewStatsInterface | null
+                    topPosts={topPosts}
+                    title="Top Posts (ยอดนิยม)"
+                    onViewApplicants={(postId) =>
+                      navigate(`/applications/post/${postId}`)
+                    }
+                    maxItems={5}
                   />
                 </Col>
               </Row>
-
-              {/* TREND DATA */}
-              <TrendChart companyId={Number(company?.ID)} />
             </Space>
           </div>
         </ConfigProvider>

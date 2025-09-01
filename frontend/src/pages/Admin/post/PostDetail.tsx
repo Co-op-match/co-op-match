@@ -1,30 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  message,
-  Row,
-  Col,
-  Typography,
-  Divider,
-  Layout,
-  Empty,
-  Spin,
-} from "antd";
-import {
-  ArrowLeftOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseOutlined,
-  ExclamationCircleOutlined,
-} from "@ant-design/icons";
-import {
-  GetAdminById,
-  GetInternshipPostsInAdminByIPostID,
-  UpdateStatusPost,
-} from "../../../services/https/index";
+import { Card, Button, Space, Tag, message, Row, Col, Typography, Divider, Layout, Empty, Spin } from "antd";
+import { ArrowLeftOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { GetAdminById, GetInternshipPostsInAdminByIPostID, UpdateStatusPost } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
 import { useNavigate, useParams } from "react-router-dom";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";

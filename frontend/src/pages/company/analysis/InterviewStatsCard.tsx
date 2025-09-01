@@ -1,16 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Space, Statistic } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RTooltip,
-  Legend,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from "recharts";
 import type { InterviewStatsInterface } from "../../../interfaces/Analysis";
 
 type Props = {

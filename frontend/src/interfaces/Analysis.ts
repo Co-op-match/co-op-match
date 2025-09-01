@@ -5,8 +5,14 @@ export interface OverviewInterface {
   rejectRate: number;
   avgReviewScore?: number;
   topPost?: { postId: number; postName: string; applications: number };
+  topPosts?: TopPostItem[];
   statusCounts?: Record<string, number>;
 }
+export type TopPostItem = {
+  postId: number;
+  postName: string;
+  applications: number;
+};
 export interface TrendPointInterface { date: string; value: number }
 export interface PipelineBucketInterface { name: string; value: number }
 export interface PostPerfRowInterface {

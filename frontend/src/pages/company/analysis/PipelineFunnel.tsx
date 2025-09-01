@@ -1,17 +1,7 @@
 import React from "react";
 import { Card, Space } from "antd";
 import { FunnelPlotOutlined } from "@ant-design/icons";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RTooltip,
-  LabelList,
-  Cell,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LabelList, Cell } from "recharts";
 import type { PipelineBucketInterface } from "../../../interfaces/Analysis";
 
 type Props = {

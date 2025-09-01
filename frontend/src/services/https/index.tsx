@@ -297,18 +297,6 @@ export async function getPipeline (companyId: number) {
     .then((res) => res.data)
     .catch((e) => e.response);
 }
-export async function getPostPerf (companyId: number) {
-  return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/posts/performance`, requestOptions)
-    .then((res) => res.data)
-    .catch((e) => e.response);
-}
-export async function getInterviewStats (companyId: number) {
-  return await axios
-    .get(`${apiUrl}/analysis/company/${companyId}/interviews`, requestOptions)
-    .then((res) => res.data)
-    .catch((e) => e.response);
-}
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

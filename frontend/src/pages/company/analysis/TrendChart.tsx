@@ -1,31 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  Space,
-  Tag,
-  Checkbox,
-  Empty,
-  Skeleton,
-  Segmented,
-  DatePicker,
-  Button,
-  Divider,
-} from "antd";
-import {
-  DownloadOutlined,
-  CalendarOutlined,
-  EyeOutlined,
-  FilterOutlined,
-} from "@ant-design/icons";
-import {
-  ResponsiveContainer,
-  ComposedChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RTooltip,
-} from "recharts";
+import { Card, Space, Tag, Checkbox, Empty, Skeleton, Segmented, DatePicker, Button, Divider } from "antd";
+import { DownloadOutlined, CalendarOutlined, EyeOutlined, FilterOutlined } from "@ant-design/icons";
+import { ResponsiveContainer, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
 import { getTrend } from "../../../services/https";
 import dayjs, { Dayjs } from "dayjs";
 import { TrendingUpIcon } from "lucide-react";
@@ -123,14 +99,25 @@ const TrendApplicantsArea: React.FC<Props> = ({
     let alive = true;
     (async () => {
       try {
-        // ถ้าเป็น custom แต่ยังไม่เลือกวันครบ ให้รอ
         if (preset === "custom" && !(range && range[0] && range[1])) return;
 
         setLoading(true);
         const { start, end, days } = currentRangeStrings;
         const data = await getTrend(companyId, start, end, days ?? defaultDays);
+
         if (!alive) return;
-        setRaw(Array.isArray(data) ? data : []);
+
+        // ✅ Normalize เป็น TrendPoint[]
+        const normalized: TrendPoint[] = (Array.isArray(data) ? data : []).map(
+          (d: any) => ({
+            date: d.date,
+            total: d.total ?? d.value ?? 0,
+            pass: d.pass ?? 0,
+            fail: d.fail ?? 0,
+          })
+        );
+
+        setRaw(normalized); // 👈 แทนที่จะ setRaw(data)
       } catch (e) {
         console.error("getTrend error:", e);
         if (alive) setRaw([]);
@@ -597,7 +584,7 @@ const TrendApplicantsArea: React.FC<Props> = ({
       )}
 
       {/* กราฟ */}
-      <div style={{ height: "300px", padding: "8px 0" }}>
+      <div style={{ height: "330px", padding: "8px 0" }}>
         {loading ? (
           <Skeleton active paragraph={{ rows: 8 }} />
         ) : chartData.length === 0 ? (
@@ -701,7 +688,6 @@ const TrendApplicantsArea: React.FC<Props> = ({
                     stroke: COLOR_PASS,
                     strokeWidth: 3,
                     fill: "#fff",
-                    boxShadow: "0 2px 8px rgba(82,196,26,0.3)",
                   }}
                   isAnimationActive={false}
                 />
@@ -720,7 +706,6 @@ const TrendApplicantsArea: React.FC<Props> = ({
                     stroke: COLOR_FAIL,
                     strokeWidth: 3,
                     fill: "#fff",
-                    boxShadow: "0 2px 8px rgba(255,77,79,0.3)",
                   }}
                   isAnimationActive={false}
                 />
@@ -739,7 +724,6 @@ const TrendApplicantsArea: React.FC<Props> = ({
                     stroke: COLOR_TOTAL,
                     strokeWidth: 3,
                     fill: "#fff",
-                    boxShadow: "0 2px 8px rgba(22,119,255,0.3)",
                   }}
                   isAnimationActive={false}
                 />

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"co-op-match.com/co-op-match/config"
-	"co-op-match.com/co-op-match/entity"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -133,13 +132,27 @@ func CompanyOverview(c *gin.Context) {
 		PostName     string `json:"postName"`
 		Applications int64  `json:"applications"`
 	}
+
+	// ====== Top Posts (ทุกเวลา) - 3 อันดับ ======
+	var topRows []TopPost
+	_ = db.Table("applications a").
+		Select("a.intership_post_id AS post_id, p.post_name AS post_name, COUNT(*) AS applications").
+		Joins("JOIN intership_posts p ON p.id = a.intership_post_id").
+		Where("p.company_id = ?", companyID).
+		// Where("a.deleted_at IS NULL AND p.deleted_at IS NULL").
+		Group("a.intership_post_id, p.post_name").
+		Order("applications DESC, p.post_name ASC").
+		Limit(3).
+		Scan(&topRows).Error
+
 	resp := struct {
 		TotalApplications int64            `json:"totalApplications"`
 		InterviewRate     float64          `json:"interviewRate"`
 		OfferRate         float64          `json:"offerRate"`
 		RejectRate        float64          `json:"rejectRate"`
 		AvgReviewScore    *float64         `json:"avgReviewScore"`
-		TopPost           *TopPost         `json:"topPost,omitempty"`
+		TopPost           *TopPost         `json:"topPost,omitempty"`  // อันดับ 1 (backward compat)
+		TopPosts          []TopPost        `json:"topPosts,omitempty"` // Top 5
 		StatusCounts      map[string]int64 `json:"statusCounts"`
 	}{
 		TotalApplications: total,
@@ -149,8 +162,12 @@ func CompanyOverview(c *gin.Context) {
 		AvgReviewScore:    avgReview,
 		StatusCounts:      statusCounts,
 	}
-	if top.PostID != 0 {
-		resp.TopPost = &TopPost{top.PostID, top.PostName, top.Applications}
+
+	// map Top 5 และตั้ง TopPost = อันดับ 1
+	if len(topRows) > 0 {
+		resp.TopPosts = topRows
+		first := topRows[0]
+		resp.TopPost = &first
 	}
 
 	// debug (ดึงล่าสุด 200 แถว ไม่กรองวัน)
@@ -178,6 +195,7 @@ func CompanyOverview(c *gin.Context) {
 			"rejectRate":        resp.RejectRate,
 			"avgReviewScore":    resp.AvgReviewScore,
 			"topPost":           resp.TopPost,
+			"topPosts":          resp.TopPosts,
 			"statusCounts":      resp.StatusCounts,
 			"applications":      apps,
 		})
@@ -208,10 +226,10 @@ func CompanyTrend(c *gin.Context) {
 
 	// โครงสร้างผลลัพธ์ใหม่
 	type TrendPoint struct {
-		Date string `json:"date"`
-		Total int64 `json:"total"` // รวมทั้งวัน (ผู้สมัครทั้งหมด)
-		Pass  int64 `json:"pass"`  // ผ่าน
-		Fail  int64 `json:"fail"`  // ไม่ผ่าน + ไม่ได้รับเลือก
+		Date  string `json:"date"`
+		Total int64  `json:"total"` // รวมทั้งวัน (ผู้สมัครทั้งหมด)
+		Pass  int64  `json:"pass"`  // ผ่าน
+		Fail  int64  `json:"fail"`  // ไม่ผ่าน + ไม่ได้รับเลือก
 	}
 
 	// 1) ดึงสรุปรายวันด้วย conditional aggregation
@@ -254,7 +272,9 @@ func CompanyTrend(c *gin.Context) {
 
 	// 2) เติมวันที่ให้ครบช่วง + map เป็นผลลัพธ์สุดท้าย
 	byDate := make(map[string]row, len(rows))
-	for _, r := range rows { byDate[r.Date] = r }
+	for _, r := range rows {
+		byDate[r.Date] = r
+	}
 
 	points := make([]TrendPoint, 0, int(end.Sub(start).Hours()/24)+1)
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
@@ -279,8 +299,8 @@ func CompanyTrend(c *gin.Context) {
 	c.JSON(http.StatusOK, points)
 }
 
-/*=================================== Pipeline (funnel by status)  ===================================*/
-func CompanyPipeline(c *gin.Context) {
+/*=================================== Status Application  ===================================*/
+func CompanyStatusApplication(c *gin.Context) {
 	db := config.DB()
 	companyId, _ := strconv.Atoi(c.Param("companyId"))
 
@@ -309,206 +329,4 @@ func CompanyPipeline(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, buckets)
-}
-
-/*=================================== Posts Performance (table)  ===================================*/
-func CompanyPostsPerformance(c *gin.Context) {
-	db := config.DB()
-	companyId, _ := strconv.Atoi(c.Param("companyId"))
-
-	type postRow struct {
-		ID       uint
-		PostName string
-		WorkMode string
-		MinGPA   *float64
-	}
-	var posts []postRow
-	db.Table("intership_posts p").
-		Select("p.id, p.post_name, wm.work_mode, p.min_gpa").
-		Joins("LEFT JOIN work_modes wm ON wm.id = p.work_mode_id").
-		Where("p.company_id = ?", companyId).
-		Scan(&posts)
-
-	rows := make([]PostPerformanceRow, 0, len(posts))
-
-	for _, p := range posts {
-		row := PostPerformanceRow{
-			PostID:   p.ID,
-			PostName: p.PostName,
-			WorkMode: p.WorkMode,
-			MinGPA:   p.MinGPA,
-		}
-
-		// ฐานใบสมัครของโพสต์นี้ (ทุกเวลา)
-		base := db.Table("applications a").
-			Where("a.intership_post_id = ?", p.ID)
-
-		// จำนวนสมัครทั้งหมด
-		base.Count(&row.Applications)
-
-		// จำนวน "ผ่าน"
-		base.Session(&gorm.Session{}).
-			Where(`REPLACE(TRIM(a.status),' ','') = 'ผ่าน'`).
-			Count(&row.Passed)
-
-		// จำนวน "สัมภาษณ์แล้ว" (เคยมีนัดหรืออยู่ในสถานะที่ชี้ว่ามีการสัมภาษณ์/สรุปผล)
-		db.Table("applications a").
-			Joins("JOIN intership_posts ip ON ip.id = a.intership_post_id").
-			Joins("LEFT JOIN interview_appointments ia ON ia.student_id = a.student_id AND ia.company_id = ip.company_id").
-			Where("a.intership_post_id = ?", p.ID).
-			Where(`
-				REPLACE(TRIM(a.status),' ','') IN ('นัดสัมภาษณ์แล้ว','ผ่าน','ไม่ผ่าน')
-				OR ia.id IS NOT NULL
-			`).
-			Distinct("a.id").
-			Count(&row.Interviewed)
-
-		// เวลาเฉลี่ย สมัคร → สรุปผล (วัน) — ทุกเวลา
-		type d struct{ Days *float64 }
-		var dd d
-		db.Raw(`
-			SELECT AVG(JULIANDAY(a.updated_at) - JULIANDAY(a.submit_at)) AS days
-			FROM applications a
-			WHERE a.intership_post_id = ?
-			  AND REPLACE(TRIM(a.status),' ','') IN ('ผ่าน','ไม่ผ่าน','ไม่ได้รับเลือก')
-			  AND a.updated_at IS NOT NULL
-		`, p.ID).Scan(&dd)
-		if dd.Days != nil {
-			row.AvgTimeToDecisionDays = *dd.Days
-		}
-
-		// Avg GPA ของ "ผู้ที่ผ่าน" (ใช้การศึกษาล่าสุด)
-		type g struct{ Avg *float64 }
-		var gg g
-		db.Raw(`
-			SELECT AVG(e.grade) AS avg
-			FROM applications a
-			JOIN students s ON s.id = a.student_id
-			LEFT JOIN (
-				SELECT e1.*
-				FROM educations e1
-				JOIN (
-					SELECT student_id, MAX(year) AS max_year
-					FROM educations
-					GROUP BY student_id
-				) m ON m.student_id = e1.student_id AND m.max_year = e1.year
-			) e ON e.student_id = s.id
-			WHERE a.intership_post_id = ?
-			  AND REPLACE(TRIM(a.status),' ','') = 'ผ่าน'
-		`, p.ID).Scan(&gg)
-		row.AvgGPA = gg.Avg
-
-		// Min GPA ของผู้ที่ผ่าน (ถ้าอยากโชว์ "ต่ำสุดของผู้ที่ผ่าน")
-		type gmin struct{ Min *float64 }
-		var gminRow gmin
-		db.Raw(`
-			SELECT MIN(e.grade) AS min
-			FROM applications a
-			JOIN students s ON s.id = a.student_id
-			LEFT JOIN (
-				SELECT e1.*
-				FROM educations e1
-				JOIN (
-					SELECT student_id, MAX(year) AS max_year
-					FROM educations
-					GROUP BY student_id
-				) m ON m.student_id = e1.student_id AND m.max_year = e1.year
-			) e ON e.student_id = s.id
-			WHERE a.intership_post_id = ?
-			  AND REPLACE(TRIM(a.status),' ','') = 'ผ่าน'
-		`, p.ID).Scan(&gminRow)
-		if gminRow.Min != nil {
-			row.MinGPA = gminRow.Min
-		}
-
-		rows = append(rows, row)
-	}
-
-	c.JSON(http.StatusOK, rows)
-}
-
-/*=================================== Interview Stats  ===================================*/
-func CompanyInterviewStats(c *gin.Context) {
-	db := config.DB()
-	companyId, _ := strconv.Atoi(c.Param("companyId"))
-
-	// 1) นัดสัมภาษณ์ทั้งหมด (ทุกเวลา)
-	var scheduled int64
-	db.Model(&entity.InterviewAppointment{}).
-		Where("company_id = ?", companyId).
-		Count(&scheduled)
-
-	// 2) no_show: ใบสมัครสถานะ "ไม่ผ่าน" + company_note มีคำบ่งชี้ "ไม่มา" (ทุกเวลา)
-	keywords := []string{
-		"%ไม่มา%", "%ไม่ได้มา%", "%ไม่มาร่วม%", "%ไม่เข้าร่วม%", "%ไม่มาสัมภาษณ์%",
-		"%no show%", "%no-show%", "%no_show%", "%noshow%",
-		"%เบี้ยว%", "%ติดต่อไม่ได้%",
-	}
-	base := db.Table("interview_appointments ia").
-		Joins("JOIN applications a ON a.student_id = ia.student_id").
-		Joins("JOIN intership_posts p ON p.id = a.intership_post_id AND p.company_id = ia.company_id").
-		Where("ia.company_id = ?", companyId).
-		Where(`REPLACE(TRIM(a.status),' ','') = 'ไม่ผ่าน'`)
-
-	noteCond := db.Where("LOWER(COALESCE(a.company_note,'')) LIKE ?", strings.ToLower(keywords[0]))
-	for i := 1; i < len(keywords); i++ {
-		noteCond = noteCond.Or("LOWER(COALESCE(a.company_note,'')) LIKE ?", strings.ToLower(keywords[i]))
-	}
-
-	var noShow int64
-	base.Where(noteCond).
-		Distinct("a.id").
-		Count(&noShow)
-
-	// 3) แยกตามโหมดสัมภาษณ์ (ทุกเวลา)
-	type M struct {
-		Mode  string
-		Count int64
-	}
-	var modes []M
-	db.Table("interview_appointments ia").
-		Select("ia.mode as mode, COUNT(*) as count").
-		Where("ia.company_id = ?", companyId).
-		Group("ia.mode").Scan(&modes)
-
-	resp := InterviewStatsResponse{
-		Scheduled: scheduled,
-		NoShow:    noShow,
-	}
-	for _, m := range modes {
-		resp.Mode = append(resp.Mode, struct {
-			Mode     string   `json:"mode"`
-			Count    int64    `json:"count"`
-			PassRate *float64 `json:"pass_rate,omitempty"`
-		}{Mode: m.Mode, Count: m.Count})
-	}
-
-	// 4) Avg สมัคร → นัด (วัน) — ทุกเวลา
-	type R struct{ Days *float64 }
-	var toSchedule R
-	db.Raw(`
-		SELECT AVG(ABS(JULIANDAY(ia.appointment_date) - JULIANDAY(a.submit_at))) AS days
-		FROM interview_appointments ia
-		JOIN applications a ON a.student_id = ia.student_id
-		JOIN intership_posts p ON p.id = a.intership_post_id
-		WHERE ia.company_id = ?
-		  AND p.company_id = ia.company_id
-	`, companyId).Scan(&toSchedule)
-	resp.AvgDaysSubmitToSchedule = toSchedule.Days
-
-	// 5) Avg นัด → สรุปผล (วัน) — ทุกเวลา
-	var schedToDecision R
-	db.Raw(`
-		SELECT AVG(JULIANDAY(a.updated_at) - JULIANDAY(ia.appointment_date)) AS days
-		FROM interview_appointments ia
-		JOIN applications a ON a.student_id = ia.student_id
-		JOIN intership_posts p ON p.id = a.intership_post_id
-		WHERE ia.company_id = ?
-		  AND p.company_id = ia.company_id
-		  AND REPLACE(TRIM(a.status),' ','') IN ('ผ่าน','ไม่ผ่าน','ไม่ได้รับเลือก')
-		  AND a.updated_at IS NOT NULL
-	`, companyId).Scan(&schedToDecision)
-	resp.AvgDaysScheduleToDecision = schedToDecision.Days
-
-	c.JSON(http.StatusOK, resp)
 }
