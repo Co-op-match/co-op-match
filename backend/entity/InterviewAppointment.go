@@ -17,4 +17,6 @@ type InterviewAppointment struct {
 
 	StudentID uint
 	Student   Student `gorm:"foreignKey:StudentID"`
+	// ✅ เพิ่ม status (เช่น "รอดำเนินการ" | "ผ่าน" | "ไม่ผ่าน")
+	Status string `json:"status" gorm:"column:status;size:50"`
 }
