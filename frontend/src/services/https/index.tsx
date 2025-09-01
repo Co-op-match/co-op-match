@@ -46,7 +46,7 @@ async function GetRole() {
     .then((res) => res)
     .catch((e) => e.response);
 }
-
+/*
 async function ResetPassword(email: string, newPassword: string) {
   try {
     const token = localStorage.getItem('token');
@@ -65,6 +65,31 @@ async function ResetPassword(email: string, newPassword: string) {
     return error.response ? error.response.data : { error: "An unknown error occurred" };
   }
 }
+*/
+// services/https.ts
+export async function SendResetPasswordEmail(email: string) {
+  try {
+    const res = await axios.post(`${apiUrl}/auth/password/forgot`, { email }, {
+      headers: { "Content-Type": "application/json" }
+    });
+    return res.data;
+  } catch (e: any) {
+    throw e.response?.data || { error: true, message: "Unknown error" };
+  }
+}
+
+export async function ResetPassword(email: string, new_password: string, otp: string) {
+  try {
+    const res = await axios.post(`${apiUrl}/auth/password/reset-otp`, 
+      { email, new_password, otp },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return res.data;
+  } catch (e: any) {
+    throw e.response?.data || { error: true, message: "Unknown error" };
+  }
+}
+
 
 async function CreateUser(data: UsersInterface) {
   return await axios
@@ -772,6 +797,7 @@ export async function Logout(email: string) {
     throw error.response?.data || error.message;
   }
 }
+
 export async function LikePost(data: { StudentID: number; IntershipPostID: number }) {
   return await axios.post(`${apiUrl}/liked-post`, data, requestOptions);
 }
@@ -895,7 +921,7 @@ export async function GetChatRoomsByUserId(userId: number) {
 export {
   SignIn,
   GetRole,
-  ResetPassword,
+  //ResetPassword,
   CreateUser,
   GetStudentById,
   GetStudentByUserId,
@@ -960,3 +986,5 @@ export {
   CreateAcademicStaff,
 
 };
+
+

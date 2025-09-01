@@ -470,7 +470,7 @@ const JobCard: React.FC<{
             </Space>
             <Space>
             <EnvironmentOutlined style={{ color: '#0050b3' }} />
-              <Text style={{ color: '#434343' }}>{job.Company?.Address?.Province?.name_th}</Text>
+              <Text style={{ color: '#434343' }}>{job.Company?.Address?.Province?.name_th} - {job.Company?.Address?.District?.name_th}</Text>
             </Space>
             <Space>
               <CalendarOutlined style={{ color: '#0050b3' }}/>
