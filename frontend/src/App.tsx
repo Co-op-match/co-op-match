@@ -33,7 +33,7 @@ import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 import AdminVerify from "./pages/Admin/verify/verify";
 import AdvancedChatInterface from "./logo.png/ChatInterface";
-
+import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 import AdminUser from "./pages/Admin/user/main";
 import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
@@ -239,6 +239,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[4]}>
                 <LecturerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/articles"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminArticlesPage />
               </ProtectedRoute>
             }
           />
