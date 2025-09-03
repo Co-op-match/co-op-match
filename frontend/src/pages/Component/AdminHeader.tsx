@@ -84,40 +84,65 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "lecturers",
       "admins",
       "users",
+      "articles"
     ].find((key) => location.pathname.includes(key)) || "dashboard";
 
   const fullMenu = [
-    {
-      key: "dashboard",
-      icon: <HomeOutlined />,
-      label: isMobile ? "หน้าหลัก" : "หน้าหลัก",
-    },
-    {
-      key: "users",
-      icon: <TeamOutlined />,
-      label: isMobile ? "ผู้ใช้" : "ผู้ใช้ทั้งหมด",
-    },
-    {
-      key: "manage-posts",
-      icon: <FileTextOutlined />,
-      label: "จัดการ Post",
-    },
-    {
-      key: "verify",
-      icon: <CheckCircleOutlined />,
-      label: isMobile ? "ตรวจสอบ" : "ตรวจสอบการรับรอง",
-    },
-    {
-      key: "notifications",
-      icon: <BellOutlined />,
-      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน",
-    },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "ตั้งค่า",
-    },
-  ];
+  {
+    key: "dashboard",
+    icon: <HomeOutlined />,
+    label: "หน้าหลัก",
+  },
+  {
+    key: "users",
+    icon: <TeamOutlined />,
+    label: "ผู้ใช้ทั้งหมด",
+  },
+  {
+    key: "manage-posts",
+    icon: <FileTextOutlined />,
+    label: "จัดการ Post",
+    children: [
+      {
+        key: "manage-posts",          // คงคีย์เดิมไว้เพื่อให้ลิงก์เดิมทำงาน
+        icon: <FileTextOutlined />,
+        label: "ภาพรวมโพสต์",
+      },
+      {
+        key: "articles",              // เมนูย่อย: จัดการข่าว/บทความ
+        icon: <FileTextOutlined />,
+        label: "จัดการข่าว/บทความ",
+      },
+    ],
+  },
+  {
+    key: "verify",
+    icon: <CheckCircleOutlined />,
+    label: "ตรวจสอบการรับรอง",
+  },
+  {
+    key: "analysis",
+    icon: <FileTextOutlined />,
+    label: "การวิเคราะห์",
+  },
+  {
+    key: "notifications",
+    icon: <BellOutlined />,
+    label: "การแจ้งเตือน",
+  },
+  {
+    key: "settings",
+    icon: <SettingOutlined />,
+    label: "ตั้งค่า",
+  },
+  // *** ลบรายการเดิมที่เคยเป็นระดับบน:
+  // {
+  //   key: "articles",
+  //   icon: <SettingOutlined />,
+  //   label: "จัดการข่าว/บทความ",
+  // },
+];
+
 
   const menuItems = minimalMenu
     ? [fullMenu.find((item) => item.key === "dashboard")!]
