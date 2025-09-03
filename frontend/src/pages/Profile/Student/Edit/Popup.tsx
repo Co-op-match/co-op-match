@@ -122,7 +122,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       program_id: values.program_id,
       education_level_id: values.education_level_id,
       year: values.year,
-      grade: values.grade,
+      grade: Number(values.grade),
     };
     await UpdateEducation(userId, eduPayload);
     messageApi.success("บันทึกข้อมูลการศึกษาสำเร็จ!"); // ✅

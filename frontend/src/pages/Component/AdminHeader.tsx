@@ -14,7 +14,7 @@ interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
 }
 
-const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
+const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   minimalMenu = false,
 }) => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -78,7 +78,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "manage-posts",
       "verify",
       "notifications",
-      "analysis",
       "settings",
       "students",
       "companies",
@@ -107,11 +106,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       key: "verify",
       icon: <CheckCircleOutlined />,
       label: isMobile ? "ตรวจสอบ" : "ตรวจสอบการรับรอง",
-    },
-    {
-      key: "analysis",
-      icon: <FileTextOutlined />,
-      label: isMobile ? "วิเคราะห์" : "การวิเคราะห์",
     },
     {
       key: "notifications",
@@ -286,4 +280,4 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   );
 };
 
-export default CompanyHeader;
+export default AdminHeader;

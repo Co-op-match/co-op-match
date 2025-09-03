@@ -10,6 +10,7 @@ import type { ContactInterface } from "./Contact";
 export interface AcademicStaffInterface {
 
   id: number;
+  ID?: number;
   academic_position: string;
   age: number;
   university_id?: number;

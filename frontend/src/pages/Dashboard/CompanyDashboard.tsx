@@ -6,7 +6,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import type { OverviewInterface, PipelineBucketInterface, TopPostItem } from "../../interfaces/Analysis";
 import { GetCompanyByUserID } from "../../services/https/Application";
 import { GetPostByCompanyId } from "../../services/https/post";
-import { getOverview, getPipeline } from "../../services/https";
+import { getOverview, getStatusApplication } from "../../services/https";
 import Overview from "../company/analysis/Overview";
 import TrendChart from "../company/analysis/TrendChart";
 import PipelineFunnel from "../company/analysis/PipelineFunnel";
@@ -121,16 +121,16 @@ const CompanyDashboard = () => {
         setCompany(compRes);
 
         // 3) ยิงทุก analytics พร้อมกัน + ดึงโพสต์เพื่อนับสถานะ
-        const [overview, pipeline, postByCompanyId] =
+        const [overview, statusApplication, postByCompanyId] =
           await Promise.all([
             getOverview(compRes.ID),
-            getPipeline(compRes.ID),
+            getStatusApplication(compRes.ID),
             GetPostByCompanyId(compRes.ID),
           ]);
 
         // 4) เซ็ต state
         setOverview(overview ?? null);
-        setFunnelData(Array.isArray(pipeline) ? pipeline : []);
+        setFunnelData(Array.isArray(statusApplication) ? statusApplication : []);
 
         if (
           postByCompanyId?.status === 200 &&

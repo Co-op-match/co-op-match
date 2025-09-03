@@ -247,6 +247,12 @@ func main() {
 			analysisCompanyGroup.GET("/trend",      analysis.CompanyTrend)
 			analysisCompanyGroup.GET("/status-application",   analysis.CompanyStatusApplication)
 		}
+		analysisAcademicGroup := r.Group("/analysis/academic/user/:userId")
+		{
+			analysisAcademicGroup.GET("/dashboard/overview", analysis.GetAcademicOverview)
+			analysisAcademicGroup.GET("/students", analysis.ListAcademicStudents)
+			analysisAcademicGroup.GET("/applications", analysis.ListAcademicApplications)
+		}
 		verifyGroup := r.Group("/verify")
 		{
 			verifyGroup.GET("", controller.GetAllVerifications)

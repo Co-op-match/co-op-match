@@ -11,7 +11,7 @@ import { GetAllAcademicStaff, GetAllCompany, GetAllLoginLogs, GetAllStudent, Get
 import type { RoleInterface } from "../../../interfaces/Role";
 import type { LoginLogInterface } from "../../../interfaces/LoginLog";
 import type { ColumnsType, TableProps } from "antd/es/table";
-import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
+import AdminHeader from "../../Component/AdminHeader";
 import ExportExcelButton from "./ExportExcelButton";
 
 const { TabPane } = Tabs;

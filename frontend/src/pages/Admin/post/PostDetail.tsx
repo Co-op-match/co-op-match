@@ -12,7 +12,7 @@ import QuickStatsCard from "../../../components/adminpage/post/PDetail_QuickStat
 import CompanyInfoCard from "../../../components/adminpage/post/PDetail_CompanyInfoCard";
 import ApplicationsCard from "../../../components/adminpage/post/PDetail_ApplicationsCard";
 import PostInfoCard from "../../../components/adminpage/post/PDetail_PostInfoCard";
-import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
+import AdminHeader from "../../Component/AdminHeader";
 import type { AdminInterface } from "../../../interfaces/Admin";
 
 const { Title, Text } = Typography;

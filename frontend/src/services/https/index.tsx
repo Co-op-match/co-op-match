@@ -14,6 +14,7 @@ import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+import type { AcademicOverviewInterface, ListAcademicApplicationsResponseInterface, ListAcademicStudentsResponseInterface } from "../../interfaces/Analysis";
 
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
@@ -140,6 +141,14 @@ export async function UpdateStatusPost(postId: number, data: { StatusPostID: num
     .put(`${apiUrl}/update-status-posts/${postId}`, data, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
+}
+
+// helper แปลง path เป็น URL เต็ม
+export function toFileURL(path?: string) {
+  if (!path) return "";
+  // ถ้า backend เสิร์ฟ static จาก root ("/public/...")
+  if (/^https?:\/\//.test(path)) return path;
+  return `${apiUrl}${path}`;
 }
 
 //=======================================Admin============================================
@@ -291,12 +300,32 @@ export async function getTrend (companyId: number, start?: string, end?: string,
     throw err?.response?.data || err;
   }
 }
-export async function getPipeline (companyId: number) {
+export async function getStatusApplication (companyId: number) {
   return await axios
     .get(`${apiUrl}/analysis/company/${companyId}/status-application`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
 }
+
+export async function getAcademicOverview(userId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/academic/user/${userId}/dashboard/overview`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function listAcademicStudents(userId: number, params: { page?: number; page_size?: number; q?: string }) {
+  return await axios
+    .get(`${apiUrl}/analysis/academic/user/${userId}/students`, { params })
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function listAcademicApplications(userId: number, params: { status?: string; page?: number; page_size?: number; q?: string }) {
+  return await axios
+    .get(`${apiUrl}/analysis/academic/user/${userId}/applications`, { params })
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

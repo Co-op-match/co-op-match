@@ -5,7 +5,7 @@ import { GetAdminByUserId, GetAllStatusVerify, GetAllVerifications, SendEmailVer
 import type { StatusVerifyInterface } from "../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";
-import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
+import AdminHeader from "../../Component/AdminHeader";
 import DocumentModal from "./DocumentModal";
 import DetailModal from "./DetailModal";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
