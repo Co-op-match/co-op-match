@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import  { useEffect, useMemo, useState } from "react";
 import {
   Layout, Card, Table, Button, Space, Tag, Modal, Form,
   Input, Select, Switch, message, Popconfirm, Row, Col,
@@ -18,7 +18,7 @@ const { Content } = Layout;
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
-const AdminArticlesPage: React.FC = () => {
+function AdminArticlesPage(){
   const [loading, setLoading] = useState(false);
   const [ messageApi,contextHolder] = message.useMessage();
   const [saving] = useState(false);
@@ -146,11 +146,11 @@ const AdminArticlesPage: React.FC = () => {
   const columns = [
     {
       title: "หัวข้อ",
-      width: 250,
+      width: 300,
       dataIndex: "title",
       render: (title: string, record: Article) => (
         <div>
-          <Text strong style={{ fontSize: 16, color: '#1e3a8a' }}>{title}</Text>
+          <Text strong style={{ fontSize: 16, color: '#001d66' }}>{title}</Text>
           {record.subtitle && <div><Text type="secondary" style={{ fontSize: 13, color: '#64748b' }}>{record.subtitle}</Text></div>}
         </div>
       )
@@ -213,7 +213,7 @@ const AdminArticlesPage: React.FC = () => {
     },
     {
       title: "สถานะ",
-      width: 200,
+      width: 175,
       dataIndex: "is_published",
       render: (b: boolean) => (
         <Tag style={{
@@ -239,7 +239,7 @@ const AdminArticlesPage: React.FC = () => {
     },
     {
       title: "จัดการ",
-      width: 140,
+      width: 120,
       render: (_: any, row: Article) => {
         return (
           <Space size={4}>
@@ -292,47 +292,105 @@ const AdminArticlesPage: React.FC = () => {
       background: '#f8fafc'
     }}>
       <AdminHeader />
+      <Layout className="adminpage-layout">
+        {/* Updated Header Section with consistent styling */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+          borderRadius: "12px",
+          padding: '40px 24px 32px',
+          margin: '0 24px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        }}>
+          <Row justify="space-between" align="middle">
+            <Col>
+              <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                <div style={{
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  borderRadius: "16px",
+                  padding: "16px",
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)'
+                }}>
+                  <FileTextOutlined style={{ 
+                    fontSize: "36px", 
+                    color: "white"
+                  }} />
+                </div>
+                <div>
+                  <Title level={2} style={{ 
+                    margin: 0, 
+                    color: "white",
+                    fontSize: "28px",
+                    fontWeight: 600
+                  }}>
+                    จัดการข่าวสารและบทความ
+                  </Title>
+                  <Text style={{ 
+                    color: "rgba(255,255,255,0.9)", 
+                    fontSize: "16px",
+                    marginTop: "8px",
+                    display: "block"
+                  }}>
+                    สร้าง แก้ไข และเผยแพร่ข่าวสารหรือบทความได้สะดวกในที่เดียว
+                  </Text>
+                </div>
+              </div>
+            </Col>
+             <Col>
+              <Button
+                type="primary"
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={handleCreate}
+                style={{
+                  borderRadius: 12,
+                  height: 48,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  fontWeight: 600,
+                  fontSize: 16,
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                เพิ่มรายการใหม่
+              </Button>
+            </Col>
+          </Row>
+        </div>
+
       <Content
         style={{
-          padding: 24,
+          padding: '0 24px 24px',
           maxWidth: 1400,
           margin: '0 auto',
           width: '100%',
         }}
       >
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Title level={2} style={{
-            margin: 0,
-            color: '#1e3a8a',
-            fontSize: 28
-          }}>
-            <FileTextOutlined style={{ marginRight: 12, color: '#3b82f6' }} />
-            จัดการข่าวสารและบทความ
-          </Title>
-        </div>
 
-        {/* Statistics Cards - ด้านบนสุด */}
+        {/* Statistics Cards - Updated colors to match */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={12} sm={6}>
             <Card
               style={{
                 borderRadius: 16,
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                border: '1px solid #dbeafe',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 background: 'white'
               }}
               bodyStyle={{ padding: 20 }}
             >
               <Statistic
                 title={
-                  <div style={{ color: '#64748b', fontSize: 14, fontWeight: 500 }}>
+                  <div style={{ color: '#1e3a8a', fontSize: 14, fontWeight: 600 }}>
                     <DashboardOutlined style={{ marginRight: 6 }} />
                     ทั้งหมด
                   </div>
                 }
                 value={statistics.total}
-                valueStyle={{ color: '#1e3a8a', fontSize: 28, fontWeight: 600 }}
+                valueStyle={{ color: '#1e3a8a', fontSize: 28, fontWeight: 700 }}
               />
             </Card>
           </Col>
@@ -342,20 +400,20 @@ const AdminArticlesPage: React.FC = () => {
               style={{
                 borderRadius: 16,
                 border: '1px solid #d1fae5',
-                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 background: '#f0fdf4'
               }}
               bodyStyle={{ padding: 20 }}
             >
               <Statistic
                 title={
-                  <div style={{ color: '#059669', fontSize: 14, fontWeight: 500 }}>
+                  <div style={{ color: '#059669', fontSize: 14, fontWeight: 600 }}>
                     <CheckCircleOutlined style={{ marginRight: 6 }} />
                     เผยแพร่
                   </div>
                 }
                 value={statistics.published}
-                valueStyle={{ color: '#059669', fontSize: 28, fontWeight: 600 }}
+                valueStyle={{ color: '#059669', fontSize: 28, fontWeight: 700 }}
               />
             </Card>
           </Col>
@@ -365,25 +423,25 @@ const AdminArticlesPage: React.FC = () => {
               style={{
                 borderRadius: 16,
                 border: '1px solid #fed7aa',
-                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 background: '#fffbeb'
               }}
               bodyStyle={{ padding: 20 }}
             >
               <Statistic
                 title={
-                  <div style={{ color: '#d97706', fontSize: 14, fontWeight: 500 }}>
+                  <div style={{ color: '#d97706', fontSize: 14, fontWeight: 600 }}>
                     <EditOutlined style={{ marginRight: 6 }} />
                     ฉบับร่าง
                   </div>
                 }
                 value={statistics.draft}
-                valueStyle={{ color: '#d97706', fontSize: 28, fontWeight: 600 }}
+                valueStyle={{ color: '#d97706', fontSize: 28, fontWeight: 700 }}
               />
             </Card>
           </Col>
 
-          <Col xs={12} sm={6}>
+        <Col xs={12} sm={6}>
             <Card
               style={{
                 borderRadius: 16,
@@ -413,14 +471,13 @@ const AdminArticlesPage: React.FC = () => {
           borderRadius: 16,
           border: '1px solid #e2e8f0',
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          background: 'white'
+          background: '#f8fafc'
         }} bodyStyle={{ padding: 0 }}>
-          {/* Card Header */}
+          {/* Card Header - Matching the top section */}
           <div style={{
-            padding: 24,
-            background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+            padding: '24px 24px 0px', // 👈 padding บน-ขวา-ล่าง
+            background: 'f8fafc',
             borderRadius: '16px 16px 0 0',
-            color: 'white'
           }}>
             <div style={{
               display: 'flex',
@@ -428,32 +485,25 @@ const AdminArticlesPage: React.FC = () => {
               alignItems: 'center'
             }}>
               <div>
-                <Title level={3} style={{ color: 'white', margin: 0, fontSize: 20 }}>
+                <Title level={3} style={{ 
+                  color: '#001d66', 
+                  margin: 0, 
+                  fontSize: 20,
+                  fontWeight: 600
+                }}>
                   <FileSearchOutlined style={{ marginRight: 10 }} />
                   รายการทั้งหมด
                 </Title>
-                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>
+                <Text style={{ 
+                  color: '#001d66', 
+                  fontSize: 14,
+                  marginTop: 4,
+                  display: 'block'
+                }}>
                   จัดการและควบคุมเนื้อหาของคุณ
                 </Text>
               </div>
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={handleCreate}
-                style={{
-                  borderRadius: 12,
-                  height: 44,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  fontWeight: 600,
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  backdropFilter: 'blur(10px)'
-                }}
-              >
-                เพิ่มรายการใหม่
-              </Button>
+              
             </div>
           </div>
 
@@ -728,6 +778,7 @@ const AdminArticlesPage: React.FC = () => {
           </Form>
         </Modal>
       </Content>
+      </Layout>
     </Layout>
     </>
   );

@@ -72,9 +72,7 @@ function App() {
             path="/student/recommendations"
             element={
               <ProtectedRoute allowedRoles={[3]}>
-                <CheckUser>
-                  <StudentRecommendedPosts />
-                </CheckUser>
+                <StudentRecommendedPosts />
               </ProtectedRoute>
             }
           />
