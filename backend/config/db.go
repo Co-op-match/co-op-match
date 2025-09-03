@@ -130,7 +130,7 @@ func createSeedData(db *gorm.DB) {
 	User := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		{Email: "Jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 
 		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
@@ -143,7 +143,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "B6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "b6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
 
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
@@ -272,51 +272,50 @@ func createSeedData(db *gorm.DB) {
 
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
-	{
-		AcademicPosition: "อาจารย์", Age: 40,
-		FirstName: "สมชาย", LastName: "วิศวกร",
-		Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
-		UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "อาจารย์", Age: 38,
-		FirstName: "สุรีย์", LastName: "เคมี",
-		Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
-		UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
-		FirstName: "สมพงษ์", LastName: "การตลาด",
-		Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
-		UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "รองศาสตราจารย์", Age: 50,
-		FirstName: "อรทัย", LastName: "ภาษา",
-		Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
-		UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "อาจารย์", Age: 35,
-		FirstName: "ธนพล", LastName: "นิติ",
-		Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
-		UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-}
+		{
+			AcademicPosition: "อาจารย์", Age: 40,
+			FirstName: "สมชาย", LastName: "วิศวกร",
+			Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
+			UserID:   4, AddressID: 1, AdminID: 1, GenderID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 38,
+			FirstName: "สุรีย์", LastName: "เคมี",
+			Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
+			UserID:   14, AddressID: 2, AdminID: 1, GenderID: 2,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
+			FirstName: "สมพงษ์", LastName: "การตลาด",
+			Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
+			UserID:   15, AddressID: 3, AdminID: 1, GenderID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "รองศาสตราจารย์", Age: 50,
+			FirstName: "อรทัย", LastName: "ภาษา",
+			Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
+			UserID:   16, AddressID: 4, AdminID: 1, GenderID: 2,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 35,
+			FirstName: "ธนพล", LastName: "นิติ",
+			Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
+			UserID:   17, AddressID: 5, AdminID: 1, GenderID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+	}
 
-for _, s := range staffs {
-	// ถ้ามีอยู่แล้วตาม UserID ก็ไม่สร้างซ้ำ
-	db.Unscoped().
-		Where(entity.AcademicStaff{UserID: s.UserID}).
-		Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
-		FirstOrCreate(&entity.AcademicStaff{})
-}
-
+	for _, s := range staffs {
+		// ถ้ามีอยู่แล้วตาม UserID ก็ไม่สร้างซ้ำ
+		db.Unscoped().
+			Where(entity.AcademicStaff{UserID: s.UserID}).
+			Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
+			FirstOrCreate(&entity.AcademicStaff{})
+	}
 
 	students := []entity.Student{
 		{
@@ -415,11 +414,11 @@ for _, s := range staffs {
 	}
 
 	companies := []entity.Company{
-		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 2, AddressID: 11},
-		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 6, AddressID: 12},
-		{CompanyName: "Gamma Innovations Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 7, AddressID: 13},
-		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 14},
-		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 15},
+		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", UserID: 2, AddressID: 11},
+		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", UserID: 6, AddressID: 12},
+		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", UserID: 7, AddressID: 13},
+		{CompanyName: "Delta Software Co., Ltd.", Logo: "/uploads/companyLogo/d.png", UserID: 8, AddressID: 14},
+		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "/uploads/companyLogo/e.png", UserID: 9, AddressID: 15},
 	}
 	for _, company := range companies {
 		db.Unscoped().FirstOrCreate(&company, entity.Company{UserID: company.UserID})
@@ -498,7 +497,7 @@ for _, s := range staffs {
 			Quantity:        1,
 			MinGpa:          2.8,
 			CreatedAt:       time.Now(),
-			CompanyID:       1,
+			CompanyID:       4,
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
@@ -518,7 +517,7 @@ for _, s := range staffs {
 			Subdistrict:     "ปทุมวัน",
 			District:        "ปทุมวัน",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       5,
 			JobTypeID:       1,
 			StipendID:       1,
 			WorkDayID:       1,
@@ -554,7 +553,7 @@ for _, s := range staffs {
 			Subdistrict:     "คลองหนึ่ง",
 			District:        "คลองหลวง",
 			Province:        "ปทุมธานี",
-			CompanyID:       1,
+			CompanyID:       2,
 			JobTypeID:       3,
 			StipendID:       2,
 			WorkDayID:       1,
@@ -572,7 +571,7 @@ for _, s := range staffs {
 			Subdistrict:     "ห้วยขวาง",
 			District:        "ห้วยขวาง",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       3,
 			JobTypeID:       4,
 			StipendID:       1,
 			WorkDayID:       2,
@@ -590,7 +589,7 @@ for _, s := range staffs {
 			Subdistrict:     "บางซื่อ",
 			District:        "บางซื่อ",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       4,
 			JobTypeID:       5,
 			StipendID:       3,
 			WorkDayID:       3,
@@ -608,7 +607,7 @@ for _, s := range staffs {
 			Subdistrict:     "พระโขนง",
 			District:        "คลองเตย",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       5,
 			JobTypeID:       6,
 			StipendID:       2,
 			WorkDayID:       2,
@@ -877,7 +876,7 @@ for _, s := range staffs {
 		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
-	
+
 	// ดึง user ทั้งหมดที่ยังไม่มี Verify
 	var users []entity.User
 	db.Where("id NOT IN (?)", db.Model(&entity.Verify{}).Select("user_id")).

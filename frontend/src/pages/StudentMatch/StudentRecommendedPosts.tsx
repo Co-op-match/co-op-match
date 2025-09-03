@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { 
   Card, Col, Row, Typography, Tag, Spin, Empty, Progress, Button, Modal, List,
   Statistic, Badge, Tooltip, Slider, Space, Alert, Divider, Layout, message
 } from 'antd';
 import { 
   TrophyOutlined, BulbOutlined, EnvironmentOutlined, BookOutlined, SettingOutlined,
-  InfoCircleOutlined, HeartOutlined, StarOutlined
+  InfoCircleOutlined, HeartOutlined, StarOutlined,
+  TrophyFilled
 } from '@ant-design/icons';
 import { GetLikedPostsByStudentID, GetRecommendedPosts, GetStudentByUserId, LikePost, DeleteLikedPost } from '../../services/https';
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
@@ -230,7 +231,7 @@ function StudentRecommendedPosts() {
       <div style={{ marginBottom: 24, padding: '24px' }}>
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <Title level={2} style={{ margin: 0 }}>
-            <TrophyOutlined style={{ color: '#faad14', marginRight: 8 }} />
+            <TrophyFilled  style={{ color: '#faad14', marginRight: 8 }} />
             งานที่แนะนำสำหรับคุณ
           </Title>
           <Space>
@@ -260,7 +261,7 @@ function StudentRecommendedPosts() {
             <div style={{ marginTop: 16 }}>กำลังวิเคราะห์งานที่เหมาะสมกับคุณ...</div>
           </div>
         ) : Array.isArray(recommendedPosts) && recommendedPosts.length === 0 ? (
-          <Empty description="ไม่พบงานที่แนะนำในขณะนี้" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty description="“อยากได้งานแนะนำ? ต้องใส่ข้อมูลโปรไฟล์ก่อนน้า ✨”" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <>
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>

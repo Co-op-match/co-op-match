@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Row,
   Col,
   Typography,
-  Empty,
   Spin,
   Space,
   Tag,
@@ -29,7 +28,7 @@ interface LikedPost {
   IntershipPost: IntershipPostInterface;
 }
 
-const LikedPosts: React.FC = () => {
+function LikedPosts(){
   const [likedPosts, setLikedPosts] = useState<LikedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -67,7 +66,7 @@ const LikedPosts: React.FC = () => {
       {/* Modern Minimalist Header */}
       <div style={{
         background: '#ffffffff',
-        padding: '40px 24px 30px',
+        padding: '30px 24px 30px',
         borderBottom: '1px solid #f0f0f0',
         position: 'relative'
       }}>
@@ -209,7 +208,7 @@ const LikedPosts: React.FC = () => {
                       style={{
                         borderRadius: 16,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        border: '1px solid #f0f0f0',
+                        border: '2px solid #f0f0f0',
                         overflow: 'hidden',
                         height: '100%',
                         transition: 'all 0.3s ease',

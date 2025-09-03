@@ -14,8 +14,7 @@ function LoginForm() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
   const { refetchUser } = useContext(UserContext);
-
-const location = useLocation();
+  const location = useLocation();
 
 useEffect(() => {
   const isLogin = localStorage.getItem("isLogin") === "true";
