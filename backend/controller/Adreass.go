@@ -86,13 +86,11 @@ func CreateAddressByRoleIDAndUserID(c *gin.Context) {
 		updateErr = config.DB().Save(&student).Error
 
 	case 4: // academic staff
-		var staff entity.AcademicStaff
-		if err := config.DB().Where("user_id = ?", userID).First(&staff).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบอาจารย์"})
+		var user entity.User
+	if err := config.DB().Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบผู้ใช้"})
 			return
 		}
-		staff.AddressID = address.ID
-		updateErr = config.DB().Save(&staff).Error
 
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "role_id ไม่รองรับ"})

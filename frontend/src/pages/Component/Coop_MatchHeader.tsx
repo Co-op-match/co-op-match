@@ -1,25 +1,22 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Avatar, Dropdown, Layout, Menu } from 'antd';
+import React, { useContext, useEffect,  useRef, useState } from 'react';
+import { Avatar, Dropdown, Layout, Menu, Badge } from 'antd';
 import {
   SearchOutlined,
   UserOutlined,
   HomeOutlined,
   SolutionOutlined,
   HistoryOutlined,
-  MessageOutlined, // 👈 แชท
-  LogoutOutlined,
-  DownOutlined,
-  HeartOutlined,
-  SettingOutlined,
-  BellOutlined,
+  MessageOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
-import { GetUserById } from '../../services/https';
+import { GetUserById, GetChatRoomsByUserId, createChatSession, createWsByToken } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
 import Notification from '../Component/Notification';
 import { UserContext } from '../../components/UserContext';
-
+import './CoopMStchHeader.css'
+import { fileURL } from '@/config/env';
 
 const { Header } = Layout;
 
@@ -47,10 +44,27 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
-  const userId = Number(localStorage.getItem("id"));
-
+  const [totalUnread, setTotalUnread] = useState<number>(0);
+  const wsRef = useRef<WebSocket | null>(null);
+  const unreadMapRef = useRef<Map<number, number>>(new Map());
   const { logout } = useContext(UserContext);
 
+  const userId = Number(localStorage.getItem("id"));
+
+  const updateTotalUnread = () => {
+    const sum = Array.from(unreadMapRef.current.values()).reduce((a, b) => a + (b || 0), 0);
+    setTotalUnread(sum);
+  };
+
+  const fetchUser = async () => {
+    if (!userId || isNaN(userId)) return;
+    try {
+      const u = await GetUserById(userId);
+      setUser(u);
+    } catch (e) {
+      console.error("Failed to fetch user", e);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -59,53 +73,114 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
 
   useEffect(() => {
     if (!userId || isNaN(userId)) return;
-    GetUserById(userId).then(setUser).catch(err => console.error("Failed to fetch user", err));
-  }, []);
 
-  // --- เมนูหลัก พร้อมเมนูย่อยใต้ "โปรไฟล์" ---
-  const fullMenu: MenuItem[] = [
+    // โหลดข้อมูลผู้ใช้
+    fetchUser();
+
+    // โหลดห้องแชทเพื่อคำนวณ unread เริ่มต้น
+    GetChatRoomsByUserId(userId)
+      .then((rooms: any[]) => {
+        unreadMapRef.current.clear();
+        if (Array.isArray(rooms)) {
+          rooms.forEach(r => unreadMapRef.current.set(Number(r?.id), Number(r?.unread_count) || 0));
+        }
+        updateTotalUnread();
+      })
+      .catch(() => { /* ignore */ });
+
+    // เปิด WS ล็อบบี้เพื่อรับอัปเดต unread
+    let alive = true;
+    (async () => {
+      try {
+        const { token } = await createChatSession(0); // rid=0
+        if (!alive) return;
+
+        const ws = createWsByToken(token);
+        wsRef.current = ws;
+
+        ws.onmessage = async (event) => {
+          let raw = '';
+          if (typeof event.data === 'string') raw = event.data;
+          else if (event.data instanceof ArrayBuffer) raw = new TextDecoder().decode(event.data);
+          else if (event.data instanceof Blob) raw = await event.data.text();
+          else return;
+
+          for (const line of raw.split('\n')) {
+            const s = line.trim();
+            if (!s) continue;
+            let data: any;
+            try { data = JSON.parse(s); } catch { continue; }
+
+            if (data.event === 'room_meta' || data.event === 'unread') {
+              const rid = Number(data.room_id);
+              const count = Number(data.unread ?? data.count);
+              if (Number.isFinite(rid) && Number.isFinite(count)) {
+                unreadMapRef.current.set(rid, Math.max(0, count));
+                updateTotalUnread();
+              }
+            }
+          }
+        };
+
+        ws.onclose = () => { if (wsRef.current === ws) wsRef.current = null; };
+      } catch {
+        // เงียบไว้
+      }
+    })();
+
+    // ✅ อัปเดตรูปอัตโนมัติเมื่อโฟกัส/visible/มีสัญญาณอัปเดตรูป
+    const onFocus = () => fetchUser();
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchUser(); };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'profile_image_updated') fetchUser();
+    };
+    const onCustom = () => fetchUser(); // window.dispatchEvent(new Event('profile-image-updated'))
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('profile-image-updated', onCustom as EventListener);
+
+    return () => {
+      alive = false;
+      if (wsRef.current) { try { wsRef.current.close(); } catch {} wsRef.current = null; }
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('profile-image-updated', onCustom as EventListener);
+    };
+  }, [userId]);
+
+  const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
     { key: 'recommendations', icon: <SolutionOutlined />, label: 'งานแนะนำ' },
-    { key: 'applications/history', label: 'ประวัติการสมัคร' },
+    { key: 'applications/history', icon: <HistoryOutlined />, label: 'ประวัติการสมัคร' },
+    { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
     {
-      key: 'profile',
-      icon: <UserOutlined />,
+      key: 'chat',
+      icon: <MessageOutlined />,
       label: (
-        <span>
-          โปรไฟล์ <DownOutlined style={{ fontSize: 10, marginLeft: 6 }} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          แชท
+          <Badge count={totalUnread} overflowCount={99} />
         </span>
       ),
-      children: [
-        { key: 'profile', icon: <UserOutlined />, label: 'ดูโปรไฟล์' },
-        {
-          key: 'favorite-posts',
-          icon: <HeartOutlined  />,
-          label: 'โพสต์งานที่สนใจ',
-        },
-        { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
-        { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
-      ],
     },
   ];
 
-  const menuItems = minimalMenu
-    ? [fullMenu.find((item: any) => item?.key === 'profile')!]
-    : fullMenu;
+  const visibleMenuItems = minimalMenu ? fullMenu.slice(-2) : fullMenu;
+  const availableKeys = fullMenu.map(item => item.key);
+  const currentPage = availableKeys.find(key => location.pathname.includes(key)) || availableKeys[0];
 
-  // --- คำนวณ current key ให้รองรับ path กับเมนูย่อย ---
-  const allKeys = flattenKeys(menuItems);
-  // หา key ที่ path ปัจจุบันมีคำนี้อยู่
-  const currentKey =
-    allKeys.find((k) => location.pathname.includes(k)) ||
-    // fallback: ถ้าอยู่หน้า /student/profile/... ให้ active 'profile'
-    (location.pathname.includes('/student/profile') ? 'profile' : allKeys[0]);
-
+  const routeMap: Record<string, string> = { chat: '/chat' };
   const handleMenuClick = ({ key }: { key: string }) => {
     // นำทางตาม key เดิม
     navigate(`/student/${key}`);
 
   };
+
+  const avatarUrl =   user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
 
   return (
     <Header
@@ -131,19 +206,20 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
 
       {/* Right: Menu + Notifications + Avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 'auto', minWidth: 0 }}>
-        <Menu
-          mode="horizontal"
-          selectedKeys={[currentKey!]}
-          items={menuItems}
-          onClick={handleMenuClick}
-          style={{
-            border: 'none',
-            backgroundColor: 'transparent',
-            minWidth: minimalMenu ? 'auto' : 600,
-            flex: '0 0 auto'
-          }}
-        />
-        {/* Dropdown ที่ Avatar: เหลือเฉพาะออกจากระบบ */}
+        <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0 }}>
+          <Menu
+            className="no-ellipsis-menu"
+            mode="horizontal"
+            selectedKeys={[currentPage]}
+            items={visibleMenuItems}
+            onClick={handleMenuClick}
+            style={{ border: 'none', backgroundColor: 'transparent' }}
+            overflowedIndicator={null}
+          />
+        </div>
+
+        <Notification />
+
         <Dropdown
           overlay={
             <Menu
@@ -164,15 +240,11 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           trigger={['hover']}
         >
           <Avatar
-            size={40}
-            src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
-            icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-            style={{
-              cursor: "pointer",
-              marginLeft: 5,
-              marginRight: 5,
-              flex: '0 0 auto'
-            }}
+            size={36}
+            shape="circle"
+            src={avatarUrl}
+            icon={!avatarUrl ? <UserOutlined /> : undefined}
+            style={{ border: '2px solid #f0f0f0', overflow: 'hidden', flexShrink: 0, cursor: 'pointer' }}
           />
         </Dropdown>
       </div>

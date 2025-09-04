@@ -1,6 +1,6 @@
 // src/pages/AdvancedChatInterface.tsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, Search, ArrowLeft, Bot, Layout } from 'lucide-react';
+import { Send, Search, ArrowLeft, Bot } from 'lucide-react';
 import './Chat.css';
 import {
   createChatSession,
@@ -16,7 +16,6 @@ import {
   readRidFromToken,
 } from '../utils/chatToken';
 import CoopMatchHeader from '../pages/Component/Coop_MatchHeader';
-import { Content } from 'antd/es/layout/layout';
 
 interface Message {
   id?: number;

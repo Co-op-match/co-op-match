@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, InputNumber, Row, Col, Select } from 'antd';
 import type { FormInstance } from 'antd';
-import { GetAllEducationLevel, GetUniversity } from '../../../../../services/https';
+import { GetAllEducationLevel, GetUniversity } from '../../../../services/https/index';
 
 export interface StepEducationProps {
   form: FormInstance<any>;

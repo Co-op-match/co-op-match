@@ -2,12 +2,16 @@ package controller
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
+	"net/mail"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -120,105 +124,211 @@ func NotificationsWebSocket(c *gin.Context) {
 	}
 }
 
-// ---------------- Email: นัดสัมภาษณ์ ----------------
+
+/* =========================
+   Template cache
+========================= */
+
+var (
+	tplOnce       sync.Once
+	tplInterview  *template.Template
+	tplResult     *template.Template
+	tplInitErr    error
+	interviewPath = "utils/email_template_interview.html"
+	resultPath    = "utils/email_template_interview_result.html"
+)
+
+func initTemplates() {
+	tplInterview, tplInitErr = template.ParseFiles(interviewPath)
+	if tplInitErr != nil {
+		return
+	}
+	tplResult, tplInitErr = template.ParseFiles(resultPath)
+}
+
+/* =========================
+   Email queue + worker
+========================= */
+
+type emailJob struct {
+	to, subject, html string
+}
+
+var (
+	mailQueue  = make(chan emailJob, 200)
+	workerOnce sync.Once
+)
+
+// 🔴 Hardcode SMTP config
+const (
+	smtpHost = "smtp.gmail.com"
+	smtpPort = 587
+	smtpUser = "coopmatch4@gmail.com" // Gmail ของคุณ
+	smtpPass = "gbjedwdbdchlzcyx"     // App Password 16 หลัก (ไม่มีช่องว่าง)
+	fromName = "Co-op Match"          // ชื่อที่โชว์ในช่องผู้ส่ง
+)
+
+/* =========================
+   Worker
+========================= */
+
+func validEmail(s string) bool {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return false
+	}
+	_, err := mail.ParseAddress(s)
+	return err == nil
+}
+
+func initEmailWorker() {
+	// worker 2 ตัว
+	for i := 1; i <= 2; i++ {
+		go emailWorker(i)
+	}
+}
+
+func emailWorker(id int) {
+	var (
+		dialer = gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
+		sc     gomail.SendCloser
+		err    error
+		alive  bool
+	)
+
+	// ✅ TLS config: ใส่ ServerName ให้ตรวจใบรับรองผ่าน
+	dialer.TLSConfig = &tls.Config{
+		ServerName: smtpHost,
+		MinVersion: tls.VersionTLS12,
+	}
+
+	reconnect := func() {
+		if alive {
+			_ = sc.Close()
+			alive = false
+		}
+		sc, err = dialer.Dial()
+		if err != nil {
+			log.Printf("[MAIL %d] dial fail: %v", id, err)
+			time.Sleep(2 * time.Second)
+			return
+		}
+		alive = true
+	}
+
+	for job := range mailQueue {
+		to := strings.TrimSpace(job.to)
+		if !validEmail(to) {
+			log.Printf("[MAIL %d] skip invalid TO: %q", id, to)
+			continue
+		}
+
+		if !alive {
+			reconnect()
+			if !alive {
+				log.Printf("[MAIL %d] skip send to=%s (no connection)", id, to)
+				continue
+			}
+		}
+
+		msg := gomail.NewMessage()
+		msg.SetAddressHeader("From", smtpUser, fromName)
+		msg.SetHeader("To", to)
+		msg.SetHeader("Subject", job.subject)
+		msg.SetBody("text/html", job.html)
+
+		if err := gomail.Send(sc, msg); err != nil {
+			log.Printf("[MAIL %d] send error to=%s: %v", id, to, err)
+			reconnect()
+		} else {
+			log.Printf("[MAIL %d] sent to=%s", id, to)
+		}
+	}
+}
+
+func enqueueEmail(to, subject, html string) {
+	select {
+	case mailQueue <- emailJob{to: to, subject: subject, html: html}:
+	default:
+		log.Printf("[MAIL] queue full; drop email to=%s", to)
+	}
+}
+
+/* =========================
+   Handler
+========================= */
 
 func SendInterviewEmail(c *gin.Context) {
+	tplOnce.Do(initTemplates)
+	workerOnce.Do(initEmailWorker)
+	if tplInitErr != nil {
+		c.JSON(500, gin.H{"error": "template init failed: " + tplInitErr.Error()})
+		return
+	}
+
 	studentID := c.Param("student_id")
 	companyID := c.Param("company_id")
 
 	db := config.DB()
 
-	// 1) ดึงนัดสัมภาษณ์
 	var appointment entity.InterviewAppointment
 	if err := db.
 		Preload("Company.User").
 		Preload("Student.User").
 		Where("student_id = ? AND company_id = ?", studentID, companyID).
 		First(&appointment).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนัดสัมภาษณ์ที่ตรงกับ student_id และ company_id"})
+		c.JSON(404, gin.H{"error": "ไม่พบนัดสัมภาษณ์"})
 		return
 	}
 
-	// 2) ดึงสถานะจาก application
 	var application entity.Application
 	if err := db.
+		Preload("IntershipPost").
 		Joins("JOIN application_details ON application_details.application_id = applications.id").
 		Joins("JOIN intership_posts ON applications.intership_post_id = intership_posts.id").
 		Where("application_details.student_id = ? AND intership_posts.company_id = ?", studentID, companyID).
 		First(&application).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลการสมัครที่ตรงกับ student และบริษัท"})
+		c.JSON(404, gin.H{"error": "ไม่พบการสมัคร"})
 		return
+	}
+
+	positionName := strings.TrimSpace(application.IntershipPost.PostName)
+	if positionName == "" {
+		positionName = "ไม่ระบุตำแหน่ง"
 	}
 
 	logoBase64 := "data:image/png;base64," + getLogoBase64()
 
-	// 3) ประกอบ template
-	body, err := buildEmailBody(appointment, logoBase64, application.Status)
+	body, err := buildEmailBody(appointment, logoBase64, application.Status, positionName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "เกิดข้อผิดพลาดขณะสร้างเนื้อหาอีเมล: " + err.Error()})
+		c.JSON(500, gin.H{"error": "สร้างอีเมลล้มเหลว: " + err.Error()})
 		return
 	}
 
-	// 4) ส่งอีเมล
-	if err := sendEmail(
-		appointment.Student.User.Email,
-		"แจ้งเตือนนัดสัมภาษณ์จากระบบ Co-op Match",
-		body,
-	); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถส่งอีเมล: " + err.Error()})
+	to := strings.TrimSpace(appointment.Student.User.Email)
+	if !validEmail(to) {
+		c.JSON(400, gin.H{"error": "อีเมลผู้รับไม่ถูกต้อง"})
 		return
 	}
 
-	// 4.1) บันทึก Notification + ยิง WS
+	enqueueEmail(to, "แจ้งเตือนนัดสัมภาษณ์จากระบบ Co-op Match", body)
+
 	loc, _ := time.LoadLocation("Asia/Bangkok")
-
-	title := "นัดสัมภาษณ์จาก " + appointment.Company.CompanyName
-	msg := "วัน-เวลา: " + appointment.AppointmentDate.In(loc).Format("2006-01-02 15:04") + "\nรายละเอียด: " + appointment.Details
-
-	if err := CreateNotificationForUser(
-		db,
-		appointment.Student.User.ID,
-		"interview", // typeName
-		title,
-		msg,
-		"การนัดสัมภาษณ์", // label (ถ้ายังไม่มี type จะถูกสร้างพร้อม label นี้)
-	); err != nil {
-		log.Printf("[NOTI] ❌ create failed user=%d err=%v", appointment.Student.User.ID, err)
-	} else {
-		log.Printf("[NOTI] ✅ created user=%d type=%s title=%q",
-			appointment.Student.User.ID, "interview", title)
-
-		// (A) นับ unread ปัจจุบัน + ส่ง count ให้ทุกแท็บ + log
-		var cnt int64
-		if err := db.Model(&entity.Notification{}).
-			Where("user_id = ? AND read = ?", appointment.Student.User.ID, false).
-			Count(&cnt).Error; err != nil {
-			log.Printf("[NOTI] count unread error user=%d err=%v", appointment.Student.User.ID, err)
-		} else {
-			notifyhub.H.NotifyCount(appointment.Student.User.ID, int(cnt))
-			log.Printf("[NOTI] unread=%d user=%d", cnt, appointment.Student.User.ID)
-		}
-
-		// (B) log จำนวน WS connections ต่อ user (debug ง่ายว่ามีแท็บไหนฟังอยู่บ้าง)
-		stats := notifyhub.H.Stats() // map[userID]connections
-		log.Printf("[WS] live clients: %#v", stats)
-	}
-
-	// 5) Response
-	c.JSON(http.StatusOK, gin.H{
-		"message": "ส่งอีเมลแจ้งเตือนนัดสัมภาษณ์เรียบร้อยแล้ว",
+	c.JSON(202, gin.H{
+		"message": "คิวส่งอีเมลถูกสร้างแล้ว",
 		"appointment": gin.H{
 			"id":               appointment.ID,
-			"appointment_date": appointment.AppointmentDate.Format("2006-01-02 15:04"),
+			"appointment_date": appointment.AppointmentDate.In(loc).Format("2006-01-02 15:04"),
 			"status":           application.Status,
 			"mode":             appointment.Mode,
 			"details":          appointment.Details,
+			"position":         positionName,
 		},
 		"student": gin.H{
 			"id":         appointment.Student.ID,
 			"first_name": appointment.Student.FirstName,
 			"last_name":  appointment.Student.LastName,
-			"email":      appointment.Student.User.Email,
+			"email":      to,
 		},
 		"company": gin.H{
 			"id":           appointment.Company.ID,
@@ -226,6 +336,54 @@ func SendInterviewEmail(c *gin.Context) {
 			"email":        appointment.Company.User.Email,
 		},
 	})
+}
+
+/* =========================
+   Email body
+========================= */
+
+func buildEmailBody(appointment entity.InterviewAppointment, logoBase64, status, position string) (string, error) {
+	var tmpl *template.Template
+	switch status {
+	case "ผ่าน", "ไม่ผ่าน":
+		tmpl = tplResult
+	default:
+		tmpl = tplInterview
+	}
+	if tmpl == nil {
+		return "", fmt.Errorf("template not initialised")
+	}
+
+	loc, _ := time.LoadLocation("Asia/Bangkok")
+	scheduleTime := appointment.AppointmentDate.In(loc)
+	thaiMonths := [...]string{"", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+		"กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"}
+	formattedDate := fmt.Sprintf("%02d %s %d เวลา %02d:%02d",
+		scheduleTime.Day(),
+		thaiMonths[int(scheduleTime.Month())],
+		scheduleTime.Year(),
+		scheduleTime.Hour(),
+		scheduleTime.Minute(),
+	)
+
+	data := map[string]interface{}{
+		"LogoBase64":     logoBase64,
+		"RecipientName":  appointment.Student.FirstName + " " + appointment.Student.LastName,
+		"Title":          "นัดสัมภาษณ์งานจากบริษัท " + appointment.Company.CompanyName,
+		"Message":        appointment.Details,
+		"Status":         status,
+		"Company":        appointment.Company.CompanyName,
+		"Mode":           appointment.Mode,
+		"Position":       position,
+		"Schedule":       formattedDate,
+		"ActionURL":      "https://coopmatch.example/interview/",
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 // ---------------- Email: Verify Status (บริษัท/อาจารย์) ----------------
@@ -237,7 +395,11 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
+
 	db := config.DB()
+
+	// ใช้ worker ส่งเมลแบบ async (ครั้งเดียวพอ)
+	workerOnce.Do(initEmailWorker)
 
 	// 1) Verify ล่าสุด
 	var latestVerify entity.Verify
@@ -253,13 +415,22 @@ func SendVerifyStatusEmail(c *gin.Context) {
 
 	// 2) หา Company ก่อน
 	var company entity.Company
-	errCompany := db.Preload("User").Where("user_id = ?", userID).First(&company).Error
+	errCompany := db.
+		Preload("User").
+		Where("user_id = ?", userID).
+		First(&company).Error
 
-	// 3) ถ้าไม่เจอ Company -> หา AcademicStaff
+	// 3) ถ้าไม่เจอ Company -> หา AcademicStaff (พร้อม preload ที่ต้องใช้)
 	var staff entity.AcademicStaff
 	var errStaff error
 	if errCompany != nil {
-		errStaff = db.Preload("User").Where("user_id = ?", userID).First(&staff).Error
+		errStaff = db.
+			Preload("User").
+			Preload("University").
+			Preload("Faculty").
+			Preload("Program").
+			Where("user_id = ?", userID).
+			First(&staff).Error
 	}
 
 	if errCompany != nil && errStaff != nil {
@@ -274,13 +445,13 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		entityName     string
 		subject        string
 		actionURL      string
-		userIDForNoti  uint
 		tmplFile       string
+		userIDForNoti  uint
 	)
 
 	if errCompany == nil {
 		role = "company"
-		recipientEmail = company.User.Email
+		recipientEmail = strings.TrimSpace(company.User.Email)
 		recipientName = company.CompanyName
 		entityName = company.CompanyName
 		actionURL = "https://coopmatch.example/company/dashboard"
@@ -288,21 +459,16 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		userIDForNoti = company.User.ID
 	} else {
 		role = "academic_staff"
-		recipientEmail = staff.User.Email
-		recipientName = staff.FirstName + " " + staff.LastName
-
-		// ✅ ใช้ NameTH จากความสัมพันธ์
-		uni := staff.University.NameTH
-		fac := staff.Faculty.NameTH
-		dept := staff.Program.NameTH // ใช้ Program เป็น "ภาควิชา/แผนก" แทน Department
+		recipientEmail = strings.TrimSpace(staff.User.Email)
+		recipientName = strings.TrimSpace(staff.FirstName + " " + staff.LastName)
 
 		switch {
-		case uni != "":
-			entityName = uni
-		case fac != "":
-			entityName = fac
-		case dept != "":
-			entityName = dept
+		case strings.TrimSpace(staff.University.NameTH) != "":
+			entityName = staff.University.NameTH
+		case strings.TrimSpace(staff.Faculty.NameTH) != "":
+			entityName = staff.Faculty.NameTH
+		case strings.TrimSpace(staff.Program.NameTH) != "":
+			entityName = staff.Program.NameTH
 		default:
 			entityName = "บัญชีอาจารย์"
 		}
@@ -311,7 +477,6 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		tmplFile = "utils/email_template_Verify_Academic.html"
 		userIDForNoti = staff.User.ID
 	}
-
 	switch status {
 	case "รับรอง":
 		if role == "company" {
@@ -335,8 +500,8 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		subject = "แจ้งสถานะการยืนยันบัญชีจากระบบ Co-op Match"
 	}
 
+	// เตรียมข้อมูล template
 	logoBase64 := "data:image/png;base64," + getLogoBase64()
-
 	data := map[string]interface{}{
 		"LogoBase64":     logoBase64,
 		"RecipientName":  recipientName,
@@ -347,12 +512,13 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		"TermsURL":       "https://coopmatch.example/terms",
 		"UnsubscribeURL": "https://coopmatch.example/unsubscribe",
 
-		// ใช้เฉพาะฝั่งอาจารย์ (template จะ ignore ถ้าไม่ได้อ้างถึง)
+		// ฝั่งอาจารย์ (template บริษัทจะไม่อ้างถึง)
 		"University": staff.University.NameTH,
 		"Faculty":    staff.Faculty.NameTH,
-		"Department": staff.Program.NameTH, // map Program → Department เพื่อไม่ต้องแก้ template
+		"Department": staff.Program.NameTH, // map Program → Department
 	}
 
+	// โหลด + render template
 	tmpl, err := template.ParseFiles(tmplFile)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถโหลด template: " + err.Error()})
@@ -364,31 +530,28 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		return
 	}
 
-	if err := sendEmail(recipientEmail, subject, body.String()); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ส่งอีเมลล้มเหลว: " + err.Error()})
+	// ตรวจอีเมลผู้รับ
+	if !validEmail(recipientEmail) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "อีเมลผู้รับไม่ถูกต้อง"})
 		return
 	}
 
-	// Notification + WS
-	var notiTitle string
-	if role == "company" {
-		notiTitle = "สถานะการยืนยันบริษัท: " + status
-	} else {
-		notiTitle = "สถานะการยืนยันบัญชีอาจารย์: " + status
-	}
-	notiMsg := "สถานะล่าสุดของคุณคือ \"" + status + "\" (" + entityName + ")"
+	// ✅ ส่งแบบเร็ว: ดันเข้าคิว แล้วตอบกลับทันที
+	enqueueEmail(recipientEmail, subject, body.String())
 
-	_ = CreateNotificationForUser(
-		db,
-		userIDForNoti,
-		"verify",
-		notiTitle,
-		notiMsg,
-		"การยืนยันบัญชี",
-	)
+	// ส่ง Notification แบบ async เล็กน้อย
+	go func() {
+		title := map[string]string{
+			"company":        "สถานะการยืนยันบริษัท: " + status,
+			"academic_staff": "สถานะการยืนยันบัญชีอาจารย์: " + status,
+		}[role]
+		msg := "สถานะล่าสุดของคุณคือ \"" + status + "\" (" + entityName + ")"
+		_ = CreateNotificationForUser(db, userIDForNoti, "verify", title, msg, "การยืนยันบัญชี")
+	}()
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":  "ส่งอีเมลแจ้งสถานะการยืนยันเรียบร้อยแล้ว",
+	// ตอบไว (ไม่บล็อกรอ SMTP)
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":  "คิวส่งอีเมลถูกสร้างแล้ว",
 		"email":    recipientEmail,
 		"status":   status,
 		"role":     role,
@@ -396,6 +559,8 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		"entity":   entityName,
 	})
 }
+
+
 
 // ---------------- REST: Get + Mark Read ----------------
 
@@ -461,244 +626,6 @@ func getLogoBase64() string {
 	}
 	return base64.StdEncoding.EncodeToString(file)
 }
-func buildEmailBody(appointment entity.InterviewAppointment, logoBase64 string, status string) (string, error) {
-	var tmplPath string
-
-	switch status {
-	case "ผ่าน", "ไม่ผ่าน":
-		tmplPath = "utils/email_template_interview_result.html"
-	default:
-		tmplPath = "utils/email_template_interview.html"
-	}
-
-	tmpl, err := template.ParseFiles(tmplPath)
-	if err != nil {
-		return "", err
-	}
-
-	loc, err := time.LoadLocation("Asia/Bangkok")
-	if err != nil {
-		return "", err
-	}
-	scheduleTime := appointment.AppointmentDate.In(loc)
-
-	thaiMonths := [...]string{
-		"", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-		"กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
-	}
-	formattedDate := fmt.Sprintf("%02d %s %d เวลา %02d:%02d",
-		scheduleTime.Day(),
-		thaiMonths[int(scheduleTime.Month())],
-		scheduleTime.Year(),
-		scheduleTime.Hour(),
-		scheduleTime.Minute(),
-	)
-
-	data := map[string]interface{}{
-		"LogoBase64":     logoBase64,
-		"RecipientName":  appointment.Student.FirstName + " " + appointment.Student.LastName,
-		"Title":          "นัดสัมภาษณ์งานจากบริษัท " + appointment.Company.CompanyName,
-		"Message":        appointment.Details,
-		"Status":         status,
-		"Company":        appointment.Company.CompanyName,
-		"Position":       "ตำแหน่งที่คุณสมัคร",
-		"Schedule":       formattedDate,
-		"ActionURL":      "https://coopmatch.example/interview/",
-		"PrivacyURL":     "https://coopmatch.example/privacy",
-		"TermsURL":       "https://coopmatch.example/terms",
-		"UnsubscribeURL": "https://coopmatch.example/unsubscribe",
-	}
-
-	var body bytes.Buffer
-	if err := tmpl.Execute(&body, data); err != nil {
-		return "", err
-	}
-	return body.String(), nil
-}
-
-func sendEmail(to, subject, body string) error {
-	m := gomail.NewMessage()
-	m.SetHeader("From", "coopmatch4@gmail.com")
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", subject)
-	m.SetBody("text/html", body)
-
-	d := gomail.NewDialer("smtp.gmail.com", 587, "coopmatch4@gmail.com", "vzyb vdiz kdgc klzv")
-	return d.DialAndSend(m)
-}
-
-// ============================ Verify Status Email ============================
-// func SendVerifyStatusEmail(c *gin.Context) {
-// 	userIDStr := c.Param("userID")
-// 	userID, err := strconv.Atoi(userIDStr)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-// 		return
-// 	}
-// 	db := config.DB()
-
-// 	// 1) ดึง Verify ล่าสุดตาม user_id (ใช้ร่วมทั้งบริษัท/อาจารย์)
-// 	var latestVerify entity.Verify
-// 	if err := db.
-// 		Preload("StatusVerify").
-// 		Where("user_id = ?", userID).
-// 		Order("created_at DESC").
-// 		First(&latestVerify).Error; err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบสถานะการยืนยันล่าสุด"})
-// 		return
-// 	}
-// 	status := latestVerify.StatusVerify.StatusVerify
-
-// 	// 2) พยายามหา Company ก่อน
-// 	var company entity.Company
-// 	errCompany := db.Preload("User").Where("user_id = ?", userID).First(&company).Error
-
-// 	// 3) ถ้าไม่เจอ Company ให้ลองหา AcademicStaff
-// 	var staff entity.AcademicStaff
-// 	errStaff := error(nil)
-// 	if errCompany != nil {
-// 		errStaff = db.Preload("User").Where("user_id = ?", userID).First(&staff).Error
-// 	}
-
-// 	if errCompany != nil && errStaff != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัทหรืออาจารย์ของผู้ใช้นี้"})
-// 		return
-// 	}
-
-// 	// 4) เตรียมข้อมูลตามชนิดผู้รับ
-// 	var (
-// 		role           string // "company" | "academic_staff"
-// 		recipientEmail string
-// 		recipientName  string
-// 		entityName     string // จะ map เข้า key ".Company" ใน template
-// 		subject        string
-// 		actionURL      string
-// 		userIDForNoti  uint
-// 		tmplFile       string
-// 	)
-
-// 	if errCompany == nil {
-// 		// ผู้รับ: บริษัท
-// 		role = "company"
-// 		recipientEmail = company.User.Email
-// 		recipientName = company.CompanyName
-// 		entityName = company.CompanyName
-// 		actionURL = "https://coopmatch.example/company/dashboard"
-// 		tmplFile = "utils/email_template_Verify.html"
-// 		userIDForNoti = company.User.ID
-// 	} else {
-// 		// ผู้รับ: อาจารย์
-// 		role = "academic_staff"
-// 		recipientEmail = staff.User.Email
-// 		recipientName = staff.FirstName + " " + staff.LastName
-// 		// ใช้สังกัดที่เหมาะสมแสดงแทนชื่อบริษัท
-// 		if staff.University != "" {
-// 			entityName = staff.University
-// 		} else if staff.Faculty != "" {
-// 			entityName = staff.Faculty
-// 		} else {
-// 			entityName = "บัญชีอาจารย์"
-// 		}
-// 		actionURL = "https://coopmatch.example/academic/dashboard"
-// 		tmplFile = "utils/email_template_Verify_Academic.html" // ← เทมเพลตสำหรับอาจารย์
-// 		userIDForNoti = staff.User.ID
-// 	}
-
-// 	// 5) สร้าง subject ที่อ่านรู้เรื่องตาม status + role
-// 	switch status {
-// 	case "รับรอง":
-// 		if role == "company" {
-// 			subject = "ยืนยันผล: บริษัทของคุณได้รับการรับรอง (Co-op Match)"
-// 		} else {
-// 			subject = "ยืนยันผล: บัญชีอาจารย์ของท่านได้รับการรับรอง (Co-op Match)"
-// 		}
-// 	case "ปฏิเสธ":
-// 		if role == "company" {
-// 			subject = "แจ้งผล: บริษัทของคุณไม่ได้รับการรับรอง (Co-op Match)"
-// 		} else {
-// 			subject = "แจ้งผล: บัญชีอาจารย์ของท่านไม่ได้รับการรับรอง (Co-op Match)"
-// 		}
-// 	case "รอรับรอง":
-// 		if role == "company" {
-// 			subject = "อยู่ระหว่างตรวจสอบคำขอรับรองบริษัท (Co-op Match)"
-// 		} else {
-// 			subject = "อยู่ระหว่างตรวจสอบคำขอรับรองบัญชีอาจารย์ (Co-op Match)"
-// 		}
-// 	default:
-// 		subject = "แจ้งสถานะการยืนยันบัญชีจากระบบ Co-op Match"
-// 	}
-
-// 	// 6) เตรียม data สำหรับเทมเพลต
-// 	logoBase64 := "data:image/png;base64," + getLogoBase64()
-
-// 	// หมายเหตุ: ถ้าคุณมี field "Reason" ใน entity.Verify ให้ map ใส่ไปด้วยได้:
-// 	// reason := latestVerify.Reason  // <-- ปรับตามชื่อฟิลด์จริงของคุณ
-// 	data := map[string]interface{}{
-// 		"LogoBase64":     logoBase64,
-// 		"RecipientName":  recipientName,
-// 		"Status":         status,
-// 		"Company":        entityName, // key เดิมในเทมเพลต: บริษัท/สังกัด
-// 		"ActionURL":      actionURL,
-// 		"PrivacyURL":     "https://coopmatch.example/privacy",
-// 		"TermsURL":       "https://coopmatch.example/terms",
-// 		"UnsubscribeURL": "https://coopmatch.example/unsubscribe",
-
-// 		// ถ้าคุณต้องการแสดงรายละเอียดอาจารย์เพิ่มเติมในเทมเพลต สามารถเปิดใช้ได้
-// 		"AcademicPosition": staff.AcademicPosition,
-// 		"Faculty":          staff.Faculty,
-// 		"Department":       staff.Department,
-// 		"University":       staff.University,
-// 		// "Reason":           reason, // เปิดใช้เมื่อมีฟิลด์ใน Verify
-// 	}
-
-// 	// 7) Render เทมเพลตตาม role
-// 	tmpl, err := template.ParseFiles(tmplFile)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถโหลด template: " + err.Error()})
-// 		return
-// 	}
-// 	var body bytes.Buffer
-// 	if err := tmpl.Execute(&body, data); err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถ render template: " + err.Error()})
-// 		return
-// 	}
-
-// 	// 8) ส่งอีเมล
-// 	if err := sendEmail(recipientEmail, subject, body.String()); err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ส่งอีเมลล้มเหลว: " + err.Error()})
-// 		return
-// 	}
-
-// 	// 9) สร้าง Notification (type: verify) + (ถ้ามี WS จะเด้ง real-time)
-// 	var notiTitle string
-// 	if role == "company" {
-// 		notiTitle = "สถานะการยืนยันบริษัท: " + status
-// 	} else {
-// 		notiTitle = "สถานะการยืนยันบัญชีอาจารย์: " + status
-// 	}
-// 	notiMsg := "สถานะล่าสุดของคุณคือ \"" + status + "\" (" + entityName + ")"
-
-// 	_ = CreateNotificationForUser(
-// 		db,
-// 		userIDForNoti,
-// 		"verify",
-// 		notiTitle,
-// 		notiMsg,
-// 		"การยืนยันบัญชี",
-// 	)
-
-// 	// 10) ส่ง response กลับ
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"message":  "ส่งอีเมลแจ้งสถานะการยืนยันเรียบร้อยแล้ว",
-// 		"email":    recipientEmail,
-// 		"status":   status,
-// 		"role":     role,
-// 		"receiver": recipientName,
-// 		"entity":   entityName,
-// 	})
-// }
-
-// ============================ Notifications API ============================
 
 // --------- (optional) ให้ frontend ยิงตรงเพื่อสร้าง notification ---------
 

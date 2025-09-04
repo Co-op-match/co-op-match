@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Button, Space, message, Spin } from "antd";
+import { Modal, Form, Button, Space, message } from "antd";
 import {
   UserOutlined,
   BookOutlined,
@@ -10,12 +10,13 @@ import {
 import AddressForm from "../../Student/Edit/From/AddressForm";
 import {
   UpdateAddress,
-
-  UpdateCompanyContact,
-
+  UpdateContact,
 } from "../../../../services/https";
 import type { CompanyInterface } from "../../../../interfaces/Company";
 import ContactForm from "./from/ContactForm";
+
+// ✅ เพิ่ม Loader
+import CoopMatchLoader from '../../../Component/loading';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -52,8 +53,9 @@ const EditProfileCompanyModal: React.FC<EditProfileModalProps> = ({
   initialData,
 }) => {
   const [form] = Form.useForm();
-  const [messageApi, contextHolder] = message.useMessage(); // ✅
+  const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState<string>("กำลังบันทึกข้อมูล...");
   const [formChanged, setFormChanged] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -63,7 +65,6 @@ const EditProfileCompanyModal: React.FC<EditProfileModalProps> = ({
 
   useEffect(() => {
     if (open && initialData) {
-
       form.setFieldsValue({
         ...initialData,
         ...initialData.Address,
@@ -72,7 +73,6 @@ const EditProfileCompanyModal: React.FC<EditProfileModalProps> = ({
         Province: initialData.Address?.Province?.name_th,
         Postcode: initialData.Address?.Postcode?.post_code,
       });
-
       setFormChanged(false);
     }
   }, [open, initialData, form]);
@@ -93,19 +93,17 @@ const EditProfileCompanyModal: React.FC<EditProfileModalProps> = ({
     }
   };
 
-
-const handleContactSubmit = async (values: any, userId: number) => {
-  const payload = {
-    phone_number: values.phone_number,
-    website: values.website,
-    email: values.email,
-    line: values.line,
-    facebook: values.facebook,
+  const handleContactSubmit = async (values: any, userId: number) => {
+    const payload = {
+      phone_number: values.phone_number,
+      website: values.website,
+      email: values.email,
+      line: values.line,
+      facebook: values.facebook,
+    };
+    await UpdateContact(userId, payload);
+    messageApi.success("บันทึกข้อมูลติดต่อบริษัทสำเร็จ!");
   };
-
-  await UpdateCompanyContact(userId, payload); // ✅ ใช้ user_id เพื่ออัปเดต contact ของบริษัท
-  messageApi.success("บันทึกข้อมูลติดต่อบริษัทสำเร็จ!");
-};
 
   const handleAddressSubmit = async (values: any, userId: number, roleId: number) => {
     const payload = {
@@ -128,6 +126,7 @@ const handleContactSubmit = async (values: any, userId: number) => {
 
     try {
       setLoading(true);
+      setLoadingText(section === "contact" ? "กำลังบันทึกข้อมูลติดต่อ..." : "กำลังบันทึกที่อยู่...");
 
       switch (section) {
         case "contact":
@@ -141,9 +140,10 @@ const handleContactSubmit = async (values: any, userId: number) => {
       onClose();
     } catch (err) {
       console.error("❌ Update Failed", err);
-      messageApi.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล"); // ✅
+      messageApi.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setLoading(false);
+      setLoadingText("กำลังบันทึกข้อมูล...");
     }
   };
 
@@ -157,7 +157,7 @@ const handleContactSubmit = async (values: any, userId: number) => {
         await doSubmit(values);
       }
     } catch {
-      messageApi.error("กรุณากรอกข้อมูลให้ครบถ้วน"); // ✅
+      messageApi.error("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
   };
 
@@ -171,7 +171,20 @@ const handleContactSubmit = async (values: any, userId: number) => {
 
   return (
     <>
-      {contextHolder} {/* ✅ Antd message */}
+      {contextHolder}
+
+      {/* ✅ Loader Overlay */}
+      {loading && (
+        <CoopMatchLoader
+          overlay
+          animation="piece-rotate"
+          progressMode="indeterminate"
+          text={loadingText}
+          // primaryColor="#1890ff"
+          // speed={2.0}
+        />
+      )}
+
       <Modal
         open={open}
         onCancel={handleCancel}
@@ -211,24 +224,25 @@ const handleContactSubmit = async (values: any, userId: number) => {
               <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "600", color: "#262626" }}>
                 {sectionConfig.title}
               </h2>
-              <p style={{ margin: 0, color: "#8c8c8c", fontSize: "14px" }}>{sectionConfig.description}</p>
+              <p style={{ margin: 0, color: "#8c8c8c", fontSize: "14px" }}>
+                {sectionConfig.description}
+              </p>
             </div>
           </div>
         </div>
 
-        <Spin spinning={loading} tip="กำลังบันทึกข้อมูล...">
-          <div style={{ background: "#fafafa", padding: "20px", borderRadius: "8px", marginBottom: "24px" }}>
-            <Form
-              layout="vertical"
-              form={form}
-              onValuesChange={handleFormChange}
-              requiredMark="optional"
-              scrollToFirstError
-            >
-              {renderForm()}
-            </Form>
-          </div>
-        </Spin>
+        {/* ❌ เอา Spin ออกเพื่อไม่ให้ซ้อนกับ Loader */}
+        <div style={{ background: "#fafafa", padding: "20px", borderRadius: "8px", marginBottom: "24px" }}>
+          <Form
+            layout="vertical"
+            form={form}
+            onValuesChange={handleFormChange}
+            requiredMark="optional"
+            scrollToFirstError
+          >
+            {renderForm()}
+          </Form>
+        </div>
 
         <div
           style={{

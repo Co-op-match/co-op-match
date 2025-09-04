@@ -29,6 +29,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CompanyReviews from "./StudentReviews";
 import CompanyJobList from "./CompanyJobList";
 import { saveChatToken } from "../../../utils/chatToken";
+import CoopMatchLoader from "../../Component/loading";
 
 const { Content } = Layout;
 
@@ -41,6 +42,7 @@ const CompanyProfileview: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [chatHovered, setChatHovered] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
+  const isBusy = loading || creatingSession;
 
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -158,6 +160,16 @@ const CompanyProfileview: React.FC = () => {
 
   return (
     <Layout>
+          {isBusy && (
+      <CoopMatchLoader
+        overlay
+        animation={creatingSession ? "bounce-assemble" : "wave-fold"}
+        primaryColor="#2473b2"
+        progressMode="indeterminate"
+        text={creatingSession ? "กำลังเริ่มแชทกับบริษัท..." : "กำลังโหลดโปรไฟล์บริษัท..."}
+        // size="lg"  // ถ้าอยากใหญ่ขึ้น ปลดคอมเมนต์ได้
+      />
+    )}
       <CompanyHeader />
       <Layout className="company-layout">
         <Content>
