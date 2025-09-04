@@ -1,39 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  Table,
-  Space,
-  Tag,
-  Input,
-  Row,
-  Col,
-  Typography,
-  Layout,
-  Tabs,
-  Empty,
-  message,
-} from "antd";
-import {
-  FileTextOutlined,
-  TeamOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  CloseOutlined,
-  SearchOutlined,
-  LinkOutlined,
-  UserOutlined,
-  StarOutlined,
-} from "@ant-design/icons";
+import { Card, Table, Space, Tag, Input, Row, Col, Typography, Layout, Tabs, Empty, message } from "antd";
+import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-
 import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
-
 import type { StatusPostInterface } from "../../../interface/IStatusPost";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
-
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";

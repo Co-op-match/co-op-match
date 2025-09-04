@@ -1,30 +1,9 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
-import {
-  Avatar,
-  Button,
-  Dropdown,
-  Layout,
-  Menu,
-  Space,
-  Drawer,
-  Grid,
-  type MenuProps,
-  message,
-} from "antd";
-import {
-  UserOutlined,
-  BellOutlined,
-  SettingOutlined,
-  HomeOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  MenuOutlined,
-  LogoutOutlined,
-  CheckCircleOutlined,
-} from "@ant-design/icons";
+import React, { useContext, useEffect, useState } from "react";
+import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
+import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
-import { GetUserById, GetUserByIdhaveStatusData } from "../../services/https";
+import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
 
@@ -106,69 +85,65 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "lecturers",
       "admins",
       "users",
+      "articles"
     ].find((key) => location.pathname.includes(key)) || "dashboard";
 
-  const userDropdownItems: MenuProps["items"] = [
-    {
-      label: "นักศึกษา",
-      key: "students",
-    },
-    {
-      label: "บริษัท",
-      key: "companies",
-    },
-    {
-      label: "อาจารย์",
-      key: "lecturers",
-    },
-    {
-      label: "ผู้ดูแลระบบ",
-      key: "admins",
-    },
-  ];
-
-  const userMenuProps = {
-    items: userDropdownItems,
-    onClick: handleMenuClick,
-  };
-
   const fullMenu = [
-    {
-      key: "dashboard",
-      icon: <HomeOutlined />,
-      label: isMobile ? "หน้าหลัก" : "หน้าหลัก",
-    },
-    {
-      key: "users",
-      icon: <TeamOutlined />,
-      label: isMobile ? "ผู้ใช้" : "ผู้ใช้ทั้งหมด",
-    },
-    {
-      key: "manage-posts",
-      icon: <FileTextOutlined />,
-      label: "จัดการ Post",
-    },
-    {
-      key: "verify",
-      icon: <CheckCircleOutlined />,
-      label: isMobile ? "ตรวจสอบ" : "ตรวจสอบการรับรอง",
-    },
-    {
-      key: "analysis",
-      icon: <FileTextOutlined />,
-      label: isMobile ? "วิเคราะห์" : "การวิเคราะห์",
-    },
-    {
-      key: "notifications",
-      icon: <BellOutlined />,
-      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน",
-    },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "ตั้งค่า",
-    },
-  ];
+  {
+    key: "dashboard",
+    icon: <HomeOutlined />,
+    label: "หน้าหลัก",
+  },
+  {
+    key: "users",
+    icon: <TeamOutlined />,
+    label: "ผู้ใช้ทั้งหมด",
+  },
+  {
+    key: "manage-posts",
+    icon: <FileTextOutlined />,
+    label: "จัดการ Post",
+    children: [
+      {
+        key: "manage-posts",          // คงคีย์เดิมไว้เพื่อให้ลิงก์เดิมทำงาน
+        icon: <FileTextOutlined />,
+        label: "ภาพรวมโพสต์",
+      },
+      {
+        key: "articles",              // เมนูย่อย: จัดการข่าว/บทความ
+        icon: <FileTextOutlined />,
+        label: "จัดการข่าว/บทความ",
+      },
+    ],
+  },
+  {
+    key: "verify",
+    icon: <CheckCircleOutlined />,
+    label: "ตรวจสอบการรับรอง",
+  },
+  {
+    key: "analysis",
+    icon: <FileTextOutlined />,
+    label: "การวิเคราะห์",
+  },
+  {
+    key: "notifications",
+    icon: <BellOutlined />,
+    label: "การแจ้งเตือน",
+  },
+  {
+    key: "settings",
+    icon: <SettingOutlined />,
+    label: "ตั้งค่า",
+  },
+  // *** ลบรายการเดิมที่เคยเป็นระดับบน:
+  // {
+  //   key: "articles",
+  //   icon: <SettingOutlined />,
+  //   label: "จัดการข่าว/บทความ",
+  // },
+];
+
 
   const menuItems = minimalMenu
     ? [fullMenu.find((item) => item.key === "dashboard")!]

@@ -1,17 +1,6 @@
 import React, { useState } from "react";
 import { Card, Descriptions, Typography, Tag, Space, Button, Modal } from "antd";
-import { 
-  EditOutlined, 
-  UserOutlined, 
-  StarOutlined, 
-  DesktopOutlined, 
-  CalendarOutlined, 
-  GiftOutlined, 
-  DollarOutlined, 
-  EnvironmentOutlined, 
-  CheckOutlined, 
-  StopOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, UserOutlined, StarOutlined, DesktopOutlined, CalendarOutlined, GiftOutlined, DollarOutlined, EnvironmentOutlined,  CheckOutlined, StopOutlined } from "@ant-design/icons";
 
 const { Title, Paragraph, Text } = Typography;
 

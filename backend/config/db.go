@@ -33,6 +33,7 @@ func SetupDatabase() {
 		&entity.Role{},
 		&entity.Permission{},
 		&entity.RolePermission{},
+		&entity.PasswordResetToken{},
 		&entity.User{},
 		&entity.Gender{},
 		&entity.Provinces{},
@@ -56,6 +57,7 @@ func SetupDatabase() {
 		&entity.Stipend{},
 		&entity.WorkDay{},
 		&entity.Application{},
+		&entity.Article{},
 		&entity.ApplicationDetails{},
 		&entity.JobMatch{},
 		&entity.Review{},
@@ -97,6 +99,7 @@ func SetupDatabase() {
 	ImportDistrictsCSV(db, "./config/data/address/districts.csv")
 	ImportPostcodesCSV(db, "./config/data/address/postcode.csv")
 	ImportSubDistrictsCSV(db, "./config/data/address/subdistricts.csv")
+	SeedArticles(db)
 }
 
 func createSeedData(db *gorm.DB) {
@@ -127,7 +130,7 @@ func createSeedData(db *gorm.DB) {
 	User := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
-		{Email: "Jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 
 		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
@@ -140,7 +143,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "s2@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s3@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
 		{Email: "s4@example.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "B6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
+		{Email: "b6526542@g.sut.ac.th", Password: hashedPassword, RoleID: 3, IsActive: true},
 
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
@@ -269,51 +272,50 @@ func createSeedData(db *gorm.DB) {
 
 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
-	{
-		AcademicPosition: "อาจารย์", Age: 40,
-		FirstName: "สมชาย", LastName: "วิศวกร",
-		Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
-		UserID: 4, AddressID: 1, AdminID: 1, GenderID: 1,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "อาจารย์", Age: 38,
-		FirstName: "สุรีย์", LastName: "เคมี",
-		Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
-		UserID: 14, AddressID: 2, AdminID: 1, GenderID: 2,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
-		FirstName: "สมพงษ์", LastName: "การตลาด",
-		Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
-		UserID: 15, AddressID: 3, AdminID: 1, GenderID: 1,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "รองศาสตราจารย์", Age: 50,
-		FirstName: "อรทัย", LastName: "ภาษา",
-		Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
-		UserID: 16, AddressID: 4, AdminID: 1, GenderID: 2,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-	{
-		AcademicPosition: "อาจารย์", Age: 35,
-		FirstName: "ธนพล", LastName: "นิติ",
-		Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
-		UserID: 17, AddressID: 5, AdminID: 1, GenderID: 1,
-		UniversityID: 1, FacultyID: 1, ProgramID: 1,
-	},
-}
+		{
+			AcademicPosition: "อาจารย์", Age: 40,
+			FirstName: "สมชาย", LastName: "วิศวกร",
+			Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
+			UserID:   4, AddressID: 1, AdminID: 1, GenderID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 38,
+			FirstName: "สุรีย์", LastName: "เคมี",
+			Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
+			UserID:   14, AddressID: 2, AdminID: 1, GenderID: 2,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
+			FirstName: "สมพงษ์", LastName: "การตลาด",
+			Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
+			UserID:   15, AddressID: 3, AdminID: 1, GenderID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "รองศาสตราจารย์", Age: 50,
+			FirstName: "อรทัย", LastName: "ภาษา",
+			Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
+			UserID:   16, AddressID: 4, AdminID: 1, GenderID: 2,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+		{
+			AcademicPosition: "อาจารย์", Age: 35,
+			FirstName: "ธนพล", LastName: "นิติ",
+			Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
+			UserID:   17, AddressID: 5, AdminID: 1, GenderID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+		},
+	}
 
-for _, s := range staffs {
-	// ถ้ามีอยู่แล้วตาม UserID ก็ไม่สร้างซ้ำ
-	db.Unscoped().
-		Where(entity.AcademicStaff{UserID: s.UserID}).
-		Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
-		FirstOrCreate(&entity.AcademicStaff{})
-}
-
+	for _, s := range staffs {
+		// ถ้ามีอยู่แล้วตาม UserID ก็ไม่สร้างซ้ำ
+		db.Unscoped().
+			Where(entity.AcademicStaff{UserID: s.UserID}).
+			Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
+			FirstOrCreate(&entity.AcademicStaff{})
+	}
 
 	students := []entity.Student{
 		{
@@ -412,11 +414,11 @@ for _, s := range staffs {
 	}
 
 	companies := []entity.Company{
-		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 2, AddressID: 11},
-		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 6, AddressID: 12},
-		{CompanyName: "Gamma Innovations Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 7, AddressID: 13},
-		{CompanyName: "Delta Software Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 8, AddressID: 14},
-		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "https://cdn-icons-png.flaticon.com/512/6596/6596121.png", UserID: 9, AddressID: 15},
+		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", UserID: 2, AddressID: 11},
+		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", UserID: 6, AddressID: 12},
+		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", UserID: 7, AddressID: 13},
+		{CompanyName: "Delta Software Co., Ltd.", Logo: "/uploads/companyLogo/d.png", UserID: 8, AddressID: 14},
+		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "/uploads/companyLogo/e.png", UserID: 9, AddressID: 15},
 	}
 	for _, company := range companies {
 		db.Unscoped().FirstOrCreate(&company, entity.Company{UserID: company.UserID})
@@ -495,7 +497,7 @@ for _, s := range staffs {
 			Quantity:        1,
 			MinGpa:          2.8,
 			CreatedAt:       time.Now(),
-			CompanyID:       1,
+			CompanyID:       4,
 			StatusPostID:    1,
 			AdminID:         1,
 			WorkModeID:      1,
@@ -503,7 +505,7 @@ for _, s := range staffs {
 			StipendID:       2,
 			JobTypeID:       1,
 			//Benefits: []entity.Benefit{
-				//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
+			//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
 			//},
 		}, {
 			PostName:        "Frontend Developer Intern",
@@ -515,7 +517,7 @@ for _, s := range staffs {
 			Subdistrict:     "ปทุมวัน",
 			District:        "ปทุมวัน",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       5,
 			JobTypeID:       1,
 			StipendID:       1,
 			WorkDayID:       1,
@@ -551,7 +553,7 @@ for _, s := range staffs {
 			Subdistrict:     "คลองหนึ่ง",
 			District:        "คลองหลวง",
 			Province:        "ปทุมธานี",
-			CompanyID:       1,
+			CompanyID:       2,
 			JobTypeID:       3,
 			StipendID:       2,
 			WorkDayID:       1,
@@ -569,7 +571,7 @@ for _, s := range staffs {
 			Subdistrict:     "ห้วยขวาง",
 			District:        "ห้วยขวาง",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       3,
 			JobTypeID:       4,
 			StipendID:       1,
 			WorkDayID:       2,
@@ -587,7 +589,7 @@ for _, s := range staffs {
 			Subdistrict:     "บางซื่อ",
 			District:        "บางซื่อ",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       4,
 			JobTypeID:       5,
 			StipendID:       3,
 			WorkDayID:       3,
@@ -605,7 +607,7 @@ for _, s := range staffs {
 			Subdistrict:     "พระโขนง",
 			District:        "คลองเตย",
 			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
+			CompanyID:       5,
 			JobTypeID:       6,
 			StipendID:       2,
 			WorkDayID:       2,
@@ -874,7 +876,7 @@ for _, s := range staffs {
 		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
 		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
 	}
-	
+
 	// ดึง user ทั้งหมดที่ยังไม่มี Verify
 	var users []entity.User
 	db.Where("id NOT IN (?)", db.Model(&entity.Verify{}).Select("user_id")).
@@ -1190,4 +1192,107 @@ func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
 		db.FirstOrCreate(&subDistrict, entity.SubDistrict{NameTH: subDistrict.NameTH, DistrictID: subDistrict.DistrictID})
 	}
 	log.Println("✅ SubDistricts imported")
+}
+func SeedArticles(db *gorm.DB) error {
+	now := time.Now()
+	yes := true
+	no := false
+
+	articles := []entity.Article{
+		// -------- News --------
+		{
+			Title:       "เปิดรับสมัครนักศึกษาฝึกงาน ประจำภาคฤดูร้อน 2568",
+			Subtitle:    "เตรียมเรซูเม่และทรานสคริปต์ให้พร้อม",
+			Body:        "บริษัทชั้นนำหลายแห่งเริ่มเปิดรับสมัครนักศึกษาฝึกงานแล้ว นักศึกษาที่สนใจควรเตรียมเอกสารให้พร้อม เช่น Resume, Transcript และจดหมายแนะนำตัว",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "โครงการจับคู่สถานประกอบการกับนักศึกษา",
+			Subtitle:    "มหาวิทยาลัยร่วมมือบริษัทพันธมิตร",
+			Body:        "มหาวิทยาลัยร่วมกับบริษัทพันธมิตร เปิดโครงการ Coop Match เพื่อช่วยจับคู่สถานประกอบการที่เหมาะสมกับนักศึกษา",
+			Category:    "กิจกรรม",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "ประกาศ! เพิ่มตำแหน่งฝึกงานด้าน Data Engineer",
+			Subtitle:    "โอกาสใหม่ในสายงาน Big Data",
+			Body:        "บริษัทด้านไอทีเพิ่มตำแหน่งฝึกงานใหม่ สายงาน Data Engineer เพื่อรองรับการเติบโตด้าน Big Data และ AI",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "เชิญร่วมงาน Career Day Online",
+			Subtitle:    "พบกับบริษัทมากกว่า 50 แห่ง",
+			Body:        "งาน Career Day จะจัดในรูปแบบออนไลน์ นักศึกษาสามารถสมัครเข้าร่วมเพื่อพบกับบริษัทต่างๆ และสัมภาษณ์เบื้องต้นได้ทันที",
+			Category:    "กิจกรรม",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+		{
+			Title:       "ประกาศเลื่อนกำหนดส่งใบสมัครฝึกงาน",
+			Subtitle:    "เลื่อนออกไปอีก 1 สัปดาห์",
+			Body:        "กำหนดส่งเอกสารฝึกงานภาคฤดูร้อน ขยายเวลาออกไปอีก 1 สัปดาห์ เพื่อเปิดโอกาสให้นักศึกษาที่เตรียมตัวไม่ทัน",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+
+		// -------- Career Articles --------
+		{
+			Title:       "5 เคล็ดลับเขียนเรซูเม่ให้โดนใจบริษัท",
+			Subtitle:    "Resume ที่ดีคือใบเบิกทาง",
+			Body:        "การฝึกงานเริ่มต้นที่เรซูเม่ บทความนี้แนะนำวิธีเขียนเรซูเม่ที่กระชับ ชัดเจน และดึงดูด HR",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "เตรียมตัวอย่างไร ก่อนสัมภาษณ์ฝึกงานครั้งแรก",
+			Subtitle:    "แชร์เทคนิคการตอบคำถามยอดฮิต",
+			Body:        "บทความนี้รวมเทคนิคการตอบคำถามสัมภาษณ์ เช่น 'แนะนำตัวเอง' หรือ 'ทำไมถึงอยากฝึกงานที่นี่' เพื่อให้คุณมั่นใจมากขึ้น",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "รวมเว็บไซต์และแหล่งหางานฝึกงานที่นักศึกษาควรรู้",
+			Subtitle:    "LinkedIn, JobsDB, Coop Match",
+			Body:        "รวมเว็บไซต์และแพลตฟอร์มหางานฝึกงาน เช่น Coop Match, LinkedIn, JobsDB และเว็บไซต์ของมหาวิทยาลัย",
+			Category:    "แหล่งข้อมูล",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+		{
+			Title:       "Soft Skills ที่บริษัทมองหาในนักศึกษาฝึกงาน",
+			Subtitle:    "มากกว่าความรู้คือทักษะที่ใช้ได้จริง",
+			Body:        "บริษัทมักมองหาทักษะนอกห้องเรียน เช่น การทำงานเป็นทีม การสื่อสารที่ดี ความรับผิดชอบ และความยืดหยุ่นในการทำงาน",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+		},
+		{
+			Title:       "Checklist ก่อนเริ่มวันแรกของการฝึกงาน",
+			Subtitle:    "เตรียมตัวให้พร้อมก่อนเริ่มจริง",
+			Body:        "สิ่งที่ควรเตรียม เช่น เสื้อผ้า, เอกสาร, วิธีเดินทาง และการทำความรู้จักทีมล่วงหน้า",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &no,
+		},
+	}
+
+	return db.Create(&articles).Error
 }

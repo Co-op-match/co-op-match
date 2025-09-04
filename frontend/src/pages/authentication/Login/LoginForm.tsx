@@ -14,8 +14,7 @@ function LoginForm() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
   const { refetchUser } = useContext(UserContext);
-
-const location = useLocation();
+  const location = useLocation();
 
 useEffect(() => {
   const isLogin = localStorage.getItem("isLogin") === "true";
@@ -92,18 +91,11 @@ useEffect(() => {
         <div className="signin-container">
           {/* Left Image Section */}
           <div className="signin-left"></div>
-
           {/* Right Form Section */}
           <div className="signin-right">
             {/* ปุ่มกลับ */}
             <div style={{ marginBottom: 16 }}>
-              <Button
-                type="link"
-                onClick={() => navigate("/")}
-                style={{ color: "#888888" }}
-              >
-                &lt; กลับสู่หน้าหลัก
-              </Button>
+              
             </div>
 
             <div className="signin-header">

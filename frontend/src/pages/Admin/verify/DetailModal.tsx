@@ -1,18 +1,6 @@
 import React from "react";
-import {
-  Modal,
-  Row,
-  Col,
-  Typography,
-  Space,
-  Button,
-} from "antd";
-import {
-  FileTextOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-} from "@ant-design/icons";
+import { Modal, Row, Col, Typography, Space, Button } from "antd";
+import { FileTextOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import type { VerifyInterface } from "../../../interfaces/Verify";
 import type { StatusVerifyInterface } from "../../../interfaces/StatusVerify";
 import DocumentsCard from "./component/DocumentsCard";

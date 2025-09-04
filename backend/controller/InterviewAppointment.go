@@ -91,7 +91,6 @@ func ListInterviewAppointments(c *gin.Context) {
 		Select(`
             interview_appointments.id, 
             interview_appointments.appointment_date, 
-            interview_appointments.status, 
             interview_appointments.mode, 
             interview_appointments.details, 
             interview_appointments.company_id, 

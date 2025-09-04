@@ -5,7 +5,6 @@ import axios from "axios";
 import type { UserInterface } from "../../interfaces/User";
 import type { ProfileImageInterface } from "../../interfaces/ProfileImage";
 import type { GenderInterface } from "../../interfaces/Gender";
-import type { EducationInterface } from "../../interfaces/Education";
 import type { AddressInterface } from "../../interfaces/Address";
 import type { StudentSkillPayload } from "../../interfaces/StudentSkillPayload";
 import type { EducationInput } from "../../interfaces/EducationInput";
@@ -15,10 +14,8 @@ import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
-import type { InternshipPostInterface } from "../../interface/IIntershipPost";
-import { API_BASE } from "@/config/env";
 import type { InputAcademicStaffInterface } from "@/interfaces/InputAcademicStaff";
-import type { Payload } from "recharts/types/component/DefaultTooltipContent";
+import { API_BASE } from "@/config/env";
 
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
@@ -56,7 +53,7 @@ async function GetRole() {
     .then((res) => res)
     .catch((e) => e.response);
 }
-
+/*
 async function ResetPassword(email: string, newPassword: string) {
   try {
     const token = localStorage.getItem('token');
@@ -75,6 +72,31 @@ async function ResetPassword(email: string, newPassword: string) {
     return error.response ? error.response.data : { error: "An unknown error occurred" };
   }
 }
+*/
+// services/https.ts
+export async function SendResetPasswordEmail(email: string) {
+  try {
+    const res = await axios.post(`${apiUrl}/auth/password/forgot`, { email }, {
+      headers: { "Content-Type": "application/json" }
+    });
+    return res.data;
+  } catch (e: any) {
+    throw e.response?.data || { error: true, message: "Unknown error" };
+  }
+}
+
+export async function ResetPassword(email: string, new_password: string, otp: string) {
+  try {
+    const res = await axios.post(`${apiUrl}/auth/password/reset-otp`, 
+      { email, new_password, otp },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return res.data;
+  } catch (e: any) {
+    throw e.response?.data || { error: true, message: "Unknown error" };
+  }
+}
+
 
 async function CreateUser(data: UsersInterface) {
   return await axios
@@ -293,37 +315,37 @@ async function CreateSendVerifyAcademicStaff(user_id: number ,data: FormData) {
 //=============================== Analysis ==============================//
 export async function GetAdminDashboardSummary () {
   return await axios
-    .get(`${apiUrl}/analysis/dashboard-summary`)
+    .get(`${apiUrl}/analysis/dashboard-summary`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminDashboardOverview () {
   return await axios
-    .get(`${apiUrl}/analysis/dashboard-overview`)
+    .get(`${apiUrl}/analysis/dashboard-overview`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAllLoginLogs () {
   return await axios
-    .get(`${apiUrl}/all-login-logs`)
+    .get(`${apiUrl}/all-login-logs`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminMonthlyApplicationStats () {
   return await axios
-    .get(`${apiUrl}/analysis/monthly-application-stats`)
+    .get(`${apiUrl}/analysis/monthly-application-stats`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminRecentActivities () {
   return await axios
-    .get(`${apiUrl}/analysis/recent-activities`)
+    .get(`${apiUrl}/analysis/recent-activities`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export async function GetAdminPendingPosts () {
   return await axios
-    .get(`${apiUrl}/analysis/pending-posts`)
+    .get(`${apiUrl}/analysis/pending-posts`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
@@ -336,12 +358,41 @@ export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'ye
 }
 export async function GetMonthlyUsersByRole () {
   return await axios
-    .get(`${apiUrl}/analysis/monthly-user-by-role`)
+    .get(`${apiUrl}/analysis/monthly-user-by-role`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
 export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+
+export async function getOverview (companyId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/overview`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function getTrend (companyId: number, start?: string, end?: string, days=30) {
+  const url =
+    start && end
+      ? `${apiUrl}/analysis/company/${companyId}/trend?start=${encodeURIComponent(
+          start
+        )}&end=${encodeURIComponent(end)}`
+      : `${apiUrl}/analysis/company/${companyId}/trend?days=${days}`;
+
+  try {
+    const res = await axios.get(url, requestOptions);
+    return res.data as { date: string; value: number }[];
+  } catch (err: any) {
+    // หากอยากให้ฝั่งเรียกใช้เช็ค error ได้ง่าย แนะนำ throw ต่อ
+    throw err?.response?.data || err;
+  }
+}
+export async function getPipeline (companyId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/status-application`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios
@@ -765,6 +816,7 @@ export async function Logout(email: string) {
     throw error.response?.data || error.message;
   }
 }
+
 export async function LikePost(data: { StudentID: number; IntershipPostID: number }) {
   return await axios.post(`${apiUrl}/liked-post`, data, requestOptions);
 }
@@ -888,7 +940,7 @@ export async function GetChatRoomsByUserId(userId: number) {
 export {
   SignIn,
   GetRole,
-  ResetPassword,
+  //ResetPassword,
   CreateUser,
   GetStudentById,
   GetStudentByUserId,
@@ -954,3 +1006,5 @@ export {
   UpdateAcademicStaff,
 
 };
+
+

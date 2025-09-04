@@ -1,252 +1,188 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Button, Card, Layout, Row, Col, Typography, message } from 'antd';
-import {
-  UserOutlined,
-  TeamOutlined,
-  CheckCircleOutlined,
-  FileTextOutlined,
-  SearchOutlined,
-  TrophyOutlined,
-  MessageOutlined,
-  HomeOutlined,
-  PlayCircleOutlined,
-  ReadOutlined,
-} from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Button, Card, Layout, Row, Col, Typography, message, Modal, Collapse } from 'antd';
+import { UserOutlined, TeamOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined, TrophyOutlined, ReadOutlined, FacebookFilled, TwitterSquareFilled, InstagramFilled,} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-const { Header, Content } = Layout;
+const { Content, Footer } = Layout;
 const { Title, Paragraph } = Typography;
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
-import { UserContext } from '../../components/UserContext';
-import { GetAllCompany,GetIntershipPost, GetAllStudent, } from '../../services/https';
+import { GetAllCompany, GetIntershipPost, GetAllStudent } from '../../services/https';
+import { ListPublishedCareer, ListPublishedNews } from '../../services/https/Articles';
 import { GetAllInterviewAppointments } from '../../services/https/Application';
 import type { CompanyInterface } from '../../interfaces/Company';
 import type { IntershipPostInterface } from '../../interfaces/IntershipPost';
 import type { StudentInterface } from '../../interfaces/Student';
 import type { InterviewAppointmentInterface } from '../../interfaces/InterviewAppointment';
+import type { Article } from '../../interfaces/Article';
+import type { AxiosResponse } from 'axios';
+import { Search, FileText, Clock, Mail, Briefcase, Edit3 } from "lucide-react";
 
 function StudentDashboard() {
   const [animated, setAnimated] = useState(false);
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi] = message.useMessage();
   const [company, setCompany] = useState<CompanyInterface[]>([]);
   const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
   const [student, setStudent] = useState<StudentInterface[]>([]);
   const [appointments, setAppointments] = useState<InterviewAppointmentInterface[]>([]);
-
-
-  const navigate = useNavigate();
-  useEffect(() => {
-    setTimeout(() => setAnimated(true), 300);
-  }, []);
-
-  const { logout } = useContext(UserContext);
-  const handleLogout = async () => {
-    await logout();
-    navigate("/sign-in");
-  };
-
-  const handleSearchClick = () => {
-      navigate('/student/search');
-  };
-
-  const handleProfileClick = () => {
-      navigate('/student/profile');
+  const [newsItems, setNewsItems] = useState<Article[]>([]);
+  const [careerItems, setCareerItems] = useState<Article[]>([]);
+  // 🆕 State และ handler สำหรับ Modal
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  // 🆕 แจ้งเตือนคัดลอก (ติดปุ่ม)
+  const [copied, setCopied] = useState<"success" | "error" | null>(null);
+  const handleCopyAll = () => {
+    if (!navigator.clipboard || !selectedArticle) return;
+    let fullContent = selectedArticle.title || "";
+    if (selectedArticle.subtitle) fullContent += "\n\n" + selectedArticle.subtitle;
+    if (selectedArticle.body) fullContent += "\n\n" + selectedArticle.body;
+    if (selectedArticle.category) fullContent += "\n\nหมวดหมู่: " + selectedArticle.category;
+    if (selectedArticle.published_at) {
+      const publishedDate = new Date(selectedArticle.published_at).toLocaleDateString("th-TH", {day: "numeric",month: "long",year: "numeric",});
+      fullContent += "\nวันที่เผยแพร่: " + publishedDate;
+    }
+    navigator.clipboard
+      .writeText(fullContent)
+      .then(() => {
+        setCopied("success");
+        setTimeout(() => setCopied(null), 2500);
+      })
+      .catch(() => {
+        setCopied("error");
+        setTimeout(() => setCopied(null), 2500);
+      });
     };
+    const openArticleDetail = (a: Article) => { setSelectedArticle(a); setDetailOpen(true); };
+    const closeArticleDetail = () => { setDetailOpen(false); setSelectedArticle(null); };
+    const navigate = useNavigate();
+      useEffect(() => {
+      setTimeout(() => setAnimated(true), 300);
+    }, []);
+    const handleSearchClick = () => { navigate('/student/search'); };
+    const handleProfileClick = () => { navigate('/student/profile'); };
 
-  // Fetch initial data with better error handling
-  const fetchInitialData = async () => {
-    try {
+    const fetchInitialData = async () => {
+      // helper: type guard บอก TS ว่าถ้า true => r เป็น FulfilledResult
+      const isOk = (
+        r: PromiseSettledResult<AxiosResponse<any>>
+      ): r is PromiseFulfilledResult<AxiosResponse<any>> =>
+        r.status === "fulfilled" && r.value?.status === 200;
+      // ใส่ generic ให้ allSettled เพื่อให้ TS รู้ว่า value เป็น AxiosResponse
+      const results = await Promise.allSettled<AxiosResponse<any>>([
+        GetAllCompany(),
+        GetAllStudent(),
+        GetIntershipPost(),
+        GetAllInterviewAppointments(),
+        ListPublishedNews(),
+        ListPublishedCareer(),
+      ]);
       const [
         companyRes,
         studentRes,
         postRes,
         appointmentRes,
-      ] = await Promise.all([
-        GetAllCompany(),
-        GetAllStudent(),
-        GetIntershipPost(),
-        GetAllInterviewAppointments(),
-      ]);
+        newsRes,
+        careerRes,
+      ] = results;
 
-      // Use a more concise way to handle responses
-      const responses = [
-        { res: companyRes, setter: setCompany },
-        { res: studentRes, setter: setStudent },
-        { res: postRes, setter: setPosts },
-        { res: appointmentRes, setter: setAppointments }
-      ];
+      if (isOk(companyRes)) setCompany(companyRes.value.data);
+      if (isOk(studentRes)) setStudent(studentRes.value.data);
+      if (isOk(postRes)) setPosts(postRes.value.data);
+      if (isOk(appointmentRes)) setAppointments(appointmentRes.value.data);
+      if (isOk(newsRes)) setNewsItems(newsRes.value.data);
+      if (isOk(careerRes)) setCareerItems(careerRes.value.data);
 
-      responses.forEach(({ res, setter }) => {
-        if (res.status === 200) {
-          setter(res.data);
-        }
-      });
+      const fails: string[] = [];
+      if (!isOk(companyRes)) fails.push("บริษัท");
+      if (!isOk(studentRes)) fails.push("นักศึกษา");
+      if (!isOk(postRes)) fails.push("ตำแหน่งฝึกงาน");
+      if (!isOk(appointmentRes)) fails.push("นัดสัมภาษณ์");
+      if (!isOk(newsRes)) fails.push("ข่าว");
+      if (!isOk(careerRes)) fails.push("บทความ");
 
-    } catch (error) {
-      messageApi.open({
-        type: "error",
-        content: "Error fetching initial data",
-      });
-      setTimeout(() => navigate("/"), 2000);
-    }
-  };
-  // Effects
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-  
-  useEffect(() => {
-    console.log("📦 Companies:", company);
-    console.log("📦 Posts:", posts);
-    console.log("📦 Students:", student);
-    console.log("📦 Appointments:", appointments);
-  }, [company, posts, student, appointments]);
-
-  const statistics = [
-    {
-      title: 'นักศึกษาที่ลงทะเบียน',
-      value: student.length,
-      icon: <UserOutlined style={{ fontSize: 28, color: '#1890ff' }} />,
-    },
-    {
-      title: 'บริษัทที่เปิดรับฝึกงาน',
-      value: company.length,
-      icon: <TeamOutlined style={{ fontSize: 28, color: '#52c41a' }} />,
-    },
-    {
-      title: 'นักศึกษาได้ที่ฝึกงาน',
-      value: appointments.filter(app => app.status === "ผ่าน").length,
-      icon: <CheckCircleOutlined style={{ fontSize: 28, color: '#faad14' }} />,
-    },
-    {
-      title: 'ตำแหน่งฝึกงานเปิดรับ',
-      value: posts.filter(p => p.StatusPostID == 1).length,
-      icon: <FileTextOutlined style={{ fontSize: 28, color: '#f5222d' }} />,
-    },
-  ];
-
-  const steps = [
-    {
-      title: 'ลงทะเบียน',
-      description: 'สร้างโปรไฟล์นักศึกษาและใส่ข้อมูลการศึกษา',
-      icon: <UserOutlined style={{ fontSize: 28, color: '#1890ff' }} />,
-    },
-    {
-      title: 'ค้นหาที่ฝึกงาน',
-      description: 'เลือกบริษัทที่เปิดรับนักศึกษาฝึกงาน',
-      icon: <SearchOutlined style={{ fontSize: 28, color: '#52c41a' }} />,
-    },
-    {
-      title: 'สมัครฝึกงาน',
-      description: 'ส่งใบสมัครและเอกสารที่จำเป็น',
-      icon: <FileTextOutlined style={{ fontSize: 28, color: '#faad14' }} />,
-    },
-    {
-      title: 'เริ่มฝึกงาน',
-      description: 'เข้าฝึกงานและเรียนรู้ประสบการณ์จริง',
-      icon: <TrophyOutlined style={{ fontSize: 28, color: '#722ed1' }} />,
-    },
-  ];
-  
-  const popularCoopTypes = [
-    { name: 'บริษัทเทคโนโลยี', count: 180 },
-    { name: 'บริษัทเอกชนขนาดใหญ่', count: 125 },
-    { name: 'บริษัทสตาร์ทอัพ', count: 98 },
-    { name: 'บริษัทต่างชาติ', count: 76 },
-    { name: 'บริษัทอื่นๆ', count: 171 },
-  ];
-
-  const news = [
-    { title: 'เปิดรับสมัครนักศึกษาฝึกงาน ภาคการศึกษา 2/2567', date: '15 ก.ค. 2567', type: 'ประกาศ' },
-    { title: 'สัมมนาออนไลน์: การเตรียมตัวสู่การฝึกงานในบริษัท', date: '10 ก.ค. 2567', type: 'กิจกรรม' },
-    { title: 'บริษัท ABC จ.กรุงเทพมหานคร เปิดรับนักศึกษาฝึกงาน 15 คน', date: '8 ก.ค. 2567', type: 'โอกาส' },
-    { title: 'เทคนิคการสัมภาษณ์เข้าฝึกงานให้ประสบความสำเร็จ', date: '5 ก.ค. 2567', type: 'บทความ' },
-  ];
-
-  const features = [
-    {
-      icon: <SearchOutlined style={{ fontSize: 32, color: '#3b82f6' }} />,
-      title: 'ค้นหาง่าย',
-      description: 'ระบบค้นหาที่ทันสมัย พร้อมตัวกรองตามสาขาวิชา จังหวัด และประเภทธุรกิจ'
-    },
-    {
-      icon: <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />,
-      title: 'จับคู่แม่นยำ',
-      description: 'ระบบจับคู่อัจฉริยะวิเคราะห์โปรไฟล์และความต้องการของคุณเพื่อแนะนำที่ฝึกงานที่เหมาะสม'
-    },
-    {
-      icon: <TeamOutlined style={{ fontSize: 32, color: '#faad14' }} />,
-      title: 'เครือข่ายกว้าง',
-      description: 'เชื่อมต่อกับบริษัทมากกว่า 650 แห่งทั่วประเทศ ครอบคลุมทุกประเภทธุรกิจ'
-    }
-  ];
-// Career guidance articles data
-  const careerArticles = [
-    {
-      id: 1,
-      title: '"เด็กจบใหม่" เริ่มต้นหางานยังไงดี ?',
-      subtitle: 'เรื่องสำคัญสำหรับบอกใครหลายคน',
-      image: '/api/placeholder/300/200',
-      type: 'article',
-      category: 'การหางาน'
-    },
-    {
-      id: 2,
-      title: 'สายงาน Creator เริ่มต้นอย่างไร?',
-      subtitle: 'แนะนำการถูกสายพร้อมคำแนะนำที่ดี',
-      image: '/api/placeholder/300/200',
-      type: 'video',
-      category: 'อาชีพใหม่'
-    },
-    {
-      id: 3,
-      title: '10 พฤติกรรมที่ไม่ควรทำในการสัมภาษณ์งาน',
-      subtitle: '',
-      image: '/api/placeholder/300/200',
-      type: 'article',
-      category: 'การสัมภาษณ์'
-    },
-    {
-      id: 4,
-      title: 'สิ่งของที่ไม่ควรนำไปสัมภาษณ์งาน',
-      subtitle: 'รับอ่านเลย',
-      image: '/api/placeholder/300/200',
-      type: 'article',
-      category: 'การสัมภาษณ์'
-    }
-  ];
+      if (fails.length) {
+        messageApi.error(`โหลดข้อมูลบางส่วนไม่สำเร็จ: ${fails.join(", ")}`);
+      }
+    };
+    useEffect(() => {
+      fetchInitialData();
+    }, []);
+    useEffect(() => { console.log("📦 Companies:", company);console.log("📦 Posts:", posts);console.log("📦 Students:", student);console.log("📦 Appointments:", appointments);}, [company, posts, student, appointments]);
+    const statistics = [
+      {
+        title: 'นักศึกษาที่ลงทะเบียน',
+        value: student.length,
+        icon: <UserOutlined style={{ fontSize: 28, color: '#1890ff' }} />,
+      },
+      {
+        title: 'บริษัทที่เปิดรับฝึกงาน',
+        value: company.length,
+        icon: <TeamOutlined style={{ fontSize: 28, color: '#52c41a' }} />,
+      },
+      {
+        title: 'นักศึกษาได้ที่ฝึกงาน',
+        value: appointments.filter(app => app.status === "ผ่าน").length,
+        icon: <CheckCircleOutlined style={{ fontSize: 28, color: '#faad14' }} />,
+      },
+      {
+        title: 'ตำแหน่งฝึกงานเปิดรับ',
+        value: posts.filter(p => p.StatusPostID == 1).length,
+        icon: <FileTextOutlined style={{ fontSize: 28, color: '#f5222d' }} />,
+      },
+    ];
+    const steps = [
+      {
+        title: 'ลงทะเบียน',
+        description: 'สร้างโปรไฟล์นักศึกษาและใส่ข้อมูลการศึกษา',
+        icon: <UserOutlined style={{ fontSize: 28, color: '#1890ff' }} />,
+      },
+      {
+        title: 'ค้นหาที่ฝึกงาน',
+        description: 'เลือกบริษัทที่เปิดรับนักศึกษาฝึกงาน',
+        icon: <SearchOutlined style={{ fontSize: 28, color: '#52c41a' }} />,
+      },
+      {
+        title: 'สมัครฝึกงาน',
+        description: 'ส่งใบสมัครและเอกสารที่จำเป็น',
+        icon: <FileTextOutlined style={{ fontSize: 28, color: '#faad14' }} />,
+      },
+      {
+        title: 'เริ่มฝึกงาน',
+        description: 'เข้าฝึกงานและเรียนรู้ประสบการณ์จริง',
+        icon: <TrophyOutlined style={{ fontSize: 28, color: '#722ed1' }} />,
+      },
+    ];
+    const features = [
+      {
+        icon: <SearchOutlined style={{ fontSize: 32, color: '#3b82f6' }} />,
+        title: 'ค้นหาง่าย',
+        description: 'ระบบค้นหาที่ทันสมัย พร้อมตัวกรองตามสาขาวิชา จังหวัด และประเภทธุรกิจ'
+      },
+      {
+        icon: <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />,
+        title: 'จับคู่แม่นยำ',
+        description: 'ระบบจับคู่อัจฉริยะวิเคราะห์โปรไฟล์และความต้องการของคุณเพื่อแนะนำที่ฝึกงานที่เหมาะสม'
+      },
+      {
+        icon: <TeamOutlined style={{ fontSize: 32, color: '#faad14' }} />,
+        title: 'เครือข่ายกว้าง',
+        description: 'เชื่อมต่อกับบริษัทมากกว่า 650 แห่งทั่วประเทศ ครอบคลุมทุกประเภทธุรกิจ'
+      }
+    ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <CoopMatchHeaderDefault />
-      <Header style={{ background: '#fff', borderBottom: '1px solid #f0f0f0', padding: '0 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/*  <Header style={{ background: '#fff', borderBottom: '1px solid #f0f0f0', padding: '0 24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Title level={3} style={{ margin: 0, background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', color: 'transparent' }}>COOP MATCH</Title>
-          <Button
-            type="primary"
-            danger
-            onClick={handleLogout}
-            style={{ borderRadius: 20, padding: '0 20px' }}
-          >
-            ออกจากระบบ
-          </Button>
         </div>
-      </Header>
-
+      </Header>*/}
       <Content style={{ padding: 24 }}>
         <div
           style={{
-            //background: 'linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899)',
-            background: 'linear-gradient(135deg, #1e3a8a, #3b82f6, #9270e4ff)',
-            color: '#fff',
-            borderRadius: 24,
-            padding: 48,
-            marginBottom: 32,
-            textAlign: 'center',
-            transition: 'all 0.5s ease-out',
-            opacity: animated ? 1 : 0,
-            transform: animated ? 'translateY(0)' : 'translateY(30px)',
-          }}
-        >
+            background: 'linear-gradient(135deg, #1e3a8a, #3b82f6, #9270e4ff)',color: '#fff',borderRadius: 24,padding: 48,marginBottom: 32,
+            textAlign: 'center',transition: 'all 0.5s ease-out',opacity: animated ? 1 : 0,transform: animated ? 'translateY(0)' : 'translateY(30px)',}}
+          >
           <Title style={{ color: '#fff' }}>ยินดีต้อนรับสู่ COOP MATCH</Title>
           <Paragraph style={{ fontSize: 18, color: '#f0f0f0' }}>
             แพลตฟอร์มเชื่อมต่อนักศึกษากับบริษัท เพื่อการฝึกงานที่มีคุณภาพ
@@ -255,28 +191,13 @@ function StudentDashboard() {
             <Button
               icon={<SearchOutlined />}
               onClick={handleSearchClick}
-              style={{
-                marginRight: 16,
-                background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
-                color: '#fff',
-                borderRadius: 24,
-                padding: '8px 24px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              }}
-            >
+              style={{marginRight: 16, background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', color: '#fff', borderRadius: 24, padding: '8px 24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', }}> 
               ค้นหาที่ฝึกงาน
             </Button>
             <Button
               icon={<FileTextOutlined />}
               onClick={handleProfileClick}
-              style={{
-                background: '#fff',
-                color: '#3b82f6',
-                borderRadius: 24,
-                padding: '8px 24px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              }}
-            >
+              style={{ background: '#fff', color: '#3b82f6', borderRadius: 24, padding: '8px 24px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', }} >
               สร้างโปรไฟล์
             </Button>
           </div>
@@ -287,12 +208,7 @@ function StudentDashboard() {
             <Col key={index} xs={24} sm={12} md={12} lg={6}>
               <Card
                 hoverable
-                style={{
-                  borderRadius: 16,
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                }}
-              >
+                style={{ borderRadius: 16, textAlign: 'center', transition: 'all 0.3s ease', }} >
                 <div style={{ marginBottom: 12 }}>{stat.icon}</div>
                 <Title level={4}>{stat.value.toLocaleString()}</Title>
                 <Paragraph>{stat.title}</Paragraph>
@@ -300,7 +216,6 @@ function StudentDashboard() {
             </Col>
           ))}
         </Row>
-
         {/* Steps Section */}
         <div style={{ background: '#fff', borderRadius: 24, padding: 36, marginTop: 48, marginBottom: 48, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
           <Title level={3} style={{ textAlign: 'center', marginBottom: 36 }}>วิธีการใช้งาน</Title>
@@ -316,114 +231,245 @@ function StudentDashboard() {
             ))}
           </Row>
         </div>
- {/* New Career Guidance Section */}
-        <div style={{ background: '#fff', padding: 36, borderRadius: 24, marginBottom: 48, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        {/* Career Guidance Section */}
+        <div style={{ background: '#fff', padding: 36, borderRadius: 24, marginBottom: 48 }}>
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
-            <Title level={2} style={{ marginBottom: 8 }}>อัพเดทบทความสาระ</Title>
+            <Title level={3} style={{ marginBottom: 8 }}>อัพเดทบทความสาระ</Title>
             <Paragraph style={{ fontSize: 16, color: '#666' }}>
-              รวบการความสาระต่างๆ ทั่วไป เช่น ข้อมูลของอาชีพต่างๆ เทคนิคการทำงาน และการสัมภาษณ์งาน เป็นต้น
+              รวบรวมสาระ เช่น ข้อมูลอาชีพ เทคนิคการทำงาน และการสัมภาษณ์งาน
             </Paragraph>
           </div>
-          
           <Row gutter={[24, 24]} justify="center">
-            {careerArticles.map((article) => (
-              <Col key={article.id} xs={24} sm={12} lg={6}>
-                <Card
-                  hoverable
-                  style={{
-                    borderRadius: 16,
-                    overflow: 'hidden',
-                    height: '100%',
-                    transition: 'all 0.3s ease',
-                    border: 'none',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                  }}
-                  bodyStyle={{ padding: 0 }}
-                >
-                  <div style={{ position: 'relative', height: 200 }}>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        background: `linear-gradient(45deg, ${
-                          article.id === 1 ? '#ff6b6b, #ffa726' :
-                          article.id === 2 ? '#4c63d2, #7c4dff' :
-                          article.id === 3 ? '#26a69a, #42a5f5' :
-                          '#66bb6a, #42a5f5'
-                        })`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontSize: 48
-                      }}
+            {careerItems.length === 0 ? (
+              <div style={{ color: "#999" }}>ยังไม่มีบทความ</div>
+            ) : (
+              careerItems.map((article, index) => {
+                const colors = [
+                  "linear-gradient(135deg, #667eea, #764ba2)",
+                  "linear-gradient(135deg, #ff9a9e, #fad0c4)",
+                  "linear-gradient(135deg, #43cea2, #185a9d)",
+                  "linear-gradient(135deg, #ff6a00, #ee0979)",
+                  "linear-gradient(135deg, #36d1dc, #5b86e5)",
+                  "linear-gradient(135deg, #f7971e, #ffd200)",
+                ];
+                const randomColor = colors[(article.ID ?? index) % colors.length];
+
+                return (
+                  <Col key={article.ID} xs={24} sm={12} lg={6}>
+                    <Card
+                      hoverable
+                      onClick={() => openArticleDetail(article)}
+                      style={{ borderRadius: 16, overflow: "hidden", cursor: "pointer" }}
+                      bodyStyle={{ padding: 0 }}
                     >
-                      {article.type === 'video' ? <PlayCircleOutlined /> : <ReadOutlined />}
-                    </div>
-                    {/* Category Badge */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        background: 'rgba(255,255,255,0.9)',
-                        padding: '4px 12px',
-                        borderRadius: 12,
-                        fontSize: 12,
-                        fontWeight: 500,
-                        color: '#333'
-                      }}
-                    >
-                      {article.category}
-                    </div>
-                  </div>
-                  
-                  <div style={{ padding: 16 }}>
-                    <Title level={5} style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.4 }}>
-                      {article.title}
-                    </Title>
-                    {article.subtitle && (
-                      <Paragraph style={{ margin: 0, fontSize: 12, color: '#666' }}>
-                        {article.subtitle}
-                      </Paragraph>
-                    )}
-                  </div>
-                </Card>
-              </Col>
-            ))}
+                      <div
+                        style={{ position: "relative", height: 200, background: randomColor, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 64, }}>
+                        {article.type === "news" ? <FileTextOutlined /> : <ReadOutlined />}
+                        <div style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.9)", padding: "4px 12px", borderRadius: 12, fontSize: 12, fontWeight: 500, color: "#333", }}>
+                          {article.category || "ทั่วไป"}
+                        </div>
+                      </div>
+                      <div style={{ padding: 16 }}>
+                        <Title level={5} style={{ marginBottom: 8 }}>{article.title}</Title>
+                        {article.subtitle && <Paragraph style={{ margin: 0, fontSize: 12, color: "#666" }}>{article.subtitle}</Paragraph>}
+                      </div>
+                    </Card>
+                  </Col>
+                );
+              })
+            )}
           </Row>
         </div>
+        {/* News Section */}
+        <Card
+          title={ <Title level={3} style={{ marginTop: 36, textAlign: "center" }}> ข่าวสารและประกาศ </Title> }
+          bordered={false}
+          style={{ borderRadius: 24, marginBottom: 48 }}>
+          {newsItems.length === 0 ? (
+            <div style={{ color: "#999", textAlign: "center" }}>ยังไม่มีข่าว</div>
+          ) : (
+            <Row gutter={[16, 16]}>
+              {newsItems.map((item) => (
+                <Col xs={24} md={12} key={item.ID}>
+                  <div
+                    style={{ padding: "12px 16px", borderRadius: 12, transition: "background .2s", borderBottom: "1px solid #e5e7eb", marginBottom: -10, cursor: "pointer", }}
+                    onClick={() => openArticleDetail(item)}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = "#f7f9ff")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background =  "transparent")}>
+                    <div style={{ fontWeight: 500, fontSize: 15, color: "#1f2937" }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                      {item.published_at
+                        ? new Date(item.published_at).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric", }) : ""}{" "} • {item.category || "ข่าว"}
+                    </div>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Card>
+      {/* 🆕 Modal แสดงรายละเอียด */}
+        <Modal
+          open={detailOpen}
+          onCancel={closeArticleDetail}
+          footer={null}
+          width={600}
+          centered
+          style={{ padding: 0 }}
+          closable={false}
+        >
+          {selectedArticle && (
+            <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+              <div style={{ position: 'relative', height: 120, background: selectedArticle.type === 'news' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', color: '#fff' }}>
+                {/* Icon & Type */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ fontSize: 32 }}>
+                    {selectedArticle.type === 'news' ? '📰' : '📚'}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, opacity: 0.8 }}>
+                      {selectedArticle.type === 'news' ? 'ข่าวสาร' : 'บทความ'}
+                    </div>
+                    {selectedArticle.category && (
+                      <div style={{ fontSize: 12, opacity: 0.7 }}>
+                        {selectedArticle.category}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Close Button */}
+              <button
+                onClick={closeArticleDetail}
+                style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", fontSize: 18, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", boxShadow: "0 2px 6px rgba(0,0,0,0.2)", }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                    "0 4px 10px rgba(0,0,0,0.25)";
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "rgba(255,255,255,0.35)"; 
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                    "0 2px 6px rgba(0,0,0,0.2)";
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "rgba(255,255,255,0.2)";
+                }}
+                onMouseDown={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform =
+                    "translateY(1px) scale(0.9)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                    "0 1px 3px rgba(0,0,0,0.2)";
+                }}
+                onMouseUp={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                    "0 4px 10px rgba(0,0,0,0.25)";
+                }}
+              >
+                ×
+              </button>
+            </div>
+              <div style={{ padding: '24px' }}>
+                <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 12px 0', color: '#1f2937', lineHeight: 1.3 }}> {selectedArticle.title} </h3>
+                {selectedArticle.published_at && (
+                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📅</span>
+                    {new Date(selectedArticle.published_at).toLocaleDateString("th-TH", {day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                )}
+                {/* Subtitle */}
+                {selectedArticle.subtitle && (
+                  <div style={{ background: '#f8fafc', padding: '16px', borderRadius: 8, marginBottom: 16, borderLeft: `3px solid ${selectedArticle.type === 'news' ? '#3b82f6' : '#7c3aed'}`,
+                    fontSize: 15, color: '#475569', fontStyle: 'italic', lineHeight: 1.5 }}> {selectedArticle.subtitle}
+                  </div>
+                )}
+                {/* Content */}
+                <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 20 }}>
+                  {selectedArticle.body ? (
+                    <div style={{ fontSize: 15, lineHeight: 1.6, color: '#374151', whiteSpace: 'pre-wrap' }}> {selectedArticle.body} </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '32px', color: '#9ca3af', fontSize: 14 }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>📝</div> ไม่มีเนื้อหา </div>)}
+                </div>
+                {/* Footer Actions - Compact */}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: '1px solid #e5e7eb' }}>
+                  {/* Status */}
+                  {selectedArticle.is_published !== undefined && (
+                    <span style={{ fontSize: 13, padding: '4px 8px', borderRadius: 6, background: selectedArticle.is_published ? '#dcfce7' : '#fef2f2', color: selectedArticle.is_published ? '#16a34a' : '#dc2626', fontWeight: 500 }}>
+                      {selectedArticle.is_published ? "เผยแพร่" : "ร่าง"}
+                    </span>
+                  )}
+                  {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 8 }}>
+              {/* ปุ่มคัดลอก + แจ้งเตือนติดปุ่ม */}
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <button
+                  onClick={handleCopyAll}
+                  style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #d1d5db", background: "#fff", color: "#374151", cursor: "pointer", fontSize: 14, fontWeight: 600,
+                    display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s ease", boxShadow: "0 4px 8px rgba(0,0,0,0.1)",}}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 14px rgba(0,0,0,0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                  }}
+                  onMouseDown={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(1px) scale(0.97)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+                  }}
+                  onMouseUp={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 14px rgba(0,0,0,0.15)";
+                  }}
+                >
+                  📋 คัดลอกทั้งหมด
+                </button>
+                  {copied && (
+                    <div
+                      style={{
+                        position: "absolute", top: "-36px", left: "50%", transform: "translateX(-50%)", padding: "6px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+                        background: copied === "success"
+                          ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                          : "#ef4444", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", whiteSpace: "nowrap" }}>
+                          {copied === "success" ? "✅ คัดลอกเนื้อหาแล้ว" : "❌ คัดลอกไม่สำเร็จ"}
+                    </div>
+                  )}
+                </div>
+                  <button
+                    onClick={closeArticleDetail}
+                    style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: selectedArticle?.type === "news" ? "#3b82f6" : "#7c3aed",
+                      color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, transition: "all 0.25s ease", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px) scale(1.05)";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 16px rgba(0,0,0,0.25)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                    }}
+                    >
+                      ปิด
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>  
         <div style={{ background: '#fff', padding: 36, borderRadius: 24, marginBottom: 48, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
           <Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>เกี่ยวกับเรา</Title>
-          <Paragraph style={{ fontSize: 16, textAlign: 'center', maxWidth: 800, margin: '0 auto' }}>
+          <Paragraph style={{ fontSize: 16, textAlign: 'center', maxWidth: 990, margin: '0 auto' }}>
             COOP MATCH เป็นแพลตฟอร์มสำหรับนักศึกษาหาที่ฝึกงานในบริษัท ที่เชื่อมต่อนักศึกษากับโอกาสการฝึกงานที่เหมาะสมกับสาขาวิชาและความสนใจ 
             ด้วยเทคโนโลยีที่ช่วยจับคู่ข้อมูลอย่างแม่นยำ เพื่อให้นักศึกษาได้รับประสบการณ์การทำงานจริงที่มีคุณภาพ
           </Paragraph>
         </div>
-        <Row gutter={[32, 32]} style={{ marginBottom: 48 }}>
-          <Col xs={24} lg={12}>
-            <Card title="ประเภทธุรกิจยอดนิยม" bordered={false} style={{ borderRadius: 24 }}>
-              {popularCoopTypes.map((type, index) => (
-                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-                  <span style={{ fontWeight: 500 }}>{type.name}</span>
-                  <span style={{ color: '#888' }}>{type.count} แห่ง</span>
-                </div>
-              ))}
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card title="ข่าวสารและประกาศ" bordered={false} style={{ borderRadius: 24 }}>
-              {news.map((item, index) => (
-                <div key={index} style={{ marginBottom: 16 }}>
-                  <div style={{ fontWeight: 500 }}>{item.title}</div>
-                  <div style={{ fontSize: 12, color: '#888' }}>{item.date} • {item.type}</div>
-                </div>
-              ))}
-            </Card>
-          </Col>
-        </Row>
-
         {/* Features Section */}
         <div style={{ background: '#fff', padding: 36, borderRadius: 24, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
           <Title level={3} style={{ textAlign: 'center', marginBottom: 36 }}>ทำไมต้องเลือก COOP MATCH?</Title>
@@ -439,7 +485,244 @@ function StudentDashboard() {
             ))}
           </Row>
         </div>
+        {/* FAQ Section */}
+        <div
+          style={{ background: "#fff", borderRadius: 24, boxShadow: "0 8px 24px rgba(0,0,0,0.05)", marginTop: 48, marginBottom: 48, padding: 24, }}>
+          <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}> คำถามที่พบบ่อย (FAQ) </Title>
+          <Row gutter={[24, 24]} justify="center">
+            {/* ซ้าย */}
+            <Col xs={24} md={12}>
+              <Collapse
+                bordered={false}
+                size="large"
+                expandIconPosition="end"
+                style={{ background: "transparent" }}
+                items={[
+                  {
+                    key: "1",
+                    label: (
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Search size={18} strokeWidth={2} color="#3b82f6" />
+                        <span style={{ color: "#1f2937", fontWeight: 500 }}>
+                          วิธีค้นหาที่ฝึกงาน?
+                        </span>
+                      </span>
+                    ),
+                    children: (
+                      <Paragraph style={{ marginBottom: 0, color: "#475569" }}>
+                        ไปที่เมนู <b>ค้นหาที่ฝึกงาน</b> เลือกตัวกรอง เช่น สาขาวิชา จังหวัด
+                        หรือประเภทบริษัท แล้วกดค้นหา
+                      </Paragraph>
+                    ),
+                  },
+                  {
+                    key: "2",
+                    label: (
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Briefcase size={18} strokeWidth={2} color="#3b82f6" />
+                        <span style={{ color: "#1f2937", fontWeight: 500 }}>
+                          สมัครได้กี่บริษัท?
+                        </span>
+                      </span>
+                    ),
+                    children: (
+                      <Paragraph style={{ marginBottom: 0, color: "#475569" }}>
+                        สมัครได้หลายบริษัท แต่ควรเลือกที่สนใจจริงและตรงกับสาขา
+                        เพื่อเพิ่มโอกาสผ่านการคัดเลือก
+                      </Paragraph>
+                    ),
+                  },
+                  {
+                    key: "3",
+                    label: (
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <FileText size={18} strokeWidth={2} color="#3b82f6" />
+                        <span style={{ color: "#1f2937", fontWeight: 500 }}>
+                          เอกสารที่ต้องใช้?
+                        </span>
+                      </span>
+                    ),
+                    children: (
+                      <ul style={{ marginLeft: 18, color: "#475569" }}>
+                        <li>เรซูเม่ (Resume)</li>
+                        <li>ใบแสดงผลการเรียน (Transcript)</li>
+                        <li>แฟ้มสะสมผลงาน (ถ้ามี)</li>
+                        <li>เอกสารอื่นๆ ที่บริษัทกำหนด</li>
+                      </ul>
+                    ),
+                  },
+                ]}
+              />
+            </Col>
+            {/* ขวา */}
+            <Col xs={24} md={12}>
+              <Collapse
+                bordered={false}
+                size="large"
+                expandIconPosition="end"
+                style={{ background: "transparent" }}
+                items={[
+                  {
+                    key: "4",
+                    label: (
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Clock size={18} strokeWidth={2} color="#3b82f6" />
+                        <span style={{ color: "#1f2937", fontWeight: 500 }}>
+                          ใช้เวลาพิจารณานานไหม?
+                        </span>
+                      </span>
+                    ),
+                    children: (
+                      <Paragraph style={{ marginBottom: 0, color: "#475569" }}>
+                        โดยทั่วไปบริษัทใช้เวลา <b>1–3 สัปดาห์</b> หลังปิดรับสมัคร
+                        สามารถติดตามสถานะได้ที่ “การสมัครของฉัน”
+                      </Paragraph>
+                    ),
+                  },
+                  {
+                    key: "5",
+                    label: (
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Edit3 size={18} strokeWidth={2} color="#3b82f6" />
+                        <span style={{ color: "#1f2937", fontWeight: 500 }}>
+                          แก้ไขใบสมัครได้ไหม?
+                        </span>
+                      </span>
+                    ),
+                    children: (
+                      <Paragraph style={{ marginBottom: 0, color: "#475569" }}>
+                        หากยังไม่ถึงขั้นสัมภาษณ์ สามารถแก้ไขใบสมัครได้จากเมนู
+                        “การสมัครของฉัน”
+                      </Paragraph>
+                    ),
+                  },
+                  {
+                    key: "6",
+                    label: (
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Mail size={18} strokeWidth={2} color="#3b82f6" />
+                        <span style={{ color: "#1f2937", fontWeight: 500 }}>
+                          ระบบแจ้งเตือนทำงานอย่างไร?
+                        </span>
+                      </span>
+                    ),
+                    children: (
+                      <Paragraph style={{ marginBottom: 0, color: "#475569" }}>
+                        ระบบมีทั้งแจ้งเตือนในแพลตฟอร์ม และส่งอีเมลเมื่อมีการนัดสัมภาษณ์
+                        หรือผลการสมัคร
+                      </Paragraph>
+                    ),
+                  },
+                ]}
+              />
+            </Col>
+          </Row>
+        </div>
       </Content>
+      <Footer style={{ padding: 0, background: "#0f172a" }}>
+      {/* แถบไฮไลท์ด้านบน */}
+        <div
+          style={{ height: 4, background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #22c55e 100%)", }}/>
+        <div
+          style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 24px 20px", color: "#cbd5e1", }}>
+          <Row gutter={[24, 24]}>
+            {/* เกี่ยวกับ */}
+            <Col xs={24} md={10}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span
+                  style={{ fontWeight: 800, fontSize: 18, background: "linear-gradient(90deg, #3b82f6, #8b5cf6)", WebkitBackgroundClip: "text", color: "transparent",}}
+                  >
+                  COOP MATCH
+                </span>
+              </div>
+              <Paragraph style={{ color: "#94a3b8", marginBottom: 12 }}>
+                แพลตฟอร์มเชื่อมต่อนักศึกษากับบริษัท เพื่อโอกาสฝึกงานที่ใช่
+                ค้นหา สมัคร และติดตามสถานะได้ในที่เดียว
+              </Paragraph>
+            {/* โซเชียล */}
+            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+              <a
+                href="#"
+                aria-label="Facebook"
+                style={{ width: 40,height: 40,borderRadius: "50%",display: "flex",alignItems: "center",justifyContent: "center",
+                  background: "rgba(255,255,255,0.06)",color: "#3b82f6",fontSize: 22,boxShadow: "0 2px 8px rgba(0,0,0,0.25)",transition: "all .25s",}}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(59,130,246,.15)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.transform = "none";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
+                }}
+              >
+                <FacebookFilled />
+              </a>
+              <a
+                href="#"
+                aria-label="Twitter"
+                style={{ width: 40,height: 40,borderRadius: "50%",display: "flex",alignItems: "center",justifyContent: "center",background: "rgba(255,255,255,0.06)",color: "#1d9bf0",fontSize: 22,boxShadow: "0 2px 8px rgba(0,0,0,0.25)",transition: "all .25s",}}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(29,155,240,.15)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.transform = "none";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
+                }}
+              >
+                <TwitterSquareFilled />
+              </a>
+              <a
+                href="#"
+                aria-label="Instagram"
+                style={{width: 40,height: 40,borderRadius: "50%",display: "flex",alignItems: "center",justifyContent: "center",background: "rgba(255,255,255,0.06)",color: "#e1306c",fontSize: 22,boxShadow: "0 2px 8px rgba(0,0,0,0.25)",transition: "all .25s",}}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(225,48,108,.15)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.transform = "none";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
+                }}
+              >
+                <InstagramFilled />
+              </a>
+            </div>
+              </Col>
+              {/* ลิงก์ด่วน */}
+              <Col xs={12} md={7}>
+                <Title level={5} style={{ color: "#e2e8f0", marginBottom: 12 }}>
+                  ลิงก์ด่วน
+                </Title>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <a href="/student/search" style={{ color: "#93c5fd" }}>ค้นหาที่ฝึกงาน</a>
+                  <a href="/student/profile" style={{ color: "#93c5fd" }}>โปรไฟล์ของฉัน</a>
+                  <a href="/student/applications" style={{ color: "#93c5fd" }}>การสมัครของฉัน</a>
+                  <a href="/help" style={{ color: "#93c5fd" }}>ศูนย์ช่วยเหลือ</a>
+                </div>
+              </Col>
+              {/* ติดต่อเรา */}
+              <Col xs={12} md={7}>
+                <Title level={5} style={{ color: "#e2e8f0", marginBottom: 12 }}>
+                  ติดต่อเรา
+                </Title>
+                <div style={{ color: "#94a3b8" }}>
+                  <div>อีเมล: support@coopmatch.ac.th</div>
+                  <div>โทร: 02-123-4567</div>
+                  <div>จันทร์–ศุกร์ 09:00–17:00 น.</div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        {/* เส้นคั่น */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.08)" }} />
+        {/* ล่างสุด: ลิขสิทธิ์/เวอร์ชัน */}
+        <div
+          style={{ maxWidth: 1400, margin: "0 auto", padding: "12px 24px 18px", color: "#94a3b8", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+          <span>© {new Date().getFullYear()} COOP MATCH — All rights reserved.</span>
+          <span>เวอร์ชัน 1.0.0</span>
+        </div>
+      </Footer>
     </Layout>
   );
 };

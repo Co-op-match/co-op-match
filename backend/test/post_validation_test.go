@@ -1,9 +1,10 @@
+// unit/intership_post_validation_test.go
 package unit
 
 import (
 	"testing"
 
-	"co-op-match.com/co-op-match/entity" // เปลี่ยนเป็น path ของคุณจริง ๆ
+	"co-op-match.com/co-op-match/entity"
 	"github.com/asaskevich/govalidator"
 	. "github.com/onsi/gomega"
 )
@@ -11,42 +12,16 @@ import (
 func TestIntershipPostValidation(t *testing.T) {
 	g := NewGomegaWithT(t)
 
-	// ✅ กรณีถูกต้อง
-	// t.Run("valid intership post", func(t *testing.T) {
-	// 	post := entity.IntershipPost{
-	// 		PostName:        "Fullstack Developer",
-	// 		PostDescription: "Build frontend and backend systems",
-	// 		Quantity:        5,
-	// 		MinGpa:          2.50,
-	// 		LocationDetail:  "123 Co-working space",
-	// 		Subdistrict:     "แขวงห้วยขวาง",
-	// 		District:        "ห้วยขวาง",
-	// 		Province:        "กรุงเทพมหานคร",
-	// 		CompanyID:       1,
-	// 		JobTypeID:       1,
-	// 		StipendID:       1,
-	// 		WorkDayID:       1,
-	// 		WorkModeID:      1,
-	// 		StatusPostID:    1,
-	// 		AdminID:         1,
-	// 	}
-
-	// 	ok, err := govalidator.ValidateStruct(post)
-	// 	g.Expect(ok).To(BeTrue())
-	// 	g.Expect(err).To(BeNil())
-	// })
-
-	// ❌ จำนวนที่เปิดรับ = 0
-	t.Run("invalid quantity - zero", func(t *testing.T) {
-		post := entity.IntershipPost{
-			PostName:        "Backend Developer",
-			PostDescription: "Develop APIs",
-			Quantity:        -1,
+	makeValid := func() entity.IntershipPost {
+		return entity.IntershipPost{
+			PostName:        "Frontend Developer Intern",
+			PostDescription: "พัฒนา UI ด้วย React + Ant Design และทำงานร่วมกับทีมพี่เลี้ยง",
+			Quantity:        3,
 			MinGpa:          2.50,
-			LocationDetail:  "123 Office",
-			Subdistrict:     "ดินแดง",
-			District:        "ดินแดง",
-			Province:        "กรุงเทพ",
+			LocationDetail:  "อาคาร A ชั้น 10",
+			Subdistrict:     "บางรัก",
+			District:        "บางรัก",
+			Province:        "กรุงเทพมหานคร",
 			CompanyID:       1,
 			JobTypeID:       1,
 			StipendID:       1,
@@ -55,87 +30,177 @@ func TestIntershipPostValidation(t *testing.T) {
 			StatusPostID:    1,
 			AdminID:         1,
 		}
+	}
 
+	t.Run("valid intership post", func(t *testing.T) {
+		post := makeValid()
 		ok, err := govalidator.ValidateStruct(post)
-		g.Expect(ok).To(BeFalse())
-		g.Expect(err).To(Not(BeNil()))
-		g.Expect(err.Error()).To(ContainSubstring("min=1"))
+		g.Expect(ok).To(BeTrue())
+		g.Expect(err).To(BeNil())
 	})
 
-	// ❌ GPA น้อยเกินไป
-	// t.Run("invalid GPA - too low", func(t *testing.T) {
-	// 	post := entity.IntershipPost{
-	// 		PostName:        "Data Analyst",
-	// 		PostDescription: "Analyze data trends",
-	// 		Quantity:        3,
-	// 		MinGpa:          0.00,
-	// 		LocationDetail:  "456 Lab",
-	// 		Subdistrict:     "บางนา",
-	// 		District:        "บางนา",
-	// 		Province:        "กรุงเทพ",
-	// 		CompanyID:       1,
-	// 		JobTypeID:       1,
-	// 		StipendID:       1,
-	// 		WorkDayID:       1,
-	// 		WorkModeID:      1,
-	// 		StatusPostID:    1,
-	// 		AdminID:         1,
-	// 	}
+	// ----- Text fields -----
+	t.Run("missing PostName", func(t *testing.T) {
+		post := makeValid()
+		post.PostName = ""
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("PostName is required"))
+	})
 
-	// 	ok, err := govalidator.ValidateStruct(post)
-	// 	g.Expect(ok).To(BeFalse())
-	// 	g.Expect(err).To(Not(BeNil()))
-	// 	g.Expect(err.Error()).To(ContainSubstring("GPA must be between 0.01 and 4.00"))
-	// })
+	t.Run("PostName too short (<3)", func(t *testing.T) {
+		post := makeValid()
+		post.PostName = "UI" // 2 ตัวอักษร
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("PostName must be 3-100 characters"))
+	})
 
-	// ❌ GPA มากเกินไป
-	// t.Run("invalid GPA - too high", func(t *testing.T) {
-	// 	post := entity.IntershipPost{
-	// 		PostName:        "Mobile Developer",
-	// 		PostDescription: "Build Android apps",
-	// 		Quantity:        2,
-	// 		MinGpa:          4.50,
-	// 		LocationDetail:  "789 DevHub",
-	// 		Subdistrict:     "ปทุมวัน",
-	// 		District:        "ปทุมวัน",
-	// 		Province:        "กรุงเทพ",
-	// 		CompanyID:       1,
-	// 		JobTypeID:       1,
-	// 		StipendID:       1,
-	// 		WorkDayID:       1,
-	// 		WorkModeID:      1,
-	// 		StatusPostID:    1,
-	// 		AdminID:         1,
-	// 	}
+	t.Run("missing PostDescription", func(t *testing.T) {
+		post := makeValid()
+		post.PostDescription = ""
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("PostDescription is required"))
+	})
 
-	// 	ok, err := govalidator.ValidateStruct(post)
-	// 	g.Expect(ok).To(BeFalse())
-	// 	g.Expect(err).To(Not(BeNil()))
-	// 	g.Expect(err.Error()).To(ContainSubstring("GPA must be between 0.01 and 4.00"))
-	// })
+	t.Run("PostDescription too short (<10)", func(t *testing.T) {
+		post := makeValid()
+		post.PostDescription = "สั้นมาก"
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("PostDescription must be 10-5000 characters"))
+	})
 
-	// ❌ ขาด PostName
-	// 	t.Run("missing PostName", func(t *testing.T) {
-	// 		post := entity.IntershipPost{
-	// 			PostDescription: "Build backend",
-	// 			Quantity:        1,
-	// 			MinGpa:          2.50,
-	// 			LocationDetail:  "123 Place",
-	// 			Subdistrict:     "ห้วยขวาง",
-	// 			District:        "ห้วยขวาง",
-	// 			Province:        "กรุงเทพ",
-	// 			CompanyID:       1,
-	// 			JobTypeID:       1,
-	// 			StipendID:       1,
-	// 			WorkDayID:       1,
-	// 			WorkModeID:      1,
-	// 			StatusPostID:    1,
-	// 			AdminID:         1,
-	// 		}
+	t.Run("Quantity negative", func(t *testing.T) {
+		post := makeValid()
+		post.Quantity = -5
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("Quantity must be between 1 and 1000"))
+	})
 
-	//		ok, err := govalidator.ValidateStruct(post)
-	//		g.Expect(ok).To(BeFalse())
-	//		g.Expect(err).To(Not(BeNil()))
-	//		g.Expect(err.Error()).To(ContainSubstring("Post name is required"))
-	//	})
+	t.Run("MinGpa below 0", func(t *testing.T) {
+		post := makeValid()
+		post.MinGpa = -0.1
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("MinGpa must be between 0.00 and 4.00"))
+	})
+
+	t.Run("MinGpa above 4", func(t *testing.T) {
+		post := makeValid()
+		post.MinGpa = 4.5
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("MinGpa must be between 0.00 and 4.00"))
+	})
+
+	// ----- Location -----
+	t.Run("missing LocationDetail", func(t *testing.T) {
+		post := makeValid()
+		post.LocationDetail = ""
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("LocationDetail is required"))
+	})
+
+	t.Run("missing Subdistrict", func(t *testing.T) {
+		post := makeValid()
+		post.Subdistrict = ""
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("Subdistrict is required"))
+	})
+
+	t.Run("missing District", func(t *testing.T) {
+		post := makeValid()
+		post.District = ""
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("District is required"))
+	})
+
+	t.Run("missing Province", func(t *testing.T) {
+		post := makeValid()
+		post.Province = ""
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("Province is required"))
+	})
+
+	// ----- Foreign Keys -----
+	t.Run("missing CompanyID", func(t *testing.T) {
+		post := makeValid()
+		post.CompanyID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("CompanyID is required"))
+	})
+
+	t.Run("missing JobTypeID", func(t *testing.T) {
+		post := makeValid()
+		post.JobTypeID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("JobTypeID is required"))
+	})
+
+	t.Run("missing StipendID", func(t *testing.T) {
+		post := makeValid()
+		post.StipendID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("StipendID is required"))
+	})
+
+	t.Run("missing WorkDayID", func(t *testing.T) {
+		post := makeValid()
+		post.WorkDayID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("WorkDayID is required"))
+	})
+
+	t.Run("missing WorkModeID", func(t *testing.T) {
+		post := makeValid()
+		post.WorkModeID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("WorkModeID is required"))
+	})
+
+	t.Run("missing StatusPostID", func(t *testing.T) {
+		post := makeValid()
+		post.StatusPostID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("StatusPostID is required"))
+	})
+
+	t.Run("missing AdminID", func(t *testing.T) {
+		post := makeValid()
+		post.AdminID = 0
+		ok, err := govalidator.ValidateStruct(post)
+		g.Expect(ok).To(BeFalse())
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(ContainSubstring("AdminID is required"))
+	})
 }

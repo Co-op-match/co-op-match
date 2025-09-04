@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect,  useRef, useState } from 'react';
 import { Avatar, Dropdown, Layout, Menu, Badge } from 'antd';
 import {
   SearchOutlined,
@@ -7,8 +7,7 @@ import {
   SolutionOutlined,
   HistoryOutlined,
   MessageOutlined,
-  LogoutOutlined,
-  HeartFilled,
+  LogoutOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -25,6 +24,21 @@ interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
   postId?: number;
 }
+
+// ---- helper: flatten keys (รองรับ children) ----
+type MenuItem = Required<React.ComponentProps<typeof Menu>>['items'][number];
+
+const flattenKeys = (items: MenuItem[] = []): string[] => {
+  const res: string[] = [];
+  items.forEach((it: any) => {
+    if (!it) return;
+    if (it.key) res.push(String(it.key));
+    if (Array.isArray(it.children)) {
+      res.push(...flattenKeys(it.children));
+    }
+  });
+  return res;
+};
 
 const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
@@ -161,8 +175,9 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
 
   const routeMap: Record<string, string> = { chat: '/chat' };
   const handleMenuClick = ({ key }: { key: string }) => {
-    const target = routeMap[key] ?? `/student/${key}`;
-    navigate(target);
+    // นำทางตาม key เดิม
+    navigate(`/student/${key}`);
+
   };
 
   const avatarUrl =   user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
@@ -172,15 +187,13 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
       style={{
         background: '#fff',
         padding: '0 24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        borderBottom: '1px solid #e5e7eb', // ⬅️ ใช้เส้นบางๆ แทนเงา
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        height: 64,
-        borderBottom: '1px solid #f0f0f0'
       }}
     >
       {/* Left: Logo */}
@@ -217,15 +230,11 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
                   navigate(`/student/${key}`);
                 }
               }}
-            >
-              <Menu.Item key="favorite-posts" icon={<HeartFilled style={{ color: '#ff4de1ff' }} />}>
-                โพสต์งานที่สนใจ
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item key="logout" icon={<LogoutOutlined />} danger>
-                ออกจากระบบ
-              </Menu.Item>
-            </Menu>
+              items={[
+                { type: 'divider' as const },
+                { key: 'logout', icon: <LogoutOutlined />, label: 'ออกจากระบบ', danger: true },
+              ]}
+            />
           }
           placement="bottomRight"
           trigger={['hover']}

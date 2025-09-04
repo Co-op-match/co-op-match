@@ -19,7 +19,7 @@ import CompanyProfile from "./pages/Profile/Company/Company";
 import CompanyApplication from './pages/company/application/application';
 import PostDetails from './pages/company/post/postdetails';
 import CompanyPostPage from './pages/company/post/post';
-import PostDetailsStudent from './pages/Student/Application/Post';
+import PostDetailsStudent from './pages/Student/Application/postDetail';
 import StudentRecommendedPosts from "./pages/StudentMatch/StudentRecommendedPosts";
 import AddApplication from './pages/Student/Application/AddApplication';
 import ApplicationHistory from "./pages/Student/Application/History";
@@ -31,12 +31,9 @@ import AdminPostManagement from "./pages/Admin/post/post";
 import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
-// import CompanyReviewsSection from "./pages/Profile/Company/StudentReviews";
 import AdminVerify from "./pages/Admin/verify/verify";
-// import ChatInterface from "./Chat/ChatInterface";
-import AdvancedChatInterface from "./Chat/ChatInterface";
-import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
-
+import AdvancedChatInterface from "./logo.png/ChatInterface";
+import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 import AdminUser from "./pages/Admin/user/main";
 import CompanyAnalysisPage from "./pages/company/analysis/analysis";
 import CoopMatchLoading from "./pages/Component/loading";
@@ -77,9 +74,7 @@ function App() {
             path="/student/recommendations"
             element={
               <ProtectedRoute allowedRoles={[3]}>
-                <CheckUser>
-                  <StudentRecommendedPosts />
-                </CheckUser>
+                <StudentRecommendedPosts />
               </ProtectedRoute>
             }
           />
@@ -119,9 +114,9 @@ function App() {
             element={
               <CompanyProfileView />
             }
-          />      
-          <Route path="/chat/session/:sid" element={<AdvancedChatInterface/>} />
-          <Route path="/chat" element={<AdvancedChatInterface/>} />      
+          />
+          <Route path="/chat/session/:sid" element={<AdvancedChatInterface />} />
+          <Route path="/chat" element={<AdvancedChatInterface />} />
           <Route
             path="/company/add-company"
             element={
@@ -211,8 +206,17 @@ function App() {
           <Route
             path="/post/:id"
             element={
-              <ProtectedRoute allowedRoles={[2]}>
+              <ProtectedRoute allowedRoles={[2, 3]}>
                 <PostDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/post-student/:id"
+            element={
+              <ProtectedRoute allowedRoles={[2, 3]}>
+                <PostDetailsStudent />
               </ProtectedRoute>
             }
           />
@@ -254,19 +258,18 @@ function App() {
           />
 
           <Route
-            path="/company/analysis"
-            element={
-              <ProtectedRoute allowedRoles={[2]}>
-                <CompanyAnalysisPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/lecturer/dashboard"
             element={
               <ProtectedRoute allowedRoles={[4]}>
                 <LecturerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/articles"
+            element={
+              <ProtectedRoute allowedRoles={[1]}>
+                <AdminArticlesPage />
               </ProtectedRoute>
             }
           />
@@ -294,7 +297,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-           <Route
+          <Route
             path="/admin/users"
             element={
               <ProtectedRoute allowedRoles={[1]}>

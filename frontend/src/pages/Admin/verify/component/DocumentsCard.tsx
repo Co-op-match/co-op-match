@@ -1,10 +1,6 @@
 import React from "react";
 import { Card, Typography, Button } from "antd";
-import {
-  FileTextOutlined,
-  EyeOutlined,
-  DownloadOutlined,
-} from "@ant-design/icons";
+import { FileTextOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 

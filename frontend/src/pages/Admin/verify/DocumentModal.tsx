@@ -1,9 +1,6 @@
 import React from "react";
 import { Modal, Button, Space, message } from "antd";
-import {
-  FilePdfOutlined,
-  FileImageOutlined,
-} from "@ant-design/icons";
+import { FilePdfOutlined, FileImageOutlined } from "@ant-design/icons";
 
 interface Document {
   name: string;
