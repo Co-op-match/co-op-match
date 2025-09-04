@@ -11,8 +11,10 @@ export interface AcademicStaffInterface {
 
   id: number;
   ID?: number;
+  user_id: number;
   academic_position: string;
   age: number;
+  birthday?: string;
   university_id?: number;
   University: UniversityInterface;
 
@@ -23,13 +25,12 @@ export interface AcademicStaffInterface {
   Program: ProgramInterface;
 
   verify: boolean;
-
-
+  
   UserID?: number;
   address_id?: number;
   AdminID?: number;
   gender_id?: number;
-
+  contact_id?:number;
   first_name?: string;
   last_name?: string;
 

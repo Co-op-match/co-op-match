@@ -62,6 +62,7 @@ func GetUserByID(c *gin.Context) {
 		Preload("Student").
 		Preload("ProfileImage").
 		Preload("Company").
+		Preload("AcademicStaff").
 		First(&user, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})

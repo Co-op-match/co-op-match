@@ -1,0 +1,26 @@
+/* ทำให้เมนูไม่ขึ้น ... และเลื่อนในแนวนอนได้เมื่อพื้นที่ไม่พอ */
+.no-ellipsis-menu .ant-menu-overflow {
+  overflow-x: auto;           /* เลื่อนซ้ายขวาแทน */
+  scrollbar-width: none;      /* Firefox: ซ่อนสกรอลบาร์ */
+}
+.no-ellipsis-menu .ant-menu-overflow::-webkit-scrollbar {
+  display: none;              /* WebKit: ซ่อนสกรอลบาร์ */
+}
+
+/* ไม่ให้ไอเท็มถูกบีบจนย้ายไปอยู่เมนูรวม */
+.no-ellipsis-menu .ant-menu-item,
+.no-ellipsis-menu .ant-menu-submenu {
+  flex: 0 0 auto;             /* คงความกว้างของไอเท็ม */
+}
+
+/* ซ่อนปุ่ม "..." (rest item) ของ antd */
+.no-ellipsis-menu .ant-menu-overflow-item-rest {
+  display: none !important;
+}
+
+/* ให้ wrapper ของเมนูยืดกินพื้นที่ที่เหลือ (ช่วยลดโอกาส overflow) */
+.header-menu-wrap {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}

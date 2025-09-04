@@ -543,12 +543,14 @@ func main() {
 		academicstaffGroup := router.Group("/academicstaff")
 		{
 			academicstaffGroup.GET("", controller.GetAllAcademicStaff)
+			academicstaffGroup.PUT("/:id", controller.UpdateAcademicStaff)
 			academicstaffGroup.GET("/:id", controller.GetAcademicStaffByID)
 			academicstaffGroup.POST("", controller.CreateAcademicStaff)
 			academicstaffGroup.GET("/user/:user_id", controller.GetAcademicStaffByUserId)
 			academicstaffGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 			academicstaffGroup.POST("/verify/:user_id", controller.CreateSendVerifyAcademicStaffy)
-			academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
+			academicstaffGroup.GET("/student/advisor/:user_id", controller.GetAdviseeStudents)
+			academicstaffGroup.GET("/company/advisor/:user_id", controller.GetAdviseeCompanySummary)
 
 		}
 

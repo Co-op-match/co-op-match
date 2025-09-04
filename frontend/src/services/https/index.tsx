@@ -14,6 +14,8 @@ import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
+import type { InputAcademicStaffInterface } from "@/interfaces/InputAcademicStaff";
+import { API_BASE } from "@/config/env";
 
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
@@ -27,6 +29,11 @@ const requestOptions = {
     Authorization: `${Bearer} ${Authorization}`,
   },
 };
+
+export const http = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+});
 
 async function SignIn(data: SignInInterface) {
   return await axios
@@ -248,6 +255,70 @@ export async function GetAllAcademicStaff() {
     .get(`${apiUrl}/academic/all`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
+}
+export async function GetAdviseeStudents(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/academicstaff/student/advisor/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetAdviseeCompanySummary(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/academicstaff/company/advisor/${user_id}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function CreateAcademicStaff(data: InputAcademicStaffInterface ) {
+return await axios.post(`${apiUrl}/academicstaff`, data, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `${Bearer} ${Authorization}`, // ✅ สำคัญ
+  },
+})
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function UpdateAcademicStaff(id: number,data: any) {
+  return await axios
+    .put(`${apiUrl}/academicstaff/${id}`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+async function GetAcademicStaffByUserId(user_id: number): Promise<AcademicStaffInterface> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+
+async function GetAcademicStaffId(id: number): Promise<AcademicStaffInterface> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/${id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function GetVerifAcademicStaffyByUserId(user_id: number) {
+  try {
+    const res = await axios.get<VerifyInterface>(`${apiUrl}/academicstaff/verify/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    throw e.response || e;
+  }
+}
+async function CreateSendVerifyAcademicStaff(user_id: number ,data: FormData) {
+  return await axios.post(`${apiUrl}/academicstaff/verify/${user_id}`, data, {
+    ...requestOptions,
+    headers: {
+      ...requestOptions.headers,
+      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
+    },
+  })
+  .then(res => res)
+  .catch(e => e.response);
 }
 //=============================== Analysis ==============================//
 export async function GetAdminDashboardSummary () {
@@ -503,59 +574,7 @@ async function UpdateCompanyLogo(user_id: number ,data: FormData) {
   .then(res => res)
   .catch(e => e.response);
 }
-//=======================================Company============================================
-async function CreateAcademicStaff(data: FormData) {
-await axios.post(`${apiUrl}/academicstaff`, data, {
-  headers: {
-    'Content-Type': 'multipart/form-data',
-    Authorization: `${Bearer} ${Authorization}`, // ✅ สำคัญ
-  },
-})
-  .then(res => res)
-  .catch(e => e.response);
-}
 
-async function GetAcademicStaffByUserId(user_id: number): Promise<AcademicStaffInterface> {
-  try {
-    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/user/${user_id}`, requestOptions);
-    return res.data;
-  } catch (e: any) {
-    throw e.response || e;
-  }
-}
-// async function UpdateGetAllAcademicStaff(id: number, data: FormData) {
-//   return await axios
-//     .put(`${apiUrl}/students/${id}`, data, requestOptions)
-//     .then((res) => res)
-//     .catch((e) => e.response);
-// }
-async function GetAcademicStaffId(id: number): Promise<AcademicStaffInterface> {
-  try {
-    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/${id}`, requestOptions);
-    return res.data;
-  } catch (e: any) {
-    throw e.response || e;
-  }
-}
-async function GetVerifAcademicStaffyByUserId(user_id: number) {
-  try {
-    const res = await axios.get<VerifyInterface>(`${apiUrl}/academicstaff/verify/${user_id}`, requestOptions);
-    return res.data;
-  } catch (e: any) {
-    throw e.response || e;
-  }
-}
-async function CreateSendVerifyAcademicStaff(user_id: number ,data: FormData) {
-  return await axios.post(`${apiUrl}/academicstaff/verify/${user_id}`, data, {
-    ...requestOptions,
-    headers: {
-      ...requestOptions.headers,
-      'Content-Type': 'multipart/form-data', // ตั้ง header ให้ถูกต้องสำหรับส่งไฟล์
-    },
-  })
-  .then(res => res)
-  .catch(e => e.response);
-}
 
 //=======================================Contact============================================
 async function CreateContact(data:ContactInterface) {
@@ -564,7 +583,7 @@ async function CreateContact(data:ContactInterface) {
     .then((res) => res)
     .catch((e) => e.response);
 }
-async function UpdateCompanyContact(user_id: number, data: ContactInterface) {
+async function UpdateContact(user_id: number, data: ContactInterface) {
   return await axios
     .put(`${apiUrl}/contact/${user_id}`, data, requestOptions)
     .then(res => res)
@@ -1004,7 +1023,7 @@ export {
   GetRecommendedPosts,
   GetEventsCompanyByUserId,
   GetRwviewCompanyByUserId,
-  UpdateCompanyContact,
+  UpdateContact,
   UpdateCompanyLogo,
   GetCompanyId,
   CreateSendVerifyAcademicStaff,
@@ -1012,6 +1031,7 @@ export {
   GetAcademicStaffId,
   GetAcademicStaffByUserId,
   CreateAcademicStaff,
+  UpdateAcademicStaff,
 
 };
 

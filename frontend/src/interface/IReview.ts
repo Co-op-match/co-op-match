@@ -1,6 +1,7 @@
 // IReview.ts
 import type { StudentInterface } from "../interfaces/Student";
 import type { CompanyInterface } from "../interfaces/Company";
+import type { Tag } from "./ITag";
 
 export interface ReviewInterface {
   id?: number;
