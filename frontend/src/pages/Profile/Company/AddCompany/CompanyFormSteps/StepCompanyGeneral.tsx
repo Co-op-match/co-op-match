@@ -14,7 +14,6 @@ export interface StepCompanyInfoProps {
 }
 
 const StepCompanyGeneral: React.FC<StepCompanyInfoProps> = ({
-  form,
   imageFile,
   setImageFile,
   previewUrl,

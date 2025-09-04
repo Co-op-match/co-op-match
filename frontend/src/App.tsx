@@ -35,9 +35,10 @@ import AdminVerify from "./pages/Admin/verify/verify";
 import AdvancedChatInterface from "./logo.png/ChatInterface";
 import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 import AdminUser from "./pages/Admin/user/main";
-import CompanyAnalysisPage from "./pages/company/analysis/analysis";
+// import CompanyAnalysisPage from "./pages/company/analysis/analysis";
 import CoopMatchLoading from "./pages/Component/loading";
 import AddAcademicStaffForm from "./pages/Profile/AcademicStaff/AddacadamicStaff/AddAcadamicStaffForm";
+import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
 function App() {
   return (

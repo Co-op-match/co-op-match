@@ -173,7 +173,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const availableKeys = fullMenu.map(item => item.key);
   const currentPage = availableKeys.find(key => location.pathname.includes(key)) || availableKeys[0];
 
-  const routeMap: Record<string, string> = { chat: '/chat' };
+
   const handleMenuClick = ({ key }: { key: string }) => {
     // นำทางตาม key เดิม
     navigate(`/student/${key}`);
