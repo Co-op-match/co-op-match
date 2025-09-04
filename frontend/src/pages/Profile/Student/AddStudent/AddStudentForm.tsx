@@ -10,7 +10,6 @@ import {
 } from '../../../../services/https';
 
 import type { GenderInterface } from '../../../../interfaces/Gender';
-import type { StudentInterface } from '../../../../interfaces/Student';
 import StepEducation from './StudentFormSteps/StepEducation';
 import StepAddress from './StudentFormSteps/StepAddress';
 import StepSkills from './StudentFormSteps/StepSkills';
@@ -179,7 +178,7 @@ const AddStudentForm: React.FC = () => {
       // ✅ STEP 1: Student
       setLoadingText('กำลังบันทึกข้อมูลนักศึกษา...');
       setProgressPct(20);
-      const payload: StudentInterface = {
+      const payload = {
         first_name: cleaned.firstName,
         last_name: cleaned.lastName,
         age: Number(cleaned.age),

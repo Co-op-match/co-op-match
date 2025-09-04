@@ -38,7 +38,6 @@ import { fileURL } from "@/config/env";
 import CoopMatchLoader from "../../Component/loading";
 import EditProfileCompanyModal from "../AcademicStaff/Edit/Popup";
 
-
 dayjs.locale("th");
 
 const { Content } = Layout;
@@ -86,9 +85,7 @@ const AcademicStaffProfile: React.FC = () => {
     AcademicStaffInterface | undefined
   >(undefined);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
-  const [editSection, setEditSection] = useState<"contact" | "address" | "personal" | null>(
-    null
-  );
+  const [editSection, setEditSection] = useState<"contact" | "address" | "personal" | null>(null);
 
   // ใหม่: นักศึกษาที่ดูแล + บริษัทสรุป
   const [students, setStudents] = useState<StudentForAdvisor[]>([]);
@@ -96,17 +93,18 @@ const AcademicStaffProfile: React.FC = () => {
   const [studentsLoading, setStudentsLoading] = useState<boolean>(false);
   const [staffLoading, setStaffLoading] = useState<boolean>(false);
   const isLoading = staffLoading || studentsLoading;
-  const [uploading, setUploading] = useState(false);
+
+  // อัปโหลดรูป
+  const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
 
   const userId = localStorage.getItem("id");
 
+  // helper: รับ url ดิบ → คืน src ที่พร้อมใช้ (หรือ undefined ถ้าไม่มี)
+  const toSrc = (raw?: string) => (raw ? fileURL(raw) : undefined);
 
-// อัปเดตรูปใน state ทันทีที่อัปโหลดสำเร็จ
-// แก้ onImageUpdated ให้เหลือแค่นี้
-const onImageUpdated = (newUrl: string) => {
-  setAvatarUrl(fileURL(newUrl));
-};
+  // อัปเดตรูปใน state ทันทีที่อัปโหลดสำเร็จ
+  const onImageUpdated = (newUrl: string) => setAvatarUrl(fileURL(newUrl));
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,12 +112,11 @@ const onImageUpdated = (newUrl: string) => {
       const formData = new FormData();
       formData.append("user_id", String(academicstaff.User.ID));
       formData.append("image", file);
-  
-      setUploading(true);
+
+      setIsUploading(true);
       const res = await UpdateProfileImage(academicstaff.User.ID, formData);
-      setUploading(false);
-  
-      // ✅ ใส่ตรงนี้
+      setIsUploading(false);
+
       if (res?.status === 200 && res.data?.data?.image_url) {
         onImageUpdated(res.data.data.image_url);
       }
@@ -127,44 +124,46 @@ const onImageUpdated = (newUrl: string) => {
   };
 
   // โหลดข้อมูลอาจารย์ + สถานะการรับรอง
-useEffect(() => {
-  const loadStaff = async () => {
-    const userIdString = localStorage.getItem("id");
-    if (!userIdString) return;
-    const uid = Number(userIdString);
-    try {
-      setStaffLoading(true);               // ⬅️ เริ่มโหลด
+  useEffect(() => {
+    const loadStaff = async () => {
+      const userIdString = localStorage.getItem("id");
+      if (!userIdString) return;
+      const uid = Number(userIdString);
+      try {
+        setStaffLoading(true); // ⬅️ เริ่มโหลด
 
-      const academicstaffData = await GetAcademicStaffByUserId(uid);
-      setAcademicStaff(academicstaffData);
+        const academicstaffData = await GetAcademicStaffByUserId(uid);
+        setAcademicStaff(academicstaffData);
 
-      const verifyData = await GetVerifyByUserId(uid);
-      if (verifyData?.StatusVerify?.status_verify) {
-        setVerifyStatus(verifyData.StatusVerify.status_verify);console.log(verifyData.StatusVerify.status_verify)
-      } else {
-        
-        setVerifyStatus("ยังไม่ได้ส่งคำขอ");
+        const verifyData = await GetVerifyByUserId(uid);
+        const v =
+          verifyData?.StatusVerify?.status_verify ??
+          verifyData?.StatusVerify?.status_verify ??
+          "ยังไม่ได้ส่งคำขอ";
+        setVerifyStatus(v);
+      } catch (error) {
+        console.error("โหลดข้อมูลอาจารย์ล้มเหลว:", error);
+      } finally {
+        setStaffLoading(false);
       }
-    } catch (error) {
-      console.error("โหลดข้อมูลอาจารย์ล้มเหลว:", error);
-    } finally {
-      setStaffLoading(false);
-    }
-  };
-  loadStaff();
-}, []);
+    };
+    loadStaff();
+  }, []);
 
-useEffect(() => {
-  const url = academicstaff?.User?.ProfileImage?.[0]?.image_url;
-  console.log(academicstaff)
-  setAvatarUrl(url ? fileURL(url) : undefined); // ถ้ามี fileURL() อยู่แล้ว ใช้ต่อได้เลย
-}, [academicstaff]);
+  // ตั้งค่า avatar เริ่มต้น → ใช้รูป "ล่าสุด" ถ้ามีหลายรูป
+  useEffect(() => {
+    const images = academicstaff?.User?.ProfileImage ?? [];
+    const latest = images?.length ? images[images.length - 1] : undefined;
+    const url = latest?.image_url;
+    setAvatarUrl(url ? fileURL(url) : undefined);
+  }, [academicstaff]);
 
-useEffect(() => {
-  (async () => {
-    if (!userId) return;
-    const uid = Number(userId);
-    setStudentsLoading(true);
+  // โหลดนักศึกษา + บริษัทสรุป
+  useEffect(() => {
+    (async () => {
+      if (!userId) return;
+      const uid = Number(userId);
+      setStudentsLoading(true);
       try {
         if (USE_MOCK_DATA) {
           setStudents([]);
@@ -201,21 +200,34 @@ useEffect(() => {
     })();
   }, [userId]);
 
-  const onEditSection = (section: "contact" | "address" |"personal") => setEditSection(section);
-
+  const onEditSection = (section: "contact" | "address" | "personal") => setEditSection(section);
 
   return (
     <Layout>
       <CompanyHeader />
-          {isLoading && (
-      <CoopMatchLoader
-        overlay
-        animation="wave-fold"        // เลือกได้: puzzle-fold | piece-rotate | flip-3d | wave-fold | bounce-assemble
-        primaryColor="#2473b2"     // สีให้เข้ากับโลโก้
-        progressMode="indeterminate"
-        text="กำลังโหลดข้อมูลอาจารย์และนักศึกษา..."
-      />
-    )}
+
+      {/* Loader รวม (โหลดข้อมูล) */}
+      {isLoading && (
+        <CoopMatchLoader
+          overlay
+          animation="wave-fold" // puzzle-fold | piece-rotate | flip-3d | wave-fold | bounce-assemble
+          primaryColor="#2473b2"
+          progressMode="indeterminate"
+          text="กำลังโหลดข้อมูลอาจารย์และนักศึกษา..."
+        />
+      )}
+
+      {/* Loader อัปโหลดรูป */}
+      {isUploading && (
+        <CoopMatchLoader
+          overlay
+          animation="bounce-assemble"
+          primaryColor="#2473b2"
+          progressMode="indeterminate"
+          text="กำลังอัปโหลดรูปโปรไฟล์..."
+        />
+      )}
+
       <Layout className="academicstaff-layout">
         <Content>
           <div className="academicstaff-profile-title">
@@ -229,40 +241,43 @@ useEffect(() => {
               <div className="academicstaff-profile-container">
                 <div className="academicstaff-profile-left">
                   <div className="academicstaff-avatar-container">
-                  <label style={{ cursor: "pointer" }}>
-                    <Avatar
-                      src={avatarUrl} // ⬅️ ใช้ state โดยตรง
-                      size={120}
-                      icon={!avatarUrl ? <UserOutlined /> : undefined}
-                      style={{ border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
-                    />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      onChange={handleImageUpload}
-                    />
-                  </label>
+                    <label style={{ cursor: "pointer" }}>
+                      <Avatar
+                        src={avatarUrl}
+                        size={120}
+                        icon={!avatarUrl ? <UserOutlined /> : undefined}
+                        style={{ border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+                        onClick={() => document.getElementById("avatar-upload")?.click()}
+                      />
+                    </label>
 
-                  <label className="student-avatar-edit-icon" title="เปลี่ยนรูปโปรไฟล์">
-                    <EditOutlined />
+                    <button
+                      type="button"
+                      className="student-avatar-edit-icon"
+                      title="เปลี่ยนรูปโปรไฟล์"
+                      onClick={() => document.getElementById("avatar-upload")?.click()}
+                    >
+                      <EditOutlined />
+                    </button>
+
+                    {/* input ตัวเดียวสำหรับทั้ง Avatar และปุ่มดินสอ */}
                     <input
+                      id="avatar-upload"
                       type="file"
                       accept="image/*"
                       style={{ display: "none" }}
                       onChange={handleImageUpload}
                     />
-                  </label>
                   </div>
+
                   <p className="academicstaff-name">
-                   {academicstaff?.academic_position} {academicstaff?.first_name} {academicstaff?.last_name}
+                    {academicstaff?.academic_position} {academicstaff?.first_name} {academicstaff?.last_name}
                   </p>
-                   <p className="student-university-major">
+                  <p className="student-university-major">
                     {academicstaff?.University?.name_th || "-"} <br />
                   </p>
-                  <p className="student-major">
-                    {academicstaff?.Faculty?.name_th || "-"}
-                  </p>
+                  <p className="student-major">{academicstaff?.Faculty?.name_th || "-"}</p>
+
                   <Badge
                     className="academicstaff-verify-badge"
                     status={
@@ -279,91 +294,84 @@ useEffect(() => {
                 </div>
 
                 <div className="academicstaff-profile-details">
-          <div className="section-header">
-            <h4><UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลส่วนตัว</h4>
-            <button className="edit-profile-button" onClick={() => onEditSection("personal")}>
-              <EditOutlined /> แก้ไข
-            </button>
-          </div>
-          <div style={{ padding: "0px 24px 0px 24px" }}>
-          <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
-             <Descriptions.Item label="ตำแหน่ง">{academicstaff?.academic_position || "-"}</Descriptions.Item>
-            <Descriptions.Item label="เพศ">{academicstaff?.Gender?.name || "-"}</Descriptions.Item>
-            <Descriptions.Item label="วันเกิด">{academicstaff?.birthday ? dayjs(academicstaff.birthday).format("DD/MM/YYYY") : "-"}</Descriptions.Item>
-            <Descriptions.Item label="มหาวิทยาลัย">{academicstaff?.University?.name_th|| "-"}</Descriptions.Item>
-            <Descriptions.Item label="คณะ">{academicstaff?.Faculty?.name_th || "-"}</Descriptions.Item>
-            <Descriptions.Item label="สาขา">{academicstaff?.Program?.name_th || "-"}</Descriptions.Item>
-          </Descriptions>
-          </div>
-                  <div className="academicstaff-section-header">
+                  <div className="section-header">
                     <h4>
-                      <UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลติดต่อ
+                      <UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลส่วนตัว
                     </h4>
-                    <button
-                      className="academicstaff-edit-button"
-                      onClick={() => onEditSection("contact")}
-                    >
+                    <button className="edit-profile-button" onClick={() => onEditSection("personal")}>
                       <EditOutlined /> แก้ไข
                     </button>
                   </div>
                   <div style={{ padding: "0px 24px 0px 24px" }}>
-                  <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
-                    <Descriptions.Item label="เว็บไซต์">
-                      {academicstaff?.Contact?.website || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="ไลน์">
-                      {academicstaff?.Contact?.line || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="เบอร์">
-                      {academicstaff?.Contact?.phone_number || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="เฟสบุ๊ค">
-                      {academicstaff?.Contact?.facebook || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="อีเมล">
-                      {academicstaff?.Contact?.email || "-"}
-                    </Descriptions.Item>
-                  </Descriptions>
+                    <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+                      <Descriptions.Item label="ตำแหน่ง">
+                        {academicstaff?.academic_position || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="เพศ">{academicstaff?.Gender?.name || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="วันเกิด">
+                        {academicstaff?.birthday ? dayjs(academicstaff.birthday).format("DD/MM/YYYY") : "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="มหาวิทยาลัย">
+                        {academicstaff?.University?.name_th || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="คณะ">{academicstaff?.Faculty?.name_th || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="สาขา">{academicstaff?.Program?.name_th || "-"}</Descriptions.Item>
+                    </Descriptions>
+                  </div>
+
+                  <div className="academicstaff-section-header">
+                    <h4>
+                      <UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลติดต่อ
+                    </h4>
+                    <button className="academicstaff-edit-button" onClick={() => onEditSection("contact")}>
+                      <EditOutlined /> แก้ไข
+                    </button>
+                  </div>
+                  <div style={{ padding: "0px 24px 0px 24px" }}>
+                    <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+                      <Descriptions.Item label="เว็บไซต์">
+                        {academicstaff?.Contact?.website || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="ไลน์">{academicstaff?.Contact?.line || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="เบอร์">
+                        {academicstaff?.Contact?.phone_number || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="เฟสบุ๊ค">
+                        {academicstaff?.Contact?.facebook || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="อีเมล">{academicstaff?.Contact?.email || "-"}</Descriptions.Item>
+                    </Descriptions>
                   </div>
 
                   <div className="academicstaff-section-header">
                     <h4>
                       <EnvironmentOutlined style={{ color: "#0d47a1" }} /> ที่อยู่
                     </h4>
-                    <button
-                      className="academicstaff-edit-button"
-                      onClick={() => onEditSection("address")}
-                    >
+                    <button className="academicstaff-edit-button" onClick={() => onEditSection("address")}>
                       <EditOutlined /> แก้ไข
                     </button>
                   </div>
                   <div style={{ padding: "0px 24px 0px 24px" }}>
-                  <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
-                    <Descriptions.Item label="บ้านเลขที่">
-                      {academicstaff?.Address?.house_number || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="หมู่บ้าน">
-                      {academicstaff?.Address?.village || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="ซอย">
-                      {academicstaff?.Address?.sub_street || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="ถนน">
-                      {academicstaff?.Address?.street || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="ตำบล">
-                      {academicstaff?.Address?.SubDistrict?.name_th || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="อำเภอ">
-                      {academicstaff?.Address?.District?.name_th || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="จังหวัด">
-                      {academicstaff?.Address?.Province?.name_th || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="รหัสไปรษณีย์">
-                      {academicstaff?.Address?.Postcode?.post_code || "-"}
-                    </Descriptions.Item>
-                  </Descriptions>
+                    <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+                      <Descriptions.Item label="บ้านเลขที่">
+                        {academicstaff?.Address?.house_number || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="หมู่บ้าน">{academicstaff?.Address?.village || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="ซอย">{academicstaff?.Address?.sub_street || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="ถนน">{academicstaff?.Address?.street || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="ตำบล">
+                        {academicstaff?.Address?.SubDistrict?.name_th || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="อำเภอ">
+                        {academicstaff?.Address?.District?.name_th || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="จังหวัด">
+                        {academicstaff?.Address?.Province?.name_th || "-"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="รหัสไปรษณีย์">
+                        {academicstaff?.Address?.Postcode?.post_code || "-"}
+                      </Descriptions.Item>
+                    </Descriptions>
                   </div>
                 </div>
               </div>
@@ -394,9 +402,7 @@ useEffect(() => {
                             </div>
                             <div>
                               <div className="card-title__text">นักศึกษาที่ดูแล</div>
-                              <div className="card-title__subtext">
-                                รายชื่อและข้อมูลการฝึกงานของนักศึกษา
-                              </div>
+                              <div className="card-title__subtext">รายชื่อและข้อมูลการฝึกงานของนักศึกษา</div>
                             </div>
                           </div>
                         }
@@ -406,17 +412,17 @@ useEffect(() => {
                         {studentsLoading ? (
                           <Skeleton active paragraph={{ rows: 8 }} />
                         ) : students.length === 0 ? (
-                       <div className="empty-center-wrap">
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description={
-                            <div className="enty">
-                              <div>ยังไม่มีนักศึกษาที่ดูแล</div>
-                              <div className="empty-subtext">นักศึกษาจะปรากฏที่นี่เมื่อได้รับการมอบหมาย</div>
-                            </div>
-                          }
-                        />
-                      </div>
+                          <div className="empty-center-wrap">
+                            <Empty
+                              image={Empty.PRESENTED_IMAGE_SIMPLE}
+                              description={
+                                <div className="enty">
+                                  <div>ยังไม่มีนักศึกษาที่ดูแล</div>
+                                  <div className="empty-subtext">นักศึกษาจะปรากฏที่นี่เมื่อได้รับการมอบหมาย</div>
+                                </div>
+                              }
+                            />
+                          </div>
                         ) : (
                           <Table<StudentForAdvisor>
                             dataSource={students}
@@ -436,23 +442,22 @@ useEffect(() => {
                                 </span>
                               ),
                             }}
-                            rowClassName={(_, index) =>
-                              index % 2 === 0 ? "table-row-even" : "table-row-odd"
-                            }
+                            rowClassName={(_, index) => (index % 2 === 0 ? "table-row-even" : "table-row-odd")}
                             columns={[
                               {
-                               title: <div className="th-title">นักศึกษา</div>,
+                                title: <div className="th-title">นักศึกษา</div>,
                                 key: "name",
                                 width: 260,
                                 align: "center",
                                 render: (_, record) => {
                                   const fullName = `${record.prefix_name ?? ""}${record.first_name} ${record.last_name}`.trim();
+                                  const src = toSrc(record.avatar_url);
                                   return (
                                     <div className="cell-student">
                                       <Avatar
                                         size={44}
-                                        src={fileURL(record.avatar_url) || undefined}
-                                        icon={!record.avatar_url ? <UserOutlined /> : undefined}
+                                        src={src}
+                                        icon={!src ? <UserOutlined /> : undefined}
                                         className="cell-student__avatar"
                                       />
                                       <div className="cell-student__namewrap">
@@ -461,7 +466,6 @@ useEffect(() => {
                                     </div>
                                   );
                                 },
-
                               },
                               {
                                 title: <div className="th-title">หลักสูตร</div>,
@@ -499,11 +503,7 @@ useEffect(() => {
                                   typeof gpa === "number" ? (
                                     <Tag
                                       className={`tag-chip ${
-                                        gpa >= 3.5
-                                          ? "tag-chip--green"
-                                          : gpa >= 3.0
-                                          ? "tag-chip--amber"
-                                          : "tag-chip--red"
+                                        gpa >= 3.5 ? "tag-chip--green" : gpa >= 3.0 ? "tag-chip--amber" : "tag-chip--red"
                                       }`}
                                     >
                                       {gpa.toFixed(2)}
@@ -556,8 +556,7 @@ useEffect(() => {
                                 align: "center",
                                 render: (_, record) => {
                                   const ci = record.current_internship;
-                                  if (!ci?.status)
-                                    return <Tag className="tag-chip tag-chip--gray">ยังไม่ได้ฝึก</Tag>;
+                                  if (!ci?.status) return <Tag className="tag-chip tag-chip--gray">ยังไม่ได้ฝึก</Tag>;
                                   const cls =
                                     ci.status === "ผ่าน"
                                       ? "tag-chip--green"
@@ -602,17 +601,17 @@ useEffect(() => {
                         {studentsLoading ? (
                           <Skeleton active paragraph={{ rows: 6 }} />
                         ) : companySummary.length === 0 ? (
-                                                 <div className="empty-center-wrap">
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description={
-                            <div className="enty">
-                              <div>ยังไม่มีข้อมูลบริษัทที่นักศึกษาไปฝึก</div>
-                              <div className="empty-subtext">ข้อมูลจะปรากฏเมื่อนักศึกษาเริ่มฝึกงาน</div>
-                            </div>
-                          }
-                        />
-                      </div>
+                          <div className="empty-center-wrap">
+                            <Empty
+                              image={Empty.PRESENTED_IMAGE_SIMPLE}
+                              description={
+                                <div className="enty">
+                                  <div>ยังไม่มีข้อมูลบริษัทที่นักศึกษาไปฝึก</div>
+                                  <div className="empty-subtext">ข้อมูลจะปรากฏเมื่อนักศึกษาเริ่มฝึกงาน</div>
+                                </div>
+                              }
+                            />
+                          </div>
                         ) : (
                           <Table<CompanySummaryItem>
                             dataSource={companySummary}
@@ -629,9 +628,7 @@ useEffect(() => {
                                 </span>
                               ),
                             }}
-                            rowClassName={(_, index) =>
-                              index % 2 === 0 ? "table-row-even" : "table-row-odd"
-                            }
+                            rowClassName={(_, index) => (index % 2 === 0 ? "table-row-even" : "table-row-odd")}
                             expandable={{
                               expandedRowRender: (record) => (
                                 <div className="company-expand">
@@ -639,41 +636,43 @@ useEffect(() => {
                                     🎓 รายชื่อนักศึกษาทั้งหมด ({record.students.length} คน)
                                   </div>
                                   <div className="company-expand__grid">
-                                    {record.students.map((s) => (
-                                      <div className="company-expand__item" key={s.id}>
-                                        <Avatar
-                                          size={36}
-                                          src={fileURL(s.avatar_url) || undefined}
-                                          icon={fileURL(s.avatar_url) ? <UserOutlined /> : undefined}
-                                          className="company-expand__avatar"
-                                        />
-                                        <div className="company-expand__text">
-                                          <div className="company-expand__name ellipsis-1">
-                                            {(s.prefix_name ?? "") + s.first_name + " " + s.last_name}
+                                    {record.students.map((s) => {
+                                      const stuSrc = toSrc(s.avatar_url);
+                                      return (
+                                        <div className="company-expand__item" key={s.id}>
+                                          <Avatar
+                                            size={36}
+                                            src={stuSrc}
+                                            icon={!stuSrc ? <UserOutlined /> : undefined}
+                                            className="company-expand__avatar"
+                                          />
+                                          <div className="company-expand__text">
+                                            <div className="company-expand__name ellipsis-1">
+                                              {(s.prefix_name ?? "") + s.first_name + " " + s.last_name}
+                                            </div>
+                                            {s.current_internship?.position && (
+                                              <Tag className="tag-chip tag-chip--cyan ellipsis-1">
+                                                {s.current_internship.position}
+                                              </Tag>
+                                            )}
                                           </div>
-                                          {s.current_internship?.position && (
-                                            <Tag className="tag-chip tag-chip--cyan ellipsis-1">
-                                              {s.current_internship.position}
-                                            </Tag>
-                                          )}
                                         </div>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               ),
-                              rowExpandable: (record) =>
-                                record.students && record.students.length > 0,
-                                expandIconColumnIndex: 0, // จะอยู่คอลัมน์ซ้ายสุด
-                                  expandIcon: ({ expanded, onExpand, record }) => (
-                                  <button
-                                    className={`expand-btn ${expanded ? "is-open" : ""}`}
-                                    onClick={(e) => onExpand(record, e)}
-                                    aria-label={expanded ? "ย่อ" : "ขยาย"}
-                                  >
-                                    <span className="expand-btn__chev">{expanded ? "−" : "+"}</span>
-                                  </button>
-                                  ),
+                              rowExpandable: (record) => record.students && record.students.length > 0,
+                              expandIconColumnIndex: 0,
+                              expandIcon: ({ expanded, onExpand, record }) => (
+                                <button
+                                  className={`expand-btn ${expanded ? "is-open" : ""}`}
+                                  onClick={(e) => onExpand(record, e)}
+                                  aria-label={expanded ? "ย่อ" : "ขยาย"}
+                                >
+                                  <span className="expand-btn__chev">{expanded ? "−" : "+"}</span>
+                                </button>
+                              ),
                             }}
                             columns={[
                               {
@@ -681,21 +680,24 @@ useEffect(() => {
                                 dataIndex: "company_name",
                                 key: "company_name",
                                 width: 360,
-                                render: (company_name, record) => (
-                                  <div className="cell-company-main">
-                                    <Avatar
-                                      shape="square"
-                                      size={56}
-                                      src={fileURL(record.logo_url) || undefined}
-                                      icon={!fileURL(record.logo_url) ? <BankOutlined /> : undefined}
-                                      className="cell-company-main__logo"
-                                    />
-                                    <div className="cell-company-main__textwrap">
-                                      <div className="cell-company-main__name">{company_name}</div>
-                                      <div className="cell-company-main__tagline">องค์กรพันธมิตร</div>
+                                render: (company_name, record) => {
+                                  const logoSrc = toSrc(record.logo_url);
+                                  return (
+                                    <div className="cell-company-main">
+                                      <Avatar
+                                        shape="square"
+                                        size={56}
+                                        src={logoSrc}
+                                        icon={!logoSrc ? <BankOutlined /> : undefined}
+                                        className="cell-company-main__logo"
+                                      />
+                                      <div className="cell-company-main__textwrap">
+                                        <div className="cell-company-main__name">{company_name}</div>
+                                        <div className="cell-company-main__tagline">องค์กรพันธมิตร</div>
+                                      </div>
                                     </div>
-                                  </div>
-                                ),
+                                  );
+                                },
                               },
                               {
                                 title: <div className="th-title th-center">จำนวนนักศึกษา</div>,
@@ -717,22 +719,25 @@ useEffect(() => {
                                 width: 360,
                                 render: (students: StudentForAdvisor[]) => (
                                   <div className="students-preview">
-                                    {students.slice(0, 3).map((s, index) => (
-                                      <div
-                                        key={s.id}
-                                        className={`students-preview__row ${index % 2 === 0 ? "is-alt" : ""}`}
-                                      >
-                                        <Avatar
-                                          size={28}
-                                          src={fileURL(s.avatar_url) || undefined}
-                                          icon={!fileURL(s.avatar_url) ? <UserOutlined /> : undefined}
-                                          className="students-preview__avatar"
-                                        />
-                                        <div className="students-preview__name ellipsis-1">
-                                          {(s.prefix_name ?? "") + s.first_name + " " + s.last_name}
+                                    {students.slice(0, 3).map((s, index) => {
+                                      const sSrc = toSrc(s.avatar_url);
+                                      return (
+                                        <div
+                                          key={s.id}
+                                          className={`students-preview__row ${index % 2 === 0 ? "is-alt" : ""}`}
+                                        >
+                                          <Avatar
+                                            size={28}
+                                            src={sSrc}
+                                            icon={!sSrc ? <UserOutlined /> : undefined}
+                                            className="students-preview__avatar"
+                                          />
+                                          <div className="students-preview__name ellipsis-1">
+                                            {(s.prefix_name ?? "") + s.first_name + " " + s.last_name}
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                     {students.length > 3 && (
                                       <div className="students-preview__more">
                                         <Text type="secondary" className="muted-italic">
@@ -753,21 +758,21 @@ useEffect(() => {
               />
             </Col>
           </Row>
-        {academicstaff && editSection && (
-      <EditProfileCompanyModal
-        open={!!editSection}
-        section={editSection}
-        initialData={academicstaff}
-        onClose={() => {
-          setEditSection(null);
-          // reload company data after update
-          const userIdString = localStorage.getItem("id");
-          if (userIdString) {
-            GetAcademicStaffByUserId(Number(userIdString)).then(setAcademicStaff);
-          }
-        }}
-      />
-)}
+
+          {academicstaff && editSection && (
+            <EditProfileCompanyModal
+              open={!!editSection}
+              section={editSection}
+              initialData={academicstaff}
+              onClose={() => {
+                setEditSection(null);
+                const userIdString = localStorage.getItem("id");
+                if (userIdString) {
+                  GetAcademicStaffByUserId(Number(userIdString)).then(setAcademicStaff);
+                }
+              }}
+            />
+          )}
         </Content>
       </Layout>
     </Layout>
