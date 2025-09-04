@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+/* import * as XLSX from "xlsx";
 
 type Row = Record<string, any>;
 
@@ -28,3 +28,4 @@ export const downloadWorkbook = (sheets: { ws: XLSX.WorkSheet; sheetName: string
   sheets.forEach(({ ws, sheetName }) => XLSX.utils.book_append_sheet(wb, ws, sheetName));
   XLSX.writeFile(wb, filename);
 };
+ */

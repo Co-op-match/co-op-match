@@ -7,7 +7,7 @@ import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
 import type { StatusPostInterface } from "../../../interface/IStatusPost";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
-import AdminHeader from "../../Component/AdminHeader";
+import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";

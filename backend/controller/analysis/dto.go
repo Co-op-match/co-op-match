@@ -111,6 +111,10 @@ type AcademicApplicationItem struct {
 	PostName        string `json:"post_name"`
 	StudentID       uint   `json:"student_id"`
 	StudentFullName string `json:"student_full_name"`
+	UpdatedAt       string `json:"updated_at"`
+	ResumeUrl       string `json:"resume_url"`
+	TranscriptUrl   string `json:"transcript_url"`
+	CompanyNote     string `json:"company_note"`
 }
 
 type ListAcademicApplicationsResponse struct {

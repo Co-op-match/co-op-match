@@ -87,10 +87,12 @@ func GetAcademicOverview(c *gin.Context) {
 	var interviewsUpcoming int64
 	db.Table("interview_appointments ia").
 		Joins("JOIN students s ON s.id = ia.student_id").
-		Joins("JOIN applications a ON a.student_id = s.id AND a.intership_post_id = ia.company_id").
+		Joins("JOIN applications a ON a.student_id = s.id").
+		Joins("JOIN intership_posts ip ON ip.id = a.intership_post_id").
 		Joins("JOIN educations e ON e.student_id = s.id").
 		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
 		Where("e.university_id = ? AND ia.appointment_date >= ? AND a.status = ?", universityID, time.Now(), "รอการนัดสัมภาษณ์").
+		Where("ip.company_id = ia.company_id").
 		Distinct("ia.id").
 		Count(&interviewsUpcoming)
 
@@ -200,7 +202,7 @@ func ListAcademicStudents(c *gin.Context) {
 	if !ok {
 		return
 	}
-	uniID := staff.UniversityID
+	universityID := staff.UniversityID
 
 	page, size := 1, 10
 	if v := c.Query("page"); v != "" {
@@ -217,6 +219,7 @@ func ListAcademicStudents(c *gin.Context) {
 	}
 	q := c.Query("q")
 
+	// ===== 1) เลือก Education ล่าสุดของแต่ละ student =====
 	latestEdu := db.Table("educations").
 		Select("student_id, MAX(created_at) as max_created_at").
 		Group("student_id")
@@ -243,7 +246,7 @@ func ListAcademicStudents(c *gin.Context) {
 		Joins("LEFT JOIN programs p ON p.id = e.program_id").
 		Joins("LEFT JOIN faculties f ON f.id = e.faculty_id").
 		Joins("LEFT JOIN universities u ON u.id = e.university_id").
-		Where("e.university_id = ?", uniID)
+		Where("e.university_id = ?", universityID)
 
 	if q != "" {
 		like := "%" + q + "%"
@@ -286,7 +289,7 @@ func ListAcademicStudents(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, ListAcademicStudentsResponse{
-		UniversityID: uniID,
+		UniversityID: universityID,
 		Total:        total,
 		Page:         page,
 		PageSize:     size,
@@ -294,6 +297,7 @@ func ListAcademicStudents(c *gin.Context) {
 	})
 }
 
+// GET /analysis/academic/user/:userId/applications?status=&page=&page_size=&q=
 // GET /analysis/academic/user/:userId/applications?status=&page=&page_size=&q=
 func ListAcademicApplications(c *gin.Context) {
 	db := config.DB()
@@ -326,10 +330,18 @@ func ListAcademicApplications(c *gin.Context) {
 
 	base := db.Table("applications a").
 		Select(`
-            a.id, a.status, a.submit_at,
-            c.company_name, ip.post_name,
-            s.id as student_id, CONCAT(s.first_name, ' ', s.last_name) as student_full_name
-        `).
+			a.id,
+			a.status,
+			a.submit_at,
+			a.updated_at,
+			a.resume_url,
+			a.transcript_url,
+			a.company_note,
+			c.company_name,
+			ip.post_name,
+			s.id AS student_id,
+			CONCAT(s.first_name, ' ', s.last_name) AS student_full_name
+		`).
 		Joins("JOIN students s ON s.id = a.student_id").
 		Joins("JOIN educations e ON e.student_id = s.id").
 		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
@@ -355,12 +367,21 @@ func ListAcademicApplications(c *gin.Context) {
 		ID              uint
 		Status          string
 		SubmitAt        time.Time
+		UpdatedAt       time.Time
+		ResumeUrl       string
+		TranscriptUrl   string
+		CompanyNote     string
 		CompanyName     string
 		PostName        string
 		StudentID       uint
 		StudentFullName string
 	}
-	if err := base.Order("a.submit_at DESC").Offset((page - 1) * size).Limit(size).Scan(&rows).Error; err != nil {
+
+	if err := base.
+		Order("a.submit_at DESC").
+		Offset((page - 1) * size).
+		Limit(size).
+		Scan(&rows).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -371,6 +392,10 @@ func ListAcademicApplications(c *gin.Context) {
 			ID:              r.ID,
 			Status:          r.Status,
 			SubmitAt:        r.SubmitAt.Format(time.RFC3339),
+			UpdatedAt:       r.UpdatedAt.Format(time.RFC3339),
+			ResumeUrl:       r.ResumeUrl,
+			TranscriptUrl:   r.TranscriptUrl,
+			CompanyNote:     r.CompanyNote,
 			CompanyName:     r.CompanyName,
 			PostName:        r.PostName,
 			StudentID:       r.StudentID,

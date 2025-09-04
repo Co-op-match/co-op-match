@@ -80,6 +80,7 @@ func main() {
 	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
 	r.GET("/student/user/:user_id", controller.GetStudentByUserID)
 	r.GET("/application/:id", controller.GetApplicationByID)
+	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication) // *ถ้าควรล็อกอิน ให้ย้ายไป protected
 	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
@@ -266,7 +267,13 @@ func main() {
 		analysisCompanyGroup.GET("/trend", analysis.CompanyTrend)
 		analysisCompanyGroup.GET("/status-application", analysis.CompanyStatusApplication)
 	}
-
+	analysisAcademicGroup := r.Group("/analysis/academic/user/:userId")
+	{
+		analysisAcademicGroup.GET("/dashboard/overview", analysis.GetAcademicOverview)
+		analysisAcademicGroup.GET("/students", analysis.ListAcademicStudents)
+		analysisAcademicGroup.GET("/applications", analysis.ListAcademicApplications)
+	}
+	
 	// articles (ต้องล็อกอิน)
 	articles := protected.Group("/articles")
 	{
@@ -274,6 +281,15 @@ func main() {
 		articles.POST("", controller.CreateArticle)
 		articles.PUT("/:id", controller.UpdateArticle)
 		articles.DELETE("/:id", controller.DeleteArticle)
+	}
+
+	// verify
+	verifyGroup := r.Group("/verify")
+	{
+		verifyGroup.GET("", controller.GetAllVerifications)
+		verifyGroup.GET("/:id", controller.GetVerificationByID)
+		verifyGroup.GET("/status", controller.GetAllStatusVerify)
+		verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
 	}
 
 	// health

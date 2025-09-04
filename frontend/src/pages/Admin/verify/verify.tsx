@@ -1,28 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, Table, Button, Typography, Input, message, Row, Col, Avatar, Tooltip, Layout, Form, Select } from "antd";
-import { EyeOutlined, FileTextOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, StopOutlined, BuildOutlined, TeamOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  FileTextOutlined,
+  UserOutlined,
+  BuildOutlined,
+  TeamOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { GetAdminByUserId, GetAllStatusVerify, GetAllVerifications, SendEmailVerify, UpdateVerifyStatus } from "../../../services/https";
 import type { StatusVerifyInterface } from "../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";
-import AdminHeader from "../../Component/AdminHeader";
+import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import DocumentModal from "./DocumentModal";
 import DetailModal from "./DetailModal";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import type { AdminInterface } from "../../../interfaces/Admin";
 
 const { Title, Text } = Typography;
-
 const user_id = Number(localStorage.getItem("id") || 0);
 
-const CertificationReviewPage = () => {
+const CertificationReviewPage: React.FC = () => {
   const [verifyForm] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
 
-  const [admin, setAdmin] = useState<AdminInterface | undefined>(undefined);
-  const [selectedRecord, setSelectedRecord] = useState<
-    VerifyInterface | undefined
-  >(undefined);
+  // ===== state =====
+  const [admin, setAdmin] = useState<AdminInterface>();
+  const [selectedRecord, setSelectedRecord] = useState<VerifyInterface>();
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [documentModalVisible, setDocumentModalVisible] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<{
@@ -33,23 +38,15 @@ const CertificationReviewPage = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [verifications, setVerifications] = useState<VerifyInterface[]>([]);
-  const [statusVerifications, setStatusVerifications] = useState<
-    StatusVerifyInterface[]
-  >([]);
-  const [selectedStatus, setSelectedStatus] = useState<
-    StatusVerifyInterface | undefined
-  >(undefined);
+  const [statusVerifications, setStatusVerifications] = useState<StatusVerifyInterface[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<StatusVerifyInterface>();
 
-  const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<
-    string[]
-  >([]);
+  const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState("");
 
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 6,
-  });
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 6 });
 
+  // ===== api =====
   const fetchVerifications = async () => {
     setLoading(true);
     try {
@@ -62,117 +59,117 @@ const CertificationReviewPage = () => {
       if (res_status.status === 200) setStatusVerifications(res_status.data);
       if (res_admin.status === 200) setAdmin(res_admin.data);
     } catch (error) {
-      messageApi.error(
-        "เกิดข้อผิดพลาดในการดึงข้อมูล: " +
-          ((error as Error).message || "Unknown error")
-      );
+      messageApi.error("เกิดข้อผิดพลาดในการดึงข้อมูล: " + ((error as Error).message || "Unknown error"));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchVerifications();
-  }, []);
+  useEffect(() => { fetchVerifications(); }, []);
 
+  // reset ฟอร์มเมื่อปิด detail modal
   useEffect(() => {
-    if (!open) {
+    if (!detailModalVisible) {
       verifyForm.resetFields();
       setSelectedStatus(undefined);
     }
-  }, [open]);
+  }, [detailModalVisible, verifyForm]);
 
-  const filteredVerifications = verifications.filter((v) => {
-    const status = v.StatusVerify?.status_verify || "รอรับรอง";
-
-    const matchStatus =
-      selectedFilterStatuses.length === 0 ||
-      selectedFilterStatuses.includes(status);
-
+  // ===== selectors / memo =====
+  const filteredVerifications = useMemo(() => {
     const keyword = searchKeyword.toLowerCase();
+    return verifications.filter((v) => {
+      const status = v.StatusVerify?.status_verify || "รอรับรอง";
+      const matchStatus = selectedFilterStatuses.length === 0 || selectedFilterStatuses.includes(status);
 
-    const companyName =
-      v?.User?.Company?.[0]?.company_name?.toLowerCase() || "";
+      const companyName = v?.User?.Company?.[0]?.company_name?.toLowerCase() || "";
+      const staffFirstName = v?.User?.AcademicStaff?.[0]?.first_name?.toLowerCase() || "";
+      const staffLastName = v?.User?.AcademicStaff?.[0]?.last_name?.toLowerCase() || "";
+      const email = v?.User?.Email?.toLowerCase() || "";
+      const id = `verify-${v.ID?.toString().padStart(4, "0")}`;
 
-    const staffFirstName =
-      v?.User?.AcademicStaff?.[0]?.first_name?.toLowerCase() || "";
-    const staffLastName =
-      v?.User?.AcademicStaff?.[0]?.last_name?.toLowerCase() || "";
+      const matchKeyword =
+        companyName.includes(keyword) ||
+        staffFirstName.includes(keyword) ||
+        staffLastName.includes(keyword) ||
+        email.includes(keyword) ||
+        id.includes(keyword);
 
-    const email = v?.User?.Email?.toLowerCase() || "";
-    const id = `verify-${v.ID?.toString().padStart(4, "0")}`;
+      return matchStatus && matchKeyword;
+    });
+  }, [verifications, selectedFilterStatuses, searchKeyword]);
 
-    const matchKeyword =
-      companyName.includes(keyword) ||
-      staffFirstName.includes(keyword) ||
-      staffLastName.includes(keyword) ||
-      email.includes(keyword) ||
-      id.includes(keyword);
+  const sortedVerifications = useMemo(() => {
+    const priority: Record<string, number> = { รอรับรอง: 0, รับรอง: 1, ปฏิเสธ: 2 };
+    return [...filteredVerifications].sort((a, b) => {
+      const statusA = a.StatusVerify?.status_verify || "รอรับรอง";
+      const statusB = b.StatusVerify?.status_verify || "รอรับรอง";
+      return priority[statusA] - priority[statusB];
+    });
+  }, [filteredVerifications]);
 
-    return matchStatus && matchKeyword;
-  });
+  // ===== helpers =====
+  const getUserInfo = (user: any) =>
+    user?.Company?.length
+      ? { type: "company", name: user.Company[0]?.company_name, logo: user.Company[0]?.logo, details: "บริษัท", icon: <BuildOutlined /> }
+      : user?.AcademicStaff?.length
+      ? {
+          type: "academic",
+          name: `${user.AcademicStaff[0]?.first_name} ${user.AcademicStaff[0]?.last_name}`,
+          position: user.AcademicStaff[0]?.position,
+          department: user.AcademicStaff[0]?.department,
+          details: user?.Role?.role,
+          icon: <TeamOutlined />,
+        }
+      : { type: "unknown", name: user?.Email, details: "ไม่ระบุประเภท", icon: <UserOutlined /> };
 
-  const sortedVerifications = [...filteredVerifications].sort((a, b) => {
-    const priority: Record<string, number> = {
-      รอรับรอง: 0,
-      รับรอง: 1,
-      ปฏิเสธ: 2,
-    };
+  const handleViewDetail = (record: VerifyInterface) => { setSelectedRecord(record); setDetailModalVisible(true); };
 
-    const statusA = a.StatusVerify?.status_verify || "รอรับรอง";
-    const statusB = b.StatusVerify?.status_verify || "รอรับรอง";
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false);
+    verifyForm.resetFields();
+    setSelectedStatus(undefined);
+    setSelectedDocument(null);
+  };
 
-    return priority[statusA] - priority[statusB];
-  });
+  const handleViewDocument = (documentPath: string) => {
+    const fileType = documentPath?.toLowerCase().includes(".pdf") ? "pdf" : "image";
+    setSelectedDocument({ name: "เอกสารประกอบการขอรับรอง", url: documentPath, fileType });
+    setDocumentModalVisible(true);
+  };
 
   const handleSubmitVerify = async () => {
-    if (!selectedRecord || !selectedStatus?.ID) {
-      messageApi.error("กรุณาเลือกสถานะและรายการก่อนยืนยัน");
-      return;
-    }
+    if (!selectedRecord || !selectedStatus?.ID) return messageApi.error("กรุณาเลือกสถานะและรายการก่อนยืนยัน");
 
     try {
       await verifyForm.validateFields();
       const values = verifyForm.getFieldsValue();
 
-      const statusObj = statusVerifications.find(
-        (s) => s.ID === selectedStatus?.ID
-      );
-      if (!statusObj) {
-        messageApi.error("ไม่พบสถานะที่เลือก");
-        return;
-      }
+      const statusObj = statusVerifications.find((s) => s.ID === selectedStatus.ID);
+      if (!statusObj) return messageApi.error("ไม่พบสถานะที่เลือก");
 
       const updateData: VerifyInterface = {
-        StatusVerifyID: selectedStatus?.ID,
+        StatusVerifyID: selectedStatus.ID,
         AdminID: admin?.ID,
         reason: statusObj.status_verify === "ปฏิเสธ" ? values.reason : "",
       };
 
       setLoading(true);
 
-      // ✅ แยก try/catch สำหรับ Update
-      let updateResponse;
+      // Update ก่อน
       try {
-        updateResponse = await UpdateVerifyStatus(
-          selectedRecord.ID!,
-          updateData
-        );
-        if (!updateResponse || updateResponse.status !== 200) {
-          throw new Error("Update failed or unexpected response");
-        }
+        const updateResponse = await UpdateVerifyStatus(selectedRecord.ID!, updateData);
+        if (!updateResponse || updateResponse.status !== 200) throw new Error("Update failed or unexpected response");
       } catch (err) {
         console.error("❌ Update failed:", err);
         messageApi.error("อัปเดตสถานะล้มเหลว");
-        return; // ❌ หยุดทำงานทันที ไม่ไปส่งอีเมล
+        return;
       }
 
-      // ✅ ถ้า update ผ่าน ค่อยส่งอีเมล
+      // ส่งอีเมลภายหลัง
       try {
         const emailRes = await SendEmailVerify(selectedRecord.UserID!);
-        if (!emailRes || emailRes.status !== 200) {
-          throw new Error("Email sending failed");
-        }
+        if (!emailRes || emailRes.status !== 200) throw new Error("Email sending failed");
       } catch (err) {
         console.error("❌ Email failed:", err);
         messageApi.warning("อัปเดตสำเร็จ แต่ส่งอีเมลไม่สำเร็จ");
@@ -188,113 +185,12 @@ const CertificationReviewPage = () => {
       await fetchVerifications();
     } catch (error) {
       console.error("Unknown error:", error);
-      messageApi.error(
-        "เกิดข้อผิดพลาด: " + ((error as Error).message || "Unknown error")
-      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Get user type and details
-  const getUserInfo = (user: any) => {
-    if (user.Company && user.Company.length > 0) {
-      const company = user.Company[0];
-      return {
-        type: "company",
-        name: company.company_name,
-        logo: company.logo,
-        details: "บริษัท",
-        icon: <BuildOutlined />,
-      };
-    } else if (user.AcademicStaff && user.AcademicStaff.length > 0) {
-      const staff = user.AcademicStaff[0];
-      return {
-        type: "academic",
-        name: `${staff.first_name} ${staff.last_name}`,
-        position: staff.position,
-        department: staff.department,
-        details: user.Role.role,
-        icon: <TeamOutlined />,
-      };
-    }
-    return {
-      type: "unknown",
-      name: user.Email,
-      details: "ไม่ระบุประเภท",
-      icon: <UserOutlined />,
-    };
-  };
-
-  // Get status configuration
-  const getStatusConfig = (statusVerify?: StatusVerifyInterface) => {
-    const statusMap = {
-      รอรับรอง: {
-        color: "#faad14",
-        bgColor: "#fff7e6",
-        icon: <ClockCircleOutlined />,
-        text:
-          statusVerifications.find((s) => s.status_verify === "รอรับรอง")
-            ?.status_verify || "รอรับรอง",
-        key: "pending",
-      },
-      รับรอง: {
-        color: "#52c41a",
-        bgColor: "#f6ffed",
-        icon: <CheckCircleOutlined />,
-        text:
-          statusVerifications.find((s) => s.status_verify === "รับรอง")
-            ?.status_verify || "รับรอง",
-        key: "approved",
-      },
-      ปฏิเสธ: {
-        color: "#ff4d4f",
-        bgColor: "#fff2f0",
-        icon: <StopOutlined />,
-        text:
-          statusVerifications.find((s) => s.status_verify === "ปฏิเสธ")
-            ?.status_verify || "ปฏิเสธ",
-        key: "rejected",
-      },
-    };
-    return (
-      statusMap[statusVerify?.status_verify as keyof typeof statusMap] ||
-      statusMap["รอรับรอง"]
-    );
-  };
-
-  const handleViewDetail = (record: VerifyInterface) => {
-    setSelectedRecord(record);
-    setDetailModalVisible(true);
-  };
-
-  const handleCloseDetailModal = () => {
-    setDetailModalVisible(false); // ปิด modal
-    verifyForm.resetFields(); // รีเซ็ตฟอร์ม
-    setSelectedStatus(undefined); // เคลียร์สถานะที่เลือก
-    setSelectedDocument(null); // เคลียร์เอกสารที่เลือก
-  };
-
-  const handleViewDocument = (documentPath: string) => {
-    const fileType = documentPath.toLowerCase().includes(".pdf")
-      ? "pdf"
-      : "image";
-
-    const document: {
-      name: string;
-      url: string;
-      fileType: "pdf" | "image" | "unknown";
-    } = {
-      name: "เอกสารประกอบการขอรับรอง",
-      url: documentPath,
-      fileType: fileType,
-    };
-
-    setSelectedDocument(document);
-
-    setDocumentModalVisible(true);
-  };
-
+  // ===== table columns =====
   const columns: ColumnsType<VerifyInterface> = [
     {
       title: "ผู้ขอรับรอง",
@@ -303,27 +199,13 @@ const CertificationReviewPage = () => {
       render: (_, record) => {
         const userInfo = getUserInfo(record.User);
         const profileImage = record?.User?.ProfileImage?.[0]?.image_url;
-
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <Avatar
-              size={48}
-              src={userInfo.type === "company" ? userInfo.logo : profileImage}
-              icon={userInfo.icon}
-              style={{ flexShrink: 0 }}
-            />
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Avatar size={48} src={userInfo.type === "company" ? userInfo.logo : profileImage} icon={userInfo.icon} style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontWeight: 600, color: "#262626" }}>
-                {userInfo.name}
-              </div>
-              <div style={{ fontSize: "13px", color: "#8c8c8c" }}>
-                {userInfo.details}
-              </div>
-              {userInfo.position && (
-                <div style={{ fontSize: "13px", color: "#595959" }}>
-                  {userInfo.position}
-                </div>
-              )}
+              <div style={{ fontWeight: 600, color: "#262626" }}>{userInfo.name}</div>
+              <div style={{ fontSize: 13, color: "#8c8c8c" }}>{userInfo.details}</div>
+              {userInfo.position && <div style={{ fontSize: 13, color: "#595959" }}>{userInfo.position}</div>}
             </div>
           </div>
         );
@@ -337,20 +219,8 @@ const CertificationReviewPage = () => {
         const userInfo = getUserInfo(record.User);
         return (
           <div>
-            <div
-              style={{
-                fontSize: "14px",
-                color: "#595959",
-                marginBottom: "4px",
-              }}
-            >
-              อีเมล: {record.User?.Email}
-            </div>
-            {userInfo.department && (
-              <div style={{ fontSize: "13px", color: "#8c8c8c" }}>
-                {userInfo.department}
-              </div>
-            )}
+            <div style={{ fontSize: 14, color: "#595959", marginBottom: 4 }}>อีเมล: {record.User?.Email}</div>
+            {userInfo.department && <div style={{ fontSize: 13, color: "#8c8c8c" }}>{userInfo.department}</div>}
           </div>
         );
       },
@@ -359,22 +229,13 @@ const CertificationReviewPage = () => {
       title: "รหัสการรับรอง",
       key: "id",
       width: 120,
-      render: (_, record) => (
-        <Text code style={{ fontSize: "13px" }}>
-          VERIFY-{record.ID?.toString().padStart(4, "0")}
-        </Text>
-      ),
+      render: (_, record) => <Text code style={{ fontSize: 13 }}>VERIFY-{record.ID?.toString().padStart(4, "0")}</Text>,
     },
-
     {
       title: "วันที่ส่ง",
       key: "createdAt",
       width: 120,
-      render: (_, record) => (
-        <div style={{ fontSize: "14px" }}>
-          {new Date(record.CreatedAt!).toLocaleDateString("th-TH")}
-        </div>
-      ),
+      render: (_, record) => <div style={{ fontSize: 14 }}>{new Date(record.CreatedAt as any).toLocaleDateString("th-TH")}</div>,
     },
     {
       title: "สถานะ",
@@ -388,14 +249,7 @@ const CertificationReviewPage = () => {
         return (
           <Button
             className="adminpage-verify-status-button"
-            style={{
-              background: bgColor,
-              color: textColor,
-              border,
-              borderRadius: "16px",
-              width: "60%",
-              cursor: "default",
-            }}
+            style={{ background: bgColor, color: textColor, border, borderRadius: 16, width: "60%", cursor: "default" }}
           >
             {statusText}
           </Button>
@@ -409,19 +263,23 @@ const CertificationReviewPage = () => {
       align: "center",
       fixed: "right",
       render: (_, record) => (
-        <Tooltip title="ดูรายละเอียด">
+        <Tooltip
+          title={record.StatusVerify?.status_verify === "ยังไม่ได้ส่งคำขอ" ? "ยังไม่ได้ส่งคำขอ (ไม่สามารถดูรายละเอียดได้)" : "ดูรายละเอียด"}
+        >
           <Button
             type="primary"
             size="middle"
             icon={<EyeOutlined />}
             onClick={() => handleViewDetail(record)}
-            style={{ borderRadius: "16px", width: "50%" }}
+            disabled={record.StatusVerify?.status_verify === "ยังไม่ได้ส่งคำขอ"}
+            style={{ borderRadius: 16, width: "50%" }}
           />
         </Tooltip>
       ),
     },
   ];
 
+  // ===== render =====
   return (
     <Layout>
       <AdminHeader />
@@ -430,47 +288,26 @@ const CertificationReviewPage = () => {
         <div className="adminpost-header-box">
           <Row justify="space-between" align="middle">
             <Col>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "16px" }}
-              >
-                <div
-                  style={{
-                    backgroundColor: "#e6f4ff",
-                    borderRadius: "12px",
-                    padding: "12px",
-                  }}
-                >
-                  <FileTextOutlined
-                    style={{ fontSize: "32px", color: "#1677ff" }}
-                  />
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ backgroundColor: "#e6f4ff", borderRadius: 12, padding: 12 }}>
+                  <FileTextOutlined style={{ fontSize: 32, color: "#1677ff" }} />
                 </div>
                 <div>
-                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>
-                    ตรวจสอบการรับรอง
-                  </Title>
-                  <Text style={{ color: "#555", fontSize: "16px" }}>
+                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>ตรวจสอบการรับรอง</Title>
+                  <Text style={{ color: "#555", fontSize: 16 }}>
                     ระบบตรวจสอบและอนุมัติการรับรองบุคลากรทางวิชาการและบริษัท
                   </Text>
                 </div>
               </div>
             </Col>
-            <Col></Col>
+            <Col />
           </Row>
         </div>
 
-        <Card
-          style={{
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            border: "none",
-          }}
-        >
+        <Card style={{ borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", border: "none" }}>
           {/* Filter Section */}
           <div style={{ marginBottom: 24 }}>
-            <Card
-              className="adminpage-filter-card"
-              styles={{ body: { padding: 20 } }}
-            >
+            <Card className="adminpage-filter-card" styles={{ body: { padding: 20 } }}>
               <Row gutter={[16, 16]} align="middle">
                 <Col xs={24} md={12}>
                   <div className="adminpage-filter-label">กรองตามสถานะ</div>
@@ -479,34 +316,14 @@ const CertificationReviewPage = () => {
                     value={selectedFilterStatuses}
                     onChange={(values) => {
                       if (values.includes("ทั้งหมด")) {
-                        const allStatuses = statusVerifications.map(
-                          (s) => s.status_verify
-                        );
-                        const isAllSelected =
-                          selectedFilterStatuses.length ===
-                            allStatuses.length &&
-                          allStatuses.every((s) =>
-                            selectedFilterStatuses.includes(s)
-                          );
-
-                        if (isAllSelected) {
-                          setSelectedFilterStatuses([]); // ยกเลิกทั้งหมด
-                        } else {
-                          setSelectedFilterStatuses(allStatuses); // เลือกทั้งหมด
-                        }
-                      } else {
-                        setSelectedFilterStatuses(values);
-                      }
+                        const allStatuses = statusVerifications.map((s) => s.status_verify);
+                        const isAllSelected = selectedFilterStatuses.length === allStatuses.length && allStatuses.every((s) => selectedFilterStatuses.includes(s));
+                        setSelectedFilterStatuses(isAllSelected ? [] : allStatuses);
+                      } else setSelectedFilterStatuses(values);
                     }}
                     style={{ width: "100%" }}
                     size="large"
-                    options={[
-                      { label: "ทั้งหมด", value: "ทั้งหมด" },
-                      ...statusVerifications.map((s) => ({
-                        label: s.status_verify,
-                        value: s.status_verify,
-                      })),
-                    ]}
+                    options={[{ label: "ทั้งหมด", value: "ทั้งหมด" }, ...statusVerifications.map((s) => ({ label: s.status_verify, value: s.status_verify }))]}
                     placeholder="เลือกสถานะที่ต้องการแสดง"
                     allowClear
                     maxTagCount="responsive"
@@ -516,11 +333,7 @@ const CertificationReviewPage = () => {
                   <div className="adminpage-filter-label">ค้นหาผู้ขอรับรอง</div>
                   <Input
                     placeholder="ค้นหาชื่อบริษัท, Email หรือ ID..."
-                    suffix={
-                      <SearchOutlined
-                        style={{ color: "#bfbfbf", fontSize: "16px" }}
-                      />
-                    }
+                    suffix={<SearchOutlined style={{ color: "#bfbfbf", fontSize: 16 }} />}
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     size="large"
@@ -540,11 +353,8 @@ const CertificationReviewPage = () => {
               ...pagination,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              onChange: (page, pageSize) => {
-                setPagination({ current: page, pageSize });
-              },
+              showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`,
+              onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
             }}
             size="middle"
             scroll={{ x: 800 }}
@@ -565,17 +375,12 @@ const CertificationReviewPage = () => {
           verifyForm={verifyForm}
           getUserInfo={getUserInfo}
           handleViewDocument={handleViewDocument}
-          getStatusConfig={getStatusConfig}
           selectedDocument={selectedDocument}
           setRejectReason={setRejectReason}
           rejectReason={rejectReason}
         />
 
-        <DocumentModal
-          open={documentModalVisible}
-          selectedDocument={selectedDocument}
-          onCancel={() => setDocumentModalVisible(false)}
-        />
+        <DocumentModal open={documentModalVisible} selectedDocument={selectedDocument} onCancel={() => setDocumentModalVisible(false)} />
       </Layout>
     </Layout>
   );

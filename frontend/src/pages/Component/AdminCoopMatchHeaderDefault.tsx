@@ -121,11 +121,6 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     label: "ตรวจสอบการรับรอง",
   },
   {
-    key: "analysis",
-    icon: <FileTextOutlined />,
-    label: "การวิเคราะห์",
-  },
-  {
     key: "notifications",
     icon: <BellOutlined />,
     label: "การแจ้งเตือน",

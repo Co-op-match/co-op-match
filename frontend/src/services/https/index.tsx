@@ -14,7 +14,6 @@ import type { ReviewPayload } from "../../interface/IReview";
 import type { VerifyInterface } from "../../interfaces/Verify";
 import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
-import type { AcademicOverviewInterface, ListAcademicApplicationsResponseInterface, ListAcademicStudentsResponseInterface } from "../../interfaces/Analysis";
 
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
