@@ -39,6 +39,8 @@ import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 
 import AdminUser from "./pages/Admin/user/main";
 import CompanyAnalysisPage from "./pages/company/analysis/analysis";
+import CoopMatchLoading from "./pages/Component/loading";
+import AddAcademicStaffForm from "./pages/Profile/AcademicStaff/AddacadamicStaff/AddAcadamicStaffForm";
 
 function App() {
   return (
@@ -50,7 +52,7 @@ function App() {
           {/* Public Routes */}
           <Route element={<Outlet />}>
             <Route path="/sign-in" element={<LoginForm />} />
-            <Route path="/academic" element={<AcademicStaffProfile />} />
+            <Route path="/a" element={<CoopMatchLoading />} />
             <Route path="/sign-up" element={<RegisterPage />} />
             <Route path="/role-select" element={<RoleSelectionPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -90,6 +92,17 @@ function App() {
                 </CheckUser>
               </ProtectedRoute>
             }
+            
+          />
+          <Route
+            path="/lecturer/profile"
+            element={
+              <ProtectedRoute allowedRoles={[4]}>
+                <CheckUser>
+                  <AcademicStaffProfile />
+                </CheckUser>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/company/profile"
@@ -113,7 +126,19 @@ function App() {
             path="/company/add-company"
             element={
               <ProtectedRoute allowedRoles={[2]}>
-                <AddCompanyForm />
+                <ProtectProfile>
+                  <AddCompanyForm />
+                </ProtectProfile>
+              </ProtectedRoute>
+            }
+          />
+                    <Route
+            path="/lecturer/add-lecturer"
+            element={
+              <ProtectedRoute allowedRoles={[4]}>
+                <ProtectProfile>
+                  <AddAcademicStaffForm />
+                </ProtectProfile>
               </ProtectedRoute>
             }
           />

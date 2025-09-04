@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Select, Row, Col, message } from 'antd';
 import type { FormInstance } from 'antd';
-import { GetAllSkill, GetAllInterest } from '../../../../../services/https';
-import type { SkillInterface } from '../../../../../interfaces/Skill';
-import type { InterestInterface } from '../../../../../interfaces/Interest';
+import { GetAllSkill, GetAllInterest } from '../../../../services/https';
+import type { SkillInterface } from '../../../../interfaces/Skill';
+import type { InterestInterface } from '../../../../interfaces/Interest';
 
 export interface StepSkillsProps {
   form: FormInstance<any>;

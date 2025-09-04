@@ -1,0 +1,118 @@
+/* ===== Academic Staff Add Form ===== */
+.add-academicstaff-layout {
+  background-color: #e3f2fd;
+  min-height: 100vh;
+  padding: 24px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.add-academicstaff-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-academicstaff-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.add-academicstaff-card {
+  background: #fff;
+  padding: 50px;
+  padding-top: 15px;
+  border-radius: 20px;
+  width: 900px;
+  height: auto;
+  max-width: 1000px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.step-card {
+  background: #fff;
+  border: none;      /* ลบเส้นขอบออก */
+  box-shadow: none;  /* ลบเงาออก */
+  border-radius: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.add-academicstaff-steps {
+  margin-bottom: 24px;
+}
+
+.form-section-title {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.academicstaff-avatar-upload {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.avatar-upload-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.avatar-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-default {
+  background-color: #d9d9d9;
+}
+
+.avatar-edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #1890ff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 0 2px white;
+}
+
+.add-academicstaff-submit-button {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.form-footer {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding-top: 16px;
+  margin-top: 32px;
+  margin-bottom: 0;
+  z-index: 10;
+}
+
+/* (ออปชัน) ตอบสนองหน้าจอเล็ก */
+@media (max-width: 992px) {
+  .add-academicstaff-card {
+    width: 100%;
+    padding: 24px 16px;
+  }
+  .add-academicstaff-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+}

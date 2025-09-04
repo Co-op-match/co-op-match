@@ -4,6 +4,10 @@ import type { UserInterface } from "../interfaces/User";
 import { getRemainingMs } from "../utils/jwt";
 import { authEvents } from "../services/authEvents";
 
+// ✅ เพิ่ม Loader (ปรับ path ให้ตรงโปรเจกต์)
+// ตัวอย่าง: ถ้าอยู่ที่ src/components/UserContext.tsx และ Loader อยู่ที่ src/pages/Component/CoopMatchLoader/CoopMatchLoader.tsx
+import CoopMatchLoader from "../pages/Component/loading";
+
 type UserContextType = {
   user: UserInterface | null;
   loading: boolean;
@@ -24,22 +28,29 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const emailRef = useRef<string | null>(null);
   useEffect(() => { emailRef.current = user?.Email ?? null; }, [user?.Email]);
 
+  // ✅ สถานะ UI สำหรับแสดง Loader ตอนออกจากระบบ
+  const [uiLoggingOut, setUiLoggingOut] = useState(false);
+
   const logout = useCallback(async () => {
     if (isLoggingOutRef.current) return;
     isLoggingOutRef.current = true;
+    setUiLoggingOut(true);
     try {
       const email = emailRef.current || localStorage.getItem("email") || undefined;
       if (email) await Logout(email);
-    } catch (e) { console.error("Logout API failed", e); }
+    } catch (e) {
+      console.error("Logout API failed", e);
+    } finally {
+      localStorage.removeItem("id");
+      localStorage.removeItem("token");
+      localStorage.removeItem("token_type");
+      localStorage.removeItem("roleId");
+      localStorage.removeItem("isLogin");
 
-    localStorage.removeItem("id");
-    localStorage.removeItem("token");
-    localStorage.removeItem("token_type");
-    localStorage.removeItem("roleId");
-    localStorage.removeItem("isLogin");
-
-    setUser(null);
-    isLoggingOutRef.current = false;
+      setUser(null);
+      isLoggingOutRef.current = false;
+      setUiLoggingOut(false);
+    }
   }, []);
 
   // ---- TIMER สำหรับ token exp
@@ -72,13 +83,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       const data = await GetUserById(Number(userIdStr));
       setUser(data);
-    } catch { setUser(null); }
-    finally { setLoading(false); }
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchUser(); scheduleAutoLogout(); }, [fetchUser, scheduleAutoLogout]);
 
-  // token ใหม่หลัง login → รีเฟทช์ทันที (ไม่ต้องกดรีเฟรชหน้า)
+  // token ใหม่หลัง login → รีเฟทช์ทันที (ไม่ต้องรีเฟรชหน้า)
   useEffect(() => {
     const onTokenChanged = () => { fetchUser(); scheduleAutoLogout(); };
     window.addEventListener("token-changed", onTokenChanged);
@@ -92,8 +106,25 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => authEvents.removeEventListener("logout", onForceLogout as EventListener);
   }, [logout]);
 
+  // ✅ ล้าง timer ตอน unmount
+  useEffect(() => () => clearLogoutTimer(), []);
+
+  // ✅ โชว์ Loader ระหว่าง bootstrap (ครั้งแรก) และตอนออกจากระบบ
+  const showBootstrapLoader = loading && !user;
+  const showLogoutLoader = uiLoggingOut;
+
   return (
     <UserContext.Provider value={{ user, loading, refetchUser: fetchUser, logout }}>
+      {(showBootstrapLoader || showLogoutLoader) && (
+        <CoopMatchLoader
+          overlay
+          animation={showLogoutLoader ? "bounce-assemble" : "wave-fold"}
+          progressMode="indeterminate"
+          text={showLogoutLoader ? "กำลังออกจากระบบ..." : "กำลังตรวจสอบเซสชัน..."}
+          // primaryColor="#1890ff"
+          // speed={2.0}
+        />
+      )}
       {children}
     </UserContext.Provider>
   );

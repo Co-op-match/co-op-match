@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Button, Space, message, Spin } from "antd";
+import { Modal, Form, Button, Space, message } from "antd";
 import {
   UserOutlined,
   BookOutlined,
@@ -18,6 +18,9 @@ import {
   UpdateEducation,
   UpdateStudent,
 } from "../../../../services/https";
+
+// ✅ เพิ่ม Loader
+import CoopMatchLoader from "../../../Component/loading";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -54,8 +57,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   initialData,
 }) => {
   const [form] = Form.useForm();
-  const [messageApi, contextHolder] = message.useMessage(); // ✅
+  const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("กำลังบันทึกข้อมูล...");
   const [formChanged, setFormChanged] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -83,9 +87,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
   }, [open, initialData, form]);
 
-  const handleFormChange = () => {
-    setFormChanged(true);
-  };
+  const handleFormChange = () => setFormChanged(true);
 
   const renderForm = () => {
     const commonProps = { form, initialData, onChange: handleFormChange };
@@ -111,7 +113,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       gender_id: values.Gender,
     };
     await UpdateStudent(userId, payload);
-    messageApi.success("บันทึกข้อมูลส่วนตัวสำเร็จ!"); // ✅
+    messageApi.success("บันทึกข้อมูลส่วนตัวสำเร็จ!");
   };
 
   const handleEducationSubmit = async (values: any, userId: number) => {
@@ -125,7 +127,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       grade: values.grade,
     };
     await UpdateEducation(userId, eduPayload);
-    messageApi.success("บันทึกข้อมูลการศึกษาสำเร็จ!"); // ✅
+    messageApi.success("บันทึกข้อมูลการศึกษาสำเร็จ!");
   };
 
   const handleAddressSubmit = async (values: any, userId: number, roleId: number) => {
@@ -149,6 +151,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
     try {
       setLoading(true);
+      setLoadingText(
+        section === "personal"
+          ? "กำลังบันทึกข้อมูลส่วนตัว..."
+          : section === "education"
+          ? "กำลังบันทึกข้อมูลการศึกษา..."
+          : "กำลังบันทึกที่อยู่..."
+      );
 
       switch (section) {
         case "personal":
@@ -165,9 +174,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       onClose();
     } catch (err) {
       console.error("❌ Update Failed", err);
-      messageApi.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล"); // ✅
+      messageApi.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setLoading(false);
+      setLoadingText("กำลังบันทึกข้อมูล...");
     }
   };
 
@@ -181,7 +191,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         await doSubmit(values);
       }
     } catch {
-      messageApi.error("กรุณากรอกข้อมูลให้ครบถ้วน"); // ✅
+      messageApi.error("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
   };
 
@@ -195,7 +205,20 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   return (
     <>
-      {contextHolder} {/* ✅ Antd message */}
+      {contextHolder}
+
+      {/* ✅ Loader Overlay */}
+      {loading && (
+        <CoopMatchLoader
+          overlay
+          animation="piece-rotate"
+          progressMode="indeterminate"
+          text={loadingText}
+          // primaryColor={SECTION_CONFIG[section].color}
+          // speed={2.0}
+        />
+      )}
+
       <Modal
         open={open}
         onCancel={handleCancel}
@@ -240,19 +263,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </div>
         </div>
 
-        <Spin spinning={loading} tip="กำลังบันทึกข้อมูล...">
-          <div style={{ background: "#fafafa", padding: "20px", borderRadius: "8px", marginBottom: "24px" }}>
-            <Form
-              layout="vertical"
-              form={form}
-              onValuesChange={handleFormChange}
-              requiredMark="optional"
-              scrollToFirstError
-            >
-              {renderForm()}
-            </Form>
-          </div>
-        </Spin>
+        {/* ❌ เอา Spin ออกเพื่อไม่ให้ซ้อนกับ Loader */}
+        <div style={{ background: "#fafafa", padding: "20px", borderRadius: "8px", marginBottom: "24px" }}>
+          <Form
+            layout="vertical"
+            form={form}
+            onValuesChange={handleFormChange}
+            requiredMark="optional"
+            scrollToFirstError
+          >
+            {renderForm()}
+          </Form>
+        </div>
 
         <div
           style={{

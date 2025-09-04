@@ -30,6 +30,7 @@ import type { StipendInterface } from '../../interfaces/Stipend';
 import type { WorkDayInterface } from '../../interfaces/WorkDay';
 import type { WorkModeInterface } from '../../interfaces/WorkMode';
 import type { IntershipPostInterface } from '../../interfaces/IntershipPost';
+import CoopMatchLoader from "../Component/loading"
 import {
   GetAllProvinces,
   GetBenefit,
@@ -80,6 +81,7 @@ function SearchJobs(){
   const [posts, setPosts] = useState<IntershipPostInterface[]>([]);
   const [rawProvinces, setRawProvinces] = useState<any[]>([]);
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
+  const [initLoading, setInitLoading] = useState(true);
 
   // Filter states (consolidated)
   const [filters, setFilters] = useState<FilterState>({
@@ -495,10 +497,16 @@ const JobCard: React.FC<{
   );
 
   // Effects
-  useEffect(() => {
-    fetchInitialData();
-    loadProvinces();
-  }, []);
+useEffect(() => {
+  (async () => {
+    try {
+      setInitLoading(true);
+      await Promise.all([fetchInitialData(), loadProvinces()]);
+    } finally {
+      setInitLoading(false);
+    }
+  })();
+}, []);
 
   // แก้ไข useEffect ที่ filter posts ให้รอ liked posts โหลดเสร็จก่อน
   useEffect(() => {
@@ -510,6 +518,15 @@ const JobCard: React.FC<{
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {contextHolder}
+       {(initLoading || !likedLoaded) && (
+      <CoopMatchLoader
+        overlay
+        animation={initLoading ? "flip-3d" : "wave-fold"}
+        primaryColor="#2473b2"
+        progressMode="indeterminate"
+        text={initLoading ? "กำลังโหลดข้อมูลฝึกงาน..." : "กำลังโหลดรายการที่สนใจ..."}
+      />
+    )}
       <CoopMatchHeaderDefault />
 
       <Layout>

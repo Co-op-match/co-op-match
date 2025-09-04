@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Row, Col, Select } from 'antd';
 import type { FormInstance } from 'antd';
-import { GetAllProvinces } from '../../../../../services/https';
+import { GetAllProvinces } from '../../../../services/https/index';
 
 export interface StepAddressProps {
   form: FormInstance<any>;

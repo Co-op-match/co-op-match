@@ -11,7 +11,7 @@ export interface CompanyInterface {
   data?: CompanyInterface | PromiseLike<CompanyInterface>;
   ID?: number;
   company_name?: string;
-  logo?: string;
+  logo?: string| undefined;
 
   user_id?: number;
   UserID?: number;

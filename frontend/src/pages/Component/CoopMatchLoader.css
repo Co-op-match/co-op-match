@@ -1,0 +1,196 @@
+:root {
+   --cml-primary: #2473b2;        /* สีหลักแบรนด์ */
+  --cml-speed: 3s;                /* ความเร็วอนิเมชันเริ่มต้น */
+  --cml-text: #1f2937;            /* ข้อความหลัก */
+  --cml-muted: #4b5563;           /* ข้อความรอง */
+  --cml-card: #ffffff;
+  --cml-border: #e5e7eb;
+  --cml-shadow: 0 10px 25px rgba(0,0,0,.06), 0 4px 8px rgba(0,0,0,.05);
+  --cml-shadow-sm: 0 6px 18px rgba(0,0,0,.05);
+}
+
+/* ===== Root / Overlay ===== */
+.cml-root { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.cml-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(2px);
+}
+
+/* ===== Size ===== */
+.cml-size-sm .cml-puzzle-svg,
+.cml-size-sm .cml-logo-image { width: 72px; height: 72px; }
+.cml-size-sm .cml-coop, .cml-size-sm .cml-match { font-size: 1.5rem; }
+
+.cml-size-md .cml-puzzle-svg,
+.cml-size-md .cml-logo-image { width: 90px; height: 90px; }
+.cml-size-md .cml-coop, .cml-size-md .cml-match { font-size: 2.5rem; }
+
+.cml-size-lg .cml-puzzle-svg,
+.cml-size-lg .cml-logo-image { width: 160px; height: 160px; }
+.cml-size-lg .cml-coop, .cml-size-lg .cml-match { font-size: 3rem; }
+.cml-puzzle-svg,
+.cml-logo-image {
+  filter: drop-shadow(0 4px 8px color-mix(in oklab, var(--cml-primary) 35%, transparent));
+}
+/* ===== Logo block ===== */
+.cml-logo-wrapper {
+  display:flex; align-items:center; gap:20px;
+  perspective:1000px; will-change: transform, opacity;
+}
+.cml-piece { transform-origin:center; }
+.cml-puzzle-svg { filter: drop-shadow(0 4px 8px rgba(37,99,235,.2)); }
+.cml-puzzle-path { fill: var(--cml-primary); }
+.cml-puzzle-dot, .cml-puzzle-body { fill: #fff; }
+
+.cml-logo-image { object-fit: contain; display:block; filter: drop-shadow(0 4px 8px rgba(37,99,235,.2)); }
+
+.cml-text-part { transform-origin:center; }
+.cml-brand-text { display:flex; flex-direction:column; font-weight:800; }
+.cml-coop, .cml-match { color: var(--cml-primary); line-height: 1; }
+
+/* ===== Status & Progress ===== */
+.cml-status { margin-top: 1.25rem; color: var(--cml-muted); font-size: 1.125rem; font-weight: 600; text-align:center; }
+/* ===== Progress (เวอร์ชันลื่น) ===== */
+.cml-progress { margin-top: .75rem; display:flex; align-items:center; gap: .5rem; }
+
+.cml-bar {
+  position: relative;
+  width: 200px;           /* เท่าเดิม */
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+  contain: paint;
+}
+
+/* ตัวแถบภายใน: คุมด้วย transform ทั้งสองโหมด */
+.cml-bar .cml-fill{
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  will-change: transform;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--cml-primary), white 0%),
+    color-mix(in oklab, var(--cml-primary), black 10%)
+  );
+}
+
+/* โหมด indeterminate: แท่งวิ่ง (ใช้ transform-only, ลื่นกว่า) */
+.cml-bar:not(.is-determinate) .cml-fill{
+  width: 40%;                               /* ก้อนวิ่งกว้าง ~40% */
+  transform: translate3d(-100%,0,0);
+  animation: cmlIndet var(--cml-speed) cubic-bezier(.4,0,.2,1) infinite;
+}
+
+/* โหมด determinate: ลื่นด้วย scaleX แทน width */
+.cml-bar.is-determinate .cml-fill{
+  animation: none;
+  transform: scaleX(var(--cml-pct, 0));     /* ค่ามาจาก TSX 0..1 */
+  transition: transform .45s cubic-bezier(.4,0,.2,1);
+}
+
+.cml-percent { min-width: 3ch; text-align:right; font-size:.875rem; color:#6b7280; }
+
+/* แอนิเมชัน indeterminate แบบ transform-only */
+@keyframes cmlIndet{
+  0%   { transform: translate3d(-100%,0,0); }
+  50%  { transform: translate3d(0%,0,0); }
+  100% { transform: translate3d(100%,0,0); }
+}
+
+/* ===== Animations (use --cml-speed) ===== */
+/* 1) Puzzle Fold */
+.puzzle-fold .cml-piece { animation: cmlPuzzleFold var(--cml-speed) ease-in-out infinite; }
+.puzzle-fold .cml-text-part { animation: cmlTextSlide var(--cml-speed) ease-in-out infinite; }
+
+@keyframes cmlPuzzleFold {
+  0%,100% { transform: rotateY(0deg) translateX(0); }
+  25%     { transform: rotateY(-90deg) translateX(-10px); }
+  50%     { transform: rotateY(-180deg) translateX(0); }
+  75%     { transform: rotateY(-270deg) translateX(10px); }
+}
+@keyframes cmlTextSlide {
+  0%,100% { transform: translateX(0) rotateY(0); }
+  25%     { transform: translateX(20px) rotateY(15deg); }
+  50%     { transform: translateX(0) rotateY(0); }
+  75%     { transform: translateX(-20px) rotateY(-15deg); }
+}
+
+/* 2) Piece Rotate */
+.piece-rotate .cml-piece { animation: cmlPieceRotate calc(var(--cml-speed) * .66) ease-in-out infinite; }
+.piece-rotate .cml-text-part { animation: cmlTextBounce calc(var(--cml-speed) * .66) ease-in-out infinite; }
+
+@keyframes cmlPieceRotate {
+  0%,100% { transform: rotate(0deg) scale(1); }
+  50%     { transform: rotate(180deg) scale(1.1); }
+}
+@keyframes cmlTextBounce {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-10px); }
+}
+
+/* 3) 3D Flip */
+.flip-3d .cml-piece { animation: cmlFlip3D var(--cml-speed) ease-in-out infinite; }
+.flip-3d .cml-text-part { animation: cmlFlip3DText var(--cml-speed) ease-in-out infinite; }
+
+@keyframes cmlFlip3D {
+  0%,100% { transform: rotateX(0) rotateY(0); }
+  33%     { transform: rotateX(180deg) rotateY(0); }
+  66%     { transform: rotateX(180deg) rotateY(180deg); }
+}
+@keyframes cmlFlip3DText {
+  0%,100% { transform: rotateY(0); opacity:1; }
+  50%     { transform: rotateY(90deg); opacity:.7; }
+}
+
+/* 4) Wave Fold */
+.wave-fold .cml-piece { animation: cmlWaveFold var(--cml-speed) ease-in-out infinite; }
+.wave-fold .cml-coop { animation: cmlWaveText1 var(--cml-speed) ease-in-out infinite; }
+.wave-fold .cml-match { animation: cmlWaveText2 var(--cml-speed) ease-in-out infinite .5s; }
+
+@keyframes cmlWaveFold {
+  0%,100% { transform: rotateZ(0) scaleX(1); }
+  25%     { transform: rotateZ(10deg) scaleX(.8); }
+  50%     { transform: rotateZ(0) scaleX(1.1); }
+  75%     { transform: rotateZ(-10deg) scaleX(.9); }
+}
+@keyframes cmlWaveText1 {
+  0%,100% { transform: translateY(0) rotateZ(0); }
+  50%     { transform: translateY(-5px) rotateZ(5deg); }
+}
+@keyframes cmlWaveText2 {
+  0%,100% { transform: translateY(0) rotateZ(0); }
+  50%     { transform: translateY(-5px) rotateZ(-5deg); }
+}
+
+/* 5) Bounce Assemble */
+.bounce-assemble .cml-piece { animation: cmlBounceAssemble calc(var(--cml-speed) * .66) ease-in-out infinite; }
+.bounce-assemble .cml-text-part { animation: cmlAssembleText calc(var(--cml-speed) * .66) ease-in-out infinite; }
+
+@keyframes cmlBounceAssemble {
+  0%   { transform: translateX(-50px) rotate(-45deg) scale(.8); }
+  50%  { transform: translateX(0) rotate(0) scale(1.1); }
+  100% { transform: translateX(-50px) rotate(-45deg) scale(.8); }
+}
+@keyframes cmlAssembleText {
+  0%   { transform: translateX(50px) scale(.8); opacity:.6; }
+  50%  { transform: translateX(0) scale(1); opacity:1; }
+  100% { transform: translateX(50px) scale(.8); opacity:.6; }
+}
+
+/* Indeterminate progress motion */
+@keyframes cmlIndeterminate {
+  0%   { width: 0%; transform: translateX(-100%); }
+  50%  { width: 100%; transform: translateX(0%); }
+  100% { width: 0%; transform: translateX(100%); }
+}
+
+/* ลด motion เมื่อผู้ใช้ร้องขอ */
+@media (prefers-reduced-motion: reduce) {
+  .cml-piece, .cml-text-part, .cml-fill { animation: none !important; transition: none !important; }
+}
