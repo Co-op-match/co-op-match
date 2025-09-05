@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Layout, Row, Col, Typography, message, Modal, Collapse } from 'antd';
-import { UserOutlined, TeamOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined, TrophyOutlined, ReadOutlined, FacebookFilled, TwitterSquareFilled, InstagramFilled,} from '@ant-design/icons';
+import { UserOutlined, TeamOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined, TrophyOutlined, ReadOutlined} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-const { Content, Footer } = Layout;
+const { Content } = Layout;
 const { Title, Paragraph } = Typography;
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
 import { GetAllCompany, GetIntershipPost, GetAllStudent } from '../../services/https';
@@ -619,110 +619,6 @@ function StudentDashboard() {
           </Row>
         </div>
       </Content>
-      <Footer style={{ padding: 0, background: "#0f172a" }}>
-      {/* แถบไฮไลท์ด้านบน */}
-        <div
-          style={{ height: 4, background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #22c55e 100%)", }}/>
-        <div
-          style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 24px 20px", color: "#cbd5e1", }}>
-          <Row gutter={[24, 24]}>
-            {/* เกี่ยวกับ */}
-            <Col xs={24} md={10}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span
-                  style={{ fontWeight: 800, fontSize: 18, background: "linear-gradient(90deg, #3b82f6, #8b5cf6)", WebkitBackgroundClip: "text", color: "transparent",}}
-                  >
-                  COOP MATCH
-                </span>
-              </div>
-              <Paragraph style={{ color: "#94a3b8", marginBottom: 12 }}>
-                แพลตฟอร์มเชื่อมต่อนักศึกษากับบริษัท เพื่อโอกาสฝึกงานที่ใช่
-                ค้นหา สมัคร และติดตามสถานะได้ในที่เดียว
-              </Paragraph>
-            {/* โซเชียล */}
-            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-              <a
-                href="#"
-                aria-label="Facebook"
-                style={{ width: 40,height: 40,borderRadius: "50%",display: "flex",alignItems: "center",justifyContent: "center",
-                  background: "rgba(255,255,255,0.06)",color: "#3b82f6",fontSize: 22,boxShadow: "0 2px 8px rgba(0,0,0,0.25)",transition: "all .25s",}}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(59,130,246,.15)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "none";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
-                }}
-              >
-                <FacebookFilled />
-              </a>
-              <a
-                href="#"
-                aria-label="Twitter"
-                style={{ width: 40,height: 40,borderRadius: "50%",display: "flex",alignItems: "center",justifyContent: "center",background: "rgba(255,255,255,0.06)",color: "#1d9bf0",fontSize: 22,boxShadow: "0 2px 8px rgba(0,0,0,0.25)",transition: "all .25s",}}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(29,155,240,.15)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "none";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
-                }}
-              >
-                <TwitterSquareFilled />
-              </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                style={{width: 40,height: 40,borderRadius: "50%",display: "flex",alignItems: "center",justifyContent: "center",background: "rgba(255,255,255,0.06)",color: "#e1306c",fontSize: 22,boxShadow: "0 2px 8px rgba(0,0,0,0.25)",transition: "all .25s",}}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(225,48,108,.15)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLAnchorElement).style.transform = "none";
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
-                }}
-              >
-                <InstagramFilled />
-              </a>
-            </div>
-              </Col>
-              {/* ลิงก์ด่วน */}
-              <Col xs={12} md={7}>
-                <Title level={5} style={{ color: "#e2e8f0", marginBottom: 12 }}>
-                  ลิงก์ด่วน
-                </Title>
-                <div style={{ display: "grid", gap: 8 }}>
-                  <a href="/student/search" style={{ color: "#93c5fd" }}>ค้นหาที่ฝึกงาน</a>
-                  <a href="/student/profile" style={{ color: "#93c5fd" }}>โปรไฟล์ของฉัน</a>
-                  <a href="/student/applications" style={{ color: "#93c5fd" }}>การสมัครของฉัน</a>
-                  <a href="/help" style={{ color: "#93c5fd" }}>ศูนย์ช่วยเหลือ</a>
-                </div>
-              </Col>
-              {/* ติดต่อเรา */}
-              <Col xs={12} md={7}>
-                <Title level={5} style={{ color: "#e2e8f0", marginBottom: 12 }}>
-                  ติดต่อเรา
-                </Title>
-                <div style={{ color: "#94a3b8" }}>
-                  <div>อีเมล: support@coopmatch.ac.th</div>
-                  <div>โทร: 02-123-4567</div>
-                  <div>จันทร์–ศุกร์ 09:00–17:00 น.</div>
-                </div>
-              </Col>
-            </Row>
-          </div>
-        {/* เส้นคั่น */}
-        <div style={{ height: 1, background: "rgba(255,255,255,0.08)" }} />
-        {/* ล่างสุด: ลิขสิทธิ์/เวอร์ชัน */}
-        <div
-          style={{ maxWidth: 1400, margin: "0 auto", padding: "12px 24px 18px", color: "#94a3b8", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-          <span>© {new Date().getFullYear()} COOP MATCH — All rights reserved.</span>
-          <span>เวอร์ชัน 1.0.0</span>
-        </div>
-      </Footer>
     </Layout>
   );
 };

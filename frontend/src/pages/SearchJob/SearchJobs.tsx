@@ -511,24 +511,6 @@ function SearchJobs() {
     checkStudentProfile();
   }, []);
 
-  // ถ้าต้องการให้เร็วขึ้นอีก สามารถใช้ React.lazy loading สำหรับ filters
-  // หรือโหลด posts ก่อน แล้วค่อยโหลด filters ทีหลัง
-  /*
-  useEffect(() => {
-    // โหลด posts ก่อน (ข้อมูลสำคัญที่สุด)
-    fetchPosts();
-    
-    // รอ 100ms แล้วค่อยโหลดส่วนอื่น
-    const timer = setTimeout(() => {
-      fetchFiltersData();
-      checkStudentProfile();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-  */
-
-  // Filter posts ทันทีที่มีการเปลี่ยนแปลง
   useEffect(() => {
     filterPosts();
   }, [filterPosts]);

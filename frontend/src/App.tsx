@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import LoginForm from "./pages/authentication/Login/LoginForm";
 import RegisterPage from "./pages/authentication/Register/RegisterForm";
 import RoleSelectionPage from "./pages/authentication/SelectRole/SelectRoleForm";
@@ -36,16 +36,16 @@ import AdvancedChatInterface from "./logo.png/ChatInterface";
 import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 import AdminUser from "./pages/Admin/user/main";
 import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
+import CoopMatchLanding from "./pages/Mainpage/MainPage";
 
 function App() {
   return (
     <BrowserRouter>
       <UserProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/sign-in" replace />} />
-
           {/* Public Routes */}
           <Route element={<Outlet />}>
+            <Route path="/" element={<CoopMatchLanding />} />
             <Route path="/sign-in" element={<LoginForm />} />
             <Route path="/academic" element={<AcademicStaffProfile />} />
             <Route path="/sign-up" element={<RegisterPage />} />
