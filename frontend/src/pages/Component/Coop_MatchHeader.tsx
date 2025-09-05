@@ -7,7 +7,9 @@ import {
   SolutionOutlined,
   HistoryOutlined,
   MessageOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  DownOutlined,
+  HeartOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -156,7 +158,23 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
     { key: 'recommendations', icon: <SolutionOutlined />, label: 'งานแนะนำ' },
     { key: 'applications/history', icon: <HistoryOutlined />, label: 'ประวัติการสมัคร' },
-    { key: 'profile', icon: <UserOutlined />, label: 'โปรไฟล์' },
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: (
+        <span>
+          โปรไฟล์ <DownOutlined style={{ fontSize: 10, marginLeft: 6 }} />
+        </span>
+      ),
+      children: [
+        { key: 'profile', icon: <UserOutlined />, label: 'ดูโปรไฟล์' },
+        {
+          key: 'favorite-posts',
+          icon: <HeartOutlined  />,
+          label: 'โพสต์งานที่สนใจ',
+        },
+      ],
+    },
     {
       key: 'chat',
       icon: <MessageOutlined />,
