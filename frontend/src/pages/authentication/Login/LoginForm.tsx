@@ -16,28 +16,28 @@ function LoginForm() {
   const { refetchUser } = useContext(UserContext);
   const location = useLocation();
 
-useEffect(() => {
-  const isLogin = localStorage.getItem("isLogin") === "true";
-  const roleId = localStorage.getItem("roleId");
-  if (location.pathname === "/sign-in" && isLogin && roleId) {
-    switch (parseInt(roleId)) {
-      case 1:
-        navigate("/admin/dashboard");
-        break;
-      case 2:
-        navigate("/company/dashboard");
-        break;
-      case 3:
-        navigate("/student/dashboard");
-        break;
-      case 4:
-        navigate("/lecturer/dashboard");
-        break;
-      default:
-        navigate("/");
+  useEffect(() => {
+    const isLogin = localStorage.getItem("isLogin") === "true";
+    const roleId = localStorage.getItem("roleId");
+    if (location.pathname === "/sign-in" && isLogin && roleId) {
+      switch (parseInt(roleId)) {
+        case 1:
+          navigate("/admin/dashboard");
+          break;
+        case 2:
+          navigate("/company/dashboard");
+          break;
+        case 3:
+          navigate("/student/dashboard");
+          break;
+        case 4:
+          navigate("/lecturer/dashboard");
+          break;
+        default:
+          navigate("/");
+      }
     }
-  }
-}, [navigate, location.pathname]);
+  }, [navigate, location.pathname]);
 
   const onFinish = async (values: SignInInterface) => {
     setLoading(true);
@@ -93,11 +93,16 @@ useEffect(() => {
           <div className="signin-left"></div>
           {/* Right Form Section */}
           <div className="signin-right">
-            {/* ปุ่มกลับ */}
             <div style={{ marginBottom: 16 }}>
-              
+              <Button
+                type="link"
+                onClick={() => navigate("/")}  // 👈 กลับไปหน้า landing
+                style={{ color: "#888888" }}
+              >
+                &lt; Back
+              </Button>
             </div>
-
+            {/* ปุ่มกลับ */}
             <div className="signin-header">
               <Title level={2} className="signin-title">Sign In</Title>
 
