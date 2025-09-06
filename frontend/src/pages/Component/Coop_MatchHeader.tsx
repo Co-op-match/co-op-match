@@ -175,10 +175,13 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
 
 
   const handleMenuClick = ({ key }: { key: string }) => {
-    // นำทางตาม key เดิม
-    navigate(`/student/${key}`);
-
+    if (key === 'chat') {
+      navigate('/chat');
+    } else {
+      navigate(`/student/${key}`);
+    }
   };
+
 
   const avatarUrl =   user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
 
