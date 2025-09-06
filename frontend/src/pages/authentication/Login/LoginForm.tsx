@@ -47,7 +47,7 @@ function LoginForm() {
     if (res.status === 200) {
       console.log("Response data:", res.data);
 
-      messageApi.success("Sign-in successful");
+      messageApi.success("เข้าสู่ระบบสำเร็จ");
 
       // Save data to localStorage
       localStorage.setItem("isLogin", "true");

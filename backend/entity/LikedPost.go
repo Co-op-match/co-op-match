@@ -7,7 +7,7 @@ import (
 type LikedPost struct {
 	gorm.Model
 	StudentID       uint          `json:"StudentID"`
-	IntershipPostID uint          `json:"IntershipPostID"`
 	Student         Student       `gorm:"foreignKey:StudentID"`
+	IntershipPostID uint          `json:"IntershipPostID"`
 	IntershipPost   IntershipPost `gorm:"foreignKey:IntershipPostID"`
 }

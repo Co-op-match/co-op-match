@@ -1,4 +1,3 @@
-// entity/password_reset_token.go
 package entity
 
 import (
