@@ -7,8 +7,6 @@ export interface Article {
   body?: string;
   category?: string;
   type: ArticleType;
-  media_type?: 'article' | 'video';
-  cover_image?: string;
   is_published?: boolean;
   published_at?: string | null;
   CreatedAt?: string;

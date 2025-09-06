@@ -17,8 +17,9 @@ type JobMatch struct {
 
 	InternshipPostID uint          `json:"internship_post_id"`
 	InternshipPost   IntershipPost `gorm:"foreignKey:InternshipPostID"`
-	MatchedAt        time.Time     `json:"matched_at"`
-	Ranking          int           `json:"ranking"`
+
+	MatchedAt time.Time `json:"matched_at"`
+	Ranking   int       `json:"ranking"`
 	// ✅ เพิ่ม field ที่จำเป็นสำหรับ frontend
 	GPA             float64 `json:"gpa"`
 	MinGPA          float64 `json:"min_gpa"`
