@@ -11,7 +11,8 @@ RUN go build -ldflags="-s -w" -o server ./main.go
 # ---------- Runtime ----------
 FROM alpine:3.20
 WORKDIR /app
-RUN adduser -D -u 10001 app && apk add --no-cache ca-certificates tzdata
+# ใส่ libstdc++ เผื่อไบนารีที่ลิงก์ด้วย CGO ต้องใช้
+RUN adduser -D -u 10001 app && apk add --no-cache ca-certificates tzdata libstdc++
 COPY --from=build /app/server /app/server
 COPY config/  /app/config/
 COPY public/  /app/public/

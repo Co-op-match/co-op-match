@@ -283,7 +283,7 @@ func main() {
 	})
 
 	// Run
-	r.Run("localhost:" + PORT)
+	r.Run(":" + PORT)
 }
 
 func logSMTPEnv() {
