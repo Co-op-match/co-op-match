@@ -49,6 +49,27 @@ const toFileURL = (p?: string | null) => {
   return `${base}${p.startsWith('/') ? '' : '/'}${encodeURI(p)}`;
 };
 
+/** ✅ รองรับทั้ง id, ID, post_id */
+const getPostId = (x: any) => x?.id ?? x?.ID ?? x?.post_id;
+
+/** ✅ ลูกศรสำหรับ Carousel ที่ไม่ส่ง prop แปลก ๆ ลง DOM */
+const SlickArrow: React.FC<{
+  type: 'prev' | 'next';
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}> = ({ type, className, style, onClick }) => (
+  <button
+    type="button"
+    className={className}
+    style={{ ...style, ...(styles as any).carouselArrow }}
+    onClick={onClick}
+    aria-label={type === 'prev' ? 'Previous' : 'Next'}
+  >
+    {type === 'prev' ? <LeftOutlined /> : <RightOutlined />}
+  </button>
+);
+
 const PostDetails = () => {
   const { id } = useParams();
   const [post, setPost] = useState<any>(null);
@@ -73,7 +94,12 @@ const PostDetails = () => {
         if (companyId) {
           GetPostByCompanyId(companyId).then((relatedRes) => {
             if (relatedRes?.data) {
-              const others = relatedRes.data.filter((p: any) => p.id !== Number(id));
+              // ✅ normalize id ให้เป็นฟิลด์ id เสมอ + ตัดตัวเองออก
+              const normalized = relatedRes.data.map((p: any) => ({
+                ...p,
+                id: getPostId(p),
+              }));
+              const others = normalized.filter((p: any) => Number(p.id) !== Number(id));
               setRelatedPosts(others);
             }
             setLoading(false);
@@ -91,7 +117,7 @@ const PostDetails = () => {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.loadingSpinner}></div>
-        <Text style={{ marginTop: 16, color: '#1e40af', fontSize: '16px' }}>กำลังโหลดข้อมูล...</Text>
+        <Text style={{ marginTop: 16, color: '#22d3ee', fontSize: '16px' }}>กำลังโหลดข้อมูล...</Text>
       </div>
     );
   }
@@ -109,7 +135,7 @@ const PostDetails = () => {
   return (
     <div style={styles.pageBackground}>
       <div style={styles.container}>
-        
+
         {/* Back Button */}
         <Button
           type="text"
@@ -125,7 +151,7 @@ const PostDetails = () => {
         <div style={styles.heroBanner}>
           <div style={styles.heroOverlay}>
             <div style={styles.heroContent}>
-              
+
               {/* Company Info */}
               <div style={styles.companySection}>
                 <div style={styles.companyLogoWrapper}>
@@ -137,12 +163,16 @@ const PostDetails = () => {
                       (e.currentTarget as HTMLImageElement).src = '/logo.png';
                     }}
                   />
-                  <Badge 
-                    count={<><FireOutlined /> HOT</>} 
+                  <Badge
+                    count={
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <FireOutlined /> HOT
+                      </span>
+                    }
                     style={styles.hotBadge}
                   />
                 </div>
-                
+
                 <div style={styles.companyInfo}>
                   <div style={styles.companyHeader}>
                     <ApartmentOutlined style={styles.companyIcon} />
@@ -174,7 +204,7 @@ const PostDetails = () => {
                 <Title level={1} style={styles.heroJobTitle}>
                   {post?.post_name}
                 </Title>
-                
+
                 {/* Key Stats */}
                 <div style={styles.heroStats}>
                   <div style={styles.heroStatItem}>
@@ -186,9 +216,9 @@ const PostDetails = () => {
                       <Text style={styles.heroStatValue}>{post?.quantity || 0} คน</Text>
                     </div>
                   </div>
-                  
+
                   <div style={styles.heroStatDivider} />
-                  
+
                   <div style={styles.heroStatItem}>
                     <div style={styles.heroStatIcon}>
                       <DollarOutlined />
@@ -198,9 +228,9 @@ const PostDetails = () => {
                       <Text style={styles.heroStatValue}>{post?.Stipend?.stipend || 'ตามตกลง'}</Text>
                     </div>
                   </div>
-                  
+
                   <div style={styles.heroStatDivider} />
-                  
+
                   <div style={styles.heroStatItem}>
                     <div style={styles.heroStatIcon}>
                       <CalendarOutlined />
@@ -229,7 +259,7 @@ const PostDetails = () => {
 
         {/* MAIN CONTENT SECTIONS */}
         <div style={styles.mainContent}>
-          
+
           {/* Job Description - Prominent Card */}
           <Card style={styles.prominentCard}>
             <div style={styles.prominentHeader}>
@@ -245,18 +275,18 @@ const PostDetails = () => {
 
           {/* Two Column Layout */}
           <Row gutter={[32, 32]}>
-            
+
             {/* Left Column */}
             <Col xs={24} lg={16}>
-              
+
               {/* Requirements */}
               <Card style={styles.contentCard}>
-                <SectionHeader 
-                  icon={<UserOutlined style={styles.sectionIcon} />} 
-                  title="คุณสมบัติผู้สมัคร" 
+                <SectionHeader
+                  icon={<UserOutlined style={styles.sectionIcon} />}
+                  title="คุณสมบัติผู้สมัคร"
                   accent
                 />
-                
+
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                   {post?.min_gpa && (
                     <div style={styles.requirementItem}>
@@ -265,7 +295,7 @@ const PostDetails = () => {
                       </div>
                       <div style={styles.requirementContent}>
                         <Text strong style={styles.requirementLabel}>เกรดขั้นต่ำ</Text>
-                        <Tag color="gold" style={styles.gpaTag}>
+                        <Tag color="orange" style={styles.gpaTag}>
                           GPA {Number(post.min_gpa).toFixed(2)}
                         </Tag>
                       </div>
@@ -291,12 +321,12 @@ const PostDetails = () => {
 
               {/* Benefits */}
               <Card style={styles.contentCard}>
-                <SectionHeader 
-                  icon={<GiftOutlined style={styles.sectionIcon} />} 
-                  title="สิทธิประโยชน์" 
+                <SectionHeader
+                  icon={<GiftOutlined style={styles.sectionIcon} />}
+                  title="สิทธิประโยชน์"
                   accent
                 />
-                
+
                 {post?.benefits && post.benefits.length > 0 ? (
                   <div style={styles.benefitsGrid}>
                     {post.benefits.map((benefit: { benefit: string }, index: number) => (
@@ -315,11 +345,11 @@ const PostDetails = () => {
 
               {/* Work Schedule */}
               <Card style={styles.contentCard}>
-                <SectionHeader 
-                  icon={<ClockCircleOutlined style={styles.sectionIcon} />} 
-                  title="เวลาทำงาน" 
+                <SectionHeader
+                  icon={<ClockCircleOutlined style={styles.sectionIcon} />}
+                  title="เวลาทำงาน"
                 />
-                
+
                 <div style={styles.scheduleGrid}>
                   <div style={styles.scheduleItem}>
                     <CalendarOutlined style={styles.scheduleIcon} />
@@ -341,16 +371,16 @@ const PostDetails = () => {
 
             {/* Right Column - Sidebar */}
             <Col xs={24} lg={8}>
-              
+
               {/* Contact Card - Sticky */}
               <div style={styles.stickyWrapper}>
                 <Card style={styles.contactCard}>
-                  <SectionHeader 
-                    icon={<PhoneOutlined style={styles.sectionIcon} />} 
-                    title="ติดต่อสอบถาม" 
+                  <SectionHeader
+                    icon={<PhoneOutlined style={styles.sectionIcon} />}
+                    title="ติดต่อสอบถาม"
                     compact
                   />
-                  
+
                   <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                     {company?.Contact?.phone_number && (
                       <div style={styles.contactItem}>
@@ -431,12 +461,12 @@ const PostDetails = () => {
                   {relatedPosts.length} ตำแหน่งงาน
                 </Text>
               </div>
-              
+
               <Carousel
                 dots={false}
                 arrows
-                prevArrow={<Button icon={<LeftOutlined />} style={styles.carouselArrow} />}
-                nextArrow={<Button icon={<RightOutlined />} style={styles.carouselArrow} />}
+                prevArrow={<SlickArrow type="prev" />}
+                nextArrow={<SlickArrow type="next" />}
                 slidesToShow={3}
                 slidesToScroll={1}
                 responsive={[
@@ -454,54 +484,57 @@ const PostDetails = () => {
                   }
                 ]}
               >
-                {relatedPosts.map((item) => (
-                  <div key={item.id} style={styles.carouselSlide}>
-                    <Card
-                      style={styles.jobCard}
-                      hoverable
-                      cover={
-                        <div style={styles.jobCardHeader}>
-                          <div style={styles.jobCardBadge}>
-                            <StarOutlined style={{ marginRight: 4 }} />
-                            เปิดรับ
+                {relatedPosts.map((item) => {
+                  const pid = getPostId(item);
+                  return (
+                    <div key={pid ?? Math.random()} style={styles.carouselSlide}>
+                      <Card
+                        style={styles.jobCard}
+                        hoverable
+                        cover={
+                          <div style={styles.jobCardHeader}>
+                            <div style={styles.jobCardBadge}>
+                              <StarOutlined style={{ marginRight: 4 }} />
+                              เปิดรับ
+                            </div>
                           </div>
-                        </div>
-                      }
-                      actions={[
-                        <Button
-                          type="link"
-                          icon={<EyeOutlined />}
-                          onClick={() => navigate(`/post/${item.id}`)}
-                          style={styles.jobCardAction}
-                        >
-                          ดูรายละเอียด
-                        </Button>
-                      ]}
-                    >
-                      <Card.Meta
-                        title={
-                          <Title level={5} style={styles.jobCardTitle}>
-                            {item.post_name}
-                          </Title>
                         }
-                        description={
-                          <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                            <div style={styles.jobCardMeta}>
-                              <TeamOutlined style={styles.jobCardIcon} />
-                              <Text style={styles.jobCardText}>{item.quantity} ตำแหน่ง</Text>
-                            </div>
-                            <div style={styles.jobCardMeta}>
-                              <EnvironmentOutlined style={styles.jobCardIcon} />
-                              <Text style={styles.jobCardText} ellipsis>
-                                {[item.district, item.province].filter(Boolean).join(', ')}
-                              </Text>
-                            </div>
-                          </Space>
-                        }
-                      />
-                    </Card>
-                  </div>
-                ))}
+                        actions={[
+                          <Button
+                            type="link"
+                            icon={<EyeOutlined />}
+                            onClick={() => pid && navigate(`/student/post-student/${pid}`)}
+                            style={styles.jobCardAction}
+                          >
+                            ดูรายละเอียด
+                          </Button>
+                        ]}
+                      >
+                        <Card.Meta
+                          title={
+                            <Title level={5} style={styles.jobCardTitle}>
+                              {item.post_name}
+                            </Title>
+                          }
+                          description={
+                            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                              <div style={styles.jobCardMeta}>
+                                <TeamOutlined style={styles.jobCardIcon} />
+                                <Text style={styles.jobCardText}>{item.quantity} ตำแหน่ง</Text>
+                              </div>
+                              <div style={styles.jobCardMeta}>
+                                <EnvironmentOutlined style={styles.jobCardIcon} />
+                                <Text style={styles.jobCardText} ellipsis>
+                                  {[item.district, item.province].filter(Boolean).join(', ')}
+                                </Text>
+                              </div>
+                            </Space>
+                          }
+                        />
+                      </Card>
+                    </div>
+                  );
+                })}
               </Carousel>
             </Card>
           )}
@@ -525,14 +558,14 @@ const PostDetails = () => {
 };
 
 // Section Header Component
-const SectionHeader = ({ 
-  icon, 
-  title, 
-  accent = false, 
-  compact = false 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
+const SectionHeader = ({
+  icon,
+  title,
+  accent = false,
+  compact = false
+}: {
+  icon: React.ReactNode;
+  title: string;
   accent?: boolean;
   compact?: boolean;
 }) => (
@@ -544,10 +577,10 @@ const SectionHeader = ({
   </div>
 );
 
-// Enhanced Styles with University-Appropriate Colors
+// Updated Styles with Gray/Light Blue Color Scheme
 const styles = {
   pageBackground: {
-    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
     minHeight: '100vh',
     position: 'relative' as const,
   },
@@ -568,8 +601,8 @@ const styles = {
   loadingSpinner: {
     width: 48,
     height: 48,
-    border: '4px solid rgba(30, 64, 175, 0.3)',
-    borderTop: '4px solid #1e40af',
+    border: '4px solid rgba(34, 211, 238, 0.3)',
+    borderTop: '4px solid #22d3ee',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -587,24 +620,25 @@ const styles = {
     transition: 'all 0.3s ease',
   },
 
-  // HERO BANNER - University-themed
+  // HERO BANNER - Soft blue/gray themed like other pages
   heroBanner: {
-    background: 'linear-gradient(135deg, #1e40af 0%, #3730a3 100%)',
+    background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
     borderRadius: '16px',
     marginBottom: 48,
     overflow: 'hidden',
-    boxShadow: '0 10px 40px rgba(30, 64, 175, 0.2)',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
     position: 'relative' as const,
+    border: '1px solid #e2e8f0',
   },
   heroOverlay: {
-    background: 'rgba(0, 0, 0, 0.05)',
+    background: 'rgba(255, 255, 255, 0.8)',
     padding: '48px',
   },
   heroContent: {
     maxWidth: 1200,
     margin: '0 auto',
   },
-  
+
   // Company Section in Hero
   companySection: {
     display: 'flex',
@@ -628,13 +662,13 @@ const styles = {
     position: 'absolute' as const,
     top: -12,
     right: -12,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#f97316',
     color: 'white',
     fontSize: '12px',
     fontWeight: 'bold',
     padding: '6px 10px',
     borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)',
+    boxShadow: '0 2px 8px rgba(249, 115, 22, 0.4)',
   },
   companyInfo: {
     flex: 1,
@@ -646,12 +680,12 @@ const styles = {
     marginBottom: 8,
   },
   companyIcon: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#64748b',
     fontSize: '16px',
     marginRight: 8,
   },
   companyLabel: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#64748b',
     fontSize: '13px',
     fontWeight: 500,
     textTransform: 'uppercase' as const,
@@ -659,7 +693,7 @@ const styles = {
   },
   heroCompanyName: {
     margin: '0 0 16px 0',
-    color: 'white',
+    color: '#1e293b',
     fontSize: '28px',
     fontWeight: 700,
     cursor: 'pointer',
@@ -668,19 +702,20 @@ const styles = {
   heroLocation: {
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
     padding: '10px 16px',
     borderRadius: '20px',
     backdropFilter: 'blur(10px)',
     width: 'fit-content',
+    border: '1px solid #e2e8f0',
   },
   heroLocationIcon: {
-    color: 'white',
+    color: '#64748b',
     fontSize: '14px',
     marginRight: 10,
   },
   heroLocationText: {
-    color: 'white',
+    color: '#475569',
     fontSize: '14px',
     fontWeight: 500,
   },
@@ -691,14 +726,14 @@ const styles = {
   },
   heroJobTitle: {
     margin: '0 0 32px 0',
-    color: 'white',
+    color: '#1e293b',
     fontSize: '40px',
     fontWeight: 700,
     lineHeight: 1.2,
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
   },
-  
-  // Hero Stats
+
+  // Hero Stats - Clean white cards
   heroStats: {
     display: 'flex',
     justifyContent: 'center',
@@ -710,54 +745,59 @@ const styles = {
   heroStatItem: {
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'white',
     padding: '16px 20px',
-    borderRadius: '12px',
-    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    backdropFilter: 'blur(15px)',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease',
   },
   heroStatIcon: {
     fontSize: '20px',
-    color: 'white',
+    color: '#3b82f6',
     marginRight: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#eff6ff',
     width: '40px',
     height: '40px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    border: '1px solid #dbeafe',
   },
   heroStatLabel: {
     display: 'block',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#64748b',
     fontSize: '12px',
     fontWeight: 500,
     marginBottom: 4,
   },
   heroStatValue: {
     display: 'block',
-    color: 'white',
+    color: '#1e293b',
     fontSize: '16px',
-    fontWeight: 600,
+    fontWeight: 700,
   },
   heroStatDivider: {
     width: '1px',
     height: '32px',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#e2e8f0',
   },
 
-  // Hero CTA - More conservative
+  // Hero CTA - Softer green
   heroCTA: {
     backgroundColor: '#059669',
     borderColor: '#059669',
     color: 'white',
     fontSize: '18px',
-    fontWeight: 600,
+    fontWeight: 700,
     height: '56px',
     padding: '0 36px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 16px rgba(5, 150, 105, 0.3)',
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(5, 150, 105, 0.3)',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    border: '1px solid #047857',
   },
 
   // Main Content
@@ -765,19 +805,19 @@ const styles = {
     maxWidth: 1200,
     margin: '0 auto',
   },
-  
-  // Prominent Card
+
+  // Prominent Card - Gray header
   prominentCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 20px rgba(30, 64, 175, 0.08)',
+    border: '1px solid #e0f2fe',
+    boxShadow: '0 4px 20px rgba(14, 165, 233, 0.12)',
     marginBottom: 40,
     overflow: 'hidden',
     position: 'relative' as const,
   },
   prominentHeader: {
-    background: 'linear-gradient(135deg, #1e40af 0%, #3730a3 100%)',
+    background: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
     padding: '20px 24px',
     display: 'flex',
     alignItems: 'center',
@@ -794,12 +834,13 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    border: '1px solid rgba(255, 255, 255, 0.1)',
   },
   prominentTitle: {
     margin: 0,
     color: 'white',
     fontSize: '20px',
-    fontWeight: 600,
+    fontWeight: 700,
   },
   prominentContent: {
     color: '#475569',
@@ -812,8 +853,8 @@ const styles = {
   contentCard: {
     backgroundColor: 'white',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+    border: '1px solid #e0f2fe',
+    boxShadow: '0 2px 12px rgba(14, 165, 233, 0.08)',
     marginBottom: 24,
     transition: 'all 0.3s ease',
   },
@@ -824,7 +865,7 @@ const styles = {
     alignItems: 'center',
     marginBottom: 20,
     paddingBottom: 12,
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid #f0f9ff',
   },
   sectionHeaderCompact: {
     display: 'flex',
@@ -833,7 +874,7 @@ const styles = {
   },
   sectionIconWrapper: {
     fontSize: '18px',
-    color: '#1e40af',
+    color: '#0ea5e9',
     backgroundColor: '#f0f9ff',
     width: '40px',
     height: '40px',
@@ -842,11 +883,12 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    border: '1px solid #e0f2fe',
   },
   sectionIconAccent: {
     fontSize: '18px',
     color: 'white',
-    backgroundColor: '#1e40af',
+    background: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
     width: '40px',
     height: '40px',
     borderRadius: '10px',
@@ -854,7 +896,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-    boxShadow: '0 2px 8px rgba(30, 64, 175, 0.2)',
+    boxShadow: '0 2px 8px rgba(100, 116, 139, 0.25)',
   },
   sectionIcon: {
     color: 'inherit',
@@ -866,18 +908,18 @@ const styles = {
     fontWeight: 600,
   },
 
-  // Requirements
+  // Requirements - Orange theme for GPA
   requirementItem: {
     display: 'flex',
     alignItems: 'center',
     padding: '16px',
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#fff7ed',
     borderRadius: '12px',
-    border: '1px solid #f59e0b',
+    border: '1px solid #fed7aa',
   },
   requirementIcon: {
     fontSize: '20px',
-    color: '#d97706',
+    color: '#ea580c',
     marginRight: 14,
   },
   requirementContent: {
@@ -887,29 +929,29 @@ const styles = {
     flex: 1,
   },
   requirementLabel: {
-    color: '#92400e',
+    color: '#c2410c',
     fontSize: '15px',
     fontWeight: 600,
   },
   gpaTag: {
-    backgroundColor: '#f59e0b',
-    color: '#92400e',
+    backgroundColor: '#f97316',
+    color: 'white',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '13px',
-    fontWeight: 600,
-    padding: '4px 10px',
+    fontWeight: 700,
+    padding: '6px 12px',
   },
 
-  // Skills
+  // Skills - Blue/cyan themed
   skillsWrapper: {
     padding: '16px',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f0f9ff',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid #e0f2fe',
   },
   skillsTitle: {
-    color: '#475569',
+    color: '#0c4a6e',
     fontSize: '15px',
     fontWeight: 600,
     marginBottom: 10,
@@ -918,37 +960,39 @@ const styles = {
   skillsContainer: {
     display: 'flex',
     flexWrap: 'wrap' as const,
-    gap: '6px',
+    gap: '8px',
   },
   skillTag: {
-    backgroundColor: '#6366f1',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
     color: 'white',
     border: 'none',
     borderRadius: '16px',
     fontSize: '12px',
-    fontWeight: 500,
+    fontWeight: 600,
     padding: '6px 12px',
     margin: 0,
+    boxShadow: '0 1px 3px rgba(14, 165, 233, 0.2)',
   },
 
-  // Benefits
+  // Benefits - Green theme
   benefitsGrid: {
     display: 'grid',
-    gap: '10px',
+    gap: '12px',
   },
   benefitCard: {
     display: 'flex',
     alignItems: 'center',
-    padding: '14px 16px',
+    padding: '16px 18px',
     backgroundColor: '#f0fdf4',
-    borderRadius: '10px',
-    border: '1px solid #86efac',
+    borderRadius: '12px',
+    border: '1px solid #bbf7d0',
     transition: 'all 0.3s ease',
+    boxShadow: '0 1px 3px rgba(34, 197, 94, 0.1)',
   },
   benefitIcon: {
     fontSize: '18px',
     color: '#16a34a',
-    marginRight: 12,
+    marginRight: 14,
   },
   benefitText: {
     color: '#166534',
@@ -959,6 +1003,9 @@ const styles = {
   emptyState: {
     textAlign: 'center' as const,
     padding: '32px 16px',
+    backgroundColor: 'transparent',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
   },
   emptyText: {
     color: '#9ca3af',
@@ -966,35 +1013,36 @@ const styles = {
     fontStyle: 'italic',
   },
 
-  // Schedule
+  // Schedule - Purple theme
   scheduleGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '14px',
+    gap: '16px',
   },
   scheduleItem: {
     display: 'flex',
     alignItems: 'center',
-    padding: '16px',
-    backgroundColor: '#fef2f2',
-    borderRadius: '10px',
-    border: '1px solid #fecaca',
+    padding: '18px',
+    backgroundColor: '#faf5ff',
+    borderRadius: '12px',
+    border: '1px solid #e9d5ff',
+    transition: 'all 0.3s ease',
   },
   scheduleIcon: {
     fontSize: '18px',
-    color: '#dc2626',
+    color: '#7c3aed',
     marginRight: 12,
   },
   scheduleLabel: {
     display: 'block',
-    color: '#991b1b',
+    color: '#6b21a8',
     fontSize: '12px',
     fontWeight: 500,
-    marginBottom: 3,
+    marginBottom: 4,
   },
   scheduleValue: {
     display: 'block',
-    color: '#7f1d1d',
+    color: '#581c87',
     fontSize: '15px',
     fontWeight: 600,
   },
@@ -1010,20 +1058,20 @@ const styles = {
   contactCard: {
     backgroundColor: 'white',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+    border: '1px solid #e0f2fe',
+    boxShadow: '0 2px 12px rgba(14, 165, 233, 0.08)',
   },
   contactItem: {
     display: 'flex',
     alignItems: 'center',
   },
   contactAvatar: {
-    backgroundColor: '#1e40af',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
     marginRight: 12,
   },
   contactLabel: {
     display: 'block',
-    color: '#6b7280',
+    color: '#64748b',
     fontSize: '11px',
     fontWeight: 500,
     marginBottom: 2,
@@ -1036,18 +1084,18 @@ const styles = {
   },
   contactLink: {
     display: 'block',
-    color: '#1e40af',
+    color: '#0ea5e9',
     fontSize: '14px',
     fontWeight: 500,
     textDecoration: 'none',
   },
 
-  // Apply Card - More conservative
+  // Apply Card - Bright green
   applyCard: {
-    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
     borderRadius: '12px',
     border: 'none',
-    boxShadow: '0 4px 16px rgba(5, 150, 105, 0.2)',
+    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.25)',
   },
   applyCardContent: {
     textAlign: 'center' as const,
@@ -1062,7 +1110,7 @@ const styles = {
     margin: '0 0 6px 0',
     color: 'white',
     fontSize: '18px',
-    fontWeight: 600,
+    fontWeight: 700,
   },
   applyCardDesc: {
     color: 'rgba(255, 255, 255, 0.9)',
@@ -1073,20 +1121,20 @@ const styles = {
   applyButton: {
     backgroundColor: 'white',
     borderColor: 'white',
-    color: '#059669',
+    color: '#10b981',
     fontSize: '15px',
-    fontWeight: 600,
+    fontWeight: 700,
     height: '44px',
     borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.3)',
   },
 
-  // Carousel Section - More subdued
+  // Carousel Section - Subtle gray theme
   carouselCard: {
     backgroundColor: 'white',
     borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #e0f2fe',
+    boxShadow: '0 4px 20px rgba(14, 165, 233, 0.1)',
     marginTop: 40,
     overflow: 'hidden',
   },
@@ -1095,7 +1143,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '24px 24px 20px 24px',
-    background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
+    background: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
   },
   carouselHeaderLeft: {
     display: 'flex',
@@ -1117,10 +1165,10 @@ const styles = {
     margin: 0,
     color: 'white',
     fontSize: '20px',
-    fontWeight: 600,
+    fontWeight: 700,
   },
   carouselSubtitle: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: '13px',
     fontWeight: 500,
   },
@@ -1129,28 +1177,29 @@ const styles = {
   },
   carouselArrow: {
     backgroundColor: 'white',
-    border: '1px solid #e2e8f0',
-    color: '#1e40af',
+    border: '1px solid #e0f2fe',
+    color: '#0ea5e9',
     width: '36px',
     height: '36px',
     borderRadius: '18px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 2px 8px rgba(14, 165, 233, 0.15)',
   },
 
   // Job Cards in Carousel
   jobCard: {
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid #e0f2fe',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     height: '100%',
     margin: '20px 0',
+    boxShadow: '0 2px 8px rgba(14, 165, 233, 0.08)',
   },
   jobCardHeader: {
     height: '50px',
-    background: 'linear-gradient(135deg, #1e40af 0%, #3730a3 100%)',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
     position: 'relative' as const,
     display: 'flex',
     alignItems: 'center',
@@ -1158,14 +1207,15 @@ const styles = {
     padding: '0 14px',
   },
   jobCardBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    color: '#1e40af',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    color: '#0ea5e9',
     fontSize: '11px',
-    fontWeight: 600,
-    padding: '4px 8px',
-    borderRadius: '8px',
+    fontWeight: 700,
+    padding: '5px 10px',
+    borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
   },
   jobCardTitle: {
     margin: '0 0 10px 0',
@@ -1179,18 +1229,18 @@ const styles = {
     alignItems: 'center',
   },
   jobCardIcon: {
-    color: '#1e40af',
+    color: '#0ea5e9',
     fontSize: '13px',
     marginRight: 6,
   },
   jobCardText: {
-    color: '#6b7280',
+    color: '#64748b',
     fontSize: '13px',
     fontWeight: 500,
   },
   jobCardAction: {
-    color: '#1e40af',
-    fontWeight: 500,
+    color: '#0ea5e9',
+    fontWeight: 600,
     fontSize: '13px',
   },
 
@@ -1202,16 +1252,16 @@ const styles = {
     zIndex: 1000,
   },
   floatingApplyButton: {
-    backgroundColor: '#059669',
-    borderColor: '#059669',
+    backgroundColor: '#0ea5e9',
+    borderColor: '#0ea5e9',
     color: 'white',
     fontSize: '16px',
     fontWeight: 600,
     height: '52px',
     padding: '0 20px',
     borderRadius: '26px',
-    boxShadow: '0 6px 20px rgba(5, 150, 105, 0.3)',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 12px rgba(14, 165, 233, 0.25)',
+    transition: 'all 0.3s ease',
   },
 
   // Responsive Design

@@ -24,7 +24,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   const navigate = useNavigate();
   const location = useLocation();
   const [company, setCompany] = useState<CompanyInterface | null>(null);
-  const [avatarVersion, setAvatarVersion] = useState<number>(0); 
+  const [avatarVersion, setAvatarVersion] = useState<number>(0);
   const [totalUnread, setTotalUnread] = useState<number>(0);
   const wsRef = useRef<WebSocket | null>(null);
   const unreadMapRef = useRef<Map<number, number>>(new Map());
@@ -157,27 +157,34 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     ? fullMenu.filter(item => item.key === 'profile')
     : fullMenu;
 
-  const { selectedKey, openKey } = useMemo(() => {
-    const currentPath = location.pathname;
+  // หา selectedKey แบบ longest-match เพื่อไฮไลต์รายการที่ถูกต้อง
+  const selectedKey = useMemo(() => {
+    const currentPath = location.pathname.replace(/\/+$/, '');
+    // ไม่นับเมนูหลักที่มี children ก่อน
     for (const item of fullMenu) {
-      if (item.children) {
-        for (const child of item.children) {
-          if (currentPath.startsWith(`/company/${child.key}`)) {
-            return { selectedKey: child.key as string | undefined, openKey: item.key as string | undefined };
+      if (item.children && Array.isArray(item.children)) {
+        // เรียง key ยาวก่อน เพื่อให้ path เฉพาะเจาะจงกว่า (เช่น /confirm) ถูกจับก่อน
+        const childrenSorted = [...item.children].sort(
+          (a: any, b: any) => String(b.key).length - String(a.key).length
+        );
+        for (const child of childrenSorted) {
+          const base = `/company/${child.key}`;
+          if (currentPath === base || currentPath.startsWith(`${base}/`)) {
+            return child.key as string;
           }
         }
       } else {
-        if (currentPath === `/company/${item.key}`) {
-          return { selectedKey: item.key as string | undefined, openKey: undefined as string | undefined };
-        }
+        const base = `/company/${item.key}`;
+        if (currentPath === base) return item.key as string;
       }
     }
-    return { selectedKey: undefined as string | undefined, openKey: undefined as string | undefined };
+    return undefined;
   }, [location.pathname, fullMenu]);
 
   const handleMenuClick = ({ key }: { key: string }) => {
     const target = routeMap[key] ?? `/company/${key}`;
     navigate(target);
+    // ไม่คุม openKeys => เมนูย่อยจะปิดเองหลังเปลี่ยนหน้า
   };
 
   const handleLogout = () => {
@@ -212,7 +219,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
         zIndex: 1000,
       }}
     >
-      {/*    */}
+      {/* โลโก้ */}
       <div onClick={() => navigate("/company/dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
         <img src={Logo} alt="Logo" style={{ height: 40 }} />
       </div>
@@ -223,8 +230,8 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
           mode="horizontal"
           items={menuItems}
           onClick={handleMenuClick}
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          defaultOpenKeys={openKey ? [openKey] : []}
+          selectedKeys={selectedKey ? [selectedKey] : []}   // ✅ ไฮไลต์ตรงหน้า
+          // ❌ เอา defaultOpenKeys/openKeys ออก -> dropdown จะไม่ค้างเปิด
           style={{ border: 'none', backgroundColor: 'transparent', minWidth: 160 }}
         />
         <Notification />

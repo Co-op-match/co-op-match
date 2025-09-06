@@ -84,6 +84,8 @@ func main() {
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication) // *ถ้าควรล็อกอิน ให้ย้ายไป protected
 	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
+	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
+	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 
 	// reviews (บางส่วนยังเป็น public ตามของเดิม)
 	r.GET("/reviews/:user_id", controller.GetReviewsByUserID)
@@ -399,7 +401,7 @@ func main() {
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
 	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
 
-	r.Static("/public", "./public")
+	r.Static("/public", "./public")/ๅ
 
 	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/chat/ws", controller.ChatWebSocket)
