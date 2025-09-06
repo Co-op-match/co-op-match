@@ -1,4 +1,4 @@
-name: Build & Deploy Backend (Docker Hub → Cloud Run)
+name: Build & Deploy (Backend & Frontend via Docker Hub → Cloud Run)
 
 on:
   push:
@@ -11,15 +11,17 @@ permissions:
 
 env:
   TAG: ${{ github.sha }}
-  DH_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/co-op-match-api
+  # ชื่ออิมเมจบน Docker Hub (ปรับชื่อ repo ได้ตามต้องการ)
+  DH_BACKEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/co-op-match-api
+  DH_FRONTEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coop-frontend
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Docker Hub: login → build → push
+      # ----- Build & Push Backend -----
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -31,33 +33,30 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ${{ env.DH_IMAGE }}:${{ env.TAG }}
-            ${{ env.DH_IMAGE }}:latest
+            ${{ env.DH_BACKEND_IMAGE }}:${{ env.TAG }}
+            ${{ env.DH_BACKEND_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # GCP Auth (WIF)
+      # ----- Auth GCP (WIF) -----
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
-
       - uses: google-github-actions/setup-gcloud@v2
 
-      # 👇 สเต็ปตรวจว่า WIF ใช้งานได้จริง
-      - name: Sanity check GCP auth
+      # ตรวจ WIF คร่าว ๆ
+      - name: Sanity check GCP auth (BE)
         run: |
-          gcloud --version
           gcloud auth list
           gcloud config set project ${{ vars.GCP_PROJECT_ID }}
-          # ลอง mint token (จะล้มทันทีถ้าสิทธิ์ไม่ครบ)
-          gcloud auth print-access-token >/dev/null && echo "OK: minted access token"
+          gcloud auth print-access-token >/dev/null && echo "OK minted token"
 
-      # Deploy
-      - name: Deploy to Cloud Run
+      # ----- Deploy Backend -----
+      - name: Deploy Backend to Cloud Run
         run: |
           gcloud run deploy ${{ vars.BACKEND_SERVICE }} \
-            --image ${{ env.DH_IMAGE }}:${{ env.TAG }} \
+            --image ${{ env.DH_BACKEND_IMAGE }}:${{ env.TAG }} \
             --project ${{ vars.GCP_PROJECT_ID }} \
             --region  ${{ vars.GCP_REGION }} \
             --allow-unauthenticated \
@@ -65,3 +64,64 @@ jobs:
             --memory 512Mi \
             --max-instances 1 \
             --set-env-vars GIN_MODE=release,DB_DIALECT=sqlite,DB_PATH=/app/data/app.db,DATA_DIR=/app/config,UPLOAD_DIR=/app/public/uploads
+      # ล็อกตอน fail (ช่วยไล่ปัญหา)
+      - name: Tail Cloud Run logs (BE) on failure
+        if: failure()
+        run: |
+          gcloud run services logs read ${{ vars.BACKEND_SERVICE }} \
+            --region ${{ vars.GCP_REGION }} --project ${{ vars.GCP_PROJECT_ID }} \
+            --limit 200 || true
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: deploy-backend   # ให้ FE รันหลัง BE เสร็จ
+    steps:
+      - uses: actions/checkout@v4
+
+      # ----- Build & Push Frontend -----
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: frontend/Dockerfile
+          push: true
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+          tags: |
+            ${{ env.DH_FRONTEND_IMAGE }}:${{ env.TAG }}
+            ${{ env.DH_FRONTEND_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ----- Auth GCP (WIF) -----
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Sanity check GCP auth (FE)
+        run: |
+          gcloud auth list
+          gcloud config set project ${{ vars.GCP_PROJECT_ID }}
+          gcloud auth print-access-token >/dev/null && echo "OK minted token"
+
+      # ----- Deploy Frontend -----
+      - name: Deploy Frontend to Cloud Run
+        run: |
+          gcloud run deploy ${{ vars.FRONTEND_SERVICE }} \
+            --image ${{ env.DH_FRONTEND_IMAGE }}:${{ env.TAG }} \
+            --project ${{ vars.GCP_PROJECT_ID }} \
+            --region  ${{ vars.GCP_REGION }} \
+            --allow-unauthenticated \
+            --port ${{ vars.FRONTEND_PORT }}
+      - name: Tail Cloud Run logs (FE) on failure
+        if: failure()
+        run: |
+          gcloud run services logs read ${{ vars.FRONTEND_SERVICE }} \
+            --region ${{ vars.GCP_REGION }} --project ${{ vars.GCP_PROJECT_ID }} \
+            --limit 200 || true

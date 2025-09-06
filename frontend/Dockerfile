@@ -2,12 +2,10 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-# เลือกใช้ตัวที่คุณใช้จริง (npm/pnpm/yarn)
-RUN npm ci
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-# ส่งค่า API base เข้า build ได้ (Vite: import.meta.env.VITE_API_URL)
 ARG VITE_API_URL
-ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_API_URL=$VITE_API_URL
 
 COPY . .
 RUN npm run build
@@ -15,8 +13,9 @@ RUN npm run build
 # ---------- Runtime stage ----------
 FROM node:20-alpine
 WORKDIR /app
+ENV NODE_ENV=production
 RUN npm i -g serve
 COPY --from=build /app/dist ./build
 ENV PORT=8080
 EXPOSE 8080
-CMD ["serve", "-s", "build", "-l", "8080"]
+CMD ["sh", "-c", "serve -s build -l tcp://0.0.0.0:${PORT:-8080}"]
