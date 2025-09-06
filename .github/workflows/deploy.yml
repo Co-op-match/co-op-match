@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  id-token: write   # สำคัญสำหรับ WIF
 
 env:
   TAG: ${{ github.sha }}
@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Docker Hub: login → build → push
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -33,11 +35,26 @@ jobs:
             ${{ env.DH_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # GCP Auth (WIF)
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+
       - uses: google-github-actions/setup-gcloud@v2
+
+      # 👇 สเต็ปตรวจว่า WIF ใช้งานได้จริง
+      - name: Sanity check GCP auth
+        run: |
+          gcloud --version
+          gcloud auth list
+          gcloud config set project ${{ vars.GCP_PROJECT_ID }}
+          gcloud projects describe ${{ vars.GCP_PROJECT_ID }} --format='value(projectNumber)'
+          # ลอง mint token (จะล้มทันทีถ้าสิทธิ์ไม่ครบ)
+          gcloud auth print-access-token >/dev/null && echo "OK: minted access token"
+
+      # Deploy
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ vars.BACKEND_SERVICE }} \
