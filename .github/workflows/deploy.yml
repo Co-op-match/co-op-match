@@ -50,7 +50,6 @@ jobs:
           gcloud --version
           gcloud auth list
           gcloud config set project ${{ vars.GCP_PROJECT_ID }}
-          gcloud projects describe ${{ vars.GCP_PROJECT_ID }} --format='value(projectNumber)'
           # ลอง mint token (จะล้มทันทีถ้าสิทธิ์ไม่ครบ)
           gcloud auth print-access-token >/dev/null && echo "OK: minted access token"
 
