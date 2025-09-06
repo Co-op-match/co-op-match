@@ -18,7 +18,7 @@ import (
 	"co-op-match.com/co-op-match/middlewares"
 )
 
-const PORT = "8000"
+const PORT = "8080"
 
 func main() {
 	// 1) โหลด .env (ถ้ามี)
