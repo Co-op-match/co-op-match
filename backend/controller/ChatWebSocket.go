@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -77,8 +78,12 @@ func CreateChatSession(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: missing token"})
 		return
 	}
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "dev-secret-only"
+	}
 	jwtWrapper := services.JwtWrapper{
-		SecretKey:       "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
+		SecretKey:       secret, // <— ใช้ตัวเดียวกัน
 		Issuer:          "AuthService",
 		ExpirationHours: 24,
 	}
@@ -132,16 +137,16 @@ func ChatWebSocket(c *gin.Context) {
 	roomID := claims.Rid
 	// ยืนยันสิทธิ์ในห้อง (roomID=0 คือ lobby)
 	if ridStr := c.Query("rid"); ridStr != "" {
-        if qRid, err := strconv.ParseUint(ridStr, 10, 64); err == nil && uint(qRid) != roomID {
-            c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "rid mismatch; use token rid"})
-            return
-        }
-    }
+		if qRid, err := strconv.ParseUint(ridStr, 10, 64); err == nil && uint(qRid) != roomID {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "rid mismatch; use token rid"})
+			return
+		}
+	}
 
-    if !isMember(userID, roomID) {
-        c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
-        return
-    }
+	if !isMember(userID, roomID) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
+		return
+	}
 
 	// อัปเกรดเป็น WS
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -551,4 +556,3 @@ func GetChatRoomsByUserID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, out)
 }
-
