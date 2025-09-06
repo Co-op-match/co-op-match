@@ -31,14 +31,12 @@ async function CreateApplication(postId: number, formData: FormData) {
 
 // ฟังก์ชันสำหรับดึงข้อมูลทั้งหมดของ Application
 export const GetApplicationSummary = async (companyId: number) => {
-  try {
-    const response = await axios.get(`http://localhost:8000/applications/summary/${companyId}`);
-    return response.data;
-  } catch (error) {
-    console.error("❌ Failed to fetch application summary:", error);
-    return [];
-  }
+  return await axios
+    .get(`${apiUrl}/applications/summary/${companyId}`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
 };
+
 
 
 

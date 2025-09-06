@@ -75,6 +75,7 @@ func main() {
 	r.DELETE("/post/:id", controller.DeleteInternshipPost) // *ถ้าควรล็อกอิน ให้ย้ายไป protected
 
 	// applications public ที่มีในเดิม
+	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
 	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
