@@ -33,11 +33,23 @@ const statusColors: Record<Status, string> = {
   'ผ่าน': 'green',
 };
 
+// ---------- ชนิดข้อมูลของ response ที่ได้จาก GetApplicationById ----------
+type DetailResponse = {
+  application: any;                 // ใช้ any ไว้ก่อน (โครงสร้างจริงของโปรเจกต์คุณ)
+  formatted_date?: string;          // "06-09-2025 14:10"
+  interview_appointment?: {
+    appointment_date?: string;      // "2025-09-06T00:04:00+07:00"
+    mode?: string;
+    details?: string;
+    status?: string;
+  };
+};
+
 const ApplicationHistory: React.FC = () => {
   const [applications, setApplications] = useState<ApplicationInterface[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<ApplicationInterface[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationInterface | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<DetailResponse | null>(null); // << เปลี่ยนชนิด
   const [companySearch, setCompanySearch] = useState('');
   const [positionSearch, setPositionSearch] = useState('');
   const [statusSearch, setStatusSearch] = useState('');
@@ -52,16 +64,16 @@ const ApplicationHistory: React.FC = () => {
         if (!userId) return;
 
         const studentRes = await GetStudentByUserId(Number(userId));
-        const studentId = studentRes.ID;
+        const sid = studentRes.ID;
 
-        if (!studentId) {
+        if (!sid) {
           message.error("ไม่พบข้อมูลนักศึกษา");
           return;
         }
 
-        setStudentId(studentId);
+        setStudentId(sid);
 
-        const response = await GetApplicationsByStudentID(Number(studentId));
+        const response = await GetApplicationsByStudentID(Number(sid));
 
         if (response?.status === 200) {
           setApplications(response.data);
@@ -81,9 +93,9 @@ const ApplicationHistory: React.FC = () => {
     try {
       const response = await GetApplicationById(record.id!);
       if (response?.status === 200) {
-        // <<<<<< สำคัญ: ดึง object ด้านใน ถ้า backend ห่อไว้ด้วย key "application"
-        const data = response.data?.application ?? response.data;
-        setSelectedApplication(data);
+        // ✅ เก็บ “ทั้งก้อน” เพื่อให้มี interview_appointment ติดมาด้วย
+        const data: DetailResponse = response.data;
+        setSelectedDetail(data);
         setIsModalVisible(true);
       } else {
         message.error("ไม่พบข้อมูลการสมัครนี้");
@@ -272,7 +284,7 @@ const ApplicationHistory: React.FC = () => {
       <ApplicationDetailModal
         visible={isModalVisible}
         onClose={handleCancel}
-        application={selectedApplication}
+        detail={selectedDetail}
       />
 
       {reviewOpen && studentId !== null && reviewCompanyId !== null && (
@@ -291,26 +303,32 @@ const ApplicationHistory: React.FC = () => {
 const ApplicationDetailModal: React.FC<{
   visible: boolean;
   onClose: () => void;
-  application: ApplicationInterface | null;
-}> = ({ visible, onClose, application }) => {
+  detail: DetailResponse | null;    // << รับทั้งก้อน
+}> = ({ visible, onClose, detail }) => {
 
-  // ครอบคลุมทั้งกรณี object ตรง ๆ และกรณีห่อใน key "application"
-  const appAny = application as any;
-  const inner = appAny?.application ?? appAny;
+  const app = detail?.application ?? {};
+  const interview = detail?.interview_appointment;
 
   const resumeURL = toFileURL(
-    inner?.resume_url ??
-    inner?.resume ??
-    inner?.ResumeUrl ??
-    ''
+    app?.resume_url ?? app?.resume ?? app?.ResumeUrl ?? ''
+  );
+  const transcriptURL = toFileURL(
+    app?.TranscriptUrl ?? app?.transcript ?? app?.transcript_url ?? ''
   );
 
-  const transcriptURL = toFileURL(
-    inner?.TranscriptUrl ??
-    inner?.transcript ??
-    inner?.transcript_url ??
-    ''
-  );
+  // ฟอร์แมตวัน/เวลาอย่างปลอดภัย
+  const dt = interview?.appointment_date ? dayjs(interview.appointment_date) : null;
+  const hasValidDate = dt ? dt.isValid() : false;
+  const interviewDate = hasValidDate ? dt!.format('DD/MM/YYYY') : '-';
+  const interviewTime = hasValidDate ? dt!.format('HH:mm') : '-';
+
+  // วันที่สมัคร: ใช้ formatted_date ถ้ามี ไม่มีก็ตกไปใช้ submit_at
+  const submittedDate =
+    detail?.formatted_date
+      ? dayjs(detail.formatted_date, 'DD-MM-YYYY HH:mm').format('DD/MM/YYYY')
+      : app?.submit_at
+      ? dayjs(app.submit_at).format('DD/MM/YYYY')
+      : '-';
 
   return (
     <Modal
@@ -320,12 +338,10 @@ const ApplicationDetailModal: React.FC<{
       footer={null}
       width={700}
       style={{ top: 40, padding: 0, backgroundColor: 'transparent' }}
-      styles={{
-        body: { padding: 0, backgroundColor: 'unset' },
-      }}
+      styles={{ body: { padding: 0, backgroundColor: 'unset' } }}
     >
       <div style={modalContainerStyle}>
-        {application && (
+        {detail && (
           <div style={{ backgroundColor: '#f8fbff', minHeight: '600px' }}>
             {/* Header */}
             <div style={modalHeaderStyle}>
@@ -336,17 +352,17 @@ const ApplicationDetailModal: React.FC<{
             <div style={{ padding: '30px' }}>
               <div style={detailRowStyle}>
                 <span style={detailLabelStyle}>ตำแหน่งที่สมัคร:</span>
-                <span style={detailValueStyle}>{inner?.IntershipPost?.post_name || 'Frontend Developer'}</span>
+                <span style={detailValueStyle}>{app?.IntershipPost?.post_name || '-'}</span>
               </div>
 
               <div style={detailRowStyle}>
                 <span style={detailLabelStyle}>บริษัท:</span>
-                <span style={detailValueStyle}>{inner?.IntershipPost?.Company?.company_name || 'ABC Tech Co., Ltd.'}</span>
+                <span style={detailValueStyle}>{app?.IntershipPost?.Company?.company_name || '-'}</span>
               </div>
 
               <div style={detailRowStyle}>
                 <span style={detailLabelStyle}>วันที่สมัคร:</span>
-                <span style={detailValueStyle}>{inner?.formatted_date || '05/05/2025'}</span>
+                <span style={detailValueStyle}>{submittedDate}</span>
               </div>
 
               <div style={{ marginTop: '30px' }}>
@@ -377,79 +393,39 @@ const ApplicationDetailModal: React.FC<{
               <div style={{ marginTop: '30px' }}>
                 <div style={detailRowStyle}>
                   <span style={detailLabelStyle}>สถานะปัจจุบัน:</span>
-                  <span style={{
-                    ...detailValueStyle,
-                    color: inner?.status === 'รอนัดสัมภาษณ์' ? '#28a745' :
-                      inner?.status === 'กำลังพิจารณา' ? '#8B4513' :
-                        inner?.status === 'ผ่าน' ? '#28a745' : '#dc3545',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    {inner?.status === 'รอนัดสัมภาษณ์' && '🏆 รอนัดสัมภาษณ์'}
-                    {inner?.status === 'นัดสัมภาษณ์แล้ว' && '📅 นัดสัมภาษณ์แล้ว'}
-                    {inner?.status === 'กำลังพิจารณา' && '🔍 กำลังพิจารณา'}
-                    {inner?.status === 'ไม่ผ่าน' && '❌ ไม่ได้ผ่านการคัดเลือก'}
-                    {inner?.status === 'ผ่าน' && '✅ ผ่านการคัดเลือก'}
+                  <span style={{ ...detailValueStyle, fontWeight: 'bold' }}>
+                    {app?.status || '-'}
                   </span>
                 </div>
 
-                {inner?.status === 'นัดสัมภาษณ์แล้ว' && (
+                {app?.status === 'นัดสัมภาษณ์แล้ว' && (
                   <>
                     <div style={detailRowStyle}>
                       <span style={detailLabelStyle}>วันสัมภาษณ์:</span>
-                      <span style={detailValueStyle}>
-                        {inner?.interview_appointment?.appointment_date
-                          ? dayjs(inner.interview_appointment.appointment_date).format("DD-MM-YYYY HH:mm")
-                          : "-"}
-                      </span>
+                      <span style={detailValueStyle}>{interviewDate}</span>
+                    </div>
+                    <div style={detailRowStyle}>
+                      <span style={detailLabelStyle}>เวลา:</span>
+                      <span style={detailValueStyle}>{interviewTime}</span>
                     </div>
                     <div style={detailRowStyle}>
                       <span style={detailLabelStyle}>ช่องทาง:</span>
-                      <span style={detailValueStyle}>
-                        {inner?.interview_appointment?.mode || "-"}
-                      </span>
+                      <span style={detailValueStyle}>{interview?.mode || '-'}</span>
                     </div>
+                    {interview?.details && (
+                      <div style={detailRowStyle}>
+                        <span style={detailLabelStyle}>หมายเหตุ:</span>
+                        <span style={detailValueStyle}>{interview.details}</span>
+                      </div>
+                    )}
                   </>
                 )}
 
-                {inner?.status === 'กำลังพิจารณา' && (
-                  <>
-                    <div style={detailRowStyle}>
-                      <span style={detailLabelStyle}>ประวัติการดำเนินการ:</span>
-                      <span style={detailValueStyle}>สมัครเรียบร้อย ({inner?.formatted_date})</span>
-                    </div>
-                    <div style={detailRowStyle}>
-                      <span style={detailLabelStyle}></span>
-                      <span style={detailValueStyle}>อยู่ระหว่างการพิจารณาโดยบริษัท</span>
-                    </div>
-                  </>
-                )}
-
-                {inner?.status === 'ไม่ผ่าน' && (
-                  <div style={detailRowStyle}>
-                    <span style={detailLabelStyle}>หมายเหตุจากบริษัท:</span>
-                    <span style={detailValueStyle}>
-                      {inner?.company_note || '"คุณสมบัติยังไม่ตรงตามที่กำหนดขณะนี้ต้องการ..."'}
-                    </span>
-                  </div>
-                )}
-
-                {inner?.status === 'ผ่าน' && (
-                  <div style={detailRowStyle}>
-                    <span style={detailLabelStyle}>สถานะ:</span>
-                    <span style={{ ...detailValueStyle, color: '#28a745', fontWeight: 'bold' }}>
-                      ✅ ผ่านการคัดเลือก - สามารถเริ่มฝึกงานได้
-                    </span>
-                  </div>
-                )}
-
-                {inner?.status !== 'ไม่ผ่าน' && inner?.company_note && (
+                {app?.status !== 'ไม่ผ่าน' && app?.company_note && (
                   <div style={{ marginTop: '20px' }}>
                     <div style={detailLabelStyle}>หมายเหตุจากบริษัท:</div>
                     <div style={companyNoteStyle}>
-                      {inner?.company_note}
+                      {app.company_note}
                     </div>
                   </div>
                 )}
@@ -469,7 +445,7 @@ const ApplicationDetailModal: React.FC<{
   );
 };
 
-// Enhanced Styles
+// ---------- Styles (คงเดิม) ----------
 const containerStyle = {
   background: 'linear-gradient(135deg, #e6f7ff 0%, #f0f8ff 100%)',
   minHeight: '100vh',
