@@ -1,46 +1,32 @@
-# ---------- Build stage ----------
-FROM golang:1.23.6-bookworm AS builder  
+# ---------- Build ----------
+FROM golang:1.23-alpine AS build
 WORKDIR /app
-
-# go-sqlite3 ต้องใช้ CGO + gcc ตอน build
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential ca-certificates && rm -rf /var/lib/apt/lists/*
-
-ENV CGO_ENABLED=1 GOOS=linux
-
-COPY go.mod go.sum ./
+RUN apk add --no-cache build-base ca-certificates
+ENV CGO_ENABLED=1
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
-
-# คัดลอกซอร์สทั้งหมด (ตามโครงสร้างที่คุณมี: main.go อยู่ราก backend)
-COPY . .
-
-# สร้างไบนารี
+COPY backend/ .
 RUN go build -ldflags="-s -w" -o server ./main.go
 
-# ---------- Runtime stage ----------
-FROM debian:bookworm-slim
+# ---------- Runtime ----------
+FROM alpine:3.20
 WORKDIR /app
+RUN adduser -D -u 10001 app && apk add --no-cache ca-certificates tzdata
+COPY --from=build /app/server /app/server
 
-# สร้าง user/โฟลเดอร์สำหรับ DB และ static (uploads)
-RUN useradd -m app && mkdir -p /app/data /app/public && chown -R app:app /app
-
-# ไบนารี
-COPY --from=builder /app/server /app/server
-
-# ✅ ใช้ไฟล์ DB จริงของคุณเป็น seed (DEV/DEMO เท่านั้น)
-# ถ้าไม่ต้องการ seed ให้คอมเมนต์บรรทัดนี้ทิ้ง และปล่อยให้ SQLite สร้างไฟล์เอง
-COPY co-op-match.db /app/data/app.db
-
-# (ออปชัน) คัดลอกไฟล์ static เดิม (ถ้าแอปเสิร์ฟจาก ./public)
-COPY public/ /app/public/
-
+# คัดลอกไฟล์ที่แอปใช้งาน (CSV/static/seed DB ถ้ามี)
+COPY backend/config   /app/config
+COPY backend/public   /app/public
+# (ถ้าต้อง seed DB)
+# COPY Backend/co-op-match.db /app/data/app.db
+RUN mkdir -p /app/data /app/public/uploads && chown -R app:app /app
 USER app
 
-# ตั้งค่าแอป
 ENV PORT=8080 \
     GIN_MODE=release \
     DB_DIALECT=sqlite \
     DB_PATH=/app/data/app.db \
+    DATA_DIR=/app/config \
     UPLOAD_DIR=/app/public/uploads
 
 EXPOSE 8080
