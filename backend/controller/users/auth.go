@@ -209,7 +209,7 @@ func SignIn(c *gin.Context) {
 	db.Model(&user).Update("is_logged_in", true)
 	loginLog := entity.LoginLog{
 		IP:      c.ClientIP(),
-		Device:  c.GetHeader("User-Agent"),
+		//Device:  c.GetHeader("User-Agent"),
 		LoginAt: time.Now(),
 		UserID:  user.ID,
 	}

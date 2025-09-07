@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, Typography, Button } from "antd";
-import { FileTextOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { FileTextOutlined, ExportOutlined } from "@ant-design/icons";
+import { fileURL, getExtension } from "@/config/env";
 
 const { Title } = Typography;
 
@@ -9,34 +10,29 @@ interface DocumentsCardProps {
   onView: (url: string) => void;
 }
 
-const API_BASE_URL = "http://localhost:8000";
-
-const normalizeUrl = (url?: string) => (!url ? "" : url.startsWith("http") ? url : `${API_BASE_URL}${url}`);
-const extFromUrl = (url: string) => {
-  try {
-    const u = new URL(normalizeUrl(url));
-    const pathname = u.pathname.toLowerCase();
-    return pathname.substring(pathname.lastIndexOf(".") + 1);
-  } catch {
-    const raw = url.toLowerCase().split("?")[0].split("#")[0];
-    return raw.substring(raw.lastIndexOf(".") + 1);
-  }
-};
-
 const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl, onView }) => {
-  const src = useMemo(() => normalizeUrl(documentUrl), [documentUrl]);
-  const ext = useMemo(() => (documentUrl ? extFromUrl(documentUrl) : ""), [documentUrl]);
+  const src = useMemo(() => fileURL(documentUrl), [documentUrl]);
+  
+  // ✅ ได้เป็น "pdf" | "png" | "jpg" ...
+  const ext = useMemo(() => getExtension(documentUrl), [documentUrl]);
+
   const isPdf = ext === "pdf";
   const isImage = ["jpeg", "jpg", "png", "gif", "bmp", "webp"].includes(ext);
 
   const handleDownload = () => {
     if (!src) return;
-    const a = document.createElement("a");
-    a.href = src;
-    a.download = ""; // ปล่อยว่างให้ browser ตัดสินชื่อไฟล์เอง
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    if (isPdf || isImage) {
+      // preview ในแท็บใหม่
+      window.open(src, "_blank", "noopener,noreferrer");
+    } else {
+      // ไฟล์อื่น โหลดลงเครื่อง
+      const a = document.createElement("a");
+      a.href = src;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
   };
 
   return (
@@ -83,7 +79,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl, onView }) =>
             {!src ? (
               <p>ไม่พบเอกสาร</p>
             ) : isPdf ? (
-              <div onClick={() => onView(documentUrl)} style={{ cursor: "pointer" }} title="คลิกเพื่อดูเต็มจอ">
+              <div onClick={handleDownload} style={{ cursor: "pointer" }} title="คลิกเพื่อดูเต็มจอ">
                 <iframe
                   title="document-preview"
                   src={src}
@@ -92,7 +88,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl, onView }) =>
               </div>
             ) : isImage ? (
               <img
-                onClick={() => onView(documentUrl)}
+                onClick={handleDownload}
                 src={src}
                 alt="แนบ"
                 title="คลิกเพื่อดูเต็มจอ"
@@ -106,10 +102,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl, onView }) =>
           <div style={{ marginTop: 8, display: "flex", justifyContent: "center", gap: 8 }}>
             {src && (
               <>
-                <Button type="link" icon={<EyeOutlined />} onClick={() => onView(documentUrl)} style={{ padding: "0 8px" }}>
-                  ดูเต็มจอ
-                </Button>
-                <Button type="link" icon={<DownloadOutlined />} onClick={handleDownload} style={{ padding: "0 8px" }}>
+                <Button type="link" icon={<ExportOutlined />} onClick={handleDownload} style={{ padding: "0 8px" }}>
                   ดาวน์โหลด
                 </Button>
               </>

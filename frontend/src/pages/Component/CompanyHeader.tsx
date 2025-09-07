@@ -13,6 +13,7 @@ import { fileURL } from '@/config/env';
 import { GetCompanyByUserID } from '@/services/https/Application';
 import type { CompanyInterface } from '@/interfaces/Company';
 import { createChatSession, createWsByToken, GetChatRoomsByUserId } from '@/services/https';
+import { fetchVerifyStatus } from '../authentication/Login/routeAfterAuth';
 
 const { Header } = Layout;
 
@@ -28,6 +29,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   const [totalUnread, setTotalUnread] = useState<number>(0);
   const wsRef = useRef<WebSocket | null>(null);
   const unreadMapRef = useRef<Map<number, number>>(new Map());
+  const [verifyStatus, setVerifyStatus] = useState<string | null>(null); // ✅ สถานะยืนยัน: ยังไม่ได้ส่งคำขอ / รอรับรอง / รับรอง / ปฏิเสธ
 
   const updateTotalUnread = () => {
     const sum = Array.from(unreadMapRef.current.values()).reduce((a, b) => a + (b || 0), 0);
@@ -47,13 +49,25 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     }
   };
 
+  const loadVerifyStatus = async () => {
+    const userId = Number(localStorage.getItem("id"));
+    if (!userId || isNaN(userId)) return;
+    try {
+      const verify_s = await fetchVerifyStatus(userId);
+      setVerifyStatus(verify_s);
+    } catch (e) {
+      console.error("Failed to fetch company", e);
+    }
+  };
+
   useEffect(() => {
     const userId = Number(localStorage.getItem("id"));
     if (!userId || isNaN(userId)) return;
 
     // โหลดข้อมูลผู้ใช้ + แชทเริ่มต้น
     fetchCompany();
-
+    loadVerifyStatus();
+    
     GetChatRoomsByUserId(userId)
       .then((rooms: any[]) => {
         unreadMapRef.current.clear();
@@ -126,6 +140,9 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     };
   }, []);
 
+  // ✅ เงื่อนไข: ถ้า verifyStatus === 'รอรับรอง' ให้แสดงเฉพาะ 'profile'
+  const isPending = verifyStatus === 'รอรับรอง' || verifyStatus === 'ปฏิเสธ';
+
   const buildMenu = () => ([
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     {
@@ -152,10 +169,12 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   ]);
   const fullMenu = useMemo(buildMenu, [totalUnread]);
 
+  const profileOnlyMenu = useMemo(() => fullMenu.filter(i => i.key === 'profile'), [fullMenu]);
+
   const routeMap: Record<string, string> = { chat: '/chat' };
-  const menuItems = minimalMenu
-    ? fullMenu.filter(item => item.key === 'profile')
-    : fullMenu;
+  
+  // หาก minimalMenu=true หรือสถานะรอรับรอง → ใช้เมนูเฉพาะโปรไฟล์
+  const menuItems = (minimalMenu || isPending) ? profileOnlyMenu : fullMenu;
 
   const { selectedKey, openKey } = useMemo(() => {
     const currentPath = location.pathname;
@@ -176,6 +195,9 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   }, [location.pathname, fullMenu]);
 
   const handleMenuClick = ({ key }: { key: string }) => {
+    // ถ้าเป็นช่วงรอรับรอง ให้คลิกได้เฉพาะ 'profile'
+    if (isPending && key !== 'profile') return;
+    
     const target = routeMap[key] ?? `/company/${key}`;
     navigate(target);
   };
@@ -198,6 +220,12 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
     ? `${baseLogoUrl}${baseLogoUrl.includes('?') ? '&' : '?'}v=${avatarVersion}`
     : undefined;
 
+  const handleLogoClick = () => {
+    // ถ้ารอรับรอง → พาไปหน้าโปรไฟล์แทน dashboard
+    if (isPending) navigate("/company/profile");
+    else navigate("/company/dashboard");
+  };
+
   return (
     <Header
       style={{
@@ -212,8 +240,8 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
         zIndex: 1000,
       }}
     >
-      {/*    */}
-      <div onClick={() => navigate("/company/dashboard")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+      {/* Logo */}
+      <div onClick={handleLogoClick} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
         <img src={Logo} alt="Logo" style={{ height: 40 }} />
       </div>
 
@@ -228,6 +256,8 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
           style={{ border: 'none', backgroundColor: 'transparent', minWidth: 160 }}
         />
         <Notification />
+        {/* ถ้าอยู่ช่วงรอรับรอง สามารถเลือกปิด Notification ได้เลย ถ้าอยากซ่อน */}
+        {!isPending && <Notification />}
         <Dropdown overlay={logoutMenu} placement="bottomRight" trigger={['click']}>
           <Avatar
             src={avatarSrc}

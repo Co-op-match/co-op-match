@@ -1,11 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
+import { fileURL } from "@/config/env";
+import { fetchVerifyStatus } from "../authentication/Login/routeAfterAuth";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -17,51 +20,115 @@ interface CoopMatchHeaderDefaultProps {
 const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   minimalMenu = false,
 }) => {
+  /* ============================ state / ctx ============================ */
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const location = useLocation();
   const screens = useBreakpoint();
-  const [user, setUser] = useState<UserInterface | null>(null);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-
   const { logout } = useContext(UserContext);
 
+  const [user, setUser] = useState<UserInterface | null>(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<string | null>(null); // ยังไม่ได้ส่งคำขอ / รอรับรอง / รับรอง / ปฏิเสธ
+
+  const userID = Number(localStorage.getItem("id"));
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
-  
-  const userID = Number(localStorage.getItem("id"));
 
+  /* ============================ fetchers ============================ */
   const fetchUser = async () => {
     if (!userID || Number.isNaN(userID)) return;
-
     try {
       const res = await GetUserByIdhaveStatusData(userID);
-      setUser(res);
-      if (res.status === 200) {
-        setUser(res.data);
-      }else {
-        messageApi.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!");
+      const status = await fetchVerifyStatus(Number(userID));
+      if (res.status !== 200) {
+        messageApi.error(
+          "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!"
+        );
       }
+      setUser(res.data);
+      setVerifyStatus(status);
     } catch (err) {
       console.error("Failed to fetch user", err);
+      messageApi.error("ไม่สามารถดึงข้อมูลผู้ใช้ได้");
     }
   };
 
+  /* ============================ effects ============================ */
   useEffect(() => {
-    console.log("Welcome to Admin Dashboard")
     if (userID) {
       fetchUser();
     }
   }, [userID]);
 
+  // เมื่อสถานะ pending ให้ redirect มา /lecturer/profile เสมอ
+  const isPending = verifyStatus === "รอรับรอง" || verifyStatus === "ปฏิเสธ";
+  useEffect(() => {
+    if (isPending && !location.pathname.includes("/lecturer/profile")) {
+      navigate("/lecturer/profile", { replace: true });
+    }
+  }, [isPending, location.pathname, navigate]);
+
+  /* ============================ menu config ============================ */
+  // current tab: ถ้า pending ให้ default เป็น profile
+  const currentPage =
+    ["dashboard", "profile"].find((key) => location.pathname.includes(key)) ||
+    (isPending ? "profile" : "dashboard");
+
+  const fullMenu = [
+    { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
+    { key: "profile", icon: <UserOutlined />, label: "โปรไฟล์" },
+    {
+      key: "notifications",
+      icon: <BellOutlined />,
+      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน",
+    },
+    { key: "settings", icon: <SettingOutlined />, label: "ตั้งค่า" },
+  ];
+
+  const profileOnlyMenu = useMemo(
+    () => fullMenu.filter((i) => i.key === "profile"),
+    [fullMenu]
+  );
+  const menuItems = minimalMenu || isPending ? profileOnlyMenu : fullMenu;
+
+  const logoutMenuItem = {
+    key: "logout",
+    icon: <LogoutOutlined />,
+    label: "ออกจากระบบ",
+    danger: true,
+    onClick: () => handleLogout(),
+  };
+  const drawerMenuItems = [
+    ...menuItems,
+    { type: "divider" as const },
+    logoutMenuItem,
+  ];
+  const profileDropdownItems = [
+    {
+      key: "logout",
+      danger: true,
+      icon: <LogoutOutlined />,
+      label: "ออกจากระบบ",
+      onClick: () => handleLogout(),
+    },
+  ];
+
+  /* ============================ handlers ============================ */
   const handleMenuClick = ({ key }: { key: string }) => {
+    console.log("Menu click:", { key, isPending });
     if (key === "logout") {
       handleLogout();
       return;
     }
-
-    navigate(`/admin/${key}`);
-    setDrawerVisible(false); // Close drawer on mobile after navigation
+    
+    if (isPending && key !== "profile") {
+      navigate("/lecturer/profile", { replace: true });
+      setDrawerVisible(false);
+      return;
+    }
+    navigate(`/lecturer/${key}`);
+    setDrawerVisible(false);
   };
 
   const handleLogout = async () => {
@@ -71,64 +138,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     setDrawerVisible(false);
   };
 
-  const currentPage =
-    [
-      "dashboard",
-      "profile",
-    ].find((key) => location.pathname.includes(key)) || "dashboard";
-
-  const fullMenu = [
-    {
-      key: "dashboard",
-      icon: <HomeOutlined />,
-      label: isMobile ? "หน้าหลัก" : "หน้าหลัก",
-    },
-    {
-      key: "profile",
-      icon: <UserOutlined />,
-      label: isMobile ? "โปรไฟล์" : "โปรไฟล์",
-    },
-    {
-      key: "notifications",
-      icon: <BellOutlined />,
-      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน",
-    },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "ตั้งค่า",
-    },
-  ];
-
-  const menuItems = minimalMenu
-    ? [fullMenu.find((item) => item.key === "dashboard")!]
-    : fullMenu;
-
-  const logoutMenuItem = {
-    key: "logout",
-    icon: <LogoutOutlined />,
-    label: "ออกจากระบบ",
-    danger: true,
-    onClick: handleLogout,
-  };
-
-  // Mobile/Tablet menu items for drawer
-  const drawerMenuItems = [
-    ...menuItems,
-    { type: "divider" as const },
-    logoutMenuItem,
-  ];
-
-  const profileDropdownItems = [
-    {
-      key: "logout",
-      danger: true,
-      icon: <LogoutOutlined />,
-      label: "ออกจากระบบ",
-      onClick: handleLogout,
-    },
-  ];
-
+  /* ============================ render ============================ */
   return (
     <>
       {contextHolder}
@@ -146,9 +156,11 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
           height: "64px",
         }}
       >
-        {/* Left side - Logo */}
+        {/* Left: Logo (ถ้า pending → ไปโปรไฟล์, ไม่งั้นไปแดชบอร์ด) */}
         <div
-          onClick={() => navigate("/admin/dashboard")}
+          onClick={() =>
+            navigate(isPending ? "/lecturer/profile" : "/lecturer/dashboard")
+          }
           style={{
             cursor: "pointer",
             display: "flex",
@@ -166,7 +178,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
           />
         </div>
 
-        {/* Right side - Menu and Profile */}
+        {/* Right: Menu / Hamburger / Avatar */}
         <div
           style={{
             display: "flex",
@@ -204,9 +216,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
           {/* Profile Avatar */}
           <Dropdown
-            menu={{
-              items: profileDropdownItems,
-            }}
+            menu={{ items: profileDropdownItems }}
             placement="bottomRight"
             trigger={["click"]}
           >
@@ -214,7 +224,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
               size={30}
               src={
                 user?.ProfileImage?.[0]?.image_url
-                  ? `http://localhost:8000${user.ProfileImage[0].image_url}`
+                  ? fileURL(user.ProfileImage[0].image_url)
                   : undefined
               }
               icon={
@@ -237,7 +247,6 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       <Drawer
         title={
           <div style={{ display: "flex", alignItems: "center" }}>
-            {/* <img src={Logo} alt="Logo" style={{ height: 32, marginRight: 12 }} /> */}
             <span>เมนู</span>
           </div>
         }
@@ -245,9 +254,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
         width={280}
-        styles={{
-          body: { padding: 0 },
-        }}
+        styles={{ body: { padding: 0 } }}
       >
         <Menu
           mode="inline"

@@ -6,6 +6,7 @@ import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
+import { fileURL } from "@/config/env";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -79,10 +80,6 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "verify",
       "notifications",
       "settings",
-      "students",
-      "companies",
-      "lecturers",
-      "admins",
       "users",
       "articles"
     ].find((key) => location.pathname.includes(key)) || "dashboard";
@@ -99,7 +96,7 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     label: "ผู้ใช้ทั้งหมด",
   },
   {
-    key: "manage-posts",
+    key: "manage",
     icon: <FileTextOutlined />,
     label: "จัดการ Post",
     children: [
@@ -253,7 +250,7 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
               size={30}
               src={
                 user?.ProfileImage?.[0]?.image_url
-                  ? `http://localhost:8000${user.ProfileImage[0].image_url}`
+                  ? fileURL(user.ProfileImage[0].image_url)
                   : undefined
               }
               icon={

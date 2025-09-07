@@ -6,6 +6,7 @@ import type { SignInInterface } from "../../../interfaces/auth/SignIn";
 import "./login.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../../../components/UserContext";
+import { fetchVerifyStatus, routeAfterAuth } from "./routeAfterAuth";
 
 const { Title, Text, Link } = Typography;
 
@@ -16,28 +17,38 @@ function LoginForm() {
   const { refetchUser } = useContext(UserContext);
   const location = useLocation();
 
-useEffect(() => {
-  const isLogin = localStorage.getItem("isLogin") === "true";
-  const roleId = localStorage.getItem("roleId");
-  if (location.pathname === "/sign-in" && isLogin && roleId) {
-    switch (parseInt(roleId)) {
-      case 1:
-        navigate("/admin/dashboard");
-        break;
-      case 2:
-        navigate("/company/dashboard");
-        break;
-      case 3:
-        navigate("/student/dashboard");
-        break;
-      case 4:
-        navigate("/lecturer/dashboard");
-        break;
-      default:
-        navigate("/");
-    }
-  }
-}, [navigate, location.pathname]);
+  useEffect(() => {
+    (async () => {
+      const isLogin = localStorage.getItem("isLogin") === "true";
+      const roleId = localStorage.getItem("roleId");
+      if (location.pathname === "/sign-in" && isLogin && roleId) {
+        const userId = Number(localStorage.getItem("id"));
+        const status = await fetchVerifyStatus(userId);
+        const isBlocked = routeAfterAuth(Number(roleId), status);
+
+        switch (parseInt(roleId)) {
+          case 1:
+            navigate("/admin/dashboard");
+            break;
+          case 2: {
+            const base = "/company";
+            navigate(isBlocked ? `${base}/profile` : `${base}/dashboard`);
+            break;
+          }
+          case 3:
+            navigate("/student/dashboard");
+            break;
+          case 4: {
+            const base = "/lecturer";
+            navigate(isBlocked ? `${base}/profile` : `${base}/dashboard`);
+            break;
+          }
+          default:
+            navigate("/");
+        }
+      }
+    })();
+  }, [navigate, location.pathname]);
 
   const onFinish = async (values: SignInInterface) => {
     setLoading(true);
@@ -58,6 +69,10 @@ useEffect(() => {
       localStorage.setItem("roleId", res.data.roleId); 
       refetchUser(); 
 
+      console.log("User ID:", Number(res.data.id));
+      const status = await fetchVerifyStatus(Number(res.data.id));
+      const isBlocked = routeAfterAuth(Number(res.data.roleId), status);
+      
       setTimeout(() => {
         const roleId = res.data.roleId;
 
@@ -65,15 +80,19 @@ useEffect(() => {
           case 1:
             navigate("/admin/dashboard");
             break;
-          case 2:
-            navigate("/company/dashboard");
+          case 2: {
+            const base = "/company";
+            navigate(isBlocked ? `${base}/profile` : `${base}/dashboard`);
             break;
+          }
           case 3:
             navigate("/student/dashboard");
             break;
-          case 4:
-            navigate("/lecturer/dashboard");
+          case 4: {
+            const base = "/lecturer";
+            navigate(isBlocked ? `${base}/profile` : `${base}/dashboard`);
             break;
+          }
           default:
             console.log("Unknown roleId:", roleId);
             navigate("/sign-in");

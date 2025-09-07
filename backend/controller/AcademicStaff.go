@@ -27,7 +27,7 @@ func GetAllAcademicStaff(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to fetch students",
+			"error":   "Failed to fetch academic staff",
 			"details": err.Error(),
 		})
 		return
@@ -55,7 +55,7 @@ func GetAcademicStaffByID(c *gin.Context) {
 		First(&academicstaff, id).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "academicstaff not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "academic staff not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
@@ -115,7 +115,7 @@ func GetAcademicStaffByUserId(c *gin.Context) {
 		Preload("Address.Province").
 		Preload("Address.SubDistrict").
 		Preload("Address.District").Where("user_id = ?", userID).First(&academicstaff).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัทที่เชื่อมกับ user_id นี้"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบอาจารย์ที่เชื่อมกับ user_id นี้"})
 		return
 	}
 	c.JSON(http.StatusOK, academicstaff)

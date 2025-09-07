@@ -1,460 +1,1360 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
-  Card, Row, Col, Statistic, Table, Input, Select, Button, message, Spin,
-  Typography, Tag, Space, Badge, Modal, Dropdown, Layout, ConfigProvider,
-  Empty, Tooltip, Skeleton, Segmented
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Table,
+  Button,
+  message,
+  Spin,
+  Typography,
+  Tag,
+  Space,
+  Badge,
+  Modal,
+  Dropdown,
+  ConfigProvider,
+  Empty,
+  Tooltip,
+  Segmented,
+  Drawer,
+  Select,
+  DatePicker,
+  Layout,
 } from "antd";
 import {
-  UserOutlined, FileTextOutlined, ReloadOutlined, EyeOutlined,
-  ExportOutlined, FileExcelOutlined
+  UsergroupAddOutlined,
+  FileTextOutlined,
+  ReloadOutlined,
+  ExportOutlined,
+  FileExcelOutlined,
+  ShopOutlined,
+  TeamOutlined,
+  ArrowRightOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip as RTooltip, ResponsiveContainer, Legend
+  LineChart as RLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RTooltip,
+  ResponsiveContainer,
+  Legend,
 } from "recharts";
-import { GetApplicationsByStudentID } from "../../services/https/Application";
-import { getAcademicOverview, listAcademicApplications, listAcademicStudents } from "../../services/https";
+import dayjs, { Dayjs } from "dayjs";
+import { TrendingUpIcon } from "lucide-react";
+import {
+  getAcademicOverview,
+  GetAcademicStaffByUserIdForNewCompany,
+  getAcademicTrend,
+  listAcademicApplications,
+  listAcademicStudents,
+} from "@/services/https";
+import { useNavigate } from "react-router-dom";
 import AcademicStaffHeader from "../Component/AcademicStaffHeader";
 
-const { Title, Text } = Typography;
+const { Text, Title } = Typography;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
-/* =============== Helpers (ย่อแถวเดียว) =============== */
+/* ================= Helpers & constants (compact) ================= */
 type AnyRow = Record<string, unknown>;
-const toArray = (v: any): any[] => (Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : Array.isArray(v?.data) ? v.data : []);
-const convertToCSV = (data: AnyRow[]): string => !data?.length ? "" : (() => { const headers = Object.keys(data[0]); const esc = (val: unknown) => (val == null ? "" : /[",\n]/.test(String(val)) ? `"${String(val).replace(/"/g, '""')}"` : String(val)); return [headers.map(esc).join(","), ...data.map(r => headers.map(h => esc(r[h])).join(","))].join("\n"); })();
-const exportToCSV = (data: AnyRow[], filename: string) => { const bom = "\uFEFF"; const blob = new Blob([bom + convertToCSV(data)], { type: "text/csv;charset=utf-8;" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.setAttribute("download", `${filename}.csv`); document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); };
-const getStatusColor = (s: string) => ({ "รอการนัดสัมภาษณ์": "orange", "กำลังพิจารณา": "blue", "ไม่ได้รับเลือก": "red", "ผ่าน": "green", "นัดสัมภาษณ์แล้ว": "purple", "ไม่ผ่าน": "red" }[s] || "default");
-const sumCounts = (arr?: any[]) => toArray(arr).reduce((s: number, it: any) => s + Number(it?.count || 0), 0);
-const countByStatus = (arr?: any[], key?: string) => toArray(arr).reduce((s: number, it: any) => s + (String(it?.key) === key ? Number(it?.count || 0) : 0), 0);
-const calcTotalAndDelta = (appsPerMonth?: any[]) => { const arr = toArray(appsPerMonth); const total = arr.reduce((sum: number, it: any) => sum + Number(it?.count || 0), 0); let deltaPct: number | null = null; if (arr.length >= 2) { const sorted = [...arr].sort((a, b) => String(a.period).localeCompare(String(b.period))); const last = Number(sorted.at(-1)?.count || 0), prev = Number(sorted.at(-2)?.count || 0); deltaPct = prev > 0 ? ((last - prev) / prev) * 100 : prev === 0 && last > 0 ? 100 : 0; } return { total, deltaPct }; };
-const mapSeries = (arr?: any[], labelKey = "period", valueKey = "count") => toArray(arr).map((it: any) => ({ name: it?.[labelKey], value: Number(it?.[valueKey] ?? 0) }));
+type PresetValue = "7d" | "30d" | "90d" | "custom";
 
-/* =============== Component =============== */
+const PRESETS: { label: string; value: PresetValue }[] = [
+  { label: "7 วัน", value: "7d" },
+  { label: "30 วัน", value: "30d" },
+  { label: "90 วัน", value: "90d" },
+  { label: "กำหนดเอง", value: "custom" },
+];
+
+const toArray = (v: any): any[] =>
+  Array.isArray(v)
+    ? v
+    : Array.isArray(v?.items)
+    ? v.items
+    : Array.isArray(v?.data)
+    ? v.data
+    : [];
+const convertToCSV = (data: Record<string, any>[]) => {
+  if (!data?.length) return "";
+  const headers = Object.keys(data[0]),
+    esc = (val: unknown) =>
+      val == null
+        ? ""
+        : /[",\n]/.test(String(val))
+        ? `"${String(val).replace(/"/g, '""')}"`
+        : String(val);
+  return [
+    headers.map(esc).join(","),
+    ...data.map((r) => headers.map((h) => esc(r[h])).join(",")),
+  ].join("\n");
+};
+const exportToCSV = (data: Record<string, any>[] = [], filename: string) => {
+  const blob = new Blob(["\uFEFF" + convertToCSV(data)], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.setAttribute("download", `${filename}.csv`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+const getStatusColor = (s: string) =>
+  ({
+    รอการนัดสัมภาษณ์: "orange",
+    กำลังพิจารณา: "blue",
+    ไม่ได้รับเลือก: "red",
+    ผ่าน: "green",
+    นัดสัมภาษณ์แล้ว: "purple",
+    ไม่ผ่าน: "red",
+  }[s] || "default");
+const sumCounts = (arr?: any[]) =>
+  toArray(arr).reduce((s: number, it: any) => s + Number(it?.count || 0), 0);
+const countByStatus = (arr?: any[], key?: string) =>
+  toArray(arr).reduce(
+    (s: number, it: any) =>
+      s + (String(it?.key) === key ? Number(it?.count || 0) : 0),
+    0
+  );
+
+const STATUS_STROKES: Record<string, string> = {
+  ผ่าน: "#22c55e",
+  กำลังพิจารณา: "#3b82f6",
+  นัดสัมภาษณ์แล้ว: "#6366f1",
+  รอการนัดสัมภาษณ์: "#f59e0b",
+  ไม่ผ่าน: "#ef4444",
+  ไม่ได้รับเลือก: "#dc2626",
+};
+const FAIL_LABEL = "ไม่ผ่าน/ไม่ได้รับเลือก";
+
+const fmtDate = (d?: string) =>
+  d ? new Date(d).toLocaleDateString("th-TH") : "-";
+const fmtDateTime = (d?: string) =>
+  d
+    ? new Date(d).toLocaleString("th-TH", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "-";
+
+/* ================= Component ================= */
 const AcademicDashboard = () => {
-  const [loading, setLoading] = useState(false);
-  const [overview, setOverview] = useState<any>(null);
-  const [students, setStudents] = useState<any[]>([]);
-  const [studentsTotal, setStudentsTotal] = useState(0);
-  const [apps, setApps] = useState<any[]>([]);
-  const [appsTotal, setAppsTotal] = useState(0);
+  const navigate = useNavigate();
+  const userID = Number(localStorage.getItem("id"));
 
-  // pagination & filter
+  const [loading, setLoading] = useState(false);
+  const [overview, setOverview] = useState<any>();
+  const [students, setStudents] = useState<any[]>([]);
+  const [apps, setApps] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [q, setQ] = useState("");
-  const [qTyping, setQTyping] = useState("");
+  const [q, setQ] = useState(""); // reserved for future search box
   const [status, setStatus] = useState("");
-  const [chartRange, setChartRange] = useState<string>("week");
-  const [messageApi, contextHolder] = message.useMessage();
-  const firstLoadRef = useRef(true);
 
-  // modal
-  const [studentApplicationsModal, setStudentApplicationsModal] = useState(false);
+  // ===== Daily trend filters
+  const [preset, setPreset] = useState<PresetValue>("30d");
+  const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [dailyTrend, setDailyTrend] = useState<any[]>([]);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  // Drawer / Modal
+  const [appsDrawerOpen, setAppsDrawerOpen] = useState(false);
+  const [appsDrawerStatus, setAppsDrawerStatus] = useState<string>("");
+  const [studentApplicationsModal, setStudentApplicationsModal] =
+    useState(false);
   const [selectedStudentApps, setSelectedStudentApps] = useState<any[]>([]);
   const [selectedStudentInfo, setSelectedStudentInfo] = useState<any>(null);
   const [loadingStudentApps, setLoadingStudentApps] = useState(false);
 
-  const rawUserId = localStorage.getItem("id");
-  const userID = Number.isFinite(Number(rawUserId)) ? Number(rawUserId) : 0;
+  const refreshTimerRef = useRef<number | null>(null); // (kept if you want to add auto-refresh later)
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-  const toFileURL = (p?: string) => (!p ? "" : /^https?:\/\//i.test(p) ? p : `${API_BASE}${p}`);
-
-  const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString("th-TH") : "-");
-  const fmtDateTime = (d?: string) => (d ? new Date(d).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" }) : "-");
-  const downloadFile = (src?: string) => { const url = toFileURL(src); if (!url) return; const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.download = ""; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
-
-  const viewStudentApplications = async (student: any) => {
-    setSelectedStudentInfo(student); setLoadingStudentApps(true); setStudentApplicationsModal(true);
-    try { const applications = await GetApplicationsByStudentID(student.id); setSelectedStudentApps(toArray(applications)); }
-    catch (e) { messageApi.error("ไม่สามารถโหลดข้อมูลใบสมัครได้"); console.error(e); }
-    finally { setLoadingStudentApps(false); }
-  };
-
-  const exportStudentsData = () => {
-    const exportData = students.map((s: any) => ({
-      ชื่อ: s.first_name, นามสกุล: s.last_name, อายุ: s.age, เพศ: s.gender,
-      สาขา: s.program_name, คณะ: s.faculty_name, มหาวิทยาลัย: s.university_name, จำนวนใบสมัคร: s.applications_total,
-    }));
-    exportToCSV(exportData, "รายชื่อนักศึกษา");
-  };
-  const exportApplicationsData = () => {
-    const exportData = apps.map((app: any) => ({
-      ชื่อนักศึกษา: app.student_full_name, บริษัท: app.company_name, ตำแหน่ง: app.post_name, สถานะ: app.status,
-      วันที่สมัคร: app.submit_at ? new Date(app.submit_at).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "",
-      อัปเดตล่าสุด: app.updated_at ? new Date(app.updated_at).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "",
-      หมายเหตุบริษัท: app.company_note || "", ResumeURL: app.resume_url ? toFileURL(app.resume_url) : "",
-      TranscriptURL: app.transcript_url ? toFileURL(app.transcript_url) : "",
-    }));
-    exportToCSV(exportData, "ใบสมัครล่าสุด");
-  };
-  const exportMenuItems = useMemo(() => ([
-    { key: "students", icon: <FileExcelOutlined />, label: "ส่งออกรายชื่อนักศึกษา (CSV)", onClick: exportStudentsData },
-    { key: "applications", icon: <FileExcelOutlined />, label: "ส่งออกใบสมัครล่าสุด (CSV)", onClick: exportApplicationsData },
-  ]), [students, apps]);
-
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
+
+    if (!userID) {
+      messageApi.error("ไม่พบ user id ใน localStorage");
+      return;
+    }
+
+    const staffRes = await GetAcademicStaffByUserIdForNewCompany(userID);
+
+    // ⬇️ ไม่พบอาจารย์ → เด้งไปหน้าเพิ่มอาจารย์ทันที และหยุดทำงานที่เหลือ
+    if (!staffRes) {
+      navigate("/lecturer/add-lecturer", { replace: true });
+      messageApi.info("โปรดเพิ่มข้อมูลอาจารย์ก่อนใช้งานแดชบอร์ด");
+      return;
+    }
+
+    if (!userID) return messageApi.error("ไม่พบข้อมูลของอาจารย์");
+
     try {
       const [overview_res, students_res, application_res] = await Promise.all([
         getAcademicOverview(userID),
         listAcademicStudents(userID, { page, page_size: pageSize, q }),
-        listAcademicApplications(userID, { page: 1, page_size: 8, status }),
+        listAcademicApplications(userID, { page: 1, page_size: 1000, status }),
       ]);
       setOverview(overview_res);
       setStudents(toArray(students_res?.items ?? students_res));
-      setStudentsTotal(Number(students_res?.total ?? 0));
       setApps(toArray(application_res?.items ?? application_res));
-      setAppsTotal(Number(application_res?.total ?? 0));
-      if (firstLoadRef.current) { messageApi.success("โหลดข้อมูลวิเคราะห์สำเร็จ"); firstLoadRef.current = false; }
-    } catch (err) { console.error(err); messageApi.error("โหลดข้อมูลวิเคราะห์ไม่สำเร็จ"); }
-    finally { setLoading(false); }
-  };
+    } catch (err) {
+      console.error(err);
+      messageApi.error("โหลดข้อมูลวิเคราะห์ไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  }, [userID, page, pageSize, q, status, messageApi]);
 
-  useEffect(() => { const t = setTimeout(() => setQ(qTyping.trim()), 300); return () => clearTimeout(t); }, [qTyping]);
-  useEffect(() => { if (!userID) { messageApi.error("ไม่พบข้อมูลของอาจารย์"); return; } fetchAll(); /* eslint-disable-next-line */ }, [userID, page, pageSize, q, status]);
+  const fetchDailyTrend = useCallback(async () => {
+    if (!userID) return;
+    let start: string | undefined,
+      end: string | undefined,
+      days: number | undefined;
+    if (preset !== "custom")
+      days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
+    else if (range) {
+      start = range[0].format("YYYY-MM-DD");
+      end = range[1].format("YYYY-MM-DD");
+    } else days = 30;
 
-  // series & delta
-  const weeklySeries   = useMemo(() => mapSeries(overview?.apps_per_week), [overview?.apps_per_week]);
-  const monthlySeries  = useMemo(() => mapSeries(overview?.apps_per_month), [overview?.apps_per_month]);
-  const semesterSeries = useMemo(() => mapSeries(overview?.apps_per_semester), [overview?.apps_per_semester]);
-  const applicationsTotalAndDelta = useMemo(() => calcTotalAndDelta(overview?.apps_per_month), [overview?.apps_per_month]);
+    try {
+      const data = await getAcademicTrend(userID, { start, end, days });
+      const normalized = (Array.isArray(data) ? data : []).map((p: any) => ({
+        date: p.date,
+        total: Number(p.total || 0),
+        pass: Number(p.pass || 0),
+        review: Number(p.review || 0),
+        interviewed: Number(p.interviewed || 0),
+        waiting_schedule: Number(
+          (p as any).waiting_schedule ?? (p as any).waiting ?? 0
+        ),
+        fail: Number(p.fail || 0),
+      }));
+      setDailyTrend(normalized);
+    } catch (e) {
+      console.error(e);
+      messageApi.error("โหลดกราฟรายวันไม่สำเร็จ");
+    }
+  }, [userID, preset, range, messageApi]);
 
-  // columns
-  const studentsColumns = useMemo(() => ([
-    { title: "ชื่อ-นามสกุล", key: "name", ellipsis: true as any, render: (_: any, r: any) => <Text strong>{`${r.first_name} ${r.last_name}`}</Text> },
-    { title: "อายุ", dataIndex: "age", key: "age", width: 80 },
-    { title: "เพศ", dataIndex: "gender", key: "gender", width: 90 },
-    { title: "สาขา", dataIndex: "program_name", key: "program_name", ellipsis: true as any },
-    { title: "คณะ", dataIndex: "faculty_name", key: "faculty_name", ellipsis: true as any },
-    { title: "จำนวนใบสมัคร", dataIndex: "applications_total", key: "applications_total", width: 140, render: (c: number) => <Badge count={c} showZero /> },
-    { title: "การดำเนินการ", key: "action", width: 160, fixed: "right" as any, render: (_: any, r: any) => <Tooltip title="ดูใบสมัครของนักศึกษา"><Button type="primary" size="small" icon={<EyeOutlined />} onClick={() => viewStudentApplications(r)} className="btn-primary-soft">ดูใบสมัคร</Button></Tooltip> },
-  ]), []);
-  const applicationsColumns = useMemo(() => ([
-    { title: "ชื่อนักศึกษา", dataIndex: "student_full_name", key: "student_full_name", ellipsis: true as any },
-    { title: "บริษัท", dataIndex: "company_name", key: "company_name", ellipsis: true as any },
-    { title: "ตำแหน่ง", dataIndex: "post_name", key: "post_name", ellipsis: true as any },
-    { title: "สถานะ", dataIndex: "status", key: "status", width: 160, render: (s: string) => <Tag color={getStatusColor(s)}>{s}</Tag> },
-    { title: "วันที่", key: "dates", width: 220, render: (_: any, r: any) => <div><div><Text type="secondary">สมัคร:</Text> {fmtDate(r.submit_at)}</div><div><Text type="secondary">อัปเดต:</Text> {fmtDateTime(r.updated_at)}</div></div> },
-    { title: "หมายเหตุบริษัท", dataIndex: "company_note", key: "company_note", ellipsis: true as any, render: (t: string) => t ? <Tooltip title={t}><Text>{t}</Text></Tooltip> : <Text type="secondary">-</Text> },
-    { title: "ไฟล์แนบ", key: "files", width: 260, render: (_: any, r: any) => { const resume = r.resume_url, transcript = r.transcript_url; return <Space wrap><Button size="small" icon={<EyeOutlined />} onClick={() => downloadFile(resume)} disabled={!resume}>Resume</Button><Button size="small" icon={<EyeOutlined />} onClick={() => downloadFile(transcript)} disabled={!transcript}>Transcript</Button></Space>; } },
-  ]), []);
-
-  const ChartBlock = (
-    <Card title={<div className="card-head"><span>แนวโน้มการสมัคร</span></div>} className="section-card" style={{ marginBottom: 24 }}
-      extra={<Segmented options={[{ label: "รายสัปดาห์", value: "week" }, { label: "รายเดือน", value: "month" }, { label: "รายเทอม", value: "semester" }]} value={chartRange} onChange={(v) => setChartRange(String(v))} />}>
-      <div className="chart-wrap">
-        {chartRange === "week" && (weeklySeries.length ? (
-          <ResponsiveContainer><LineChart data={weeklySeries}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><RTooltip /><Legend /><Line type="monotone" dataKey="value" name="จำนวนใบสมัคร" dot /></LineChart></ResponsiveContainer>
-        ) : <Empty description="ยังไม่มีข้อมูลรายสัปดาห์" />)}
-        {chartRange === "month" && (monthlySeries.length ? (
-          <ResponsiveContainer><LineChart data={monthlySeries}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><RTooltip /><Legend /><Line type="monotone" dataKey="value" name="จำนวนใบสมัคร" dot /></LineChart></ResponsiveContainer>
-        ) : <Empty description="ยังไม่มีข้อมูลรายเดือน" />)}
-        {chartRange === "semester" && (semesterSeries.length ? (
-          <ResponsiveContainer><LineChart data={semesterSeries}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><RTooltip /><Legend /><Line type="monotone" dataKey="value" name="จำนวนใบสมัคร" dot /></LineChart></ResponsiveContainer>
-        ) : <Empty description="ยังไม่มีข้อมูลรายเทอม" />)}
-      </div>
-    </Card>
+  // initial load
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+  // daily trend load
+  useEffect(() => {
+    fetchDailyTrend();
+  }, [fetchDailyTrend]);
+  // (optional) auto-refresh hook placeholder (disabled)
+  useEffect(
+    () => () => {
+      if (refreshTimerRef.current) {
+        window.clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+    },
+    []
   );
 
-  // นับสถานะรวม (ใช้ในการ์ดที่ 3)
-  const totalStatus = sumCounts(overview?.applications_by_status);
+  /* ===== Daily series for Recharts ===== */
+  const dailyChartData = useMemo(
+    () =>
+      dailyTrend.map((p: any) => ({
+        name: p.date,
+        total: Number(p.total || 0),
+        ผ่าน: Number(p.pass || 0),
+        กำลังพิจารณา: Number(p.review || 0),
+        นัดสัมภาษณ์แล้ว: Number(p.interviewed || 0),
+        รอการนัดสัมภาษณ์: Number(p.waiting_schedule || p.waiting || 0),
+        [FAIL_LABEL]: Number(p.fail || 0),
+      })),
+    [dailyTrend]
+  );
+
+  /* ===== Companies derived from apps ===== */
+  const companiesCoop = useMemo(() => {
+    const map = new Map<
+      string,
+      { company_name: string; applicants: any[]; last_apply_at?: string }
+    >();
+    toArray(apps).forEach((a: any) => {
+      const cname = a.company_name || "ไม่ระบุบริษัท";
+      if (!map.has(cname))
+        map.set(cname, {
+          company_name: cname,
+          applicants: [],
+          last_apply_at: undefined,
+        });
+      const bucket = map.get(cname)!;
+      bucket.applicants.push(a);
+      const t = a.updated_at || a.submit_at;
+      if (
+        t &&
+        (!bucket.last_apply_at || new Date(t) > new Date(bucket.last_apply_at))
+      )
+        bucket.last_apply_at = t;
+    });
+    return Array.from(map.values())
+      .map((v) => ({
+        key: v.company_name,
+        company_name: v.company_name,
+        applicants_count: v.applicants.length,
+        last_apply_at: v.last_apply_at,
+      }))
+      .sort((a, b) => b.applicants_count - a.applicants_count);
+  }, [apps]);
+
+  /* ===== ล่าสุด 5 คน (ไม่ซ้ำ) ===== */
+  const latest5UniqueAdvisees = useMemo(() => {
+    const sorted = [...toArray(apps)].sort(
+      (a: any, b: any) =>
+        new Date(b.updated_at || b.submit_at || 0).getTime() -
+        new Date(a.updated_at || a.submit_at || 0).getTime()
+    );
+    const seen = new Map<number | string, any>();
+    for (const a of sorted) {
+      const key = (a.student_id ?? a.student_full_name) as number | string;
+      if (!seen.has(key)) seen.set(key, a);
+      if (seen.size >= 5) break;
+    }
+    return Array.from(seen.values()).map((a: any) => ({
+      student_id: a.student_id,
+      name: a.student_full_name,
+      status: a.status,
+      updated_at: a.updated_at || a.submit_at,
+      company_name: a.company_name,
+      post_name: a.post_name,
+    }));
+  }, [apps]);
+
+  /* ===== Export menu ===== */
+  const exportMenuItems = [
+    {
+      key: "students",
+      icon: <FileExcelOutlined />,
+      label: "ส่งออกรายชื่อนักศึกษา (CSV)",
+      onClick: () =>
+        exportToCSV(
+          students?.map((s: any) => ({
+            ชื่อ: s.first_name,
+            นามสกุล: s.last_name,
+            อายุ: s.age,
+            เพศ: s.gender,
+            สาขา: s.program_name,
+            คณะ: s.faculty_name,
+            มหาวิทยาลัย: s.university_name,
+            จำนวนใบสมัคร: s.applications_total,
+          })) ?? [],
+          "รายชื่อนักศึกษา"
+        ),
+    },
+    {
+      key: "companies",
+      icon: <FileExcelOutlined />,
+      label: "ส่งออกบริษัทร่วม Co-op (CSV)",
+      onClick: () =>
+        exportToCSV(
+          companiesCoop?.map((c: any) => ({
+            บริษัท: c.company_name,
+            จำนวนนักศึกษาที่สมัคร: c.applicants_count,
+            ล่าสุดเมื่อ: c.last_apply_at
+              ? new Date(c.last_apply_at).toLocaleString("th-TH", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })
+              : "",
+          })) ?? [],
+          "บริษัทร่วม Co-op"
+        ),
+    },
+    {
+      key: "series",
+      icon: <ExportOutlined />,
+      label: "ส่งออกกราฟรายวัน (CSV)",
+      onClick: () =>
+        exportToCSV(
+          dailyChartData as AnyRow[],
+          `แนวโน้มรายวัน_${dayjs().format("YYYYMMDD")}`
+        ),
+    },
+  ];
+
+  /* ===== Table columns ===== */
+  const applicationsColumns = [
+    {
+      title: "ชื่อนักศึกษา",
+      dataIndex: "student_full_name",
+      key: "student_full_name",
+      ellipsis: true,
+      render: (t: string) => <Tooltip title={t}>{t}</Tooltip>,
+    },
+    {
+      title: "บริษัท",
+      dataIndex: "company_name",
+      key: "company_name",
+      ellipsis: true,
+      render: (t: string) => <Tooltip title={t}>{t}</Tooltip>,
+    },
+    {
+      title: "ตำแหน่ง",
+      dataIndex: "post_name",
+      key: "post_name",
+      ellipsis: true,
+      render: (t: string) => <Tooltip title={t}>{t}</Tooltip>,
+    },
+    {
+      title: "สถานะ",
+      dataIndex: "status",
+      key: "status",
+      width: 160,
+      render: (s: string) => (
+        <Tag
+          color={getStatusColor(s)}
+          style={{ borderRadius: 8, fontWeight: 500 }}
+        >
+          {s}
+        </Tag>
+      ),
+    },
+    {
+      title: "สมัครเมื่อ",
+      dataIndex: "submit_at",
+      key: "submit_at",
+      width: 140,
+      render: (d: string) => fmtDate(d),
+    },
+  ];
+
+  const statuses = [
+    "รอการนัดสัมภาษณ์",
+    "กำลังพิจารณา",
+    "นัดสัมภาษณ์แล้ว",
+    "ผ่าน",
+    "ไม่ผ่าน",
+    "ไม่ได้รับเลือก",
+  ];
 
   return (
     <ConfigProvider
       theme={{
-        token: { colorPrimary: "#1677ff", colorInfo: "#1677ff", colorLink: "#1677ff", colorText: "#262626", colorBgLayout: "#f5f5f5", borderRadiusLG: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" },
+        token: {
+          fontWeightStrong: 600,
+          colorPrimary: "#1677ff",
+          colorInfo: "#1677ff",
+          colorSuccess: "#22c55e",
+          colorWarning: "#f59e0b",
+          colorError: "#ef4444",
+          colorText: "#0f172a",
+          colorTextSecondary: "#475569",
+          colorBorder: "#e2e8f0",
+          colorBgLayout: "#ffffff",
+          colorBgContainer: "#ffffff",
+          borderRadiusLG: 20,
+          borderRadius: 12,
+          fontSize: 14,
+          fontFamily:
+            "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, 'Noto Sans Thai', 'Prompt', sans-serif",
+          lineHeight: 1.6,
+          boxShadow:
+            "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
+          boxShadowSecondary:
+            "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+          boxShadowTertiary:
+            "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
+        },
         components: {
-          Card: { headerBg: "transparent", boxShadowTertiary: "0 2px 8px rgba(0,0,0,0.12)", paddingLG: 16 },
-          Table: { headerBg: "#fafafa", headerColor: "#262626", borderColor: "#d9d9d9", rowHoverBg: "#f5f5f5", cellPaddingBlockSM: 10 },
-          Statistic: { titleColor: "#8c8c8c", contentFontSize: 24 },
-          Badge: { colorBorderBg: "#f5f5f5" },
-          Tag: { defaultBg: "#fafafa", defaultColor: "#262626" },
-          Button: { controlHeight: 36 },
-          Input: { activeShadow: "0 0 0 3px rgba(22, 119, 255, 0.16)" },
-          Select: { activeBorderColor: "#1677ff" },
+          Card: {
+            headerBg: "transparent",
+            paddingLG: 24,
+            boxShadow:
+              "0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px 0 rgba(0,0,0,0.04)",
+          },
+          Table: {
+            headerBg: "#f1f5f9",
+            headerColor: "#1f2937",
+            cellPaddingBlockSM: 12,
+            rowHoverBg: "#f8fafc",
+            borderColor: "#e2e8f0",
+          },
+          Button: { controlHeight: 40, borderRadius: 10, fontWeight: 500 },
+          Segmented: {
+            itemSelectedBg: "rgba(22, 119, 255, 0.12)",
+            borderRadius: 10,
+          },
+          Modal: { borderRadiusLG: 16 },
+          Tag: { borderRadius: 8 },
         },
       }}
     >
-      <Layout style={{ background: "linear-gradient(180deg, #f0f5ff 0%, #fafafa 100%)" }}>
+      <Layout>
         <AcademicStaffHeader />
-        <div className="adminpage-layout">
+        <div className="dashboard-container">
           {contextHolder}
+          <style>{customStyles}</style>
 
-          {/* TOP */}
-          <div className="header-hero">
-            <div>
-              <Title level={2} style={{ margin: 0, color: "#262626" }}>📊 แดชบอร์ดอาจารย์</Title>
-              <div className="page-subtitle">ภาพรวมการสมัครงานของนักศึกษาในที่ปรึกษา</div>
+          {/* Header */}
+          <div className="dashboard-header">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 16,
+              }}
+            >
+              <div>
+                <Title level={1} className="dashboard-title">
+                  <DashboardOutlined
+                    style={{ marginRight: 12, color: "#1677ff" }}
+                  />
+                  แดชบอร์ดอาจารย์
+                </Title>
+                <div className="dashboard-subtitle">
+                  ภาพรวมการสมัคร บริษัทที่ร่วมโครงการ Co-op
+                  และข้อมูลนักศึกษาทั้งหมด
+                </div>
+              </div>
+              <Space size={16} wrap>
+                <Dropdown menu={{ items: exportMenuItems }} trigger={["click"]}>
+                  <Button
+                    className="secondary-button"
+                    size="large"
+                    icon={<ExportOutlined />}
+                  >
+                    ส่งออกข้อมูล
+                  </Button>
+                </Dropdown>
+                <Button
+                  className="action-button"
+                  size="large"
+                  icon={<ReloadOutlined />}
+                  onClick={fetchAll}
+                  loading={loading}
+                >
+                  รีเฟรชข้อมูล
+                </Button>
+              </Space>
             </div>
-            <Space>
-              <Dropdown menu={{ items: exportMenuItems }} placement="bottomRight" trigger={["click"]}>
-                <Button icon={<ExportOutlined />} disabled={loading}>ส่งออก</Button>
-              </Dropdown>
-              <Button type="primary" icon={<ReloadOutlined />} onClick={fetchAll} loading={loading}>รีเฟรช</Button>
-            </Space>
           </div>
 
-          <Spin spinning={loading} indicator={<Skeleton.Avatar active size={32} shape="circle" />}>
-            {/* KPI — ทำให้ “สูงเท่ากัน” จริง ๆ */}
-            <Row gutter={[16, 16]} className="kpi-row" style={{ marginBottom: 24 }}>
-              <Col xs={24} sm={12} lg={8} className="kpi-col">
-                <Card className="kpi-card">
-                  <div className="kpi-inner">
-                    <div className="stat-icon"><UserOutlined /></div>
-                    <div className="stat-block">
-                      <Statistic title="จำนวนนักศึกษา" value={overview?.students || 0} />
-                      <div className="kpi-sub">ที่อยู่ในการดูแลของคุณ</div>
+          <Spin spinning={loading}>
+            {/* KPI Cards */}
+            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+              <Col xs={24} sm={12} lg={8}>
+                <div className="kpi-card" style={{ animationDelay: ".02s" }}>
+                  <div className="kpi-content">
+                    <div className="kpi-icon">
+                      <UsergroupAddOutlined />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <Statistic
+                        title={
+                          <span
+                            style={{
+                              color: "#475569",
+                              fontSize: 14,
+                              fontWeight: 600,
+                            }}
+                          >
+                            จำนวนนักศึกษา
+                          </span>
+                        }
+                        value={overview?.students || 0}
+                        valueStyle={{
+                          color: "#0f172a",
+                          fontSize: 28,
+                          fontWeight: 800,
+                        }}
+                      />
                     </div>
                   </div>
-                </Card>
+                </div>
               </Col>
 
-              <Col xs={24} sm={12} lg={8} className="kpi-col">
-                <Card className="kpi-card">
-                  <div className="kpi-inner">
-                    <div className="stat-icon green"><FileTextOutlined /></div>
-                    <div className="stat-block">
-                      <Statistic title="ใบสมัครทั้งหมด" value={sumCounts(overview?.applications_by_status)} />
-                      <div className="kpi-sub">
-                        เทียบเดือนก่อน{" "}
-                        {applicationsTotalAndDelta.deltaPct !== null ? (
-                          <Tag color={applicationsTotalAndDelta.deltaPct >= 0 ? "green" : "red"} className="delta-chip">
-                            {applicationsTotalAndDelta.deltaPct >= 0 ? "▲" : "▼"} {Math.abs(applicationsTotalAndDelta.deltaPct).toFixed(1)}%
-                          </Tag>
-                        ) : <Tag className="delta-chip">—</Tag>}
-                      </div>
+              <Col xs={24} sm={12} lg={8}>
+                <div className="kpi-card" style={{ animationDelay: ".08s" }}>
+                  <div className="kpi-content">
+                    <div className="kpi-icon">
+                      <FileTextOutlined />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <Statistic
+                        title={
+                          <span
+                            style={{
+                              color: "#475569",
+                              fontSize: 14,
+                              fontWeight: 600,
+                            }}
+                          >
+                            ใบสมัครทั้งหมด
+                          </span>
+                        }
+                        value={sumCounts(overview?.applications_by_status)}
+                        valueStyle={{
+                          color: "#0f172a",
+                          fontSize: 28,
+                          fontWeight: 800,
+                        }}
+                      />
                     </div>
                   </div>
-                </Card>
-              </Col>
-
-              {/* การ์ดสถานะ — จัด 2 คอลัมน์ คงความสูงเท่ากัน */}
-              <Col xs={24} sm={24} lg={8} className="kpi-col">
-                <Card className="kpi-card">
-                  <div className="kpi-inner status">
-
-                    <div className="status-list">
-                      <div className="row">
-                        <div className="left">
-                          <span className="dot green" />
-                          ผ่าน
-                        </div>
-                        <div className="right">{countByStatus(overview?.applications_by_status, "ผ่าน").toLocaleString()}</div>
-                      </div>
-
-                      <div className="row">
-                        <div className="left">
-                          <span className="dot blue" />
-                          กำลังพิจารณา
-                        </div>
-                        <div className="right">{countByStatus(overview?.applications_by_status, "กำลังพิจารณา").toLocaleString()}</div>
-                      </div>
-
-                      <div className="row">
-                        <div className="left">
-                          <span className="dot purple" />
-                          นัดสัมภาษณ์แล้ว
-                        </div>
-                        <div className="right">{countByStatus(overview?.applications_by_status, "นัดสัมภาษณ์แล้ว").toLocaleString()}</div>
-                      </div>
-
-                      <div className="row">
-                        <div className="left">
-                          <span className="dot orange" />
-                          รอการนัดสัมภาษณ์
-                        </div>
-                        <div className="right">{countByStatus(overview?.applications_by_status, "รอการนัดสัมภาษณ์").toLocaleString()}</div>
-                      </div>
-
-                      <div className="row">
-                        <div className="left">
-                          <span className="dot red" />
-                          ไม่ผ่าน/ไม่ได้รับเลือก
-                        </div>
-                        <div className="right">
-                          {(
-                            countByStatus(overview?.applications_by_status, "ไม่ผ่าน") +
-                            countByStatus(overview?.applications_by_status, "ไม่ได้รับเลือก")
-                          ).toLocaleString()}
-                        </div>
-                      </div>
-
-                      <div className="divider" />
-
-                      <div className="row total">
-                        <div className="left">รวมทั้งหมด</div>
-                        <div className="right">{totalStatus.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                </div>
               </Col>
             </Row>
 
-            {ChartBlock}
-
-            {/* Top Companies */}
-            <Card title="บริษัทที่นักศึกษาสมัครมากที่สุด" className="section-card" style={{ marginBottom: 24 }}>
-              {toArray(overview?.top_companies).length ? (
-                <Row gutter={[16, 16]}>
-                  {toArray(overview.top_companies).map((c: any, i: number) => (
-                    <Col key={i} xs={24} md={12} lg={8}>
-                      <Card size="small" className="mini-card">
-                        <div className="company-line">
-                          <div className="company-name">{c.CompanyName || "ไม่ทราบชื่อบริษัท"}</div>
-                          <Tag color="blue">{(c.Count ?? 0).toLocaleString()} ใบสมัคร</Tag>
+            {/* Lists Section */}
+            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+              <Col xs={24} md={12} xl={8}>
+                <Card
+                  className="list-card"
+                  title={
+                    <Space>
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 8,
+                          background:
+                            "linear-gradient(135deg, #f59e0b, #d97706)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                        }}
+                      >
+                        <ShopOutlined />
+                      </div>
+                      <span className="gradient-text">
+                        บริษัทที่คนสมัครเยอะสุด
+                      </span>
+                    </Space>
+                  }
+                  extra={
+                    <Button
+                      type="link"
+                      icon={<ArrowRightOutlined />}
+                      style={{ color: "#1677ff", fontWeight: 600 }}
+                      onClick={() => navigate("/lecturer/profile")}
+                    >
+                      ดูทั้งหมด
+                    </Button>
+                  }
+                  bodyStyle={{ padding: 0 }}
+                >
+                  {companiesCoop.slice(0, 5).length ? (
+                    companiesCoop.slice(0, 5).map((c: any, i: number) => (
+                      <div key={c.key} className="list-item">
+                        <div className="list-item-header">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 6,
+                                background: `linear-gradient(135deg, ${
+                                  [
+                                    "#1677ff",
+                                    "#0ea5e9",
+                                    "#22c55e",
+                                    "#f59e0b",
+                                    "#3b82f6",
+                                  ][i % 5]
+                                }, ${
+                                  [
+                                    "#1d4ed8",
+                                    "#0284c7",
+                                    "#16a34a",
+                                    "#d97706",
+                                    "#1e40af",
+                                  ][i % 5]
+                                })`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "white",
+                                fontSize: 12,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {i + 1}
+                            </div>
+                            <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                              {c.company_name}
+                            </div>
+                          </div>
+                          <Badge
+                            count={c.applicants_count}
+                            showZero
+                            style={{
+                              backgroundColor: "#1677ff",
+                              boxShadow: "0 2px 4px rgba(22,119,255,.3)",
+                            }}
+                          />
                         </div>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              ) : <Empty description="ยังไม่มีข้อมูลบริษัท" />}
-            </Card>
+                        <div className="list-item-meta">
+                          <Text type="secondary">
+                            อัปเดตล่าสุด:{" "}
+                            {c.last_apply_at
+                              ? fmtDateTime(c.last_apply_at)
+                              : "-"}
+                          </Text>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: 40 }}>
+                      <Empty description="ยังไม่มีข้อมูลบริษัท" />
+                    </div>
+                  )}
+                </Card>
+              </Col>
 
-            {/* Students */}
+              <Col xs={24} md={12} xl={8}>
+                <Card
+                  className="list-card"
+                  title={
+                    <Space>
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 8,
+                          background:
+                            "linear-gradient(135deg, #22c55e, #16a34a)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                        }}
+                      >
+                        <TeamOutlined />
+                      </div>
+                      <span className="gradient-text">การสมัครงานล่าสุด</span>
+                    </Space>
+                  }
+                  extra={
+                    <Button
+                      type="link"
+                      icon={<ArrowRightOutlined />}
+                      style={{ color: "#1677ff", fontWeight: 600 }}
+                      onClick={() => navigate("/lecturer/profile")}
+                    >
+                      ดูทั้งหมด
+                    </Button>
+                  }
+                  bodyStyle={{ padding: 0 }}
+                >
+                  {latest5UniqueAdvisees.length ? (
+                    <Row>
+                      {latest5UniqueAdvisees.map((r: any) => (
+                        <div
+                          key={`${r.student_id}-${r.updated_at}`}
+                          className="list-item"
+                        >
+                          <div className="list-item-header">
+                            <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                              {r.name}
+                            </div>
+                            <Tag
+                              color={getStatusColor(r.status)}
+                              style={{
+                                margin: 0,
+                                borderRadius: 8,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {r.status}
+                            </Tag>
+                          </div>
+                          <div className="list-item-meta">
+                            <Text type="secondary">{r.company_name}</Text>
+                            <span>•</span>
+                            <Text type="secondary">
+                              อัปเดตล่าสุด:{" "}
+                              {r.updated_at ? fmtDateTime(r.updated_at) : "-"}
+                            </Text>
+                          </div>
+                        </div>
+                      ))}
+                    </Row>
+                  ) : (
+                    <div style={{ padding: 40 }}>
+                      <Empty description="ยังไม่มีการอัปเดตสำหรับนักศึกษาที่อยู่ในการดูแล" />
+                    </div>
+                  )}
+                </Card>
+              </Col>
+
+              <Col xs={24} sm={24} lg={8}>
+                <div
+                  className="status-overview-card"
+                  style={{ animationDelay: ".14s" }}
+                >
+                  <div style={{ marginBottom: 14 }}>
+                    <div
+                      className="gradient-text"
+                      style={{ fontSize: 16, fontWeight: 700 }}
+                    >
+                      สถานะใบสมัคร
+                    </div>
+                  </div>
+                  <div>
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator green"></span>ผ่าน
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#22c55e" }}>
+                        {countByStatus(
+                          overview?.applications_by_status,
+                          "ผ่าน"
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator blue"></span>
+                        กำลังพิจารณา
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#3b82f6" }}>
+                        {countByStatus(
+                          overview?.applications_by_status,
+                          "กำลังพิจารณา"
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator purple"></span>
+                        นัดสัมภาษณ์แล้ว
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#6366f1" }}>
+                        {countByStatus(
+                          overview?.applications_by_status,
+                          "นัดสัมภาษณ์แล้ว"
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator orange"></span>
+                        รอการนัดสัมภาษณ์
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#f59e0b" }}>
+                        {countByStatus(
+                          overview?.applications_by_status,
+                          "รอการนัดสัมภาษณ์"
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator red"></span>
+                        ไม่ผ่าน/ไม่ได้รับเลือก
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#ef4444" }}>
+                        {(
+                          countByStatus(
+                            overview?.applications_by_status,
+                            "ไม่ผ่าน"
+                          ) +
+                          countByStatus(
+                            overview?.applications_by_status,
+                            "ไม่ได้รับเลือก"
+                          )
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="status-item">
+                      <div style={{ fontWeight: 800, color: "#0f172a" }}>
+                        รวมทั้งหมด
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: 900,
+                          fontSize: 16,
+                          color: "#0f172a",
+                        }}
+                      >
+                        {sumCounts(
+                          overview?.applications_by_status
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+
+            {/* ======== Chart Section (Daily Trend) ======== */}
             <Card
-              title={<span className="card-title">รายชื่อนักศึกษา</span>}
-              className="section-card"
-              extra={
+              className="chart-card"
+              title={
                 <Space>
-                  <Input allowClear prefix={<ReloadOutlined rotate={90} style={{ opacity: 0 }} />} placeholder="ค้นหานักศึกษา..." style={{ width: 260 }}
-                    value={qTyping} onChange={(e) => setQTyping(e.target.value)} onPressEnter={(e) => setQ((e.target as HTMLInputElement).value.trim())}/>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                    }}
+                  >
+                    <TrendingUpIcon />
+                  </div>
+                  <span className="gradient-text">แนวโน้มการสมัคร</span>
                 </Space>
               }
-              style={{ marginBottom: 24 }}
+              extra={
+                <Space size={12} wrap>
+                  <Segmented<PresetValue>
+                    options={PRESETS as any}
+                    value={preset}
+                    onChange={(val) => {
+                      setPreset(val as PresetValue);
+                      if (val !== "custom") setRange(null);
+                    }}
+                    style={{ borderRadius: 8 }}
+                  />
+                  {preset === "custom" && (
+                    <RangePicker
+                      value={range ?? undefined}
+                      onChange={(vals) =>
+                        setRange(vals ? [vals[0]!, vals[1]!] : null)
+                      }
+                      format="YYYY-MM-DD"
+                      allowClear
+                      style={{ borderRadius: 8 }}
+                    />
+                  )}
+                  <Tooltip title="ส่งออก (CSV)">
+                    <Button
+                      className="secondary-button"
+                      icon={<ExportOutlined />}
+                      onClick={() =>
+                        exportToCSV(
+                          dailyChartData as AnyRow[],
+                          `แนวโน้มรายวัน_${dayjs().format("YYYYMMDD")}`
+                        )
+                      }
+                    />
+                  </Tooltip>
+                </Space>
+              }
+              bodyStyle={{ padding: 0 }}
             >
-              <Table size="middle" sticky scroll={{ x: true }} dataSource={students} columns={studentsColumns} rowKey="id"
-                className="nice-table" locale={{ emptyText: <Empty description="ยังไม่มีข้อมูลนักศึกษา" /> }}
-                pagination={{
-                  current: page, pageSize, total: studentsTotal, showSizeChanger: true, showQuickJumper: true,
-                  showTotal: (t, r) => `${r[0]}-${r[1]} จาก ${t} รายการ`,
-                  onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+              <div
+                style={{
+                  background: "#fafbfc",
+                  borderRadius: 12,
+                  padding: "20px 24px",
+                  margin: "0 16px 12px 16px",
+                  border: "1px solid #f0f0f0",
                 }}
               />
-            </Card>
+              <div className="chart-container">
+                {!dailyChartData?.length ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <Empty
+                      description="ยังไม่มีข้อมูลช่วงนี้"
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RLineChart
+                      data={dailyChartData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="colorTotal"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#1677ff"
+                            stopOpacity={0.32}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#1677ff"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#475569"
+                        fontSize={12}
+                        fontWeight={600}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        stroke="#475569"
+                        fontSize={12}
+                        fontWeight={600}
+                      />
+                      <RTooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(255,255,255,0.95)",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                        }}
+                      />
+                      <Legend />
 
-            {/* Applications */}
-            <Card
-              title={<span className="card-title">ใบสมัครล่าสุด</span>}
-              className="section-card"
-              extra={
-                <Space>
-                  <Select placeholder="เลือกสถานะ" allowClear style={{ width: 240 }} value={status || undefined} onChange={(v) => setStatus(v || "")}>
-                    <Option value="รอการนัดสัมภาษณ์">รอการนัดสัมภาษณ์</Option>
-                    <Option value="กำลังพิจารณา">กำลังพิจารณา</Option>
-                    <Option value="ไม่ได้รับเลือก">ไม่ได้รับเลือก</Option>
-                    <Option value="ผ่าน">ผ่าน</Option>
-                    <Option value="นัดสัมภาษณ์แล้ว">นัดสัมภาษณ์แล้ว</Option>
-                    <Option value="ไม่ผ่าน">ไม่ผ่าน</Option>
-                  </Select>
-                </Space>
-              }
-            >
-              <div style={{ marginBottom: 12 }}>
-                <Space wrap>
-                  {[
-                    { label: "ทั้งหมด", value: "" },
-                    { label: "รอการนัดสัมภาษณ์", value: "รอการนัดสัมภาษณ์" },
-                    { label: "กำลังพิจารณา", value: "กำลังพิจารณา" },
-                    { label: "ไม่ได้รับเลือก", value: "ไม่ได้รับเลือก" },
-                    { label: "ผ่าน", value: "ผ่าน" },
-                    { label: "นัดสัมภาษณ์แล้ว", value: "นัดสัมภาษณ์แล้ว" },
-                    { label: "ไม่ผ่าน", value: "ไม่ผ่าน" },
-                  ].map((opt) => (
-                    <Button key={opt.value || "all"} size="small" type={status === opt.value ? "primary" : "default"} onClick={() => setStatus(opt.value)}>
-                      {opt.label}
-                    </Button>
-                  ))}
-                </Space>
+                      <Line
+                        type="monotone"
+                        dataKey="total"
+                        name="รวม (รายวัน)"
+                        stroke="#1677ff"
+                        strokeWidth={3}
+                        strokeDasharray="6 6"
+                        fill="url(#colorTotal)"
+                        dot={{
+                          fill: "#1677ff",
+                          strokeWidth: 2,
+                          stroke: "#ffffff",
+                          r: 5,
+                        }}
+                        activeDot={{
+                          r: 7,
+                          fill: "#1677ff",
+                          stroke: "#ffffff",
+                          strokeWidth: 3,
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="ผ่าน"
+                        name="ผ่าน"
+                        stroke={STATUS_STROKES["ผ่าน"]}
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="กำลังพิจารณา"
+                        name="กำลังพิจารณา"
+                        stroke={STATUS_STROKES["กำลังพิจารณา"]}
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="นัดสัมภาษณ์แล้ว"
+                        name="นัดสัมภาษณ์แล้ว"
+                        stroke={STATUS_STROKES["นัดสัมภาษณ์แล้ว"]}
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="รอการนัดสัมภาษณ์"
+                        name="รอการนัดสัมภาษณ์"
+                        stroke={STATUS_STROKES["รอการนัดสัมภาษณ์"]}
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey={FAIL_LABEL}
+                        name={FAIL_LABEL}
+                        stroke="#dc2626"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </RLineChart>
+                  </ResponsiveContainer>
+                )}
               </div>
-              <Table size="middle" sticky scroll={{ x: true }} dataSource={apps} columns={applicationsColumns} rowKey="id"
-                className="nice-table" locale={{ emptyText: <Empty description="ยังไม่มีข้อมูลใบสมัคร" /> }}
-                pagination={{ total: appsTotal, pageSize: 8, showTotal: (t, r) => `${r[0]}-${r[1]} จาก ${t} รายการ` }}
-              />
             </Card>
           </Spin>
+
+          {/* Applications Drawer */}
+          <Drawer
+            open={appsDrawerOpen}
+            onClose={() => setAppsDrawerOpen(false)}
+            width={980}
+            title={
+              <Space>
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 6,
+                    background: "linear-gradient(135deg, #1677ff, #1d4ed8)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                  }}
+                >
+                  <FileTextOutlined />
+                </div>
+                <span className="gradient-text">ใบสมัครทั้งหมด</span>
+              </Space>
+            }
+            extra={
+              <Space wrap>
+                <Text type="secondary" style={{ fontWeight: 600 }}>
+                  สถานะ:
+                </Text>
+                <Select
+                  allowClear
+                  placeholder="ทั้งหมด"
+                  style={{ width: 220 }}
+                  value={appsDrawerStatus || undefined}
+                  onChange={(v) => setAppsDrawerStatus(v || "")}
+                >
+                  {statuses.map((s) => (
+                    <Option key={s} value={s}>
+                      {s}
+                    </Option>
+                  ))}
+                </Select>
+                <Button
+                  className="secondary-button"
+                  onClick={() =>
+                    exportToCSV(
+                      (appsDrawerStatus
+                        ? apps.filter((a) => a.status === appsDrawerStatus)
+                        : apps) ?? [],
+                      "ใบสมัครทั้งหมด"
+                    )
+                  }
+                >
+                  ส่งออก CSV
+                </Button>
+              </Space>
+            }
+            styles={{ body: { padding: 0 } }}
+          >
+            <div style={{ padding: 24 }}>
+              <Table
+                size="middle"
+                scroll={{ x: true, y: 520 }}
+                sticky
+                dataSource={
+                  (appsDrawerStatus
+                    ? apps.filter((a) => a.status === appsDrawerStatus)
+                    : apps) ?? []
+                }
+                columns={applicationsColumns}
+                rowKey="id"
+                pagination={{
+                  pageSize: 12,
+                  showTotal: (t, r) => `${r[0]}-${r[1]} จาก ${t} รายการ`,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                }}
+                locale={{
+                  emptyText: <Empty description="ยังไม่มีข้อมูลใบสมัคร" />,
+                }}
+              />
+            </div>
+          </Drawer>
+
+          {/* Student Applications Modal */}
+          <Modal
+            open={studentApplicationsModal}
+            title={
+              <span style={{ fontSize: 16, fontWeight: 700 }}>
+                ใบสมัครของ{" "}
+                <span className="gradient-text">
+                  {selectedStudentInfo
+                    ? `${selectedStudentInfo.first_name} ${selectedStudentInfo.last_name}`
+                    : "นักศึกษา"}
+                </span>
+              </span>
+            }
+            width={900}
+            onCancel={() => {
+              setStudentApplicationsModal(false);
+              setSelectedStudentApps([]);
+              setSelectedStudentInfo(null);
+            }}
+            footer={[
+              <Button
+                key="export"
+                className="action-button"
+                onClick={() => {
+                  const data = (
+                    Array.isArray(selectedStudentApps)
+                      ? selectedStudentApps
+                      : []
+                  ).map((app: any) => ({
+                    บริษัท: app.company_name || app.company || "-",
+                    ตำแหน่ง: app.position || app.post_name || "-",
+                    สถานะ: app.status || "-",
+                    วันที่สมัคร: fmtDate(app.date || app.submit_at),
+                  }));
+                  exportToCSV(
+                    data,
+                    `ใบสมัคร_${selectedStudentInfo?.first_name || ""}_${
+                      selectedStudentInfo?.last_name || ""
+                    }`
+                  );
+                }}
+              >
+                ส่งออก (CSV)
+              </Button>,
+              <Button
+                key="close"
+                className="secondary-button"
+                onClick={() => setStudentApplicationsModal(false)}
+              >
+                ปิด
+              </Button>,
+            ]}
+          >
+            <Spin spinning={loadingStudentApps}>
+              <Table
+                size="middle"
+                scroll={{ x: true, y: 420 }}
+                sticky
+                dataSource={
+                  Array.isArray(selectedStudentApps) ? selectedStudentApps : []
+                }
+                rowKey="id"
+                pagination={{ pageSize: 8 }}
+                locale={{
+                  emptyText: (
+                    <Empty description="ยังไม่มีข้อมูลใบสมัครของนักศึกษาคนนี้" />
+                  ),
+                }}
+                columns={[
+                  {
+                    title: "บริษัท",
+                    key: "company",
+                    ellipsis: true,
+                    render: (_: any, r: any) => (
+                      <Tooltip title={r.company_name || r.company || "-"}>
+                        {r.company_name || r.company || "-"}
+                      </Tooltip>
+                    ),
+                  },
+                  {
+                    title: "ตำแหน่ง",
+                    key: "position",
+                    ellipsis: true,
+                    render: (_: any, r: any) => (
+                      <Tooltip title={r.position || r.post_name || "-"}>
+                        {r.position || r.post_name || "-"}
+                      </Tooltip>
+                    ),
+                  },
+                  {
+                    title: "สถานะ",
+                    dataIndex: "status",
+                    key: "status",
+                    width: 140,
+                    render: (s: string) => (
+                      <Tag
+                        color={getStatusColor(s)}
+                        style={{ borderRadius: 8, fontWeight: 600 }}
+                      >
+                        {s || "-"}
+                      </Tag>
+                    ),
+                  },
+                  {
+                    title: "วันที่สมัคร",
+                    key: "date",
+                    width: 140,
+                    render: (_: any, r: any) => fmtDate(r.date || r.submit_at),
+                  },
+                ]}
+              />
+            </Spin>
+          </Modal>
         </div>
-
-        {/* Modal */}
-        <Modal
-          open={studentApplicationsModal}
-          title={<span>ใบสมัครของ <b>{selectedStudentInfo ? `${selectedStudentInfo.first_name} ${selectedStudentInfo.last_name}` : "นักศึกษา"}</b></span>}
-          width={900}
-          onCancel={() => { setStudentApplicationsModal(false); setSelectedStudentApps([]); setSelectedStudentInfo(null); }}
-          className="fade-modal"
-          footer={[
-            <Button key="export" type="primary" onClick={() => {
-              const data = (Array.isArray(selectedStudentApps) ? selectedStudentApps : []).map((app: any) => ({
-                บริษัท: app.company_name || app.company || "-", ตำแหน่ง: app.position || app.post_name || "-",
-                สถานะ: app.status || "-", วันที่สมัคร: fmtDate(app.date || app.submit_at),
-              }));
-              exportToCSV(data, `ใบสมัคร_${selectedStudentInfo?.first_name || ""}_${selectedStudentInfo?.last_name || ""}`);
-            }}>ส่งออก (CSV)</Button>,
-            <Button key="close" onClick={() => setStudentApplicationsModal(false)}>ปิด</Button>,
-          ]}
-        >
-          <Spin spinning={loadingStudentApps}>
-            <Table size="middle" dataSource={Array.isArray(selectedStudentApps) ? selectedStudentApps : []} rowKey="id"
-              pagination={{ pageSize: 8 }} locale={{ emptyText: <Empty description="ยังไม่มีข้อมูลใบสมัครของนักศึกษาคนนี้" /> }}
-              columns={[
-                { title: "บริษัท", key: "company", ellipsis: true as any, render: (_: any, r: any) => r.company_name || r.company || "-" },
-                { title: "ตำแหน่ง", key: "position", ellipsis: true as any, render: (_: any, r: any) => r.position || r.post_name || "-" },
-                { title: "สถานะ", dataIndex: "status", key: "status", width: 140, render: (s: string) => <Tag color={getStatusColor(s)}>{s || "-"}</Tag> },
-                { title: "วันที่สมัคร", key: "date", width: 140, render: (_: any, r: any) => fmtDate(r.date || r.submit_at) },
-                { title: "ไฟล์แนบ", key: "files", render: (_: any, r: any) => { const resume = r.resume || r.resume_url, transcript = r.transcript || r.transcript_url; return <Space wrap><Button size="small" icon={<EyeOutlined />} onClick={() => downloadFile(resume)} disabled={!resume}>Resume</Button><Button size="small" icon={<EyeOutlined />} onClick={() => downloadFile(transcript)} disabled={!transcript}>Transcript</Button></Space>; } },
-              ]}
-            />
-          </Spin>
-        </Modal>
-
-        {/* Styles */}
-        <style jsx>{`
-          .adminpage-layout { display:flex; flex-direction:column; padding:24px; min-height:100vh; background:linear-gradient(180deg,#f0f5ff 0%,#fafafa 100%); animation:fadeIn .6s ease-in-out; }
-          .header-hero { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding:20px 24px; margin-bottom:20px; background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.08); position:sticky; top:0; z-index:2; }
-          .page-subtitle { color:#8c8c8c; margin-top:4px; font-size:14px; }
-
-          /* ====== Make KPI equal height ====== */
-          .kpi-row .kpi-col { display:flex; }
-          .kpi-card { flex:1; display:flex; }
-          .kpi-card .ant-card-body { display:flex; width:100%; padding:18px; }
-          .kpi-inner { display:flex; align-items:center; gap:14px; width:100%; }
-          .kpi-inner.status { align-items:flex-start; }
-          .stat-icon { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; background:#e6f7ff; color:#1677ff; font-size:20px; flex:0 0 46px; }
-          .stat-icon.green { background:#f6ffed; color:#52c41a; }
-          .stat-block { display:flex; flex-direction:column; gap:6px; }
-          .kpi-sub { font-size:12px; color:#8c8c8c; }
-
-          /* Status list (balanced & aligned) */
-          .status-title { font-weight:600; color:#262626; margin-bottom:8px; }
-          .status-list { display:flex; flex-direction:column; gap:8px; width:100%; }
-          .status-list .row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-          .status-list .row.total { font-weight:600; }
-          .status-list .divider { height:1px; background:rgba(0,0,0,.06); margin:4px 0; }
-          .left { display:flex; align-items:center; gap:8px; color:#595959; }
-          .right { color:#262626; min-width:48px; text-align:right; }
-          .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
-          .dot.green { background:#52c41a; } .dot.blue { background:#1677ff; } .dot.purple { background:#722ed1; } .dot.orange { background:#faad14; } .dot.red { background:#ff4d4f; }
-
-          .section-card { border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
-          .mini-card { border-radius:10px; }
-          .company-line { display:flex; align-items:center; justify-content:space-between; }
-          .company-name { color:#262626; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%; }
-
-          .nice-table :where(.ant-table) { border-radius:10px; overflow:hidden; }
-          .nice-table .ant-table-tbody > tr:hover > td { background:#f0f7ff !important; }
-
-          .btn-primary-soft { background:#e6f7ff; color:#1677ff; border:1px solid #91d5ff; }
-          .card-head { display:flex; align-items:center; gap:10px; font-weight:600; }
-          .chart-wrap { width:100%; height:320px; }
-
-          .fade-modal .ant-modal-content { border-radius:12px; }
-          @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-        `}</style>
       </Layout>
     </ConfigProvider>
   );
 };
 
 export default AcademicDashboard;
+
+const customStyles = `
+  body { background: linear-gradient(135deg, #e6f2ff 0%, #f5faff 100%); min-height: 100vh; }
+  .dashboard-container { background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%); min-height: 100vh; padding: 32px; }
+  .dashboard-header { background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%); border-radius: 24px; padding: 28px 24px; margin-bottom: 32px;
+    box-shadow: 0 10px 25px -5px rgba(22, 119, 255, 0.12), 0 10px 10px -5px rgba(22, 119, 255, 0.06); border: 1px solid rgba(22, 119, 255, 0.12); backdrop-filter: blur(10px); animation: fadeIn .5s ease both; }
+  .dashboard-title { background: linear-gradient(135deg, #1677ff 0%, #1d4ed8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    font-size: clamp(22px, 2.4vw, 30px); font-weight: 800; margin: 0 !important; letter-spacing: -0.02em; }
+  .dashboard-subtitle { color: #475569; font-size: clamp(13px, 1.4vw, 16px); margin-top: 6px; font-weight: 400; }
+  .action-button { background: linear-gradient(135deg, #1677ff 0%, #1d4ed8 100%); border: none; border-radius: 12px; color: white; font-weight: 600; transition: transform .25s ease, box-shadow .25s ease; box-shadow: 0 8px 18px rgba(22, 119, 255, 0.25); }
+  .action-button:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(22, 119, 255, 0.35); }
+  .secondary-button { background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%); border: 1px solid rgba(22, 119, 255, 0.16); border-radius: 12px; font-weight: 600;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease; }
+  .secondary-button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(22, 119, 255, 0.18); border-color: #1677ff; color: #1677ff; }
+
+  .kpi-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; padding: 24px; border: 1px solid rgba(22, 119, 255, 0.10);
+    box-shadow: 0 4px 20px -2px rgba(22, 119, 255, 0.12); transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; position: relative; overflow: hidden; animation: slideUp .6s ease both; height: 100%; }
+  .kpi-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, #1677ff, #0ea5e9, #1d4ed8); }
+  .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px -6px rgba(22, 119, 255, 0.22); border-color: rgba(22, 119, 255, 0.18); }
+  .kpi-content { display: flex; gap: 18px; align-items: flex-start; }
+  .kpi-icon { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #1677ff, #1d4ed8); display: grid; place-items: center; color: white; font-size: 20px; }
+
+  .status-overview-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(22, 119, 255, 0.12);
+    border: 1px solid rgba(22, 119, 255, 0.10); position: relative; overflow: hidden; animation: slideUp .65s ease both; }
+  .status-overview-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+  .status-item:last-child { border-bottom: none; margin-top: 8px; padding-top: 16px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+  .status-indicator { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
+  .status-indicator.green { background: #22c55e; } .status-indicator.blue { background: #3b82f6; } .status-indicator.purple { background: #6366f1; }
+  .status-indicator.orange { background: #f59e0b; } .status-indicator.red { background: #ef4444; }
+
+  .list-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; border: 1px solid rgba(22, 119, 255, 0.10);
+    box-shadow: 0 4px 20px -2px rgba(22, 119, 255, 0.12); transition: transform .2s ease, box-shadow .2s ease; height: 100%; }
+  .list-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -6px rgba(22, 119, 255, 0.18); }
+  .list-item { padding: 16px; border-bottom: 1px solid #e2e8f0; cursor: default; transition: background .2s ease; }
+  .list-item:hover { background: linear-gradient(135deg, #f8fbff 0%, #f1f5f9 100%); }
+  .list-item:last-child { border-bottom: none; }
+  .list-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .list-item-meta { display: flex; align-items: center; gap: 10px; color: #475569; font-size: 13px; }
+
+  .chart-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; border: 1px solid rgba(22, 119, 255, 0.10); animation: fadeIn .5s ease both; }
+  .chart-container { height: clamp(280px, 48vh, 440px); padding: 10px 16px 20px 16px; }
+
+  .ant-table-thead > tr > th { background: linear-gradient(135deg, #f1f5f9 0%, #eaf2ff 100%) !important; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; }
+  .ant-table-tbody > tr:hover > td { background: linear-gradient(135deg, #f8fbff 0%, #f1f5f9 100%) !important; }
+
+  .ant-segmented { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border: 1px solid rgba(22,119,255,0.12); }
+
+  .gradient-text { background: linear-gradient(135deg, #1677ff 0%, #1d4ed8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+
+  @media (max-width: 991px) { .dashboard-container { padding: 20px; } .dashboard-header { padding: 20px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+`;

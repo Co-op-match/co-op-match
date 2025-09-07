@@ -17,6 +17,7 @@ import DocumentModal from "./DocumentModal";
 import DetailModal from "./DetailModal";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import type { AdminInterface } from "../../../interfaces/Admin";
+import { fileURL } from "@/config/env";
 
 const { Title, Text } = Typography;
 const user_id = Number(localStorage.getItem("id") || 0);
@@ -100,7 +101,7 @@ const CertificationReviewPage: React.FC = () => {
   }, [verifications, selectedFilterStatuses, searchKeyword]);
 
   const sortedVerifications = useMemo(() => {
-    const priority: Record<string, number> = { รอรับรอง: 0, รับรอง: 1, ปฏิเสธ: 2 };
+    const priority: Record<string, number> = { "รอรับรอง": 0, "รับรอง": 1, "ปฏิเสธ": 2, "ยังไม่ได้ส่งคำขอ": 3 };
     return [...filteredVerifications].sort((a, b) => {
       const statusA = a.StatusVerify?.status_verify || "รอรับรอง";
       const statusB = b.StatusVerify?.status_verify || "รอรับรอง";
@@ -111,7 +112,7 @@ const CertificationReviewPage: React.FC = () => {
   // ===== helpers =====
   const getUserInfo = (user: any) =>
     user?.Company?.length
-      ? { type: "company", name: user.Company[0]?.company_name, logo: user.Company[0]?.logo, details: "บริษัท", icon: <BuildOutlined /> }
+      ? { type: "company", name: user.Company[0]?.company_name, logo: fileURL(user.Company[0]?.logo), details: "บริษัท", icon: <BuildOutlined /> }
       : user?.AcademicStaff?.length
       ? {
           type: "academic",
@@ -169,7 +170,7 @@ const CertificationReviewPage: React.FC = () => {
       // ส่งอีเมลภายหลัง
       try {
         const emailRes = await SendEmailVerify(selectedRecord.UserID!);
-        if (!emailRes || emailRes.status !== 200) throw new Error("Email sending failed");
+        if (!emailRes || emailRes.status !== 202) throw new Error("Email sending failed");
       } catch (err) {
         console.error("❌ Email failed:", err);
         messageApi.warning("อัปเดตสำเร็จ แต่ส่งอีเมลไม่สำเร็จ");
@@ -198,7 +199,7 @@ const CertificationReviewPage: React.FC = () => {
       width: 250,
       render: (_, record) => {
         const userInfo = getUserInfo(record.User);
-        const profileImage = record?.User?.ProfileImage?.[0]?.image_url;
+        const profileImage = fileURL(record?.User?.ProfileImage?.[0]?.image_url);
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Avatar size={48} src={userInfo.type === "company" ? userInfo.logo : profileImage} icon={userInfo.icon} style={{ flexShrink: 0 }} />

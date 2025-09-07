@@ -1,18 +1,20 @@
 import { Card, Descriptions, Table, Tag, Tabs, Avatar, Badge, Row, Col, Statistic, Button, Modal, Input, Select, Switch, Space, Divider, Layout, Typography } from "antd";
 import { UserOutlined, LoginOutlined, EditOutlined, EyeOutlined, SafetyOutlined, TeamOutlined, CheckCircleOutlined, CloseCircleOutlined, GlobalOutlined, BarChartOutlined } from "@ant-design/icons";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState, type Key } from "react";
 import type { UserInterface } from "../../../interfaces/User";
 import type { CompanyInterface } from "../../../interfaces/Company";
 import type { StudentInterface } from "../../../interfaces/Student";
 import type { AcademicStaffInterface } from "../../../interfaces/AcademicStaff";
-import { GetAllAcademicStaff, GetAllCompany, GetAllLoginLogs, GetAllStudent, GetAllUser, GetRole, UpdateUser } from "../../../services/https";
+import { GetAllAcademicStaff, GetAllCompany, GetAllLoginLogs, GetAllStudent, GetAllUser, GetMonthlyUsersByRole, GetRole, UpdateUser } from "../../../services/https";
 import type { RoleInterface } from "../../../interfaces/Role";
 import type { LoginLogInterface } from "../../../interfaces/LoginLog";
 import type { ColumnsType, TableProps } from "antd/es/table";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import ExportExcelButton from "./ExportExcelButton";
+import { fileURL } from "@/config/env";
+import type { MonthlyUserByRoleInterface } from "@/interfaces/Analysis";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -27,25 +29,27 @@ const AdminUserDetailsPage: React.FC = () => {
   const [filteredLoginLogs, setFilteredLoginLogs] = useState<LoginLogInterface[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null);
   const [roles, setRoles] = useState<RoleInterface[]>([]);
+  const [monthlyUserData, SetMonthlyUserData] = useState<MonthlyUserByRoleInterface[]>([]);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [loginSearchText, setLoginSearchText] = useState("");
 
-  // ใช้เป็นค่าคงที่ — ตัด setter ออกเพื่อแก้ TS6133
+  // ค่าคงที่สำหรับ auto refresh
   const autoRefresh = true;
   const intervalMs = 600_000; // 10 นาที
 
   const refreshData = useCallback(async () => {
     try {
-      const [usersRes, studentsRes, companiesRes, academicRes, logsRes, roleRes] = await Promise.all([
+      const [usersRes, studentsRes, companiesRes, academicRes, logsRes, roleRes, monthUserRes] = await Promise.all([
         GetAllUser(),
         GetAllStudent(),
         GetAllCompany(),
         GetAllAcademicStaff(),
         GetAllLoginLogs(),
         GetRole(),
+        GetMonthlyUsersByRole(),
       ]);
       const usersData = usersRes.data ?? [];
       setUsers(usersData);
@@ -55,6 +59,8 @@ const AdminUserDetailsPage: React.FC = () => {
       setLoginLogs(logsRes.data ?? []);
       setFilteredLoginLogs(logsRes.data ?? []);
       setRoles(roleRes.data ?? []);
+      const rows = Array.isArray(monthUserRes?.data) ? monthUserRes.data : [];
+      SetMonthlyUserData(rows);
     } catch (e) {
       console.error(e);
     }
@@ -70,56 +76,49 @@ const AdminUserDetailsPage: React.FC = () => {
 
   // Filter login logs based on search text
   useEffect(() => {
-    const filtered = loginLogs.filter(
-      (log) =>
-        log.User?.Email?.toLowerCase().includes(loginSearchText.toLowerCase()) ||
-        log.ip?.toLowerCase().includes(loginSearchText.toLowerCase()) ||
-        log.device?.toLowerCase().includes(loginSearchText.toLowerCase())
+    const q = loginSearchText.toLowerCase();
+    setFilteredLoginLogs(
+      loginLogs.filter(
+        (log) =>
+          log.User?.Email?.toLowerCase().includes(q) ||
+          log.ip?.toLowerCase().includes(q) ||
+          log.device?.toLowerCase().includes(q)
+      )
     );
-    setFilteredLoginLogs(filtered);
   }, [loginLogs, loginSearchText]);
 
-  // Statistics data
-  const adminStats = users.filter((u) => u.Role?.RoleName === "Admin");
-  const studentStats = users.filter((u) => u.Role?.RoleName === "Student");
-  const companyStats = users.filter((u) => u.Role?.RoleName === "Company");
-  const academicStats = users.filter((u) => u.Role?.RoleName === "AcademicStaff");
-
-  const roleChartData = [
-    { name: "แอดมิน", total: adminStats.length, online: adminStats.filter((u) => u.is_logged_in).length, offline: adminStats.filter((u) => !u.is_logged_in).length },
-    { name: "นักเรียน", total: studentStats.length, online: studentStats.filter((u) => u.is_logged_in).length, offline: studentStats.filter((u) => !u.is_logged_in).length },
-    { name: "บริษัท", total: companyStats.length, online: companyStats.filter((u) => u.is_logged_in).length, offline: companyStats.filter((u) => !u.is_logged_in).length },
-    { name: "อาจารย์", total: academicStats.length, online: academicStats.filter((u) => u.is_logged_in).length, offline: academicStats.filter((u) => !u.is_logged_in).length },
-  ];
-
+  // สร้างสัดส่วนผู้ใช้ตามบทบาท (ใช้ใน Pie)
   const roleStats = roles.map((Role) => ({
     name: Role.RoleNameTH,
     value: users.filter((user) => user.Role?.RoleName === Role.RoleName).length,
-    color: Role.RoleName === "Admin" ? "#1890ff" : Role.RoleName === "Student" ? "#52c41a" : Role.RoleName === "Company" ? "#fa8c16" : "#722ed1",
+    color:
+      Role.RoleName === "Admin" ? "#1890ff" :
+      Role.RoleName === "Student" ? "#52c41a" :
+      Role.RoleName === "Company" ? "#fa8c16" : "#722ed1",
   }));
 
   const roleFilters = useMemo(
     () =>
       Array.from(new Set(users.map((u) => u.Role?.RoleNameTH).filter((v): v is string => Boolean(v)))).map((name) => ({
-        text: name,
-        value: name,
+        text: name, value: name,
       })),
     [users]
   );
 
-  const monthlyUserData = [
-    { month: "ม.ค.", users: 45 },
-    { month: "ก.พ.", users: 52 },
-    { month: "มี.ค.", users: 48 },
-    { month: "เม.ย.", users: 61 },
-    { month: "พ.ค.", users: 55 },
-    { month: "มิ.ย.", users: 67 },
-    { month: "ก.ค.", users: 73 },
-    { month: "ส.ค.", users: 78 },
-  ];
-
   // ฟิลเตอร์บทบาทที่เลือก (controlled)
   const [roleFilterKeys, setRoleFilterKeys] = useState<Key[] | null>(null);
+
+  const chartData = useMemo(() => {
+  return (monthlyUserData ?? []).map(d => ({
+    month: d.month,
+    students: d.students,
+    companies: d.companies,
+    academic_staff: d.academic_staff,
+    admins: d.admins,
+    total: (d.students || 0) + (d.companies || 0) + (d.academic_staff || 0) + (d.admins || 0),
+  }));
+}, [monthlyUserData]);
+
 
   // รวมการค้นหา + ฟิลเตอร์บทบาท -> รายการที่แสดงจริง
   const displayedUsers = useMemo(() => {
@@ -135,16 +134,6 @@ const AdminUserDetailsPage: React.FC = () => {
     return data;
   }, [users, searchText, roleFilterKeys]);
 
-  // URL helpers
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-  const resolveUrl = (p?: string) => {
-    if (!p) return undefined;
-    if (/^https?:\/\//i.test(p)) return p;
-    const base = BASE_URL.replace(/\/+$/, "");
-    const path = p.startsWith("/") ? p : `/${p}`;
-    return `${base}${path}`;
-  };
-
   const userColumns: ColumnsType<UserInterface> = [
     {
       title: "อีเมล",
@@ -153,7 +142,7 @@ const AdminUserDetailsPage: React.FC = () => {
       render: (Email: string, record: UserInterface) => {
         const isCompany = record.Role?.RoleName === "Company";
         const raw = isCompany ? record.Company?.[0]?.logo : record.ProfileImage?.[0]?.image_url;
-        const imgSrc = resolveUrl(raw);
+        const imgSrc = fileURL(raw);
         return (
           <Space>
             <Avatar src={imgSrc} icon={!imgSrc ? <UserOutlined /> : undefined} />
@@ -187,12 +176,7 @@ const AdminUserDetailsPage: React.FC = () => {
         </Space>
       ),
     },
-    {
-      title: "วันที่สร้าง",
-      dataIndex: "CreatedAt",
-      key: "CreatedAt",
-      render: (date: string) => dayjs(date).format("DD/MM/YYYY HH:mm"),
-    },
+    { title: "วันที่สร้าง", dataIndex: "CreatedAt", key: "CreatedAt", render: (date: string) => dayjs(date).format("DD/MM/YYYY HH:mm") },
     {
       title: "การจัดการ",
       key: "actions",
@@ -202,20 +186,15 @@ const AdminUserDetailsPage: React.FC = () => {
             type="primary"
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => handleViewUser(record)}
-            style={{
-              background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
-              border: "none",
-              borderRadius: 8,
-              boxShadow: "0 2px 8px rgba(25, 118, 210, 0.3)",
-            }}
+            onClick={() => { setSelectedUser(record); setIsModalVisible(true); }}
+            style={{ background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)", border: "none", borderRadius: 8, boxShadow: "0 2px 8px rgba(25, 118, 210, 0.3)" }}
           >
             ดู
           </Button>
           <Button
             icon={<EditOutlined />}
             size="small"
-            onClick={() => handleEditUser(record)}
+            onClick={() => { setSelectedUser(record); setEditModalVisible(true); }}
             style={{ borderColor: "#1976d2", color: "#1976d2", borderRadius: 8, background: "rgba(25, 118, 210, 0.02)" }}
           >
             แก้ไข
@@ -233,7 +212,7 @@ const AdminUserDetailsPage: React.FC = () => {
       render: (Email: string, record: LoginLogInterface) => {
         const isCompany = record.User?.Role?.RoleName === "Company";
         const raw = isCompany ? record.User?.Company?.[0]?.logo : record.User?.ProfileImage?.[0]?.image_url;
-        const imgSrc = resolveUrl(raw);
+        const imgSrc = fileURL(raw);
         return (
           <Space>
             <Avatar src={imgSrc} icon={!imgSrc ? <UserOutlined /> : undefined} />
@@ -243,23 +222,17 @@ const AdminUserDetailsPage: React.FC = () => {
       },
     },
     { title: "IP Address", dataIndex: "ip", key: "ip", render: (ip: string) => <Tag icon={<GlobalOutlined />}>{ip}</Tag> },
-    { title: "อุปกรณ์", dataIndex: "device", key: "device", width: 500 },
     { title: "เวลาเข้าสู่ระบบ", dataIndex: "login_at", key: "login_at", render: (date: string) => dayjs(date).format("DD/MM/YYYY HH:mm:ss") },
     {
       title: "เวลาออกจากระบบ",
       dataIndex: "logout_at",
       key: "logout_at",
-      render: (date?: string | null) =>
-        date && String(date).trim() !== "" ? dayjs(date).format("DD/MM/YYYY HH:mm:ss") : <Tag color="green">ยังคงออนไลน์</Tag>,
+      render: (date?: string | null) => (date && String(date).trim() !== "" ? dayjs(date).format("DD/MM/YYYY HH:mm:ss") : <Tag color="green">ยังคงออนไลน์</Tag>),
     },
   ];
 
-  const handleViewUser = (user: UserInterface) => { setSelectedUser(user); setIsModalVisible(true); };
-  const handleEditUser = (user: UserInterface) => { setSelectedUser(user); setEditModalVisible(true); };
-
   const handleUserTableChange: TableProps<UserInterface>["onChange"] = (_pagination, filters) => {
-    const val = filters?.Role as Key[] | null | undefined;
-    setRoleFilterKeys(val ?? null);
+    const val = filters?.Role as Key[] | null | undefined; setRoleFilterKeys(val ?? null);
   };
 
   return (
@@ -279,7 +252,6 @@ const AdminUserDetailsPage: React.FC = () => {
                 </div>
               </div>
             </Col>
-            {/* ปุ่ม Export เพิ่มเติม (ถ้าต้องการรวม users+logs ให้ใช้ ExportExcelButton variant="both") */}
             {/* <Col><Space><ExportExcelButton variant="both" usersAll={users} usersFiltered={displayedUsers} logsAll={loginLogs} logsFiltered={filteredLoginLogs} /></Space></Col> */}
           </Row>
         </div>
@@ -318,85 +290,56 @@ const AdminUserDetailsPage: React.FC = () => {
         <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
           <Col xs={24} lg={12}>
             <Card
-              title={
-                <div style={{ color: "#1976d2", fontSize: 18, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                  <TeamOutlined />ผู้ใช้ตามบทบาทและสถานะ
-                </div>
-              }
-              style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)", border: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: 16, boxShadow: "0 4px 20px rgba(33, 150, 243, 0.08)" }}
+              title={<div style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><GlobalOutlined />สัดส่วนผู้ใช้</div>}
+              style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)", border: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: 16, boxShadow: "0 4px 20px rgba(33, 150, 243, 0.08)", height: 180 }}
               headStyle={{ background: "linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)", borderBottom: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: "16px 16px 0 0" }}
+              bodyStyle={{ height: 120, padding: 8 }}
             >
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={roleChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(25, 118, 210, 0.1)" />
-                  <XAxis dataKey="name" stroke="#1976d2" fontSize={12} />
-                  <YAxis stroke="#1976d2" fontSize={12} />
-                  <RechartsTooltip contentStyle={{ background: "rgba(255, 255, 255, 0.95)", border: "1px solid rgba(25, 118, 210, 0.2)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }} />
-                  <Bar dataKey="online" stackId="a" fill="#4caf50" name="ออนไลน์" />
-                  <Bar dataKey="offline" stackId="a" fill="#f44336" name="ออฟไลน์" />
-                </BarChart>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={roleStats} cx="50%" cy="50%" outerRadius={45} fill="#8884d8" dataKey="value" label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}>
+                    {roleStats.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ background: "rgba(255, 255, 255, 0.95)", border: "1px solid rgba(25, 118, 210, 0.2)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", fontSize: 12 }} />
+                </PieChart>
               </ResponsiveContainer>
             </Card>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Row gutter={[16, 16]} style={{ height: "100%" }}>
-              <Col xs={24}>
-                <Card
-                  title={
-                    <div style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                      <GlobalOutlined />สัดส่วนผู้ใช้
-                    </div>
-                  }
-                  style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)", border: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: 16, boxShadow: "0 4px 20px rgba(33, 150, 243, 0.08)", height: 180 }}
-                  headStyle={{ background: "linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)", borderBottom: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: "16px 16px 0 0" }}
-                  bodyStyle={{ height: 120, padding: 8 }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={roleStats} cx="50%" cy="50%" outerRadius={45} fill="#8884d8" dataKey="value" label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}>
-                        {roleStats.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                      </Pie>
-                      <RechartsTooltip contentStyle={{ background: "rgba(255, 255, 255, 0.95)", border: "1px solid rgba(25, 118, 210, 0.2)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", fontSize: 12 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Card>
-              </Col>
-
-              <Col xs={24}>
-                <Card
-                  title={
-                    <div style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                      <BarChartOutlined />ผู้ใช้รายเดือน
-                    </div>
-                  }
-                  style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)", border: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: 16, boxShadow: "0 4px 20px rgba(33, 150, 243, 0.08)", height: 180 }}
-                  headStyle={{ background: "linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)", borderBottom: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: "16px 16px 0 0" }}
-                  bodyStyle={{ height: 120, padding: 8 }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyUserData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(25, 118, 210, 0.1)" />
-                      <XAxis dataKey="month" stroke="#1976d2" fontSize={10} />
-                      <YAxis stroke="#1976d2" fontSize={10} />
-                      <RechartsTooltip contentStyle={{ background: "rgba(255, 255, 255, 0.95)", border: "1px solid rgba(25, 118, 210, 0.2)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", fontSize: 12 }} />
-                      <Line type="monotone" dataKey="users" stroke="#1976d2" strokeWidth={2} dot={{ fill: "#1976d2", strokeWidth: 1, r: 3 }} activeDot={{ r: 4, stroke: "#1976d2", strokeWidth: 1 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </Card>
-              </Col>
-            </Row>
+            <Card
+              title={<div style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><BarChartOutlined />ผู้ใช้รายเดือน</div>}
+              style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)", border: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: 16, boxShadow: "0 4px 20px rgba(33, 150, 243, 0.08)", height: 180 }}
+              headStyle={{ background: "linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)", borderBottom: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: "16px 16px 0 0" }}
+              bodyStyle={{ height: 120, padding: 8 }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                {/* <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(25, 118, 210, 0.1)" />
+                  <XAxis dataKey="month" stroke="#1976d2" fontSize={10} />
+                  <YAxis stroke="#1976d2" fontSize={10} />
+                  <RechartsTooltip contentStyle={{ background: "rgba(255, 255, 255, 0.95)", border: "1px solid rgba(25, 118, 210, 0.2)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", fontSize: 12 }} />
+                  <Line type="monotone" dataKey="total" stroke="#1976d2" strokeWidth={2} dot={{ fill: "#1976d2", strokeWidth: 1, r: 3 }} activeDot={{ r: 4, stroke: "#1976d2", strokeWidth: 1 }} />
+                </LineChart> */}
+                  <LineChart data={monthlyUserData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(25,118,210,0.1)" />
+                    <XAxis dataKey="month" stroke="#1976d2" fontSize={10} />
+                    <YAxis stroke="#1976d2" fontSize={10} />
+                    <RechartsTooltip contentStyle={{ background: "rgba(255, 255, 255, 0.95)", border: "1px solid rgba(25, 118, 210, 0.2)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", fontSize: 12 }} />
+                    <Line type="monotone" dataKey="students" stroke="#1890ff" strokeWidth={2} />
+                    <Line type="monotone" dataKey="companies" stroke="#fa8c16" strokeWidth={2} />
+                    <Line type="monotone" dataKey="academic_staff" stroke="#722ed1" strokeWidth={2} />
+                    <Line type="monotone" dataKey="admins" stroke="#52c41a" strokeWidth={2} />
+                  </LineChart>
+              </ResponsiveContainer>
+            </Card>
           </Col>
         </Row>
 
         <Card style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)", border: "1px solid rgba(25, 118, 210, 0.1)", borderRadius: 16, boxShadow: "0 4px 20px rgba(33, 150, 243, 0.08)" }}>
           <Tabs defaultActiveKey="users">
             <TabPane
-              tab={
-                <span style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                  <TeamOutlined />รายชื่อผู้ใช้
-                </span>
-              }
+              tab={<span style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><TeamOutlined />รายชื่อผู้ใช้</span>}
               key="users"
             >
               <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
@@ -421,11 +364,7 @@ const AdminUserDetailsPage: React.FC = () => {
             </TabPane>
 
             <TabPane
-              tab={
-                <span style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                  <LoginOutlined />บันทึกการเข้าสู่ระบบ
-                </span>
-              }
+              tab={<span style={{ color: "#1976d2", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><LoginOutlined />บันทึกการเข้าสู่ระบบ</span>}
               key="loginLogs"
             >
               <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
@@ -554,20 +493,13 @@ const AdminUserDetailsPage: React.FC = () => {
                   });
                 }}
               >
-                {roles.map((Role) => (
-                  <Option key={Role.ID} value={Role.ID}>{Role.RoleNameTH}</Option>
-                ))}
+                {roles.map((Role) => (<Option key={Role.ID} value={Role.ID}>{Role.RoleNameTH}</Option>))}
               </Select>
             </div>
             <div style={{ marginBottom: 16 }}>
               <label>สถานะการใช้งาน:</label>
               <div style={{ marginTop: 4 }}>
-                <Switch
-                  checked={selectedUser?.is_active}
-                  checkedChildren="เปิดใช้งาน"
-                  unCheckedChildren="ปิดใช้งาน"
-                  onChange={(checked) => selectedUser && setSelectedUser({ ...selectedUser, is_active: checked })}
-                />
+                <Switch checked={selectedUser?.is_active} checkedChildren="เปิดใช้งาน" unCheckedChildren="ปิดใช้งาน" onChange={(checked) => selectedUser && setSelectedUser({ ...selectedUser, is_active: checked })} />
               </div>
             </div>
           </div>

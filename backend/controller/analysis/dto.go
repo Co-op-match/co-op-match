@@ -60,6 +60,12 @@ type KVTime struct {
 	Count  int    `json:"count"`
 }
 
+type KVTimeStatus struct {
+	Period string `json:"period"`
+	Status string `json:"status"`
+	Count  int    `json:"count"`
+}
+
 type TopCompany struct {
 	CompanyID   uint
 	CompanyName string
@@ -75,10 +81,6 @@ type AcademicOverviewResponse struct {
 	ReviewsTotal         int          `json:"reviews_total"`
 	TopCompanies         []TopCompany `json:"top_companies"`
 	NeverApplied         int          `json:"never_applied"`
-
-	AppsPerWeek     []KVTime `json:"apps_per_week"`
-	AppsPerMonth    []KVTime `json:"apps_per_month"`
-	AppsPerSemester []KVTime `json:"apps_per_semester"`
 }
 
 type AcademicStudentItem struct {
@@ -87,6 +89,7 @@ type AcademicStudentItem struct {
 	LastName  string `json:"last_name"`
 	Gender    string `json:"gender"`
 	Age       uint   `json:"age"`
+	Email     string `json:"email"`
 
 	ProgramName    string `json:"program_name"`
 	FacultyName    string `json:"faculty_name"`

@@ -4,9 +4,8 @@ import { CalendarOutlined, DashboardOutlined, BuildOutlined } from "@ant-design/
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import type { OverviewInterface, PipelineBucketInterface, TopPostItem } from "../../interfaces/Analysis";
-import { GetCompanyByUserID } from "../../services/https/Application";
 import { GetPostByCompanyId } from "../../services/https/post";
-import { getOverview, getStatusApplication } from "../../services/https";
+import { GetCompanyByUserIdForNewCompany, getOverview, getStatusApplication } from "../../services/https";
 import Overview from "../company/analysis/Overview";
 import TrendChart from "../company/analysis/TrendChart";
 import PipelineFunnel from "../company/analysis/PipelineFunnel";
@@ -20,9 +19,8 @@ dayjs.extend(isBetween);
 const { Text, Title } = Typography;
 
 // -------------------- Component --------------------
-const CompanyDashboard = () => {
+const CompanyDashboard = () => {  
   const [messageApi, contextHolder] = message.useMessage();
-
   const [loading, setLoading] = useState(false);
 
   // data states
@@ -79,45 +77,36 @@ const CompanyDashboard = () => {
     (async () => {
       setLoading(true);
       try {
-        // 1) หา companyId จาก user ปัจจุบัน
         const userId = Number(localStorage.getItem("id"));
         if (!userId) {
           messageApi.error("ไม่พบ user id ใน localStorage");
           return;
         }
-        const compRes = await GetCompanyByUserID(userId);
 
+        const compRes = await GetCompanyByUserIdForNewCompany(userId);
+
+        // ⬇️ ไม่พบบริษัท → เด้งไปหน้าเพิ่มบริษัททันที และหยุดทำงานที่เหลือ
         if (!compRes) {
-          messageApi.error("ดึงข้อมูลบริษัทไม่สำเร็จ");
+          navigate("/company/add-company", { replace: true });
+          messageApi.info("โปรดเพิ่มข้อมูลบริษัทก่อนใช้งานแดชบอร์ด");
           return;
         }
+
         setCompany(compRes);
 
-        // 3) ยิงทุก analytics พร้อมกัน + ดึงโพสต์เพื่อนับสถานะ
-        const [overview, statusApplication, postByCompanyId] =
-          await Promise.all([
-            getOverview(compRes.ID),
-            getStatusApplication(compRes.ID),
-            GetPostByCompanyId(compRes.ID),
-          ]);
+        const [overview, statusApplication, postByCompanyId] = await Promise.all([
+          getOverview(compRes.ID!),
+          getStatusApplication(compRes.ID!),
+          GetPostByCompanyId(compRes.ID!),
+        ]);
 
-        // 4) เซ็ต state
         setOverview(overview ?? null);
         setFunnelData(Array.isArray(statusApplication) ? statusApplication : []);
 
-        if (
-          postByCompanyId?.status === 200 &&
-          Array.isArray(postByCompanyId.data)
-        ) {
-          const open = postByCompanyId.data.filter(
-            (p: any) => p?.StatusPost?.status_post === "Open"
-          ).length;
-          const closed = postByCompanyId.data.filter(
-            (p: any) => p?.StatusPost?.status_post === "Closed"
-          ).length;
-          const pending = postByCompanyId.data.filter(
-            (p: any) => p?.StatusPost?.status_post === "Pending Approval"
-          ).length;
+        if (postByCompanyId?.status === 200 && Array.isArray(postByCompanyId.data)) {
+          const open = postByCompanyId.data.filter((p: any) => p?.StatusPost?.status_post === "Open").length;
+          const closed = postByCompanyId.data.filter((p: any) => p?.StatusPost?.status_post === "Closed").length;
+          const pending = postByCompanyId.data.filter((p: any) => p?.StatusPost?.status_post === "Pending Approval").length;
           setPostStatusCounts({ open, closed, pending });
         }
       } catch (err) {

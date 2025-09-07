@@ -227,6 +227,9 @@ func main() {
 		academicstaffGroup.GET("/verify/:user_id", controller.GetVerifyByUserId)
 		academicstaffGroup.POST("/verify/:user_id", controller.CreateSendVerifyAcademicStaffy)
 		academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
+		academicstaffGroup.GET("/student/advisor/:user_id", controller.GetAdviseeStudents)
+		academicstaffGroup.GET("/company/advisor/:user_id", controller.GetAdviseeCompanySummary)
+		
 	}
 
 	// contact
@@ -251,13 +254,13 @@ func main() {
 	// analysis
 	analysisGroup := protected.Group("/analysis")
 	{
-		analysisGroup.GET("/dashboard-summary", analysis.GetAdminStatusSummaries)
+		//analysisGroup.GET("/dashboard-summary", analysis.GetAdminStatusSummaries)
 		analysisGroup.GET("/dashboard-overview", analysis.GetAdminDashboardOverview)
-		analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
-		analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
-		analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
+		//analysisGroup.GET("/monthly-application-stats", analysis.GetAdminMonthlyApplicationStats)
+		//analysisGroup.GET("/recent-activities", analysis.GetAdminRecentActivities)
+		//analysisGroup.GET("/pending-posts", analysis.GetAdminPendingPosts)
 		analysisGroup.GET("/monthly-user-by-role", analysis.GetMonthlyUsersByRole)
-		analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
+		//analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
 		analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
 		analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
 	}
@@ -270,8 +273,13 @@ func main() {
 	analysisAcademicGroup := r.Group("/analysis/academic/user/:userId")
 	{
 		analysisAcademicGroup.GET("/dashboard/overview", analysis.GetAcademicOverview)
+		analysisAcademicGroup.GET("/trend", analysis.GetAcademicTrend)
 		analysisAcademicGroup.GET("/students", analysis.ListAcademicStudents)
 		analysisAcademicGroup.GET("/applications", analysis.ListAcademicApplications)
+	}
+	analysisAdminGroup := r.Group("/analysis/admin")
+	{
+		analysisAdminGroup.GET("/trend", analysis.GetTrendForAdmin)
 	}
 	
 	// articles (ต้องล็อกอิน)
@@ -288,6 +296,7 @@ func main() {
 	{
 		verifyGroup.GET("", controller.GetAllVerifications)
 		verifyGroup.GET("/:id", controller.GetVerificationByID)
+		verifyGroup.GET("/user/:user_id/latest", controller.GetLatestVerificationByUserID)
 		verifyGroup.GET("/status", controller.GetAllStatusVerify)
 		verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
 	}

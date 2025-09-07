@@ -117,70 +117,6 @@ func GetAcademicOverview(c *gin.Context) {
 		Where("e.university_id = ? AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.student_id = s.id)", universityID).
 		Count(&neverApplied)
 
-		// ===== 6) แนวโน้มการสมัครรายสัปดาห์/รายเดือน/รายเทอม =====
-		// ========== แนวโน้มรายสัปดาห์ ==========
-	var appsPerWeek []KVTime
-	db.Table("applications a").
-		Joins("JOIN students s ON s.id = a.student_id").
-		Joins("JOIN educations e ON e.student_id = s.id").
-		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
-		Where("e.university_id = ?", universityID).
-		Select(`
-		strftime('%Y-%W', a.created_at) AS period,
-		COUNT(*) AS count
-	`).
-		Group("period").
-		Order("period").
-		Scan(&appsPerWeek)
-
-	// ========== แนวโน้มรายเดือน ==========
-	var appsPerMonth []KVTime
-	db.Table("applications a").
-		Joins("JOIN students s ON s.id = a.student_id").
-		Joins("JOIN educations e ON e.student_id = s.id").
-		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
-		Where("e.university_id = ?", universityID).
-		Select(`
-		strftime('%Y-%m', a.created_at) AS period,
-		COUNT(*) AS count
-	`).
-		Group("period").
-		Order("period").
-		Scan(&appsPerMonth)
-
-	// ========== แนวโน้มรายเทอม (กำหนดช่วงเทอม) ==========
-	// สมมติ: ส.ค.–ธ.ค. = เทอม 1, ม.ค.–พ.ค. = เทอม 2, มิ.ย.–ก.ค. = ช่วงฤดูร้อน S
-	var appsPerSemester []KVTime
-	db.Table("applications a").
-		Joins("JOIN students s ON s.id = a.student_id").
-		Joins("JOIN educations e ON e.student_id = s.id").
-		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
-		Where("e.university_id = ?", universityID).
-		Select(`
-		CASE
-		  WHEN CAST(strftime('%m', a.created_at) AS INTEGER) BETWEEN 8 AND 12
-		    THEN strftime('%Y', a.created_at) || '-1'
-		  WHEN CAST(strftime('%m', a.created_at) AS INTEGER) BETWEEN 1 AND 5
-		    THEN strftime('%Y', a.created_at) || '-2'
-		  ELSE strftime('%Y', a.created_at) || '-S'
-		END AS period,
-		COUNT(*) AS count
-	`).
-		Group("period").
-		Order("period").
-		Scan(&appsPerSemester)
-
-	// กัน null ใน response: ถ้าไม่มีผลลัพธ์ให้เป็น [] แทน
-	if appsPerWeek == nil {
-		appsPerWeek = []KVTime{}
-	}
-	if appsPerMonth == nil {
-		appsPerMonth = []KVTime{}
-	}
-	if appsPerSemester == nil {
-		appsPerSemester = []KVTime{}
-	}
-
 	c.JSON(http.StatusOK, AcademicOverviewResponse{
 		UniversityID:         universityID,
 		Students:             int(studentsCount),
@@ -188,11 +124,128 @@ func GetAcademicOverview(c *gin.Context) {
 		TopCompanies:         topCompanies,
 		NeverApplied:         int(neverApplied),
 		InterviewsUpcoming:   int(interviewsUpcoming),
-
-		AppsPerWeek:     appsPerWeek,
-		AppsPerMonth:    appsPerMonth,
-		AppsPerSemester: appsPerSemester,
 	})
+}
+
+// GET /analysis/academic/user/:userId/trend
+// Query: ?start=YYYY-MM-DD&end=YYYY-MM-DD  หรือ  ?days=7|30|90
+func GetAcademicTrend(c *gin.Context) {
+	db := config.DB()
+
+	// 1) หาโปรไฟล์อาจารย์จาก userId -> เพื่อจำกัดที่มหาวิทยาลัยเดียวกัน
+	staff, ok := getAcademicByUserID(c, db)
+	if !ok {
+		return
+	}
+	universityID := staff.UniversityID
+
+	// 2) แปลงช่วงวันที่
+	startStr := c.Query("start")
+	endStr := c.Query("end")
+
+	var start, end time.Time
+	var err error
+	if startStr != "" && endStr != "" {
+		start, end, err = betweenStartEnd(startStr, endStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
+			return
+		}
+	} else {
+		start, end = betweenDays(c.Query("days"))
+	}
+
+	// 3) โครงสร้างผลลัพธ์
+	type TrendPoint struct {
+		Date        string `json:"date"`
+		Total       int64  `json:"total"`
+		Pass        int64  `json:"pass"`             // ผ่าน
+		Review      int64  `json:"review"`           // กำลังพิจารณา
+		Interviewed int64  `json:"interviewed"`      // นัดสัมภาษณ์แล้ว
+		Waiting     int64  `json:"waiting_schedule"` // รอการนัดสัมภาษณ์
+		Fail        int64  `json:"fail"`             // ไม่ผ่าน + ไม่ได้รับเลือก
+	}
+
+	// 4) ดึงข้อมูลแบบ Conditional Aggregation (ใช้ submit_at เป็นวันที่อ้างอิง)
+	passCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
+	reviewCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
+	interviewedCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'นัดสัมภาษณ์แล้ว' THEN 1 ELSE 0 END`
+	waitingCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
+	failCond := `
+		CASE
+		  WHEN REPLACE(TRIM(a.status),' ','') = 'ไม่ผ่าน'
+		    OR INSTR(REPLACE(TRIM(a.status),' ',''),'ไม่ผ่าน') > 0
+		    OR REPLACE(TRIM(a.status),' ','') = 'ไม่ได้รับเลือก'
+		    OR INSTR(REPLACE(TRIM(a.status),' ',''),'ไม่ได้รับเลือก') > 0
+		  THEN 1 ELSE 0
+		END
+	`
+
+	type row struct {
+		Date        string
+		Total       int64
+		Pass        int64
+		Review      int64
+		Interviewed int64
+		Waiting     int64
+		Fail        int64
+	}
+	var rows []row
+
+	latestEdu := db.Table("educations").
+		Select("student_id, MAX(created_at) as max_created_at").
+		Group("student_id")
+
+	if err := db.Table("applications a").
+		Select(`
+			DATE(a.submit_at) AS date,
+			COUNT(*) AS total,
+			SUM(`+passCond+`) AS pass,
+			SUM(`+reviewCond+`) AS review,
+			SUM(`+interviewedCond+`) AS interviewed,
+			SUM(`+waitingCond+`) AS waiting,
+			SUM(`+failCond+`) AS fail
+		`).
+		Joins("JOIN students s ON s.id = a.student_id").
+		Joins("JOIN educations e ON e.student_id = s.id").
+		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
+		Where("e.university_id = ?", universityID).
+		Where("a.submit_at BETWEEN ? AND ?", start, end.Add(24*time.Hour-1)).
+		Group("DATE(a.submit_at)").
+		Order("DATE(a.submit_at)").
+		Scan(&rows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 5) เติมวันที่ให้ครบช่วง
+	byDate := make(map[string]row, len(rows))
+	for _, r := range rows {
+		byDate[r.Date] = r
+	}
+
+	points := make([]TrendPoint, 0, int(end.Sub(start).Hours()/24)+1)
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		day := d.Format("2006-01-02")
+		if r, ok := byDate[day]; ok {
+			points = append(points, TrendPoint{
+				Date:        day,
+				Total:       r.Total,
+				Pass:        r.Pass,
+				Review:      r.Review,
+				Interviewed: r.Interviewed,
+				Waiting:     r.Waiting,
+				Fail:        r.Fail,
+			})
+		} else {
+			points = append(points, TrendPoint{
+				Date:  day,
+				Total: 0, Pass: 0, Review: 0, Interviewed: 0, Waiting: 0, Fail: 0,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, points)
 }
 
 // GET /analysis/academic/user/:userId/students?page=&page_size=&q=
@@ -230,6 +283,7 @@ func ListAcademicStudents(c *gin.Context) {
 			s.first_name,
 			s.last_name,
 			s.age,
+			us.email,
 			COALESCE(genders.name_th, '') AS gender,
 			COALESCE(p.name_th, '')      AS program_name,
 			COALESCE(f.name_th, '')      AS faculty_name,
@@ -242,6 +296,7 @@ func ListAcademicStudents(c *gin.Context) {
 		`).
 		Joins("LEFT JOIN genders ON genders.id = s.gender_id").
 		Joins("JOIN educations e ON e.student_id = s.id").
+		Joins("JOIN users us ON us.id = s.user_id").
 		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
 		Joins("LEFT JOIN programs p ON p.id = e.program_id").
 		Joins("LEFT JOIN faculties f ON f.id = e.faculty_id").
@@ -262,6 +317,7 @@ func ListAcademicStudents(c *gin.Context) {
 		LastName          string
 		Age               uint
 		Gender            string
+		Email             string
 		ProgramName       string
 		FacultyName       string
 		UniversityName    string
@@ -281,6 +337,7 @@ func ListAcademicStudents(c *gin.Context) {
 			LastName:          r.LastName,
 			Age:               r.Age,
 			Gender:            r.Gender,
+			Email:             r.Email,
 			ProgramName:       r.ProgramName,
 			FacultyName:       r.FacultyName,
 			UniversityName:    r.UniversityName,

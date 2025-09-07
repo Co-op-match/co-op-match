@@ -1,18 +1,16 @@
 import React from "react";
 import { Modal, Button, Space } from "antd";
 import { FilePdfOutlined, FileImageOutlined } from "@ant-design/icons";
+import { fileURL } from "@/config/env";
 
 type FileKind = "pdf" | "image" | string;
 
 interface Document { name: string; url: string; fileType: FileKind; }
 interface DocumentModalProps { open: boolean; selectedDocument: Document | null; onCancel: () => void; }
 
-const API_BASE_URL = "http://localhost:8000";
-
-const normalizeUrl = (u?: string) => (!u ? "" : u.startsWith("http") ? u : `${API_BASE_URL}${u}`);
 
 const DocumentModal: React.FC<DocumentModalProps> = ({ open, selectedDocument, onCancel }) => {
-  const src = normalizeUrl(selectedDocument?.url);
+  const src = fileURL(selectedDocument?.url);
   const isPdf = selectedDocument?.fileType === "pdf";
   const isImage = selectedDocument?.fileType === "image";
   const displayName = selectedDocument?.name ?? "เอกสารแนบ";
