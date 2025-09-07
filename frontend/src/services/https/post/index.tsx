@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // URL ของ API backend
-const apiUrl = "http://localhost:8000"; // เปลี่ยน URL ให้ตรงกับเซิร์ฟเวอร์ของคุณ
+const apiUrl = "api.coop-match.online"; // เปลี่ยน URL ให้ตรงกับเซิร์ฟเวอร์ของคุณ
 
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
