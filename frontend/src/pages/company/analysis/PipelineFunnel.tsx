@@ -34,7 +34,7 @@ const PipelineHorizontalBar: React.FC<Props> = ({
           }}
         >
           <div style={{ fontWeight: 600, marginBottom: 2 }}>{d.name}</div>
-          <div>จำนวน: <strong>{d.value.toLocaleString("th-TH")}</strong> คน</div>
+          <div>จำนวน: <strong>{d.value?.toLocaleString("th-TH")}</strong> คน</div>
         </div>
       );
     }

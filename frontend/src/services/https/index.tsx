@@ -174,6 +174,14 @@ export async function UpdateStatusPost(postId: number, data: { StatusPostID: num
     .catch((e) => e.response);
 }
 
+// helper แปลง path เป็น URL เต็ม
+export function toFileURL(path?: string) {
+  if (!path) return "";
+  // ถ้า backend เสิร์ฟ static จาก root ("/public/...")
+  if (/^https?:\/\//.test(path)) return path;
+  return `${apiUrl}${path}`;
+}
+
 //=======================================Admin============================================
 export async function GetAdminById(id: number) {
   return await axios
@@ -221,6 +229,12 @@ export async function GetVerificationByID(id: number) {
   return await axios
     .get(`${apiUrl}/verify/${id}`, requestOptions)
     .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetLatestVerificationByUserID(user_id: number) {
+  return await axios
+    .get(`${apiUrl}/verify/user/${user_id}/latest`, requestOptions)
+    .then((res) => res.data)
     .catch((e) => e.response);
 }
 export async function GetAllStatusVerify() {
@@ -284,7 +298,17 @@ async function GetAcademicStaffByUserId(user_id: number): Promise<AcademicStaffI
     throw e.response || e;
   }
 }
-
+export async function GetAcademicStaffByUserIdForNewCompany(user_id: number): Promise<AcademicStaffInterface | null> {
+  try {
+    const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    if (axios.isAxiosError(e) && e.response?.status === 404) {
+      return null; // เจอ 404 → ยังไม่มีอาจารย์ของ user นี้
+    }
+    throw e; // โยน error อื่นต่อ (500, เน็ตหลุด ฯลฯ)
+  }
+}
 async function GetAcademicStaffId(id: number): Promise<AcademicStaffInterface> {
   try {
     const res = await axios.get<AcademicStaffInterface>(`${apiUrl}/academicstaff/${id}`, requestOptions);
@@ -313,12 +337,12 @@ async function CreateSendVerifyAcademicStaff(user_id: number ,data: FormData) {
   .catch(e => e.response);
 }
 //=============================== Analysis ==============================//
-export async function GetAdminDashboardSummary () {
+/* export async function GetAdminDashboardSummary () {
   return await axios
     .get(`${apiUrl}/analysis/dashboard-summary`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
-}
+} */
 export async function GetAdminDashboardOverview () {
   return await axios
     .get(`${apiUrl}/analysis/dashboard-overview`, requestOptions)
@@ -331,39 +355,49 @@ export async function GetAllLoginLogs () {
     .then((res) => res)
     .catch((e) => e.response);
 }
-export async function GetAdminMonthlyApplicationStats () {
+/* export async function GetAdminMonthlyApplicationStats () {
   return await axios
     .get(`${apiUrl}/analysis/monthly-application-stats`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
-}
-export async function GetAdminRecentActivities () {
+} */
+/* export async function GetAdminRecentActivities () {
   return await axios
     .get(`${apiUrl}/analysis/recent-activities`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
-}
-export async function GetAdminPendingPosts () {
+} */
+/* export async function GetAdminPendingPosts () {
   return await axios
     .get(`${apiUrl}/analysis/pending-posts`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
-}
-export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'year'; year: number }) {
+} */
+/* export async function GetUsersByRoleSeries(params: { mode: 'month'|'quarter'|'year'; year: number }) {
   const { mode, year } = params;
   return await axios
     .get(`${apiUrl}/analysis/users-by-role-series`, { params: { mode, year } })
     .then(res => res)
     .catch(e => e.response);
-}
+} */
 export async function GetMonthlyUsersByRole () {
   return await axios
     .get(`${apiUrl}/analysis/monthly-user-by-role`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
-export const GetTopJobs = () => axios.get(`${apiUrl}/analysis/top-jobs`, requestOptions);
-export const GetPopularCompanies = () => axios.get(`${apiUrl}/analysis/popular-companies`, requestOptions);
+export async function GetTopJobs ()  {
+  return await axios
+    .get(`${apiUrl}/analysis/top-jobs`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetPopularCompanies ()  {
+  return await axios
+    .get(`${apiUrl}/analysis/popular-companies`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
 
 export async function getOverview (companyId: number) {
   return await axios
@@ -387,11 +421,58 @@ export async function getTrend (companyId: number, start?: string, end?: string,
     throw err?.response?.data || err;
   }
 }
-export async function getPipeline (companyId: number) {
+export async function getStatusApplication (companyId: number) {
   return await axios
     .get(`${apiUrl}/analysis/company/${companyId}/status-application`, requestOptions)
     .then((res) => res.data)
     .catch((e) => e.response);
+}
+
+export async function getAcademicOverview(userId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/academic/user/${userId}/dashboard/overview`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function listAcademicStudents(userId: number, params: { page?: number; page_size?: number; q?: string }) {
+  return await axios
+    .get(`${apiUrl}/analysis/academic/user/${userId}/students`, { params })
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function listAcademicApplications(userId: number, params: { status?: string; page?: number; page_size?: number; q?: string }) {
+  return await axios
+    .get(`${apiUrl}/analysis/academic/user/${userId}/applications`, { params })
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
+export async function getAcademicTrend(
+  userId: number,
+  opts?: { start?: string; end?: string; days?: number },
+  signal?: AbortSignal
+) {
+  const { start, end, days = 30 } = opts ?? {};
+  const base = `${apiUrl}/analysis/academic/user/${userId}/trend`;
+  const url =
+    start && end
+      ? `${base}?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`
+      : `${base}?days=${days}`;
+
+  try {
+    const config: any = { ...requestOptions };
+    if (signal) config.signal = signal; // รองรับ abort (Axios v1+)
+    const res = await axios.get(url, config);
+    return res.data;
+  } catch (err: any) {
+    // โยนต่อให้ฝั่ง caller จัดการ
+    throw err?.response?.data || err;
+  }
+}
+export async function GetTrendForAdmin (params?: { start?: string; end?: string; days?: number | string }) {
+  return await axios
+    .get(`${apiUrl}/analysis/admin/trend`, { params })
+    .then(res => res)
+    .catch(e => e.response);
 }
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
@@ -506,6 +587,17 @@ async function GetCompanyByUserId(user_id: number): Promise<CompanyInterface> {
     return res.data;
   } catch (e: any) {
     throw e.response || e;
+  }
+}
+export async function GetCompanyByUserIdForNewCompany(user_id: number): Promise<CompanyInterface | null> {
+  try {
+    const res = await axios.get<CompanyInterface>(`${apiUrl}/company/user/${user_id}`, requestOptions);
+    return res.data;
+  } catch (e: any) {
+    if (axios.isAxiosError(e) && e.response?.status === 404) {
+      return null; // เจอ 404 → ยังไม่มีบริษัทของ user นี้
+    }
+    throw e; // โยน error อื่นต่อ (500, เน็ตหลุด ฯลฯ)
   }
 }
 async function GetCompanyId(id: number): Promise<CompanyInterface> {

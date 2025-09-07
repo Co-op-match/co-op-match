@@ -3,11 +3,10 @@ package entity
 import (
 	"time"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-type Analysis struct {
+/* type Analysis struct {
 	gorm.Model
 
 	AnalysisTypeID uint         `json:"analysis_type_id"`
@@ -35,7 +34,7 @@ type AnalysisType struct {
 	TypeCode string     `json:"type_code"` // เช่น application, review, matching, post
 	TypeName string     `json:"type_name"` // เช่น การสมัคร, รีวิว, การจับคู่, โพสต์
 	Analyses []Analysis `gorm:"foreignKey:AnalysisTypeID"`
-}
+} */
 
 type MonthlyUserRoleStat struct {
   gorm.Model
@@ -48,7 +47,7 @@ type MonthlyUserRoleStat struct {
   Cumulative    bool      `json:"cumulative"`
   SnapshotAt    time.Time `json:"snapshot_at"`
 }
-type VerificationStatusSnapshot struct {
+/* type VerificationStatusSnapshot struct {
 	gorm.Model
 	AsOfDate   time.Time `json:"as_of_date" gorm:"index"` // วัน/ชั่วโมงที่สรุป
 	Pending    int       `json:"pending"`
@@ -57,7 +56,7 @@ type VerificationStatusSnapshot struct {
 	NotSent    int       `json:"not_sent"`
 }
 
-/* type TopJob struct {
+type TopJob struct {
 	Name  string `json:"name"`
 	Count int64  `json:"count"`
 }
@@ -69,9 +68,9 @@ type PopularCompany struct {
 	Interviews int64  `json:"interviews"`
 	Accepted   int64  `json:"accepted"`
 	Completed  int64  `json:"completed"`
-} */
+}
 
-/*************************************** ยังไม่ใช้ ******************************************/
+************************************** ยังไม่ใช้ *****************************************
 // วิเคราะห์ทักษะที่บริษัทต้องการมากที่สุด
 type SkillDemandAnalysis struct {
 	gorm.Model
@@ -153,3 +152,4 @@ type UniversityApplicationAnalysis struct {
 
 	Year int `json:"year"`
 }
+ */
