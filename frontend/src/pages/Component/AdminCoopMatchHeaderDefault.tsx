@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserByIdhaveStatusData } from "../../services/https";
@@ -98,12 +98,12 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   {
     key: "manage",
     icon: <FileTextOutlined />,
-    label: "จัดการ Post",
+    label: "จัดการโพสต์",
     children: [
       {
         key: "manage-posts",          // คงคีย์เดิมไว้เพื่อให้ลิงก์เดิมทำงาน
         icon: <FileTextOutlined />,
-        label: "ภาพรวมโพสต์",
+        label: "จัดการโพสต์งาน",
       },
       {
         key: "articles",              // เมนูย่อย: จัดการข่าว/บทความ
@@ -116,11 +116,6 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     key: "verify",
     icon: <CheckCircleOutlined />,
     label: "ตรวจสอบการรับรอง",
-  },
-  {
-    key: "notifications",
-    icon: <BellOutlined />,
-    label: "การแจ้งเตือน",
   },
   // *** ลบรายการเดิมที่เคยเป็นระดับบน:
   // {
