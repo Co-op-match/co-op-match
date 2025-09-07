@@ -1,5 +1,5 @@
 import axios from "axios";
-const apiUrl = "http://api.coop-match.online";
+const apiUrl = "https://api.coop-match.online";
 
 function getAuthHeader() {
   const Authorization = localStorage.getItem("token");

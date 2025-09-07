@@ -17,7 +17,7 @@ import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
 import type { InputAcademicStaffInterface } from "@/interfaces/InputAcademicStaff";
 import { API_BASE } from "@/config/env";
 
-const apiUrl = "http://api.coop-match.online";
+const apiUrl = "https://api.coop-match.online";
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
 axios.defaults.withCredentials = true;
