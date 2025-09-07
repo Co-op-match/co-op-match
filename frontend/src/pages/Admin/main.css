@@ -159,6 +159,10 @@
 .adminpage-dashboard-stats-card .ant-card-body {
   padding: 24px;
 }
+.adminpage-dashboard-stats-card.click {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
 /* Chart Cards */
 .adminpage-dashboard-chart-card {
   background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);

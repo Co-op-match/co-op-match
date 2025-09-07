@@ -155,7 +155,7 @@ const TopPostsCard: React.FC<Props> = ({
                     
                     {/* Progress Bar */}
                     <Progress
-                      percent={(item.applications / maxApplications) * 100}
+                      percent={(item.applications! / maxApplications) * 100}
                       size="small"
                       strokeColor={{
                         '0%': getRankColor(index),
@@ -185,7 +185,7 @@ const TopPostsCard: React.FC<Props> = ({
                           type="primary"
                           size="small"
                           icon={<EyeOutlined />}
-                          onClick={() => onViewApplicants?.(item.postId)}
+                          onClick={() => onViewApplicants?.(item.postId!)}
                           style={{
                             borderRadius: 6,
                             height: 28,

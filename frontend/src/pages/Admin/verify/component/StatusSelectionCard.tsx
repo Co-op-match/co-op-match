@@ -8,9 +8,7 @@ const { TextArea } = Input;
 
 interface Props {
   selectedStatus: StatusVerifyInterface | undefined;
-  setSelectedStatus: React.Dispatch<
-    React.SetStateAction<StatusVerifyInterface | undefined>
-  >;
+  setSelectedStatus: React.Dispatch<React.SetStateAction<StatusVerifyInterface | undefined>>;
   statusVerifications: StatusVerifyInterface[];
   loading?: boolean;
   isReadOnlyStatus?: boolean;
@@ -26,29 +24,44 @@ const StatusSelectionCard: React.FC<Props> = ({
   loading,
   isReadOnlyStatus,
   verifyForm,
+  rejectReason,
   setRejectReason,
 }) => {
+  const findStatus = (label: "รับรอง" | "ปฏิเสธ") =>
+    statusVerifications.find((s) => s.status_verify === label);
+
+  const setStatus = (label: "รับรอง" | "ปฏิเสธ") => setSelectedStatus(findStatus(label));
+
+  const disabled = Boolean(isReadOnlyStatus || loading);
+  const isSelected = (label: "รับรอง" | "ปฏิเสธ") => selectedStatus?.status_verify === label;
+
+  const cards: Array<{
+    label: "รับรอง" | "ปฏิเสธ";
+    title: string;
+    activeBorder: string;
+    activeBg: string;
+  }> = [
+    {
+      label: "รับรอง",
+      title: "อนุมัติการรับรอง",
+      activeBorder: "#52c41a",
+      activeBg: "linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)",
+    },
+    {
+      label: "ปฏิเสธ",
+      title: "ปฏิเสธการรับรอง",
+      activeBorder: "#ff4d4f",
+      activeBg: "linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%)",
+    },
+  ];
+
   return (
     <Card
-      style={{
-        borderRadius: "16px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-        border: "none",
-        background: "white",
-      }}
-      styles={{ body: { padding: "24px" } }}
+      style={{ borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "none", background: "#fff" }}
+      styles={{ body: { padding: 24 } }}
     >
-      <div style={{ marginBottom: "20px" }}>
-        <Title
-          level={5}
-          style={{
-            margin: 0,
-            color: "#1677ff",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
+      <div style={{ marginBottom: 20 }}>
+        <Title level={5} style={{ margin: 0, color: "#1677ff", display: "flex", alignItems: "center", gap: 8 }}>
           <CheckCircleOutlined />
           เลือกสถานะการอนุมัติ
         </Title>
@@ -56,102 +69,48 @@ const StatusSelectionCard: React.FC<Props> = ({
 
       <Form form={verifyForm} layout="vertical">
         <Radio.Group
+          name="status_verify"
+          value={selectedStatus?.status_verify}
+          disabled={disabled}
+          style={{ width: "100%" }}
           onChange={(e) => {
-            if (loading) return;
-            const selected = ["รับรอง", "ปฏิเสธ"].find(
-              (v) => v === e.target.value
-            );
-            if (selected) {
-              setSelectedStatus(
-                statusVerifications.find((s) => s.status_verify === selected)
-              );
-            }
-            if (e.target.value !== "ปฏิเสธ") {
-              verifyForm?.resetFields(["reason"]);
+            const val = e.target.value as "รับรอง" | "ปฏิเสธ";
+            setStatus(val);
+            if (val !== "ปฏิเสธ") {
+              verifyForm?.resetFields?.(["reason"]);
               setRejectReason("");
             }
           }}
-          name="status_verify"
-          value={selectedStatus?.status_verify}
-          disabled={isReadOnlyStatus || loading}
-          style={{ width: "100%" }}
         >
           <Space direction="vertical" style={{ width: "100%" }} size="middle">
-            {/* รับรอง */}
-            <Card
-              style={{
-                cursor: isReadOnlyStatus || loading ? "not-allowed" : "pointer",
-                border:
-                  selectedStatus?.status_verify === "รับรอง"
-                    ? "2px solid #52c41a"
-                    : "1px solid #d9d9d9",
-                borderRadius: "12px",
-                opacity: loading ? 0.6 : 1,
-                background:
-                  selectedStatus?.status_verify === "รับรอง"
-                    ? "linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)"
-                    : "white",
-                transition: "all 0.3s ease",
-              }}
-              onClick={() =>
-                !isReadOnlyStatus &&
-                !loading &&
-                setSelectedStatus(
-                  statusVerifications.find((s) => s.status_verify === "รับรอง")
-                )
-              }
-              styles={{ body: { padding: "16px", textAlign: "center" } }}
-            >
-              <Radio
-                value="รับรอง"
-                style={{ fontSize: "14px", fontWeight: 600 }}
+            {cards.map(({ label, title, activeBorder, activeBg }) => (
+              <Card
+                key={label}
+                onClick={() => !disabled && setStatus(label)}
+                style={{
+                  cursor: disabled ? "not-allowed" : "pointer",
+                  border: isSelected(label) ? `2px solid ${activeBorder}` : "1px solid #d9d9d9",
+                  borderRadius: 12,
+                  opacity: loading ? 0.6 : 1,
+                  background: isSelected(label) ? activeBg : "#fff",
+                  transition: "all 0.3s ease",
+                }}
+                styles={{ body: { padding: 16, textAlign: "center" } }}
               >
-                อนุมัติการรับรอง
-              </Radio>
-            </Card>
-
-            {/* ปฏิเสธ */}
-            <Card
-              style={{
-                cursor: isReadOnlyStatus || loading ? "not-allowed" : "pointer",
-                border:
-                  selectedStatus?.status_verify === "ปฏิเสธ"
-                    ? "2px solid #ff4d4f"
-                    : "1px solid #d9d9d9",
-                borderRadius: "12px",
-                opacity: loading ? 0.6 : 1,
-                background:
-                  selectedStatus?.status_verify === "ปฏิเสธ"
-                    ? "linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%)"
-                    : "white",
-                transition: "all 0.3s ease",
-              }}
-              onClick={() =>
-                !isReadOnlyStatus &&
-                !loading &&
-                setSelectedStatus(
-                  statusVerifications.find((s) => s.status_verify === "ปฏิเสธ")
-                )
-              }
-              styles={{ body: { padding: "16px", textAlign: "center" } }}
-            >
-              <Radio
-                value="ปฏิเสธ"
-                style={{ fontSize: "14px", fontWeight: 600 }}
-              >
-                ปฏิเสธการรับรอง
-              </Radio>
-            </Card>
+                <Radio value={label} style={{ fontSize: 14, fontWeight: 600 }}>
+                  {title}
+                </Radio>
+              </Card>
+            ))}
           </Space>
         </Radio.Group>
 
-        {/* เหตุผลการปฏิเสธ */}
         {selectedStatus?.status_verify === "ปฏิเสธ" && (
-          <div style={{ marginTop: "20px" }}>
+          <div style={{ marginTop: 20 }}>
             <Divider style={{ margin: "16px 0" }} />
-            <div style={{ marginBottom: "12px" }}>
-              <Text strong style={{ color: "#ff4d4f", fontSize: "14px" }}>
-                <CloseCircleOutlined style={{ marginRight: "6px" }} />
+            <div style={{ marginBottom: 12 }}>
+              <Text strong style={{ color: "#ff4d4f", fontSize: 14 }}>
+                <CloseCircleOutlined style={{ marginRight: 6 }} />
                 เหตุผลการปฏิเสธ *
               </Text>
             </div>
@@ -159,23 +118,14 @@ const StatusSelectionCard: React.FC<Props> = ({
             <Form.Item
               name="reason"
               rules={[
-                {
-                  required: selectedStatus?.status_verify === "ปฏิเสธ",
-                  message: "กรุณากรอกเหตุผลการปฏิเสธ",
-                },
-                {
-                  min: 10,
-                  message: "เหตุผลการปฏิเสธต้องมีอย่างน้อย 10 ตัวอักษร",
-                },
-                {
-                  max: 500,
-                  message: "เหตุผลการปฏิเสธต้องไม่เกิน 500 ตัวอักษร",
-                },
+                { required: true, message: "กรุณากรอกเหตุผลการปฏิเสธ" },
+                { min: 10, message: "เหตุผลการปฏิเสธต้องมีอย่างน้อย 10 ตัวอักษร" },
+                { max: 500, message: "เหตุผลการปฏิเสธต้องไม่เกิน 500 ตัวอักษร" },
               ]}
               style={{ margin: 0 }}
             >
               <TextArea
-                value="reason"
+                value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="กรุณาระบุเหตุผลในการปฏิเสธการรับรองอย่างชัดเจน เช่น เอกสารไม่ชัดเจน, ข้อมูลไม่ถูกต้อง, หรือเอกสารไม่ครบถ้วน"
                 rows={4}
@@ -183,12 +133,9 @@ const StatusSelectionCard: React.FC<Props> = ({
                 showCount
                 maxLength={500}
                 style={{
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  background:
-                    selectedStatus?.status_verify === "ปฏิเสธ"
-                      ? "linear-gradient(135deg, #fff2f0 0%, #ffffff 100%)"
-                      : "white",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  background: "linear-gradient(135deg, #fff2f0 0%, #ffffff 100%)",
                   border: "1px solid #ff7875",
                 }}
               />

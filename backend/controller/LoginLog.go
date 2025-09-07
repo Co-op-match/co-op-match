@@ -12,6 +12,8 @@ func GetAllLoginLogs(c *gin.Context) {
 	var logs []entity.LoginLog
 	if err := config.DB().
 		Preload("User.Role").
+		Preload("User.ProfileImage").
+		Preload("User.Company").
 		Order("login_at DESC").
 		Find(&logs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get login logs"})

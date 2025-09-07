@@ -80,18 +80,8 @@ func SetupDatabase() {
 		&entity.StatusVerify{},
 		&entity.Tag{},
 		&entity.ReviewLike{},
-		&entity.Analysis{},
-		&entity.AnalysisType{},
 		&entity.LoginLog{},
-		&entity.SkillDemandAnalysis{},
-		&entity.ApplicationStatistics{},
-		&entity.StudentPerformanceAnalysis{},
-		&entity.CompanyReviewStats{},
-		&entity.InterestTrendAnalysis{},
 		&entity.ReviewAnalysis{},
-		&entity.UniversityApplicationAnalysis{},
-		&entity.MonthlyUserRoleStat{},
-		&entity.VerificationStatusSnapshot{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
@@ -129,13 +119,13 @@ func createSeedData(db *gorm.DB) {
 	//User
 	User := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
-		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+/* 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, */
 
 		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 
-		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+/* 		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
@@ -148,7 +138,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn4@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
+		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, */
 	}
 	for _, pkg := range User {
 		db.Unscoped().FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
@@ -157,21 +147,21 @@ func createSeedData(db *gorm.DB) {
 	// Seed Profile Images
 	profileImages := []entity.ProfileImage{
 		{
-			ImageURL: "https://example.com/profiles/user1.jpg",
+			ImageURL: "/uploads/admin-profile.png",
 			UserID:   1,
 		},
 		{
-			ImageURL: "https://example.com/profiles/user2.jpg",
+			ImageURL: "/uploads/admin-profile.png",
 			UserID:   2,
 		},
-		{
+/* 		{
 			ImageURL: "https://img2.pic.in.th/pic/Co-op-match-Photoroom.png",
 			UserID:   3,
 		},
 		{
 			ImageURL: "https://example.com/profiles/user4.jpg",
 			UserID:   4,
-		},
+		}, */
 	}
 	for _, pkg := range profileImages {
 		db.FirstOrCreate(&pkg, entity.ProfileImage{UserID: pkg.UserID})
@@ -224,7 +214,7 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// ที่อยู่ (Address)
-	addresses := []entity.Address{
+/* 	addresses := []entity.Address{
 		{HouseNumber: "123", Village: "หมู่บ้าน ABC", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 		{HouseNumber: "456", Village: "หมู่บ้าน XYZ", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 		{HouseNumber: "789", Village: "หมู่บ้าน QWE", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
@@ -249,7 +239,7 @@ func createSeedData(db *gorm.DB) {
 			SubDistrictID: addr.SubDistrictID,
 			Province:      addr.Province,
 		})
-	}
+	} */
 
 	// แอดมิน (Admin)
 	admins := []entity.Admin{
@@ -260,17 +250,7 @@ func createSeedData(db *gorm.DB) {
 		db.Unscoped().FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
 	}
 
-	// Seed Permission
-	permissions := []entity.Permission{
-		{Name: "Read", Description: "Read-only access", AdminID: 1},
-		{Name: "Write", Description: "Write access", AdminID: 1},
-		{Name: "Delete", Description: "Delete access", AdminID: 1},
-	}
-	for _, p := range permissions {
-		db.FirstOrCreate(&p, entity.Permission{Name: p.Name})
-	}
-
-	// บุคลากรทางวิชาการ (AcademicStaff)
+/* 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
 		{
 			AcademicPosition: "อาจารย์", Age: 40,
@@ -315,9 +295,9 @@ func createSeedData(db *gorm.DB) {
 			Where(entity.AcademicStaff{UserID: s.UserID}).
 			Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
 			FirstOrCreate(&entity.AcademicStaff{})
-	}
+	} */
 
-	students := []entity.Student{
+/* 	students := []entity.Student{
 		{
 			FirstName:   "สมชาย",
 			LastName:    "ใจดี",
@@ -411,9 +391,9 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, s := range students {
 		db.Unscoped().FirstOrCreate(&s, entity.Student{UserID: s.UserID})
-	}
+	} */
 
-	companies := []entity.Company{
+/* 	companies := []entity.Company{
 		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", UserID: 2, AddressID: 11},
 		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", UserID: 6, AddressID: 12},
 		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", UserID: 7, AddressID: 13},
@@ -422,7 +402,7 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, company := range companies {
 		db.Unscoped().FirstOrCreate(&company, entity.Company{UserID: company.UserID})
-	}
+	} */
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
@@ -445,7 +425,7 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
 
-	intershipPosts := []entity.IntershipPost{
+/* 	intershipPosts := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
 			PostDescription: "Join our team as a software development intern",
@@ -656,10 +636,10 @@ func createSeedData(db *gorm.DB) {
 		var benefits []entity.Benefit
 		db.Where("id IN ?", benefitIDs).Find(&benefits)
 		db.Model(&intershipPosts[i]).Association("Benefits").Replace(benefits)
-	}
+	} */
 
 	// Step 2: Map post index → skills
-	skillMap := map[int][]uint{
+/* 	skillMap := map[int][]uint{
 		0: {1, 2}, // Software Dev → Python, Java
 		1: {1, 5}, // Data Science → Python, Data Analysis
 		2: {1, 5}, // AI/ML → Python, Data Analysis
@@ -678,7 +658,7 @@ func createSeedData(db *gorm.DB) {
 				db.FirstOrCreate(&reqSkill, reqSkill)
 			}
 		}
-	}
+	} */
 
 	/*
 		for _, post := range intershipPosts {
@@ -730,7 +710,7 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.Interest{InterestName: pkg.InterestName})
 	}
 	// Seed Student Skills
-	studentSkills := []entity.StudentSkill{
+	/* studentSkills := []entity.StudentSkill{
 		{SkillID: 1, StudentID: 1}, // Python
 		{SkillID: 2, StudentID: 1}, // Java
 		{SkillID: 4, StudentID: 1}, // SQL
@@ -739,7 +719,7 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, pkg := range studentSkills {
 		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
-	}
+	} */
 	/*
 		companyRequiredSkills := []entity.CompanyRequiredSkill{
 			{SkillID: 1, IntershipPostID: 1}, // Python for Software Dev
@@ -755,7 +735,7 @@ func createSeedData(db *gorm.DB) {
 			})
 		}
 	*/
-	studentInterests := []entity.StudentInterest{
+	/* studentInterests := []entity.StudentInterest{
 		{StudentID: 1, InterestID: 1}, // Web Development
 		{StudentID: 1, InterestID: 3}, // Data Science
 		{StudentID: 2, InterestID: 4}, // AI/ML
@@ -767,7 +747,7 @@ func createSeedData(db *gorm.DB) {
 			StudentID:  si.StudentID,
 			InterestID: si.InterestID,
 		})
-	}
+	} */
 
 	// Seed Educational Background
 	EducationLevels := []entity.EducationLevel{
@@ -779,7 +759,7 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.EducationLevel{Name: pkg.Name})
 	}
 	// 4. เพิ่มข้อมูล Education
-	education := entity.Education{
+	/* education := entity.Education{
 		UniversityID:     1,
 		FacultyID:        1,
 		ProgramID:        1,
@@ -794,8 +774,8 @@ func createSeedData(db *gorm.DB) {
 		StudentID: education.StudentID,
 		ProgramID: education.ProgramID,
 		Year:      education.Year,
-	})
-	interviewAppointments := []entity.InterviewAppointment{
+	}) */
+	/* interviewAppointments := []entity.InterviewAppointment{
 		{
 			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
@@ -825,7 +805,7 @@ func createSeedData(db *gorm.DB) {
 			CompanyID:       appointment.CompanyID,
 			AppointmentDate: appointment.AppointmentDate,
 		})
-	}
+	} */
 
 	// Seed Notification Types
 
@@ -850,24 +830,24 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
-	verifies := []entity.Verify{
+/* 	verifies := []entity.Verify{
 		{
-			VerificationDocument: "/uploads/verifyDocument/001.png",
+			VerificationDocument: "/uploads/verifyDocument/Company/06-09-2025.png",
 			StatusVerifyID:       2,
 			UserID:               2,
 		},
 		{
-			VerificationDocument: "/uploads/verifyDocument/002.pdf",
+			VerificationDocument: "/uploads/verifyDocument/Company/06-09-2025.png",
 			StatusVerifyID:       2,
 			UserID:               6,
 		},
 		{
-			VerificationDocument: "/uploads/verifyDocument/001.png",
+			VerificationDocument: "/uploads/verifyDocument/AcademicStaff/06-09-2025.png",
 			StatusVerifyID:       2,
 			UserID:               4,
 		},
 		{
-			VerificationDocument: "/uploads/verifyDocument/002.pdf",
+			VerificationDocument: "/uploads/verifyDocument/AcademicStaff/06-09-2025.png",
 			StatusVerifyID:       2,
 			UserID:               14,
 		},
@@ -890,9 +870,9 @@ func createSeedData(db *gorm.DB) {
 			Reason:               "",
 		}
 		db.FirstOrCreate(&verify, entity.Verify{UserID: verify.UserID})
-	}
+	} */
 
-	reviews := []entity.Review{
+/* 	reviews := []entity.Review{
 		{Rating: 5, Comment: "ได้เรียนรู้งานจริงจากโปรเจกต์ในบริษัท ทีมงานใจดีและให้คำแนะนำดีมาก", Like: 10, CreatedAt: time.Date(2024, 2, 1, 10, 0, 0, 0, time.UTC), StudentID: 1, CompanyID: 1},
 		{Rating: 4, Comment: "บรรยากาศในการทำงานดี เพื่อนร่วมงานเป็นกันเอง", Like: 7, CreatedAt: time.Date(2024, 2, 3, 11, 30, 0, 0, time.UTC), StudentID: 2, CompanyID: 1},
 		{Rating: 3, Comment: "ได้รับมอบหมายงานน้อย แต่ได้เรียนรู้ระบบงานจริง", Like: 5, CreatedAt: time.Date(2024, 1, 20, 9, 15, 0, 0, time.UTC), StudentID: 3, CompanyID: 1},
@@ -905,8 +885,8 @@ func createSeedData(db *gorm.DB) {
 	for _, review := range reviews {
 		db.Create(&review)
 	}
-
-	applications := []entity.Application{
+ */
+/* 	applications := []entity.Application{
 		{
 			Status:          "ผ่าน",
 			ResumeUrl:       "resume_student1.pdf",
@@ -973,9 +953,9 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, app := range applications {
 		db.Create(&app)
-	}
+	} */
 
-	analysisTypes := []entity.AnalysisType{
+/* 	analysisTypes := []entity.AnalysisType{
 		{TypeCode: "application", TypeName: "การสมัคร"},
 		{TypeCode: "review", TypeName: "รีวิวบริษัท"},
 		{TypeCode: "matching", TypeName: "การจับคู่งาน"},
@@ -984,7 +964,7 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, at := range analysisTypes {
 		db.FirstOrCreate(&at, entity.AnalysisType{TypeCode: at.TypeCode})
-	}
+	} */
 
 }
 
