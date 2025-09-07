@@ -7,10 +7,9 @@ const { Title } = Typography;
 
 interface DocumentsCardProps {
   documentUrl: string;
-  onView: (url: string) => void;
 }
 
-const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl, onView }) => {
+const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl }) => {
   const src = useMemo(() => fileURL(documentUrl), [documentUrl]);
   
   // ✅ ได้เป็น "pdf" | "png" | "jpg" ...

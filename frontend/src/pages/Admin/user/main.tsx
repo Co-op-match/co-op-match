@@ -108,18 +108,6 @@ const AdminUserDetailsPage: React.FC = () => {
   // ฟิลเตอร์บทบาทที่เลือก (controlled)
   const [roleFilterKeys, setRoleFilterKeys] = useState<Key[] | null>(null);
 
-  const chartData = useMemo(() => {
-  return (monthlyUserData ?? []).map(d => ({
-    month: d.month,
-    students: d.students,
-    companies: d.companies,
-    academic_staff: d.academic_staff,
-    admins: d.admins,
-    total: (d.students || 0) + (d.companies || 0) + (d.academic_staff || 0) + (d.admins || 0),
-  }));
-}, [monthlyUserData]);
-
-
   // รวมการค้นหา + ฟิลเตอร์บทบาท -> รายการที่แสดงจริง
   const displayedUsers = useMemo(() => {
     let data = [...users];

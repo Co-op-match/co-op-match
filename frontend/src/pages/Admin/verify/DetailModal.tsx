@@ -72,7 +72,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
   onClose,
   onSubmitVerify,
   getUserInfo,
-  handleViewDocument,
   selectedStatus,
   setSelectedStatus,
   statusVerifications,
@@ -209,7 +208,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
               <div style={leftPaneStyle}>
                 <DocumentsCard
                   documentUrl={record.verification_document ?? ""}
-                  onView={handleViewDocument}
                 />
               </div>
               <div style={rightPaneStyle}>
@@ -230,7 +228,6 @@ const DetailModal: React.FC<DetailModalProps> = ({
               <div style={fullPaneStyle}>
                 <DocumentsCard
                   documentUrl={record.verification_document ?? ""}
-                  onView={handleViewDocument}
                 />
               </div>
             </div>

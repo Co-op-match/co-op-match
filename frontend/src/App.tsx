@@ -127,7 +127,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-                    <Route
+          <Route
             path="/lecturer/add-lecturer"
             element={
               <ProtectedRoute allowedRoles={[4]}>
