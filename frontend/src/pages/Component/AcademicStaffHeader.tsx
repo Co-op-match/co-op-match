@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined,  HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
+import { UserOutlined, HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Logo from "../../assets/Co-op match-Photoroom.png";

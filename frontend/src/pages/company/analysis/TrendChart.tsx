@@ -45,7 +45,7 @@ type PresetValue = (typeof PRESETS)[number]["value"];
 const TrendApplicantsArea: React.FC<Props> = ({
   companyId,
   defaultDays = 30,
-  title = "แนวโน้มผู้สมัคร (รายวัน)",
+  title = "แนวโน้มผู้สมัครย้อนหลัง",
 }) => {
   const [loading, setLoading] = useState(false);
   const [raw, setRaw] = useState<TrendPoint[]>([]);

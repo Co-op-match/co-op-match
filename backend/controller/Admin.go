@@ -14,7 +14,6 @@ func GetAllAdmin(c *gin.Context) {
 	var admin []entity.Admin
 
 	err := config.DB().
-		Preload("Permission").
 		Preload("IntershipPost").
 		Preload("Company").
 		Preload("AcademicStaff").
@@ -39,7 +38,6 @@ func GetAdminByID(c *gin.Context) {
     var admin entity.Admin
 
     if err := config.DB().
-		Preload("Permission").
 		Preload("IntershipPost").
 		Preload("Company").
 		Preload("AcademicStaff").
@@ -63,7 +61,6 @@ func GetAdminByUserID(c *gin.Context) {
 	var admin entity.Admin
 
 	if err := config.DB().
-		Preload("Permission").
 		Preload("IntershipPost").
 		Preload("Company").
 		Preload("AcademicStaff").
