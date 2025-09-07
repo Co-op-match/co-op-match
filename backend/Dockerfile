@@ -11,13 +11,27 @@ RUN go build -ldflags="-s -w" -o server ./main.go
 # ---------- Runtime ----------
 FROM alpine:3.20
 WORKDIR /app
-# ใส่ libstdc++ เผื่อไบนารีที่ลิงก์ด้วย CGO ต้องใช้
 RUN adduser -D -u 10001 app && apk add --no-cache ca-certificates tzdata libstdc++
 COPY --from=build /app/server /app/server
-COPY config/  /app/config/
-COPY public/  /app/public/
+
+# ✅ คัดลอกไฟล์/โฟลเดอร์ที่แอปต้องใช้จริงตอนรัน
+COPY config/            /app/config/
+COPY public/            /app/public/
+COPY utils/*.html       /app/utils/          
+COPY logo/              /app/logo/          
+# (ถ้ามีรูป seed เดิม)
+# COPY uploads/         /app/public/uploads/
+
 RUN mkdir -p /app/data /app/public/uploads && chown -R app:app /app
 USER app
-ENV PORT=8080 GIN_MODE=release DB_DIALECT=sqlite DB_PATH=/app/data/app.db DATA_DIR=/app/config UPLOAD_DIR=/app/public/uploads
+
+ENV PORT=8080 \
+    GIN_MODE=release \
+    DB_DIALECT=sqlite \
+    DB_PATH=/app/data/app.db \
+    DATA_DIR=/app/config \
+    UPLOAD_DIR=/app/public/uploads \
+    TEMPLATE_DIR=/app/utils           
+
 EXPOSE 8080
 CMD ["/app/server"]
