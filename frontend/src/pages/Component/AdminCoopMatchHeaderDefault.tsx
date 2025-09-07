@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, BellOutlined,  HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserByIdhaveStatusData } from "../../services/https";
