@@ -423,7 +423,7 @@ function SearchJobs() {
                 job.Company?.logo?.startsWith('http')
                   ? job.Company.logo
                   : job.Company?.logo
-                  ? `http://localhost:8000${job.Company.logo}`
+                  ? `http://api.coop-match.online:8080${job.Company.logo}`
                   : undefined
               }
               style={{ height: '100px', objectFit: 'contain' }}

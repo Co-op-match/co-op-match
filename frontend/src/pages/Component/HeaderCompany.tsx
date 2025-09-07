@@ -79,7 +79,7 @@ const HeaderCompany: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
           }}
         />
         <Avatar
-          src={user?.ProfileImage?.[0]?.image_url ? `http://localhost:8000${user.ProfileImage[0].image_url}` : undefined}
+          src={user?.ProfileImage?.[0]?.image_url ? `http://api.coop-match.online:8080${user.ProfileImage[0].image_url}` : undefined}
           icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
           style={{ cursor: "pointer", marginLeft: 16 }}
         />

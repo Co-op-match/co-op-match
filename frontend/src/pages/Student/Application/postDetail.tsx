@@ -32,7 +32,7 @@ const { Title, Text, Paragraph } = Typography;
 
 /* ---------- helper: ประกอบ URL ให้วิ่งที่ backend:8000 เสมอ ---------- */
 const getApiBase = () => {
-  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8000';
+  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://api.coop-match.online:8080';
   return String(base).replace(/\/$/, '');
 };
 

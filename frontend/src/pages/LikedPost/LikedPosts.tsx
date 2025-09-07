@@ -253,7 +253,7 @@ function LikedPosts(){
                                 job.Company?.logo?.startsWith('http')
                                   ? job.Company.logo
                                   : job.Company?.logo
-                                    ? `http://localhost:8000${job.Company.logo}`
+                                    ? `http://api.coop-match.online:8080${job.Company.logo}`
                                     : undefined
                               }
                               alt={job.Company?.company_name || 'โลโก้บริษัท'}

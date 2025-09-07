@@ -10,7 +10,7 @@ import ReviewModalContainer from '../Review/Review';
 
 // ----------------- helper สำหรับประกอบลิงก์ไฟล์อย่างปลอดภัย -----------------
 const getApiBase = () => {
-  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8000';
+  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://api.coop-match.online:8080';
   return String(base).replace(/\/$/, '');
 };
 const toFileURL = (p?: string | null) => {
