@@ -11,7 +11,7 @@ import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
-import "./Post.css";
+import "./post.css";
 import "../main.css";
 
 const { Title, Text } = Typography;
