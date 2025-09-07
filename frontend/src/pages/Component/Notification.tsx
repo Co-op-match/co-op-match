@@ -21,7 +21,6 @@ interface NotificationItem {
   type: NotificationType;
   createdAt?: string;  // เก็บไว้เผื่อเรียง
 }
-type Props = { userId?: number };
 
 const { Text } = Typography;
 
@@ -35,7 +34,6 @@ const api = axios.create({
 });
 
 const Notification: React.FC = () => {
-  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [serverUnreadCount, setServerUnreadCount] = useState<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);

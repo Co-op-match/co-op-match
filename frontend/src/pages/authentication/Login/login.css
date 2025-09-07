@@ -11,11 +11,8 @@
 ========================= */
 .login-page {
   min-height: 100vh;
-background: linear-gradient(135deg, #fefefe 0%, #ededed 50%, #c9c9c9 100%);
-
-
+  background: linear-gradient(135deg, #fefefe 0%, #ededed 50%, #c9c9c9 100%);
   /*background: linear-gradient(135deg, #001d66 0%, #002c8c 100%);*/
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,8 +33,6 @@ background: linear-gradient(135deg, #fefefe 0%, #ededed 50%, #c9c9c9 100%);
   grid-template-columns: 1fr 1fr;
   overflow: hidden;
 }
-
-
 
 /* =========================
    LEFT SIDE (IMAGE)

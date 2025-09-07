@@ -75,6 +75,7 @@ func main() {
 	r.DELETE("/post/:id", controller.DeleteInternshipPost) // *ถ้าควรล็อกอิน ให้ย้ายไป protected
 
 	// applications public ที่มีในเดิม
+	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/interview_appointments/company/:company_id", controller.GetInterviewAppointmentsByCompanyID)
 	r.GET("/application_details/student/:id", controller.GetApplicationDetailsByStudentID)
 	r.GET("/applications/student/:id", controller.GetApplicationsByStudentID)
@@ -84,6 +85,8 @@ func main() {
 	r.GET("/applications/post/:id", controller.GetApplicationsByIntershipPostID)
 	r.PUT("/applications/post/:id", controller.UpdateApplication) // *ถ้าควรล็อกอิน ให้ย้ายไป protected
 	r.GET("/applications/summary/:companyId", controller.GetTotalApplicationsByCompanyID)
+	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
+	r.POST("/company/interview_appointments", controller.CreateInterviewAppointment)
 
 	// reviews (บางส่วนยังเป็น public ตามของเดิม)
 	r.GET("/reviews/:user_id", controller.GetReviewsByUserID)
@@ -423,7 +426,7 @@ func main() {
 	// r.GET("/applications/company/:id", controller.GetInterviewAppointmentByCompanyID)
 	r.GET("/applications/company/:id", controller.GetPendingInterviewApplicationsByCompanyID)
 
-	r.Static("/public", "./public")
+	r.Static("/public", "./public")/ๅ
 
 	r.POST("/applications/:id", controller.CreateApplication)
 	r.GET("/chat/ws", controller.ChatWebSocket)

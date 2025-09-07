@@ -21,16 +21,6 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-/*
- ฟีเจอร์หลัก (OTP Reset แบบปลอดภัย)
- - ป้องกัน user enumeration (ตอบกลางๆ แม้อีเมลไม่อยู่ในระบบ)
- - Cooldown ต่ออีเมล (ส่งซ้ำต้องรอ otpCooldown)
- - ล็อกชั่วคราวเมื่อกรอก OTP ผิดเกิน otpMaxAttempts
- - Cleanup OTP ที่หมดอายุแบบ background
- - ส่งอีเมลผ่าน TLS/SSL (587 STARTTLS / 465 SMTPS) + รองรับ Gmail App Password
- - มี SimpleResetPassword ไว้ให้ใช้แบบเดิม (debug/backward-compat)
-*/
-
 // ====== ค่าคงที่ความปลอดภัย/พฤติกรรมระบบ ======
 const (
 	otpTTL          = 10 * time.Minute // อายุ OTP
@@ -178,7 +168,7 @@ func SignUp(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "Signup successful"})
+	c.JSON(http.StatusCreated, gin.H{"message": "ลงทะเบียนเรียบร้อยแล้ว"})
 }
 
 func SignIn(c *gin.Context) {
@@ -240,7 +230,7 @@ func SignIn(c *gin.Context) {
 	c.SetCookie("auth_token", signedToken, 3600*24, "/", domain, secure, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":    "Login successful",
+		"message":    "เข้าสู่ระบบสำเร็จ",
 		"token_type": "Bearer",
 		"token":      signedToken, // เผื่อ FE ใช้แบบ header
 		"role":       user.Role.RoleName,

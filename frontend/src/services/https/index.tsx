@@ -535,14 +535,14 @@ async function GetStudentByUserId(user_id: number): Promise<StudentInterface> {
   }
 }
 
-async function CreateStudent(data: StudentInterface) {
+async function CreateStudent(data: any) {
   return await axios
     .post(`${apiUrl}/students`, data, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }
 
-async function UpdateStudent(id: number, data: StudentInterface) {
+async function UpdateStudent(id: number, data: any) {
   return await axios
     .put(`${apiUrl}/students/${id}`, data, requestOptions)
     .then((res) => res)

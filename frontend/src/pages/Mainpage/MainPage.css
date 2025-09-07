@@ -1,0 +1,381 @@
+/* ==== Global safety (กันสกอร์ลแปลก ๆ) ==== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden; /* กันสกอร์ลแนวนอนจาก 100vw */
+}
+body { overscroll-behavior: none; }
+
+/* พื้นหลังรวมทั้งหน้า + ล็อคเต็มจอ */
+.coopmatch-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2a81fb 0%, #001d66 100%) !important;
+}
+
+/* ==== Layout: full-bleed card ==== */
+.main-wrapper {
+  /* เต็มหน้าจอจริง ไม่อิง container กลาง */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.main-card {
+  width: 100%;
+  height: 100%;             /* ให้เท่ากับ viewport ผ่าน parent fixed */
+  min-height: 100svh;       /* กัน address bar มือถือ */
+  border-radius: 0 !important;
+  padding: clamp(24px, 4vw, 56px) !important;
+  box-shadow: none !important;
+  position: relative;
+  overflow: hidden;
+  background: transparent;  /* ใช้พื้นหลังจาก .coopmatch-container */
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(32px, 5vw, 60px);
+}
+
+.logo { font-size: 24px; font-weight: 600; color: #fff; }
+.logo-img {
+  will-change: filter, transform;
+  transform: translateZ(0);
+  transition: transform 0.4s ease, filter 0.4s ease; /* 👈 เพิ่ม transition */
+}
+
+.logo-img:hover {
+  transform: scale(1.1) rotate(-3deg); /* 👈 ขยาย + หมุนเล็กน้อย */
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1))
+          drop-shadow(0 0 12px rgba(79, 172, 254, 0.9))
+          drop-shadow(0 0 20px rgba(22, 93, 255, 0.7)); /* 👈 Glow ฟ้า */
+}
+
+.nav-link {
+  color: rgba(255,255,255,0.9) !important;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.nav-link:hover { color: #fff !important; }
+
+/* Hero Content */
+.hero-content { margin-bottom: 0; }
+.hero-text { padding-right: 0; }
+
+.hero-title {
+  font-size: clamp(32px, 6vw, 56px) !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  line-height: 1.2 !important;
+  margin-bottom: 24px !important;
+}
+
+.hero-description {
+  font-size: clamp(14px, 1.8vw, 18px) !important;
+  color: rgba(255,255,255,0.9) !important;
+  line-height: 1.7 !important;
+  margin-bottom: clamp(24px, 4vw, 40px) !important;
+}
+
+.action-buttons { margin-bottom: clamp(20px, 4vw, 40px); }
+
+.primary-btn {
+  background: linear-gradient(135deg, #4facfe, #165dff) !important;
+  border: none !important;
+  padding: 14px 28px !important;
+  height: auto !important;
+  font-weight: 700;
+  color: #fff !important;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.primary-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5dade2, #0d47a1) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+/* Sign in ให้ match Register */
+.signin-btn,
+
+.register-btn {
+  /* ✅ ขนาดเหมือนกัน */
+  height: 32px !important;
+  padding: 0 15px !important;
+  font-size: 14px !important;
+  font-weight: 700;
+  line-height: 32px !important;
+  border-radius: 20px !important;
+  min-width: 100px; /* ✅ กำหนดให้กว้างเท่า ๆ กัน */
+}
+
+/* ---- Sign In ---- */
+.signin-btn {
+  background: linear-gradient(135deg, #4facfe, #165dff) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 700;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.signin-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5dade2, #0d47a1) !important;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+/* ---- Register ---- */
+.register-btn {
+  border: 1px solid rgba(255,255,255,0.5) !important;
+  color: #fff !important;
+  background: transparent !important;
+}
+.register-btn:hover {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.6) !important;
+  color: #fff !important;
+}
+
+
+.secondary-btn {
+  background: transparent !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.5) !important;
+  padding: 14px 28px !important;
+  height: auto !important;
+  font-weight: 700;
+  transition: all 0.3s;
+}
+.secondary-btn:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.6) !important;
+}
+
+/* Stats */
+.stats-section { margin-top: 12px; }
+
+.stat-item {
+  text-align: left;        /* ให้ข้อความชิดซ้าย */
+  padding-left: 22px;      /* ขยับทั้งกล่องไปทางขวา */
+}
+/* CoopMatchLanding.css */
+.stat-item {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-6px) scale(1.05);
+}
+
+.stat-item svg {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.stat-item:hover svg {
+  transform: rotate(-5deg) scale(1.2);
+  color: #4facfe; /* ฟ้าไล่เฉด */
+}
+
+.stat-item .ant-statistic-title {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 6px;
+}
+
+.stat-item .ant-statistic-content {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+}
+
+
+/* ===== Hero Images — scale for full screen ===== */
+.hero-images {
+  position: relative;
+  height: clamp(480px, 60svh, 720px);
+
+  /* ตั้งค่าขนาดมาตรฐานให้การ์ดทั้งหมด */
+  --card-w: clamp(240px, 22vw, 320px);
+  --card-h: clamp(180px, 18vw, 220px);
+}
+
+/* Card container */
+.image-card {
+  position: absolute;
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  transition: transform 0.3s;
+  background: transparent !important;
+  border: none !important;
+}
+
+.image-card:hover .hero-img {
+  transform: translateY(-5px);
+}
+/* รูปภาพให้เต็ม container */
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+  transition: transform .3s;
+}
+.card-1 {
+  top: 0;
+  left: -4%;    /* คงเดิม */
+  z-index: 1;
+}
+
+.card-2 {
+  top: 140px;
+  left: 50%;   /* เดิม 20% → ขยับไปขวาอีก */
+  z-index: 2;
+}
+
+.card-3 {
+  top: 280px;
+  left: -5%;   /* เดิม 30% → ขยับไปขวาอีก */
+  z-index: 3;
+}
+
+.student-avatar {
+  width: clamp(84px, 7vw, 112px);
+  height: clamp(84px, 7vw, 112px);
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: #666;
+}
+
+/* Floating + Decorative */
+.floating-icon {
+  position: absolute;
+  width: clamp(50px, 4vw, 64px);
+  height: clamp(50px, 4vw, 64px);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  top: clamp(20px, 4vh, 40px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.decorative-shapes { position: absolute; width: 16px; height: 16px; border-radius: 50%; }
+.shape-1 { background: #DDA0DD; top: clamp(180px, 25vh, 280px); left: clamp(40px, 6vw, 80px); opacity: 0.7; }
+.shape-2 { background: #87CEEB; bottom: clamp(120px, 15vh, 180px); right: clamp(140px, 18vw, 200px); opacity: 0.7; }
+.shape-3 { background: #98FB98; top: clamp(80px, 12vh, 140px); left: clamp(180px, 24vw, 280px); width: 20px; height: 20px; opacity: 0.6; }
+
+/* Bottom Labels: ไม่ให้เลยขอบจออีกต่อไป */
+.hero-section-label,
+.figma-icon {
+  position: absolute;
+  bottom: 16px;                 /* เดิม -60px → ทำให้เลื่อน */
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+.hero-section-label {
+  left: 16px; padding: 10px 16px; font-weight: 700; color: #666; font-size: 16px;
+}
+.figma-icon {
+  right: 16px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: bold; font-size: 18px;
+  background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #45B7D1, #96CEB4, #FFEAA7);
+}
+
+.logo-img {
+  height: 40px;
+  object-fit: contain;
+  display: block;
+
+  /* เรืองแสงสีขาวแรงขึ้น */
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 1))
+          drop-shadow(0 0 8px rgba(255, 255, 255, 0.9))
+          drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
+}
+
+
+
+
+
+
+
+/* Responsive */
+@media (max-width: 992px) {
+  .hero-text { padding-right: 0; text-align: center; margin-bottom: 24px; }
+  .hero-title { font-size: 36px !important; }
+  .stats-section { justify-content: center; }
+  .hero-images { height: clamp(380px, 48svh, 520px); }
+  .header { flex-direction: column; gap: 16px; text-align: center; }
+  .nav { flex-wrap: wrap; justify-content: center; }
+}
+
+@media (max-width: 768px) {
+  .action-buttons { flex-direction: column; width: 100%; }
+  .primary-btn, .secondary-btn { width: 100%; margin-bottom: 10px; }
+
+  .hero-images {
+    height: 360px;
+    --card-w-lg: clamp(170px, 60vw, 240px);
+    --card-h-lg: clamp(130px, 36vw, 190px);
+  }
+
+  .card-1 { top: 0; left: 4%; }
+  .card-2 { top: 80px; right: 4%; }
+  .card-3 { bottom: 0; left: 20%; }
+
+  .hero-section-label, .figma-icon { display: none; }
+}
+
+/* ===== Fade-in on load ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ทำงานเฉพาะตอนมี .is-loaded บน <body> เพื่อกันกระพริบ */
+.is-loaded .header,
+.is-loaded .hero-title,
+.is-loaded .hero-description,
+.is-loaded .action-buttons {
+  opacity: 0; animation: fadeInUp .6s ease forwards;
+}
+.is-loaded .hero-title        { animation-delay: .05s; }
+.is-loaded .hero-description  { animation-delay: .12s; }
+.is-loaded .action-buttons    { animation-delay: .18s; }
+.is-loaded .header            { animation-delay: 0s; }
+
+/* Stats: เฟดอินแบบสเต็ป */
+.is-loaded .stats-section .stat-item {
+  opacity: 0; animation: fadeInUp .6s ease forwards;
+}
+.is-loaded .stats-section .stat-item:nth-child(1) { animation-delay: .22s; }
+.is-loaded .stats-section .stat-item:nth-child(2) { animation-delay: .30s; }
+.is-loaded .stats-section .stat-item:nth-child(3) { animation-delay: .38s; }
+
+/* Hero images: เฟดอิน + scale นิด ๆ และสเต็ป */
+.is-loaded .image-card {
+  opacity: 0; animation: fadeInScale .7s ease forwards;
+}
+.is-loaded .card-1 { animation-delay: .25s; }
+.is-loaded .card-2 { animation-delay: .35s; }
+.is-loaded .card-3 { animation-delay: .45s; }
+
+/* เคารพผู้ใช้ที่ปิดแอนิเมชัน */
+@media (prefers-reduced-motion: reduce) {
+  .is-loaded * { animation: none !important; transition: none !important; }
+}

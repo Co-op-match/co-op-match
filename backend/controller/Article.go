@@ -29,7 +29,7 @@ func CreateArticle(c *gin.Context) {
 		if err := c.ShouldBind(&in); err != nil {
 			// อย่ารีเทิร์น ปล่อยให้ fallback ด้านล่าง
 		}
-		// ✅ อ่านค่า is_published ทับอีกชั้นเสมอ
+		// อ่านค่า is_published ทับอีกชั้นเสมอ
 		if raw := c.PostForm("is_published"); raw != "" {
 			if b, ok := parseBoolStr(raw); ok {
 				in.IsPublished = &b
@@ -55,7 +55,7 @@ func CreateArticle(c *gin.Context) {
 		IsPublished: in.IsPublished, // nil ได้ (draft)
 	}
 
-	// ✅ เซ็ต published_at ตามค่าสถานะจริง
+	// เซ็ต published_at ตามค่าสถานะจริง
 	if in.IsPublished != nil && *in.IsPublished {
 		now := time.Now()
 		article.PublishedAt = &now
@@ -68,13 +68,11 @@ func CreateArticle(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Article created successfully",
+		"message": "สร้างเรียบร้อย",
 		"article": article,
 	})
 
 }
-
-// controller/article.go
 
 // แปลงสตริงเป็นบูล (รองรับ "true/false", "1/0", "on/off", "yes/no")
 func parseBoolStr(s string) (bool, bool) {
@@ -126,7 +124,7 @@ func UpdateArticle(c *gin.Context) {
 		}
 	}
 
-	// ✅ กันพลาด: อ่าน is_published จากฟอร์ม/คิวรี ตรงๆ อีกชั้น (ทับค่าที่ bind มา)
+	//  กันพลาด: อ่าน is_published จากฟอร์ม/คิวรี ตรงๆ อีกชั้น (ทับค่าที่ bind มา)
 	if in.IsPublished == nil {
 		raw := c.PostForm("is_published")
 		if raw == "" {
@@ -155,7 +153,7 @@ func UpdateArticle(c *gin.Context) {
 		update["type"] = *in.Type
 	}
 
-	// ✅ สำคัญ: pointer != nil ถึงจะอัปเดต แม้เป็น false ก็ต้องอัปเดต
+	// สำคัญ: pointer != nil ถึงจะอัปเดต แม้เป็น false ก็ต้องอัปเดต
 	if in.IsPublished != nil {
 		update["is_published"] = *in.IsPublished
 		if *in.IsPublished {

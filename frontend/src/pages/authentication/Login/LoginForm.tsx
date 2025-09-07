@@ -58,7 +58,7 @@ function LoginForm() {
     if (res.status === 200) {
       console.log("Response data:", res.data);
 
-      messageApi.success("Sign-in successful");
+      messageApi.success("เข้าสู่ระบบสำเร็จ");
 
       // Save data to localStorage
       localStorage.setItem("isLogin", "true");
@@ -112,11 +112,16 @@ function LoginForm() {
           <div className="signin-left"></div>
           {/* Right Form Section */}
           <div className="signin-right">
-            {/* ปุ่มกลับ */}
             <div style={{ marginBottom: 16 }}>
-              
+              <Button
+                type="link"
+                onClick={() => navigate("/")}  // 👈 กลับไปหน้า landing
+                style={{ color: "#888888" }}
+              >
+                &lt; Back
+              </Button>
             </div>
-
+            {/* ปุ่มกลับ */}
             <div className="signin-header">
               <Title level={2} className="signin-title">Sign In</Title>
 

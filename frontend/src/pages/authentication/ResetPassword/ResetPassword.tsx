@@ -6,7 +6,7 @@ import "../Login/login.css";
 
 const { Title } = Typography;
 
-export default function ResetPasswordPage() {
+function ResetPasswordPage() {
   const navigate = useNavigate();
   const [emailStepForm] = Form.useForm();
   const [otpStepForm] = Form.useForm();
@@ -298,3 +298,5 @@ export default function ResetPasswordPage() {
     </>
   );
 }
+export default ResetPasswordPage;
+

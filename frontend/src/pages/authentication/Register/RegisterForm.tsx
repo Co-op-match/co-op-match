@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Typography } from 'antd';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import type { UsersInterface } from '../../../interfaces/auth/IUser';
@@ -18,7 +18,7 @@ const roleRouteMap: Record<string, string> = {
   'AcademicStaff': '/lecturer/dashboard',
 };
 
-const RegisterPage: React.FC = () => {
+function RegisterPage(){
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -216,10 +216,10 @@ const RegisterPage: React.FC = () => {
             <div style={{ marginBottom: 16 }}>
               <Button
                 type="link"
-                onClick={() => navigate("/student/dashboard")}
+                onClick={() => navigate("/role-select")}  // 👈 กลับไปหน้า landing
                 style={{ color: "#888888" }}
               >
-                &lt; กลับสู่หน้าหลัก
+                &lt; Back
               </Button>
             </div>
 

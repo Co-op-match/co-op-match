@@ -135,7 +135,7 @@ func AdvancedMatchStudentToPosts(student entity.Student, weights MatchingWeights
 		results[i].LastUpdated = time.Now()
 	}
 
-	*debug = append(*debug, fmt.Sprintf("✅ Found %d suitable positions", len(results)))
+	*debug = append(*debug, fmt.Sprintf("Found %d suitable positions", len(results)))
 	return results
 }
 
@@ -167,7 +167,6 @@ func calculateAdvancedMatch(student entity.Student, post entity.IntershipPost,
 	} else {
 		result.WeakPoints = append(result.WeakPoints, fmt.Sprintf("GPA ต่ำกว่าเกณฑ์ %.1f คะแนน", float64(post.MinGpa)-gpa))
 	}
-	
 
 	// 2. Skills Score with weighted matching
 	skillScore, matchedCount, skillGaps := calculateSkillScore(studentSkills, post.CompanyRequiredSkills)
@@ -205,7 +204,7 @@ func calculateAdvancedMatch(student entity.Student, post entity.IntershipPost,
 	}
 
 	// 5. Education Level Score (new)
-	educationScore := calculateEducationScore(student.Education, post.JobTypeID)
+	educationScore := calculateEducationScore(student.Education)
 
 	// Calculate weighted total score
 	totalScore = (gpaScore * weights.GPA) +
@@ -322,11 +321,10 @@ func calculateLocationScore(studentAddr, companyAddr entity.Address) float64 {
 	return 0.2 // Different province but still possible
 }
 
-func calculateEducationScore(educations []entity.Education, jobTypeID uint) float64 {
+func calculateEducationScore(educations []entity.Education) float64 {
 	if len(educations) == 0 {
 		return 0.5 // Neutral if no education data
 	}
-
 	// Get latest education
 	sort.Slice(educations, func(i, j int) bool {
 		return educations[i].Year > educations[j].Year
@@ -343,6 +341,7 @@ func calculateEducationScore(educations []entity.Education, jobTypeID uint) floa
 	}
 	return 0.4
 }
+
 func getLatestGPA(educations []entity.Education) float64 {
 	if len(educations) == 0 {
 		fmt.Println("❌ ไม่มีข้อมูล education")
@@ -353,7 +352,7 @@ func getLatestGPA(educations []entity.Education) float64 {
 		return educations[i].Year > educations[j].Year
 	})
 
-	fmt.Printf("✅ ใช้ GPA: %.2f (จากปี %d)\n", educations[0].Grade, educations[0].Year)
+	fmt.Printf("ใช้ GPA: %.2f (จากปี %d)\n", educations[0].Grade, educations[0].Year)
 	return educations[0].Grade
 }
 
@@ -416,7 +415,7 @@ func saveMatchingResults(studentID uint, results []MatchResult) {
 
 	// Save new results
 	for i, result := range results {
-		if i >= 20 { // Save only top 20 matches
+		if i >= 10 { // Save only top 10 matches
 			break
 		}
 
@@ -432,7 +431,7 @@ func saveMatchingResults(studentID uint, results []MatchResult) {
 			MatchedAt:        result.LastUpdated,
 			Ranking:          result.Ranking,
 
-			// ✅ เพิ่มตรงนี้เพื่อให้ข้อมูลไม่เป็น 0
+			//  เพิ่มตรงนี้เพื่อให้ข้อมูลไม่เป็น 0
 			GPA:             result.Gpa,
 			MinGPA:          result.MinGpa,
 			GpaMatched:      result.GpaMatched,
@@ -442,7 +441,7 @@ func saveMatchingResults(studentID uint, results []MatchResult) {
 			TotalRequired:   result.TotalRequired,
 			ConfidenceLevel: result.ConfidenceLevel,
 
-			// ✅ เพิ่ม JSON fields
+			//  เพิ่ม JSON fields
 			RecommendReasons: reasonsJSON,
 			WeakPoints:       weakPointsJSON,
 			SkillGap:         skillGapJSON,
@@ -512,7 +511,7 @@ func GetSavedRecommendations(c *gin.Context) {
 			Ranking:     jm.Ranking,
 			LastUpdated: jm.MatchedAt,
 
-			// ✅ เพิ่ม field ที่ React ต้องใช้
+			//  เพิ่ม field ที่ React ต้องใช้
 			Gpa:             jm.GPA,
 			MinGpa:          jm.MinGPA,
 			GpaMatched:      jm.GpaMatched,

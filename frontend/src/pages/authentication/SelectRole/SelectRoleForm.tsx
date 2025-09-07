@@ -14,7 +14,7 @@ const roleDetailsMap: Record<string, {
   signupPath: string;
 }> = {
   Student: {
-    title: 'สมัครเป็นนักศึกษา',
+    title: 'สมัครในนามนักศึกษา',
     titleEn: 'Student Registration',
     description: 'Student co-op opportunities',
     icon: <UserOutlined style={{ fontSize: 48, color: '#1677ff' }} />,
@@ -36,7 +36,7 @@ const roleDetailsMap: Record<string, {
   },
 };
 
-const RoleSelectionPage: React.FC = () => {
+function RoleSelectionPage(){
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [roles, setRoles] = useState<RoleInterface[]>([]);
@@ -73,7 +73,9 @@ const RoleSelectionPage: React.FC = () => {
     <div 
      style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #001d66 0%, #002c8c 100%)',
+      //background: 'linear-gradient(135deg, #001d66 0%, #002c8c 100%)',
+      background: 'linear-gradient(135deg, #fefefe 0%, #ededed 50%, #c9c9c9 100%)',
+      //background: 'linear-gradient(135deg, #2a81fb 0%, #001d66 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -86,9 +88,17 @@ const RoleSelectionPage: React.FC = () => {
           borderRadius: 16,
           boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
           border: 'none',
+          background:'#fafafa',
         }}
         bodyStyle={{ padding: '40px' }}
       >
+        <Button
+          type="link"
+          onClick={() => navigate("/")}  // 👈 กลับไปหน้า landing
+          style={{ color: "#888888" }}
+        >
+          &lt; Back
+        </Button>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <Title level={2} style={{ color: '#1f2937', marginBottom: 8 }}>
             สมัครใช้งานในระบบสหกิจศึกษา
@@ -112,7 +122,7 @@ const RoleSelectionPage: React.FC = () => {
                     borderRadius: 12,
                     border: selectedRole === role.RoleName ? '2px solid #4096FF' : '1px solid #e5e7eb',
                     transition: 'all 0.3s ease',
-                    background: selectedRole === role.RoleName ? '#faf5ff' : '#ffffff',
+                    background: selectedRole === role.RoleName ? '#faf5ff' : '#fafafa',
                   }}
                   bodyStyle={{
                     padding: '32px 24px',
