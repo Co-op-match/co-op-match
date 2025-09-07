@@ -1,6 +1,6 @@
 // ปกติใช้ในทุกเพจ
 export const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL ?? "http://http://api.coop-match.online:8080").toString().replace(/\/$/, "");
+  (import.meta.env.VITE_API_BASE_URL ?? "https://api.coop-match.online:8080").toString().replace(/\/$/, "");
 
 export const ASSET_BASE =
   (import.meta.env.VITE_ASSET_BASE_URL ?? API_BASE).toString().replace(/\/$/, "");

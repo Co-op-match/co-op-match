@@ -34,7 +34,7 @@ import CoopMatchLoader from "../../Component/loading";
 const { Content } = Layout;
 
 // ✅ ควรตั้งใน .env เช่น VITE_API_BASE_URL
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://api.coop-match.online:8080";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.coop-match.online:8080";
 
 const CompanyProfileview: React.FC = () => {
   const [company, setCompany] = useState<CompanyInterface | null>(null);
