@@ -12,3 +12,19 @@ export function fileURL(p?: string | null): string | undefined {
   if (/^https?:\/\//i.test(s)) return s;
   return `${ASSET_BASE}${s.startsWith("/") ? "" : "/"}${s}`;
 }
+
+// ✅ ฟังก์ชันดึงนามสกุลไฟล์จาก URL (กันทั้ง query/hash และ relative path)
+export const getExtension = (u?: string): string => {
+  if (!u) return "";
+  try {
+    const abs = fileURL(u) as string; // แปลงให้เป็น absolute ก่อน
+    const urlObj = new URL(abs);
+    const pathname = urlObj.pathname.toLowerCase();
+    const dot = pathname.lastIndexOf(".");
+    return dot >= 0 ? pathname.slice(dot + 1) : "";
+  } catch {
+    const s = String(u).toLowerCase().split("#")[0].split("?")[0];
+    const dot = s.lastIndexOf(".");
+    return dot >= 0 ? s.slice(dot + 1) : "";
+  }
+};

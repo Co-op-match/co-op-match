@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"co-op-match.com/co-op-match/config"
@@ -90,6 +91,32 @@ func GetVerificationByID(c *gin.Context) {
 		Preload("Admin").
 		First(&verify, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลการรับรอง"})
+		return
+	}
+	c.JSON(http.StatusOK, verify)
+}
+
+// GET /api/verifications/user/:user_id/latest
+func GetLatestVerificationByUserID(c *gin.Context) {
+	userIDStr := c.Param("user_id")
+	
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil || userID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id ไม่ถูกต้อง"})
+		return
+	}
+
+	var verify entity.Verify
+	if err := config.DB().Preload("User.Company").
+		Preload("User.AcademicStaff").
+		Preload("User.ProfileImage").
+		Preload("User.Role").
+		Preload("StatusVerify").
+		Preload("Admin").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		First(&verify).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบข้อมูลการรับรองของผู้ใช้นี้"})
 		return
 	}
 	c.JSON(http.StatusOK, verify)

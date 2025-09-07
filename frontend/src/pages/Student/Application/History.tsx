@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Space, Modal, Input, Select, Card, message } from 'antd';
+import { Table, Tag, Button, Space, Modal, Input, Select, Card, message, Layout } from 'antd';
 import { StarOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { type ApplicationInterface } from '../../../interface/IApplication';
 import { GetApplicationById, GetApplicationsByStudentID } from '../../../services/https/Application';
@@ -197,106 +197,108 @@ const ApplicationHistory: React.FC = () => {
   ];
 
   return (
-    <div style={containerStyle}>
+    <Layout>
       <CoopMatchHeader />
+      <div style={containerStyle}>
+  
+        <div style={titleContainerStyle}>
+          <h2 style={headingStyle}>📋 ประวัติการสมัครงาน</h2>
+          <div style={subtitleStyle}>ติดตามสถานะการสมัครและผลการพิจารณาของคุณ</div>
+        </div>
 
-      <div style={titleContainerStyle}>
-        <h2 style={headingStyle}>📋 ประวัติการสมัครงาน</h2>
-        <div style={subtitleStyle}>ติดตามสถานะการสมัครและผลการพิจารณาของคุณ</div>
+        <Card style={searchCardStyle}>
+          <div style={searchHeaderStyle}>
+            <SearchOutlined style={searchIconStyle} />
+            <span style={searchTitleStyle}>ค้นหาข้อมูลการสมัคร</span>
+          </div>
+
+          <div style={searchFieldsStyle}>
+            <div style={searchFieldStyle}>
+              <div style={labelStyle}>ชื่อบริษัท</div>
+              <Input
+                placeholder="ค้นหาชื่อบริษัท"
+                value={companySearch}
+                onChange={(e) => setCompanySearch(e.target.value)}
+                onPressEnter={handleSearch}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={searchFieldStyle}>
+              <div style={labelStyle}>ตำแหน่งงาน</div>
+              <Input
+                placeholder="ค้นหาตำแหน่ง"
+                value={positionSearch}
+                onChange={(e) => setPositionSearch(e.target.value)}
+                onPressEnter={handleSearch}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={searchFieldStyle}>
+              <div style={labelStyle}>สถานะ</div>
+              <Select
+                placeholder="เลือกสถานะ"
+                value={statusSearch}
+                onChange={setStatusSearch}
+                onBlur={handleSearch}
+                style={inputStyle}
+              >
+                <Select.Option value="">ทั้งหมด</Select.Option>
+                <Select.Option value="รอนัดสัมภาษณ์">รอนัดสัมภาษณ์</Select.Option>
+                <Select.Option value="กำลังพิจารณา">กำลังพิจารณา</Select.Option>
+                <Select.Option value="ไม่ได้รับเลือก">ไม่ได้รับเลือก</Select.Option>
+                <Select.Option value="นัดสัมภาษณ์แล้ว">นัดสัมภาษณ์แล้ว</Select.Option>
+                <Select.Option value="ผ่านการคัดเลือก">ผ่านการคัดเลือก</Select.Option>
+              </Select>
+            </div>
+
+            <div style={searchFieldStyle}>
+              <div style={{ ...labelStyle, opacity: 0 }}>ค้นหา</div>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={handleSearch}
+                style={searchButtonStyle}
+              >
+                ค้นหา
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        <Card style={tableCardStyle}>
+          <Table
+            dataSource={filteredApplications}
+            columns={columns}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              showQuickJumper: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`
+            }}
+            rowKey="id"
+            style={tableStyle}
+          />
+        </Card>
+
+        <ApplicationDetailModal
+          visible={isModalVisible}
+          onClose={handleCancel}
+          detail={selectedDetail}
+        />
+
+        {reviewOpen && studentId !== null && reviewCompanyId !== null && (
+          <ReviewModalContainer
+            open={reviewOpen}
+            onClose={closeReviewModal}
+            studentId={studentId}
+            companyId={reviewCompanyId}
+            onSuccess={handleReviewSuccess}
+          />
+        )}
       </div>
-
-      <Card style={searchCardStyle}>
-        <div style={searchHeaderStyle}>
-          <SearchOutlined style={searchIconStyle} />
-          <span style={searchTitleStyle}>ค้นหาข้อมูลการสมัคร</span>
-        </div>
-
-        <div style={searchFieldsStyle}>
-          <div style={searchFieldStyle}>
-            <div style={labelStyle}>ชื่อบริษัท</div>
-            <Input
-              placeholder="ค้นหาชื่อบริษัท"
-              value={companySearch}
-              onChange={(e) => setCompanySearch(e.target.value)}
-              onPressEnter={handleSearch}
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={searchFieldStyle}>
-            <div style={labelStyle}>ตำแหน่งงาน</div>
-            <Input
-              placeholder="ค้นหาตำแหน่ง"
-              value={positionSearch}
-              onChange={(e) => setPositionSearch(e.target.value)}
-              onPressEnter={handleSearch}
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={searchFieldStyle}>
-            <div style={labelStyle}>สถานะ</div>
-            <Select
-              placeholder="เลือกสถานะ"
-              value={statusSearch}
-              onChange={setStatusSearch}
-              onBlur={handleSearch}
-              style={inputStyle}
-            >
-              <Select.Option value="">ทั้งหมด</Select.Option>
-              <Select.Option value="รอนัดสัมภาษณ์">รอนัดสัมภาษณ์</Select.Option>
-              <Select.Option value="กำลังพิจารณา">กำลังพิจารณา</Select.Option>
-              <Select.Option value="ไม่ได้รับเลือก">ไม่ได้รับเลือก</Select.Option>
-              <Select.Option value="นัดสัมภาษณ์แล้ว">นัดสัมภาษณ์แล้ว</Select.Option>
-              <Select.Option value="ผ่านการคัดเลือก">ผ่านการคัดเลือก</Select.Option>
-            </Select>
-          </div>
-
-          <div style={searchFieldStyle}>
-            <div style={{ ...labelStyle, opacity: 0 }}>ค้นหา</div>
-            <Button
-              type="primary"
-              icon={<SearchOutlined />}
-              onClick={handleSearch}
-              style={searchButtonStyle}
-            >
-              ค้นหา
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      <Card style={tableCardStyle}>
-        <Table
-          dataSource={filteredApplications}
-          columns={columns}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-            showQuickJumper: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`
-          }}
-          rowKey="id"
-          style={tableStyle}
-        />
-      </Card>
-
-      <ApplicationDetailModal
-        visible={isModalVisible}
-        onClose={handleCancel}
-        detail={selectedDetail}
-      />
-
-      {reviewOpen && studentId !== null && reviewCompanyId !== null && (
-        <ReviewModalContainer
-          open={reviewOpen}
-          onClose={closeReviewModal}
-          studentId={studentId}
-          companyId={reviewCompanyId}
-          onSuccess={handleReviewSuccess}
-        />
-      )}
-    </div>
+    </Layout>
   );
 };
 

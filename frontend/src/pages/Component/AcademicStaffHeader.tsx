@@ -1,12 +1,15 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
 import { fileURL } from "@/config/env";
+import { fetchVerifyStatus } from "../authentication/Login/routeAfterAuth";
+import Notification from "../Component/Notification";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -15,130 +18,86 @@ interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
 }
 
-const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
+const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   minimalMenu = false,
 }) => {
+  /* ============================ state / ctx ============================ */
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const location = useLocation();
   const screens = useBreakpoint();
-  const [user, setUser] = useState<UserInterface | null>(null);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-
   const { logout } = useContext(UserContext);
 
+  const [user, setUser] = useState<UserInterface | null>(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<string | null>(null); // ยังไม่ได้ส่งคำขอ / รอรับรอง / รับรอง / ปฏิเสธ
+
+  const userID = Number(localStorage.getItem("id"));
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
-  
-  const userID = Number(localStorage.getItem("id"));
 
+  /* ============================ fetchers ============================ */
   const fetchUser = async () => {
     if (!userID || Number.isNaN(userID)) return;
-
     try {
       const res = await GetUserByIdhaveStatusData(userID);
-      setUser(res);
-      if (res.status === 200) {
-        setUser(res.data);
-      }else {
+      const status = await fetchVerifyStatus(Number(userID));
+      if (res.status !== 200) {
         messageApi.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!");
       }
+      setUser(res.data);
+      setVerifyStatus(status);
     } catch (err) {
       console.error("Failed to fetch user", err);
+      messageApi.error("ไม่สามารถดึงข้อมูลผู้ใช้ได้");
     }
   };
 
+  /* ============================ effects ============================ */
   useEffect(() => {
-    console.log("Welcome to Admin Dashboard")
     if (userID) {
       fetchUser();
     }
   }, [userID]);
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    if (key === "logout") {
-      handleLogout();
-      return;
+  // เมื่อสถานะ pending ให้ redirect มา /lecturer/profile เสมอ
+  const isPending = verifyStatus === "รอรับรอง" || verifyStatus === "ปฏิเสธ";
+  useEffect(() => {
+    if (isPending && !location.pathname.includes("/lecturer/profile")) {
+      navigate("/lecturer/profile", { replace: true });
     }
+  }, [isPending, location.pathname, navigate]);
 
-    navigate(`/admin/${key}`);
-    setDrawerVisible(false); // Close drawer on mobile after navigation
-  };
-
-  const handleLogout = async () => {
-    localStorage.clear();
-    await logout();
-    navigate("/sign-in");
-    setDrawerVisible(false);
-  };
-
+  /* ============================ menu config ============================ */
+  // current tab: ถ้า pending ให้ default เป็น profile
   const currentPage =
-    [
-      "dashboard",
-      "post",
-      "manage-posts",
-      "verify",
-      "notifications",
-      "settings",
-      "users",
-      "articles"
-    ].find((key) => location.pathname.includes(key)) || "dashboard";
+    ["dashboard", "profile"].find((key) => location.pathname.includes(key)) ||
+    (isPending ? "profile" : "dashboard");
 
-  const fullMenu = [
-  {
-    key: "dashboard",
-    icon: <HomeOutlined />,
-    label: "หน้าหลัก",
-  },
-  {
-    key: "users",
-    icon: <TeamOutlined />,
-    label: "ผู้ใช้ทั้งหมด",
-  },
-  {
-    key: "manage",
-    icon: <FileTextOutlined />,
-    label: "จัดการโพสต์",
-    children: [
-      {
-        key: "manage-posts",          // คงคีย์เดิมไว้เพื่อให้ลิงก์เดิมทำงาน
-        icon: <FileTextOutlined />,
-        label: "จัดการโพสต์งาน",
-      },
-      {
-        key: "articles",              // เมนูย่อย: จัดการข่าว/บทความ
-        icon: <FileTextOutlined />,
-        label: "จัดการข่าว/บทความ",
-      },
+  // เมนู (ลบ "การแจ้งเตือน" ออกแล้ว)
+  const fullMenu = useMemo(
+    () => [
+      { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
+      { key: "profile", icon: <UserOutlined />, label: "โปรไฟล์" },
     ],
-  },
-  {
-    key: "verify",
-    icon: <CheckCircleOutlined />,
-    label: "ตรวจสอบการรับรอง",
-  },
-  // *** ลบรายการเดิมที่เคยเป็นระดับบน:
-  // {
-  //   key: "articles",
-  //   icon: <SettingOutlined />,
-  //   label: "จัดการข่าว/บทความ",
-  // },
-];
+    []
+  );
 
+  const profileOnlyMenu = useMemo(
+    () => fullMenu.filter((i) => i.key === "profile"),
+    [fullMenu]
+  );
 
-  const menuItems = minimalMenu
-    ? [fullMenu.find((item) => item.key === "dashboard")!]
-    : fullMenu;
+  const menuItems = minimalMenu || isPending ? profileOnlyMenu : fullMenu;
 
   const logoutMenuItem = {
     key: "logout",
     icon: <LogoutOutlined />,
     label: "ออกจากระบบ",
     danger: true,
-    onClick: handleLogout,
+    onClick: () => handleLogout(),
   };
 
-  // Mobile/Tablet menu items for drawer
   const drawerMenuItems = [
     ...menuItems,
     { type: "divider" as const },
@@ -151,10 +110,36 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       danger: true,
       icon: <LogoutOutlined />,
       label: "ออกจากระบบ",
-      onClick: handleLogout,
+      onClick: () => handleLogout(),
     },
   ];
 
+  /* ============================ handlers ============================ */
+  const handleMenuClick = ({ key }: { key: string }) => {
+    if (key === "logout") {
+      handleLogout();
+      return;
+    }
+
+    if (isPending && key !== "profile") {
+      navigate("/lecturer/profile", { replace: true });
+      setDrawerVisible(false);
+      return;
+    }
+
+    // ไม่มีเส้นทาง notifications อีกต่อไป
+    navigate(`/lecturer/${key}`);
+    setDrawerVisible(false);
+  };
+
+  const handleLogout = async () => {
+    localStorage.clear();
+    await logout();
+    navigate("/sign-in");
+    setDrawerVisible(false);
+  };
+
+  /* ============================ render ============================ */
   return (
     <>
       {contextHolder}
@@ -172,9 +157,11 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
           height: "64px",
         }}
       >
-        {/* Left side - Logo */}
+        {/* Left: Logo (ถ้า pending → ไปโปรไฟล์, ไม่งั้นไปแดชบอร์ด) */}
         <div
-          onClick={() => navigate("/admin/dashboard")}
+          onClick={() =>
+            navigate(isPending ? "/lecturer/profile" : "/lecturer/dashboard")
+          }
           style={{
             cursor: "pointer",
             display: "flex",
@@ -192,13 +179,14 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
           />
         </div>
 
-        {/* Right side - Menu and Profile */}
+        {/* Right: Menu / Hamburger / Notification / Avatar */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             flex: "1 1 auto",
             justifyContent: "flex-end",
+            gap: 8,
           }}
         >
           {/* Desktop Menu */}
@@ -228,11 +216,12 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
             />
           )}
 
+          {/* ใช้ Notification component แทนเมนู "การแจ้งเตือน" */}
+          {!isPending && <Notification />}
+
           {/* Profile Avatar */}
           <Dropdown
-            menu={{
-              items: profileDropdownItems,
-            }}
+            menu={{ items: profileDropdownItems }}
             placement="bottomRight"
             trigger={["click"]}
           >
@@ -243,11 +232,7 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
                   ? fileURL(user.ProfileImage[0].image_url)
                   : undefined
               }
-              icon={
-                !user?.ProfileImage?.[0]?.image_url ? (
-                  <UserOutlined />
-                ) : undefined
-              }
+              icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
               style={{
                 cursor: "pointer",
                 marginLeft: 5,
@@ -261,19 +246,12 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
       {/* Mobile Drawer Menu */}
       <Drawer
-        title={
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {/* <img src={Logo} alt="Logo" style={{ height: 32, marginRight: 12 }} /> */}
-            <span>เมนู</span>
-          </div>
-        }
+        title={<div style={{ display: "flex", alignItems: "center" }}><span>เมนู</span></div>}
         placement="right"
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
         width={280}
-        styles={{
-          body: { padding: 0 },
-        }}
+        styles={{ body: { padding: 0 } }}
       >
         <Menu
           mode="inline"
@@ -287,4 +265,4 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   );
 };
 
-export default AdminHeader;
+export default AcademicStaffHeader;
