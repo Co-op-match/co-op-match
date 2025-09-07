@@ -376,7 +376,7 @@ func buildEmailBody(appointment entity.InterviewAppointment, logoBase64, status,
 		"Mode":           appointment.Mode,
 		"Position":       position,
 		"Schedule":       formattedDate,
-		"ActionURL":      "https://coopmatch.example/interview/",
+		"ActionURL":      "https://api.coop-match.online/",
 	}
 
 	var buf bytes.Buffer
@@ -454,7 +454,7 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		recipientEmail = strings.TrimSpace(company.User.Email)
 		recipientName = company.CompanyName
 		entityName = company.CompanyName
-		actionURL = "https://coopmatch.example/company/dashboard"
+		actionURL = "https://api.coop-match.online/"
 		tmplFile = "utils/email_template_Verify.html"
 		userIDForNoti = company.User.ID
 	} else {
@@ -473,7 +473,7 @@ func SendVerifyStatusEmail(c *gin.Context) {
 			entityName = "บัญชีอาจารย์"
 		}
 
-		actionURL = "https://coopmatch.example/academic/dashboard"
+		actionURL = "https://api.coop-match.online/"
 		tmplFile = "utils/email_template_Verify_Academic.html"
 		userIDForNoti = staff.User.ID
 	}

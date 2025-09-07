@@ -111,7 +111,7 @@ const CoopMatchHeaderDefault: React.FC = () => {
   />
   <Avatar
     src={user?.ProfileImage?.[0]?.image_url
-      ? `https://api.coop-match.online:8080${user.ProfileImage[0].image_url}`
+      ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
       : undefined}
     icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
     style={{ cursor: "pointer", marginLeft: 16 }}

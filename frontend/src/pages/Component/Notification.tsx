@@ -24,8 +24,8 @@ interface NotificationItem {
 const { Text } = Typography;
 
 // ====== ปรับตามสภาพแวดล้อมของคุณ ======
-const API_BASE = import.meta.env.VITE_API_BASE || 'api.coop-match.online';
-const WS_URL   = import.meta.env.VITE_WS_URL  || 'ws://api.coop-match.online/ws/notifications';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.coop-match.online';
+const WS_URL   = import.meta.env.VITE_WS_URL  || 'wss://api.coop-match.online/ws/notifications';
 
 const api = axios.create({
   baseURL: API_BASE,

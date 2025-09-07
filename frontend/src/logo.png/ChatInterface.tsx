@@ -40,7 +40,7 @@ const normalizeUrl = (raw?: string | null) => {
   if (!raw) return '';
   const s = String(raw).trim();
   if (!s) return '';
-  return s.startsWith('http') ? s : `api.coop-match.online${s}`;
+  return s.startsWith('https') ? s : `api.coop-match.online${s}`;
 };
 
 const AdvancedChatInterface: React.FC = () => {

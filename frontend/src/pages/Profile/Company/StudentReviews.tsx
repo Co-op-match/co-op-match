@@ -434,7 +434,7 @@ return (
                 <div className="reviewer-name">
                   <Avatar
                     src={review.image_url 
-                      ? `https://api.coop-match.online:8080${review.image_url}` 
+                      ? `https://api.coop-match.online${review.image_url}` 
                       : undefined
                     }
                     size={35}

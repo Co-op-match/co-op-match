@@ -26,7 +26,7 @@ const { Title, Text, Paragraph } = Typography;
 /* ---------- helper: ประกอบ URL ให้วิ่งที่ backend:8000 เสมอ ---------- */
 const getApiBase = () => {
   // ถ้ามี env ก็ใช้ได้เลย, ไม่มีก็ fallback เป็น 8000
-  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'https://api.coop-match.online:8080';
+  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'https://api.coop-match.online';
   return String(base).replace(/\/$/, '');
 };
 
