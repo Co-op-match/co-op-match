@@ -122,11 +122,6 @@ const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     icon: <BellOutlined />,
     label: "การแจ้งเตือน",
   },
-  {
-    key: "settings",
-    icon: <SettingOutlined />,
-    label: "ตั้งค่า",
-  },
   // *** ลบรายการเดิมที่เคยเป็นระดับบน:
   // {
   //   key: "articles",

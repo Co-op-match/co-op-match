@@ -31,8 +31,6 @@ func SetupDatabase() {
 	// Migrate เฉพาะ Entity ที่ระบุ
 	db.AutoMigrate(
 		&entity.Role{},
-		&entity.Permission{},
-		&entity.RolePermission{},
 		&entity.PasswordResetToken{},
 		&entity.User{},
 		&entity.Gender{},
