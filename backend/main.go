@@ -289,9 +289,12 @@ func main() {
 	articles := protected.Group("/articles")
 	{
 		articles.GET("", controller.ListArticles)
-		articles.POST("", controller.CreateArticle)
-		articles.PUT("/:id", controller.UpdateArticle)
-		articles.DELETE("/:id", controller.DeleteArticle)
+		articles.GET("/:id", controller.GetArticle)
+
+		// จำกัดสิทธิ์เฉพาะ Admin
+		articles.POST("", middlewares.RequireAdmin(), controller.CreateArticle)
+		articles.PUT("/:id", middlewares.RequireAdmin(), controller.UpdateArticle)
+		articles.DELETE("/:id", middlewares.RequireAdmin(), controller.DeleteArticle)
 	}
 
 	// verify
