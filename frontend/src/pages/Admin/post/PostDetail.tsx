@@ -80,6 +80,7 @@ const PostDetailPage = () => {
 
   const handleUpdateStatus = async (next: "Open" | "Closed") => {
     if (!post) return;
+    console.log("admin: ", admin);
     if (!admin?.ID) return messageApi.error("ไม่พบบัญชีแอดมิน");
 
     const target = statusList.find((s) => s.status_post === next);
