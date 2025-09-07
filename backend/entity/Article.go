@@ -22,4 +22,7 @@ type Article struct {
 	Type        ArticleType `json:"type" binding:"required,oneof=news career"`
 	PublishedAt *time.Time  `json:"published_at"`
 	IsPublished *bool       `json:"is_published" form:"is_published"`
+
+	AdminID uint  `json:"admin_id" gorm:"index;not null"`
+	Admin   Admin `gorm:"foreignKey:AdminID"`
 }

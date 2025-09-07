@@ -1193,6 +1193,7 @@ func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
 	}
 	log.Println("✅ SubDistricts imported")
 }
+
 func SeedArticles(db *gorm.DB) error {
 	now := time.Now()
 	yes := true
@@ -1208,6 +1209,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeNews,
 			PublishedAt: &now,
 			IsPublished: &yes,
+			AdminID:     1,
 		},
 		{
 			Title:       "โครงการจับคู่สถานประกอบการกับนักศึกษา",
@@ -1217,6 +1219,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeNews,
 			PublishedAt: &now,
 			IsPublished: &yes,
+			AdminID:     1,
 		},
 		{
 			Title:       "ประกาศ! เพิ่มตำแหน่งฝึกงานด้าน Data Engineer",
@@ -1226,6 +1229,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeNews,
 			PublishedAt: &now,
 			IsPublished: &yes,
+			AdminID:     1,
 		},
 		{
 			Title:       "เชิญร่วมงาน Career Day Online",
@@ -1235,6 +1239,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeNews,
 			PublishedAt: &now,
 			IsPublished: &no,
+			AdminID:     1,
 		},
 		{
 			Title:       "ประกาศเลื่อนกำหนดส่งใบสมัครฝึกงาน",
@@ -1244,6 +1249,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeNews,
 			PublishedAt: &now,
 			IsPublished: &no,
+			AdminID:     1,
 		},
 
 		// -------- Career Articles --------
@@ -1255,6 +1261,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeCareer,
 			PublishedAt: &now,
 			IsPublished: &yes,
+			AdminID:     1,
 		},
 		{
 			Title:       "เตรียมตัวอย่างไร ก่อนสัมภาษณ์ฝึกงานครั้งแรก",
@@ -1264,6 +1271,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeCareer,
 			PublishedAt: &now,
 			IsPublished: &yes,
+			AdminID:     1,
 		},
 		{
 			Title:       "รวมเว็บไซต์และแหล่งหางานฝึกงานที่นักศึกษาควรรู้",
@@ -1273,6 +1281,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeCareer,
 			PublishedAt: &now,
 			IsPublished: &no,
+			AdminID:     1,
 		},
 		{
 			Title:       "Soft Skills ที่บริษัทมองหาในนักศึกษาฝึกงาน",
@@ -1282,6 +1291,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeCareer,
 			PublishedAt: &now,
 			IsPublished: &yes,
+			AdminID:     1,
 		},
 		{
 			Title:       "Checklist ก่อนเริ่มวันแรกของการฝึกงาน",
@@ -1291,6 +1301,7 @@ func SeedArticles(db *gorm.DB) error {
 			Type:        entity.ArticleTypeCareer,
 			PublishedAt: &now,
 			IsPublished: &no,
+			AdminID:     1,
 		},
 	}
 
