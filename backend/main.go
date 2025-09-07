@@ -223,6 +223,7 @@ func main() {
 	academicstaffGroup := protected.Group("/academicstaff")
 	{
 		academicstaffGroup.GET("", controller.GetAllAcademicStaff)
+		academicstaffGroup.PUT("/:id", controller.UpdateAcademicStaff)
 		academicstaffGroup.GET("/:id", controller.GetAcademicStaffByID)
 		academicstaffGroup.POST("", controller.CreateAcademicStaff)
 		academicstaffGroup.GET("/user/:user_id", controller.GetAcademicStaffByUserId)

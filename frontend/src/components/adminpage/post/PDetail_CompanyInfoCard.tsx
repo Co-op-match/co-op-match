@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Avatar, Typography, Divider, Space } from "antd";
 import { TeamOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, GlobalOutlined, FacebookOutlined } from "@ant-design/icons";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
+import { fileURL } from "@/config/env";
 
 const { Title, Text, Link } = Typography;
 
@@ -45,8 +46,8 @@ const CompanyInfoCard: React.FC<Props> = ({ post }) => {
       <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
         <Avatar
           size={80}
-          src={company?.logo}
-          style={{ backgroundColor: "#1677ff", marginBottom: 12 }}
+          src={fileURL(company?.logo)}
+          style={{ marginBottom: 12 }}
         >
           {company?.company_name?.charAt(0)}
         </Avatar>

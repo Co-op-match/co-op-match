@@ -97,7 +97,7 @@ function StudentDashboard() {
   const statistics = [
     { title: 'นักศึกษาที่ลงทะเบียน', value: student.length, icon: <UserOutlined style={{ fontSize: 28, color: '#1890ff' }} /> },
     { title: 'บริษัทที่เปิดรับฝึกงาน', value: company.length, icon: <TeamOutlined style={{ fontSize: 28, color: '#52c41a' }} /> },
-    { title: 'นักศึกษาได้ที่ฝึกงาน', value: appointments.filter(app => app.status === "ผ่าน").length, icon: <CheckCircleOutlined style={{ fontSize: 28, color: '#faad14' }} /> },
+    { title: 'นักศึกษาได้ที่ฝึกงาน', value: (appointments || []).filter(app => app.status === "ผ่าน").length, icon: <CheckCircleOutlined style={{ fontSize: 28, color: '#faad14' }} /> },
     { title: 'ตำแหน่งฝึกงานเปิดรับ', value: posts.filter(p => p.StatusPostID == 1).length, icon: <FileTextOutlined style={{ fontSize: 28, color: '#f5222d' }} /> },
   ];
 

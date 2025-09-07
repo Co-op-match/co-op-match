@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
+import { UserOutlined, SettingOutlined, HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -9,6 +9,7 @@ import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
 import { fileURL } from "@/config/env";
 import { fetchVerifyStatus } from "../authentication/Login/routeAfterAuth";
+import Notification from "../Component/Notification";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -42,9 +43,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       const res = await GetUserByIdhaveStatusData(userID);
       const status = await fetchVerifyStatus(Number(userID));
       if (res.status !== 200) {
-        messageApi.error(
-          "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!"
-        );
+        messageApi.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบอีกครั้ง!!!");
       }
       setUser(res.data);
       setVerifyStatus(status);
@@ -75,21 +74,20 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     ["dashboard", "profile"].find((key) => location.pathname.includes(key)) ||
     (isPending ? "profile" : "dashboard");
 
-  const fullMenu = [
-    { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
-    { key: "profile", icon: <UserOutlined />, label: "โปรไฟล์" },
-    {
-      key: "notifications",
-      icon: <BellOutlined />,
-      label: isMobile ? "แจ้งเตือน" : "การแจ้งเตือน",
-    },
-    { key: "settings", icon: <SettingOutlined />, label: "ตั้งค่า" },
-  ];
+  // เมนู (ลบ "การแจ้งเตือน" ออกแล้ว)
+  const fullMenu = useMemo(
+    () => [
+      { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
+      { key: "profile", icon: <UserOutlined />, label: "โปรไฟล์" },
+    ],
+    []
+  );
 
   const profileOnlyMenu = useMemo(
     () => fullMenu.filter((i) => i.key === "profile"),
     [fullMenu]
   );
+
   const menuItems = minimalMenu || isPending ? profileOnlyMenu : fullMenu;
 
   const logoutMenuItem = {
@@ -99,11 +97,13 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     danger: true,
     onClick: () => handleLogout(),
   };
+
   const drawerMenuItems = [
     ...menuItems,
     { type: "divider" as const },
     logoutMenuItem,
   ];
+
   const profileDropdownItems = [
     {
       key: "logout",
@@ -116,17 +116,18 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
   /* ============================ handlers ============================ */
   const handleMenuClick = ({ key }: { key: string }) => {
-    console.log("Menu click:", { key, isPending });
     if (key === "logout") {
       handleLogout();
       return;
     }
-    
+
     if (isPending && key !== "profile") {
       navigate("/lecturer/profile", { replace: true });
       setDrawerVisible(false);
       return;
     }
+
+    // ไม่มีเส้นทาง notifications อีกต่อไป
     navigate(`/lecturer/${key}`);
     setDrawerVisible(false);
   };
@@ -178,13 +179,14 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
           />
         </div>
 
-        {/* Right: Menu / Hamburger / Avatar */}
+        {/* Right: Menu / Hamburger / Notification / Avatar */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             flex: "1 1 auto",
             justifyContent: "flex-end",
+            gap: 8,
           }}
         >
           {/* Desktop Menu */}
@@ -214,6 +216,9 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
             />
           )}
 
+          {/* ใช้ Notification component แทนเมนู "การแจ้งเตือน" */}
+          {!isPending && <Notification />}
+
           {/* Profile Avatar */}
           <Dropdown
             menu={{ items: profileDropdownItems }}
@@ -227,11 +232,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
                   ? fileURL(user.ProfileImage[0].image_url)
                   : undefined
               }
-              icon={
-                !user?.ProfileImage?.[0]?.image_url ? (
-                  <UserOutlined />
-                ) : undefined
-              }
+              icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
               style={{
                 cursor: "pointer",
                 marginLeft: 5,
@@ -245,11 +246,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
       {/* Mobile Drawer Menu */}
       <Drawer
-        title={
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span>เมนู</span>
-          </div>
-        }
+        title={<div style={{ display: "flex", alignItems: "center" }}><span>เมนู</span></div>}
         placement="right"
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}

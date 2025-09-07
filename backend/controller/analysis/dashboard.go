@@ -36,7 +36,7 @@ func GetAdminDashboardOverview(c *gin.Context) {
 	// Pending posts
 	db.Model(&entity.IntershipPost{}).
 		Joins("JOIN status_posts ON intership_posts.status_post_id = status_posts.id").
-		Where("status_posts.status_post = ?", "Pending").
+		Where("status_posts.status_post = ?", "Pending Approval").
 		Count(&totalPendingPosts)
 
 	// Recent logins

@@ -262,7 +262,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
           // ❌ เอา defaultOpenKeys/openKeys ออก -> dropdown จะไม่ค้างเปิด
           style={{ border: 'none', backgroundColor: 'transparent', minWidth: 160 }}
         />
-        <Notification />
         {/* ถ้าอยู่ช่วงรอรับรอง สามารถเลือกปิด Notification ได้เลย ถ้าอยากซ่อน */}
         {!isPending && <Notification />}
         <Dropdown overlay={logoutMenu} placement="bottomRight" trigger={['click']}>
