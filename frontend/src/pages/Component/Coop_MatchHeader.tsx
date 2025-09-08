@@ -189,8 +189,8 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
 
   const visibleMenuItems = minimalMenu ? fullMenu.slice(-2) : fullMenu;
   const availableKeys = fullMenu.map(item => item.key);
-  const currentPage = availableKeys.find(key => location.pathname.includes(key)) || availableKeys[0];
-
+  //const currentPage = availableKeys.find(key => location.pathname.includes(key)) || availableKeys[0];
+  const currentPage = availableKeys.find(key => location.pathname === `/${key}` || location.pathname.endsWith(`/${key}`)) || availableKeys[0];
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'chat') {

@@ -31,7 +31,7 @@ import {
   GetAdviseeCompanySummary,
   UpdateProfileImage,
 } from "../../../services/https";
-import CompanyHeader from "../../Component/CompanyHeader";
+import CompanyHeader from "../../Component/AcademicStaffHeader";
 import type { AcademicStaffInterface } from "../../../interfaces/AcademicStaff";
 import "./AcademicStaffProfile.css";
 import { fileURL } from "@/config/env";

@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, BellOutlined, SettingOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, HomeOutlined, TeamOutlined, FileTextOutlined, MenuOutlined, LogoutOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserByIdhaveStatusData } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
+import { fileURL } from "@/config/env";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -14,7 +15,7 @@ interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
 }
 
-const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
+const AdminHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   minimalMenu = false,
 }) => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -78,12 +79,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       "manage-posts",
       "verify",
       "notifications",
-      "analysis",
       "settings",
-      "students",
-      "companies",
-      "lecturers",
-      "admins",
       "users",
       "articles"
     ].find((key) => location.pathname.includes(key)) || "dashboard";
@@ -100,14 +96,14 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     label: "ผู้ใช้ทั้งหมด",
   },
   {
-    key: "manage-posts",
+    key: "manage",
     icon: <FileTextOutlined />,
-    label: "จัดการ Post",
+    label: "จัดการโพสต์",
     children: [
       {
         key: "manage-posts",          // คงคีย์เดิมไว้เพื่อให้ลิงก์เดิมทำงาน
         icon: <FileTextOutlined />,
-        label: "ภาพรวมโพสต์",
+        label: "จัดการโพสต์งาน",
       },
       {
         key: "articles",              // เมนูย่อย: จัดการข่าว/บทความ
@@ -120,21 +116,6 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     key: "verify",
     icon: <CheckCircleOutlined />,
     label: "ตรวจสอบการรับรอง",
-  },
-  {
-    key: "analysis",
-    icon: <FileTextOutlined />,
-    label: "การวิเคราะห์",
-  },
-  {
-    key: "notifications",
-    icon: <BellOutlined />,
-    label: "การแจ้งเตือน",
-  },
-  {
-    key: "settings",
-    icon: <SettingOutlined />,
-    label: "ตั้งค่า",
   },
   // *** ลบรายการเดิมที่เคยเป็นระดับบน:
   // {
@@ -259,7 +240,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
               size={30}
               src={
                 user?.ProfileImage?.[0]?.image_url
-                  ? `http://localhost:8000${user.ProfileImage[0].image_url}`
+                  ? fileURL(user.ProfileImage[0].image_url)
                   : undefined
               }
               icon={
@@ -306,4 +287,4 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   );
 };
 
-export default CompanyHeader;
+export default AdminHeader;

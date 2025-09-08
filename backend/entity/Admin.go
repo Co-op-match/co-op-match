@@ -15,7 +15,6 @@ type Admin struct {
 	UserID uint `json:"user_id"`
 	User   User `gorm:"foreignKey:UserID"`
 
-	Permission    []Permission    `gorm:"foreignKey:AdminID"`
 	IntershipPost []IntershipPost `gorm:"foreignKey:AdminID"`
 	Company       []Company       `gorm:"foreignKey:AdminID"`
 	AcademicStaff []AcademicStaff `gorm:"foreignKey:AdminID"`
