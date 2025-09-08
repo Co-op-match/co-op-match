@@ -38,7 +38,7 @@ import CompanyHeader from "../../Component/CompanyHeader";
 import "./Appointment.css";
 
 const { Title, Text } = Typography;
-const { Content } = Layout;
+const { Header, Content } = Layout; // ⬅️ เพิ่ม Header เข้ามา
 
 const InterviewDashboard: React.FC = () => {
   const [applications, setApplications] = useState<any[]>([]);
@@ -245,13 +245,20 @@ const InterviewDashboard: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f8ff" }}>
-      {/* ✅ CompanyHeader อยู่บนสุด ทำให้ชิดด้านบนเหมือนหน้าแรก */}
+      {/* ✅ แท็บบาร์/ส่วนหัวของระบบ (ของคุณเอง) */}
       <CompanyHeader />
 
-      {/* ✅ ใช้ Content และตัด padding ด้านบนออก */}
-      <Content >
-        {/* ถ้าต้องการกว้างไม่เกิน 1200px ก็ครอบด้วย div นี้ */}
-        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+      {/* ✅ คอนเทนต์เต็มหน้าจอ (full width) */}
+      <Content style={{ padding: 0 }}>
+        <div
+          style={{
+            width: "100vw",
+            maxWidth: "100vw", // ให้เต็มความกว้างหน้าจอ
+            margin: 0,
+            padding: 24,
+            boxSizing: "border-box",
+          }}
+        >
           {/* Header Section */}
           <div
             style={{
