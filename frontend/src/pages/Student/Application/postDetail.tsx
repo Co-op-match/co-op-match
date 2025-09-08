@@ -540,18 +540,6 @@ const PostDetails = () => {
           )}
         </div>
 
-        {/* Floating Apply Button */}
-        <div style={styles.floatingButton}>
-          <Button
-            type="primary"
-            size="large"
-            icon={<SendOutlined />}
-            onClick={() => navigate(`/student/applications/${post.ID}`)}
-            style={styles.floatingApplyButton}
-          >
-            สมัครฝึกงาน
-          </Button>
-        </div>
       </div>
     </div>
   );
