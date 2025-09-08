@@ -88,7 +88,7 @@ func CreateApplication(c *gin.Context) {
 		// ไม่พบข้อมูล = สมัครใหม่ได้
 	} else {
 		// พบการสมัครซ้ำ
-		c.JSON(http.StatusBadRequest, gin.H{"error": "You have already applied for this post"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "คุณได้ส่งใบสมัครสำหรับตำแหน่งนี้แล้ว ไม่สามารถส่งซ้ำได้"})
 		return
 	}
 
@@ -193,17 +193,18 @@ func GetApplicationByID(c *gin.Context) {
 
 	formattedDate := application.CreatedAt.Format("02-01-2006 15:04")
 
-	// ✅ ดึงข้อมูล InterviewAppointment
+	// ✅ ดึงข้อมูล InterviewAppointment ล่าสุด
 	var interview entity.InterviewAppointment
 	err := config.DB().
 		Where("student_id = ? AND company_id = ?", application.StudentID, application.IntershipPost.Company.ID).
 		Order("created_at desc").
 		First(&interview).Error
 
-	// สร้าง response object
+	// ✅ สร้าง response object พร้อม post_id
 	response := gin.H{
 		"application":    application,
 		"formatted_date": formattedDate,
+		"post_id":        application.IntershipPostID, // เพิ่มตรงนี้
 	}
 
 	if err == nil {

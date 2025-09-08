@@ -1,8 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { Layout, Typography } from 'antd';
 import CompanyHeader from '../../Component/CompanyHeader';
 import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../services/https/Application/index';
-import { useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+
+const { Header, Content } = Layout;
+const { Title } = Typography;
 
 interface ApplicationInterface {
     post_name: ReactNode;
@@ -34,7 +37,6 @@ const Dashboard = () => {
         const handleNewApplication = (event: any) => {
             if (Number(event.detail.postId) === Number(postId)) {
                 fetchApplications();
-
             }
         };
         window.addEventListener("application-submitted", handleNewApplication);
@@ -65,7 +67,6 @@ const Dashboard = () => {
 
         // ตรวจสอบว่าข้อมูลที่ได้มีจริงหรือไม่
         if (!Array.isArray(realApplications)) {
-
             return;
         }
 
@@ -84,11 +85,9 @@ const Dashboard = () => {
         setApplications(mappedApps);
     };
 
-
     useEffect(() => {
         calculateStats(applications);             // ✅ ถูกต้อง
     }, [applications]);
-
 
     const calculateStats = (data: ApplicationInterface[]) => {
         const stats = { approved: 0, pending: 0, rejected: 0 };
@@ -99,7 +98,6 @@ const Dashboard = () => {
         });
         setApprovalStats(stats); // ✅ << ตรงนี้แหละ
     };
-
 
     const handleApproval = (
         application: ApplicationInterface,
@@ -133,278 +131,293 @@ const Dashboard = () => {
         }
     };
 
-
-
     const fileBaseURL = 'http://localhost:8000'; // ✅ ปรับตาม backend จริงของคุณ
 
-
-
     return (
-        <div style={containerStyle}>
+        <Layout style={{ minHeight: '100vh', background: '#f0f8ff' }}>
+            {/* ✅ CompanyHeader ไว้บนสุดเหมือนตัวอย่าง */}
             <CompanyHeader />
 
-            <div style={summaryCardStyle}>
-                <h3 style={headingStyle}>📊 สรุปผลคำขอ</h3>
-                <div style={summaryFieldsStyle}>
-                    <div style={{ ...summaryItemStyle, ...summaryItemTotalStyle }}>
-                        <div style={iconStyle}>📋</div>
-                        <h4>คำขอทั้งหมด</h4>
-                        <p style={statsNumberStyle}>{applications.length}</p>
-                    </div>
-                    <div style={{ ...summaryItemStyle, ...summaryItemApprovedStyle }}>
-                        <div style={iconStyle}>✅</div>
-                        <h4>อนุมัติ</h4>
-                        <p style={statsNumberStyle}>{approvalStats.approved}</p>
-                    </div>
-                    <div style={{ ...summaryItemStyle, ...summaryItemPendingStyle }}>
-                        <div style={iconStyle}>⏳</div>
-                        <h4>รอการอนุมัติ</h4>
-                        <p style={statsNumberStyle}>{approvalStats.pending}</p>
-                    </div>
-                    <div style={{ ...summaryItemStyle, ...summaryItemRejectedStyle }}>
-                        <div style={iconStyle}>❌</div>
-                        <h4>ไม่อนุมัติ</h4>
-                        <p style={statsNumberStyle}>{approvalStats.rejected}</p>
+            {/* ✅ Header แบบเต็มหน้าจอ + sticky */}
+            <Header
+                style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 100,
+                    background: '#e3f2fd',
+                    padding: '0 24px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    borderBottom: '1px solid #e0e7ff',
+                }}
+            >
+                <Title level={2} style={{ margin: 0, color: '#1565c0', fontWeight: 600, fontSize: 24 }}>
+                    จัดการใบสมัคร
+                </Title>
+                {/* ปุ่ม action เพิ่มได้ทางขวา */}
+            </Header>
+
+            <Content style={{ padding: 0 }}>
+                <div style={containerStyle}>
+                    {/* ---------- คอนเทนต์เดิมทั้งหมดของคุณ (เก็บไว้ครบ) ---------- */}
+
+                    <div style={summaryCardStyle}>
+                        <h3 style={headingStyle}>📊 สรุปผลคำขอ</h3>
+                        <div style={summaryFieldsStyle}>
+                            <div style={{ ...summaryItemStyle, ...summaryItemTotalStyle }}>
+                                <div style={iconStyle}>📋</div>
+                                <h4>คำขอทั้งหมด</h4>
+                                <p style={statsNumberStyle}>{applications.length}</p>
+                            </div>
+                            <div style={{ ...summaryItemStyle, ...summaryItemApprovedStyle }}>
+                                <div style={iconStyle}>✅</div>
+                                <h4>อนุมัติ</h4>
+                                <p style={statsNumberStyle}>{approvalStats.approved}</p>
+                            </div>
+                            <div style={{ ...summaryItemStyle, ...summaryItemPendingStyle }}>
+                                <div style={iconStyle}>⏳</div>
+                                <h4>รอการอนุมัติ</h4>
+                                <p style={statsNumberStyle}>{approvalStats.pending}</p>
+                            </div>
+                            <div style={{ ...summaryItemStyle, ...summaryItemRejectedStyle }}>
+                                <div style={iconStyle}>❌</div>
+                                <h4>ไม่อนุมัติ</h4>
+                                <p style={statsNumberStyle}>{approvalStats.rejected}</p>
+                            </div>
+                        </div>
                     </div>
 
-                </div>
-            </div>
+                    <div style={summaryCardStyle}>
+                        <h3 style={headingStyle}>📝 ใบสมัครที่รอการอนุมัติ</h3>
+                        <div style={searchBoxContainerStyle}>
+                            <div style={searchInputWrapperStyle}>
+                                <label style={searchLabelStyle}>🔍 ค้นหาชื่อผู้สมัครหรือตำแหน่ง</label>
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={searchInputStyle}
+                                    placeholder="พิมพ์ชื่อหรือตำแหน่ง..."
+                                />
+                            </div>
+                            <div style={searchInputWrapperStyle}>
+                                <label style={searchLabelStyle}>📅 ค้นหาวันที่</label>
+                                <input
+                                    type="date"
+                                    value={searchDate}
+                                    onChange={(e) => setSearchDate(e.target.value)}
+                                    style={searchInputStyle}
+                                />
+                            </div>
+                        </div>
 
-            <div style={summaryCardStyle}>
-                <h3 style={headingStyle}>📝 ใบสมัครที่รอการอนุมัติ</h3>
-                <div style={searchBoxContainerStyle}>
-                    <div style={searchInputWrapperStyle}>
-                        <label style={searchLabelStyle}>🔍 ค้นหาชื่อผู้สมัครหรือตำแหน่ง</label>
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={searchInputStyle}
-                            placeholder="พิมพ์ชื่อหรือตำแหน่ง..."
-                        />
-                    </div>
-                    <div style={searchInputWrapperStyle}>
-                        <label style={searchLabelStyle}>📅 ค้นหาวันที่</label>
-                        <input
-                            type="date"
-                            value={searchDate}
-                            onChange={(e) => setSearchDate(e.target.value)}
-                            style={searchInputStyle}
-                        />
-                    </div>
-                </div>
-
-                <div style={requestBoxStyle}>
-                    <table style={tableStyle}>
-                        <thead>
-                            <tr style={tableHeaderStyle}>
-                                <th style={thStyle}>👤 ชื่อผู้สมัคร</th>
-                                <th style={thStyle}>💼 ตำแหน่ง</th>
-                                <th style={thStyle}>📅 วันที่ส่ง</th>
-                                <th style={thStyle}>📄 Resume</th>
-                                <th style={thStyle}>📊 Transcript</th>
-                                <th style={thStyle}>🔄 สถานะ</th>
-                                <th style={thStyle}>📝 หมายเหตุ</th>
-                                <th style={thStyle}>⚙️ การจัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {applications
-                                .filter(app => app.status === 'กำลังพิจารณา')
-                                .filter(app =>
-                                    app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    app.position.toLowerCase().includes(searchTerm.toLowerCase())
-                                )
-                                .filter(app => searchDate ? app.submit_at?.startsWith(searchDate) : true)
-                                .map(application => (
-                                    <tr key={application.id} style={tableRowStyle}>
-                                        <td style={tdStyle}>{application.name}</td>
-                                        <td style={tdStyle}>{application.post_name}</td>
-                                        <td style={tdStyle}>{application.submit_at}</td>
-                                        <td style={tdStyle}>
-                                            {application.resume ? (
-                                                <a href={`${fileBaseURL}${application.resume}`} target="_blank" rel="noopener noreferrer" style={linkStyle}>
-                                                    📎 ดูไฟล์
-                                                </a>
-                                            ) : <span style={noDataStyle}>-</span>}
-                                        </td>
-                                        <td style={tdStyle}>
-                                            {application.transcript ? (
-                                                <a href={`${fileBaseURL}${application.transcript}`} target="_blank" rel="noopener noreferrer" style={linkStyle}>
-                                                    📎 ดูไฟล์
-                                                </a>
-                                            ) : <span style={noDataStyle}>-</span>}
-                                        </td>
-                                        <td style={tdStyle}>
-                                            <span style={statusBadgeStyle}>{application.status}</span>
-                                        </td>
-                                        <td style={tdStyle}>
-                                            <div style={actionButtonsStyle}>
-                                                <button
-                                                    style={approveButtonStyle}
-                                                    onClick={() => handleApproval(application, 'รอการนัดสัมภาษณ์')}
-                                                    onMouseEnter={(e) => {
-                                                        const target = e.target as HTMLButtonElement;
-                                                        target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        const target = e.target as HTMLButtonElement;
-                                                        target.style.transform = 'translateY(0) scale(1)';
-                                                    }}
-
-                                                >
-                                                    ✅ อนุมัติ
-                                                </button>
-                                                <button
-                                                    style={rejectButtonStyle}
-                                                    onClick={() => handleApproval(application, 'ไม่ได้รับเลือก')}
-                                                    onMouseEnter={(e) => {
-                                                        const target = e.target as HTMLButtonElement;
-                                                        target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        const target = e.target as HTMLButtonElement;
-                                                        target.style.transform = 'translateY(0) scale(1)';
-                                                    }}
-
-                                                >
-                                                    ❌ ไม่อนุมัติ
-                                                </button>
-                                            </div>
-                                        </td>
+                        <div style={requestBoxStyle}>
+                            <table style={tableStyle}>
+                                <thead>
+                                    <tr style={tableHeaderStyle}>
+                                        <th style={thStyle}>👤 ชื่อผู้สมัคร</th>
+                                        <th style={thStyle}>💼 ตำแหน่ง</th>
+                                        <th style={thStyle}>📅 วันที่ส่ง</th>
+                                        <th style={thStyle}>📄 Resume</th>
+                                        <th style={thStyle}>📊 Transcript</th>
+                                        <th style={thStyle}>🔄 สถานะ</th>
+                                        <th style={thStyle}>📝 หมายเหตุ</th>
+                                        <th style={thStyle}>⚙️ การจัดการ</th>
                                     </tr>
-                                ))}
-                        </tbody>
-
-                    </table>
-                </div>
-            </div>
-
-            <div style={summaryCardStyle}>
-                <h3 style={headingStyle}>📋 ประวัติใบสมัครทั้งหมด</h3>
-                <div style={searchStatusContainerStyle}>
-                    <label style={searchLabelStyle}>🔍 ค้นหาสถานะ</label>
-                    <select value={searchStatus} onChange={(e) => setSearchStatus(e.target.value)} style={dropdownStyle}>
-                        <option value="">เลือกสถานะ</option>
-                        <option value="รอการนัดสมัภาษณ์">รอการนัดสมัภาษณ์</option>
-                        <option value="ไม่ได้รับเลือก">ไม่ได้รับเลือก</option>
-                    </select>
-                </div>
-
-                <div style={requestBoxStyle}>
-                    <table style={tableStyle}>
-                        <thead>
-                            <tr style={tableHeaderStyle}>
-                                <th style={thStyle}>👤 ชื่อผู้สมัคร</th>
-                                <th style={thStyle}>💼 ตำแหน่ง</th>
-                                <th style={thStyle}>📅 วันที่ส่ง</th>
-                                <th style={thStyle}>🔄 สถานะ</th>
-                                <th style={thStyle}>📝 หมายเหตุ</th>
-                                <th style={thStyle}>⚙️ จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {applications.map(app => (
-                                <tr key={app.id} style={tableRowStyle}>
-                                    <td style={tdStyle}>{app.name}</td>
-                                    <td style={tdStyle}>{app.post_name}</td>
-                                    <td style={tdStyle}>{app.submit_at}</td>
-                                    <td style={tdStyle}>
-                                        <span style={getStatusStyle(app.status)}>{app.status}</span>
-                                    </td>
-                                    <td style={tdStyle}>{app.companyNote || <span style={noDataStyle}>-</span>}</td>
-                                    <td style={tdStyle}>
-                                        {app.status === 'รอการนัดสัมภาษณ์' && (
-                                            <button
-                                                onClick={() => handleScheduleInterview(app)}
-                                                style={{
-                                                    ...interviewButtonStyle,
-                                                    backgroundColor: app.status === 'รอการนัดสัมภาษณ์' ? '#2196f3' : '#cccccc',
-                                                    cursor: app.status === 'รอการนัดสัมภาษณ์' ? 'pointer' : 'not-allowed',
-                                                    opacity: app.status === 'รอการนัดสัมภาษณ์' ? 1 : 0.5,
-                                                }}
-                                                disabled={app.status !== 'รอการนัดสัมภาษณ์'}
-                                                onMouseEnter={(e) => {
-                                                    const target = e.target as HTMLButtonElement;
-                                                    if (app.status === 'รอการนัดสัมภาษณ์') {
-                                                        target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                    }
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    const target = e.target as HTMLButtonElement;
-                                                    target.style.transform = 'translateY(0) scale(1)';
-                                                }}
-                                            >
-                                                🗓️ นัดสัมภาษณ์
-                                            </button>
-
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-
-
-                    </table>
-                </div>
-            </div>
-
-            {showModal && selectedApplication && (
-                <div style={modalOverlayStyle}>
-                    <div style={modalStyle}>
-                        <div style={modalHeadingBoxStyle}>
-                            <h3 style={modalHeadingStyle}>
-                                {newStatus === 'รอการนัดสัมภาษณ์' ? '✅ คุณแน่ใจหรือไม่ที่จะอนุมัติคำขอนี้?' : '❌ คุณแน่ใจหรือไม่ที่จะไม่อนุมัติคำขอนี้?'}
-                            </h3>
-                        </div>
-                        <div style={modalContentStyle}>
-                            <p><strong>👤 ชื่อ:</strong> {selectedApplication.name}</p>
-                            <p><strong>💼 ตำแหน่ง:</strong> {selectedApplication.position}</p>
-                            <p><strong>📅 วันที่ส่ง:</strong> {selectedApplication.submit_at}</p>
-                        </div>
-                        <textarea
-                            style={modalInputStyle}
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="📝 หมายเหตุเพิ่มเติม (ไม่จำเป็น)"
-                            rows={4}
-                        />
-                        <div style={modalActionsStyle}>
-                            <button
-                                onClick={confirmApproval}
-                                style={modalConfirmButtonStyle}
-                                onMouseEnter={(e) => {
-                                    const target = e.target as HTMLButtonElement;
-                                    target.style.transform = 'translateY(-2px) scale(1.05)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    const target = e.target as HTMLButtonElement;
-                                    target.style.transform = 'translateY(0) scale(1)';
-                                }}
-
-                            >
-                                ✅ ยืนยัน
-                            </button>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                style={modalCancelButtonStyle}
-                                onMouseEnter={(e) => {
-                                    const target = e.target as HTMLButtonElement;
-                                    target.style.transform = 'translateY(-2px) scale(1.05)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    const target = e.target as HTMLButtonElement;
-                                    target.style.transform = 'translateY(0) scale(1)';
-                                }}
-
-                            >
-                                ❌ ยกเลิก
-                            </button>
+                                </thead>
+                                <tbody>
+                                    {applications
+                                        .filter(app => app.status === 'กำลังพิจารณา')
+                                        .filter(app =>
+                                            app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                            app.position.toLowerCase().includes(searchTerm.toLowerCase())
+                                        )
+                                        .filter(app => searchDate ? app.submit_at?.startsWith(searchDate) : true)
+                                        .map(application => (
+                                            <tr key={application.id} style={tableRowStyle}>
+                                                <td style={tdStyle}>{application.name}</td>
+                                                <td style={tdStyle}>{application.post_name}</td>
+                                                <td style={tdStyle}>{application.submit_at}</td>
+                                                <td style={tdStyle}>
+                                                    {application.resume ? (
+                                                        <a href={`${fileBaseURL}${application.resume}`} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                                                            📎 ดูไฟล์
+                                                        </a>
+                                                    ) : <span style={noDataStyle}>-</span>}
+                                                </td>
+                                                <td style={tdStyle}>
+                                                    {application.transcript ? (
+                                                        <a href={`${fileBaseURL}${application.transcript}`} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                                                            📎 ดูไฟล์
+                                                        </a>
+                                                    ) : <span style={noDataStyle}>-</span>}
+                                                </td>
+                                                <td style={tdStyle}>
+                                                    <span style={statusBadgeStyle}>{application.status}</span>
+                                                </td>
+                                                <td style={tdStyle}>
+                                                    <div style={actionButtonsStyle}>
+                                                        <button
+                                                            style={approveButtonStyle}
+                                                            onClick={() => handleApproval(application, 'รอการนัดสัมภาษณ์')}
+                                                            onMouseEnter={(e) => {
+                                                                const target = e.target as HTMLButtonElement;
+                                                                target.style.transform = 'translateY(-2px) scale(1.05)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                const target = e.target as HTMLButtonElement;
+                                                                target.style.transform = 'translateY(0) scale(1)';
+                                                            }}
+                                                        >
+                                                            ✅ อนุมัติ
+                                                        </button>
+                                                        <button
+                                                            style={rejectButtonStyle}
+                                                            onClick={() => handleApproval(application, 'ไม่ได้รับเลือก')}
+                                                            onMouseEnter={(e) => {
+                                                                const target = e.target as HTMLButtonElement;
+                                                                target.style.transform = 'translateY(-2px) scale(1.05)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                const target = e.target as HTMLButtonElement;
+                                                                target.style.transform = 'translateY(0) scale(1)';
+                                                            }}
+                                                        >
+                                                            ❌ ไม่อนุมัติ
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+
+                    <div style={summaryCardStyle}>
+                        <h3 style={headingStyle}>📋 ประวัติใบสมัครทั้งหมด</h3>
+                        <div style={searchStatusContainerStyle}>
+                            <label style={searchLabelStyle}>🔍 ค้นหาสถานะ</label>
+                            <select value={searchStatus} onChange={(e) => setSearchStatus(e.target.value)} style={dropdownStyle}>
+                                <option value="">เลือกสถานะ</option>
+                                <option value="รอการนัดสมัภาษณ์">รอการนัดสมัภาษณ์</option>
+                                <option value="ไม่ได้รับเลือก">ไม่ได้รับเลือก</option>
+                            </select>
+                        </div>
+
+                        <div style={requestBoxStyle}>
+                            <table style={tableStyle}>
+                                <thead>
+                                    <tr style={tableHeaderStyle}>
+                                        <th style={thStyle}>👤 ชื่อผู้สมัคร</th>
+                                        <th style={thStyle}>💼 ตำแหน่ง</th>
+                                        <th style={thStyle}>📅 วันที่ส่ง</th>
+                                        <th style={thStyle}>🔄 สถานะ</th>
+                                        <th style={thStyle}>📝 หมายเหตุ</th>
+                                        <th style={thStyle}>⚙️ จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {applications.map(app => (
+                                        <tr key={app.id} style={tableRowStyle}>
+                                            <td style={tdStyle}>{app.name}</td>
+                                            <td style={tdStyle}>{app.post_name}</td>
+                                            <td style={tdStyle}>{app.submit_at}</td>
+                                            <td style={tdStyle}>
+                                                <span style={getStatusStyle(app.status)}>{app.status}</span>
+                                            </td>
+                                            <td style={tdStyle}>{app.companyNote || <span style={noDataStyle}>-</span>}</td>
+                                            <td style={tdStyle}>
+                                                {app.status === 'รอการนัดสัมภาษณ์' && (
+                                                    <button
+                                                        onClick={() => handleScheduleInterview(app)}
+                                                        style={{
+                                                            ...interviewButtonStyle,
+                                                            backgroundColor: app.status === 'รอการนัดสัมภาษณ์' ? '#2196f3' : '#cccccc',
+                                                            cursor: app.status === 'รอการนัดสัมภาษณ์' ? 'pointer' : 'not-allowed',
+                                                            opacity: app.status === 'รอการนัดสัมภาษณ์' ? 1 : 0.5,
+                                                        }}
+                                                        disabled={app.status !== 'รอการนัดสัมภาษณ์'}
+                                                        onMouseEnter={(e) => {
+                                                            const target = e.target as HTMLButtonElement;
+                                                            if (app.status === 'รอการนัดสัมภาษณ์') {
+                                                                target.style.transform = 'translateY(-2px) scale(1.05)';
+                                                            }
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            const target = e.target as HTMLButtonElement;
+                                                            target.style.transform = 'translateY(0) scale(1)';
+                                                        }}
+                                                    >
+                                                        🗓️ นัดสัมภาษณ์
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {showModal && selectedApplication && (
+                        <div style={modalOverlayStyle}>
+                            <div style={modalStyle}>
+                                <div style={modalHeadingBoxStyle}>
+                                    <h3 style={modalHeadingStyle}>
+                                        {newStatus === 'รอการนัดสัมภาษณ์' ? '✅ คุณแน่ใจหรือไม่ที่จะอนุมัติคำขอนี้?' : '❌ คุณแน่ใจหรือไม่ที่จะไม่อนุมัติคำขอนี้?'}
+                                    </h3>
+                                </div>
+                                <div style={modalContentStyle}>
+                                    <p><strong>👤 ชื่อ:</strong> {selectedApplication.name}</p>
+                                    <p><strong>💼 ตำแหน่ง:</strong> {selectedApplication.position}</p>
+                                    <p><strong>📅 วันที่ส่ง:</strong> {selectedApplication.submit_at}</p>
+                                </div>
+                                <textarea
+                                    style={modalInputStyle}
+                                    value={note}
+                                    onChange={(e) => setNote(e.target.value)}
+                                    placeholder="📝 หมายเหตุเพิ่มเติม (ไม่จำเป็น)"
+                                    rows={4}
+                                />
+                                <div style={modalActionsStyle}>
+                                    <button
+                                        onClick={confirmApproval}
+                                        style={modalConfirmButtonStyle}
+                                        onMouseEnter={(e) => {
+                                            const target = e.target as HTMLButtonElement;
+                                            target.style.transform = 'translateY(-2px) scale(1.05)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            const target = e.target as HTMLButtonElement;
+                                            target.style.transform = 'translateY(0) scale(1)';
+                                        }}
+                                    >
+                                        ✅ ยืนยัน
+                                    </button>
+                                    <button
+                                        onClick={() => setShowModal(false)}
+                                        style={modalCancelButtonStyle}
+                                        onMouseEnter={(e) => {
+                                            const target = e.target as HTMLButtonElement;
+                                            target.style.transform = 'translateY(-2px) scale(1.05)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            const target = e.target as HTMLButtonElement;
+                                            target.style.transform = 'translateY(0) scale(1)';
+                                        }}
+                                    >
+                                        ❌ ยกเลิก
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
+            </Content>
+        </Layout>
     );
 };
 
@@ -433,10 +446,14 @@ const getStatusStyle = (status: string) => {
 };
 
 // Light Blue Theme Styles
-const containerStyle = {
-    background: '#f0f8ff', // Very light blue background
-    minHeight: '100vh',
+const containerStyle: React.CSSProperties = {
+    background: '#f0f8ff',
+    minHeight: 'calc(100vh - 64px)', // ลบความสูง Header (antd default 64px)
+    width: '100vw',
     padding: '20px',
+    margin: 0,
+    boxSizing: 'border-box',
+    overflowX: 'hidden',
 };
 
 const headingStyle = {
@@ -589,7 +606,6 @@ const tableRowStyle: React.CSSProperties = {
     transition: 'background-color 0.2s ease',
     cursor: 'pointer',
 };
-
 
 const tdStyle: React.CSSProperties = {
     padding: '12px 16px',
@@ -783,3 +799,4 @@ const modalInputStyle = {
 };
 
 export default Dashboard;
+

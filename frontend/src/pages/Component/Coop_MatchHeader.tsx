@@ -147,7 +147,7 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
       }
     })();
 
-    // ✅ อัปเดตรูปอัตโนมัติเมื่อโฟกัส/visible/มีสัญญาณอัปเดตรูป
+    //  อัปเดตรูปอัตโนมัติเมื่อโฟกัส/visible/มีสัญญาณอัปเดตรูป
     const onFocus = () => fetchUser();
     const onVisibility = () => { if (document.visibilityState === 'visible') fetchUser(); };
     const onStorage = (e: StorageEvent) => {
@@ -217,15 +217,14 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
     }
   };
 
-
-  const avatarUrl =   user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
+  const avatarUrl = user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
 
   return (
     <Header
       style={{
         background: '#fff',
         padding: '0 24px',
-        borderBottom: '1px solid #e5e7eb', // ⬅️ ใช้เส้นบางๆ แทนเงา
+        borderBottom: '1px solid #e5e7eb',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
