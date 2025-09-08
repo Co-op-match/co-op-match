@@ -50,6 +50,23 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const wsRef = useRef<WebSocket | null>(null);
   const unreadMapRef = useRef<Map<number, number>>(new Map());
   const { logout } = useContext(UserContext);
+  // --- เพิ่ม helper ใกล้ๆ ที่ประกาศ availableKeys ---
+const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
+  // ครอบคลุม /chat และ /chat/session/xxxx
+  if (pathname === '/chat' || pathname.startsWith('/chat/')) {
+    return 'chat';
+  }
+
+  // ครอบคลุม /student/<key> หรือ path ย่อยที่ลงท้ายด้วย key
+  // รองรับ key แบบมี "/" ภายใน เช่น "applications/history"
+  for (const key of keys) {
+    if (pathname === `/${key}` || pathname.endsWith(`/${key}`) || pathname === `/student/${key}` || pathname.endsWith(`/student/${key}`)) {
+      return key;
+    }
+  }
+  return null;
+};
+
 
   const userId = Number(localStorage.getItem("id"));
 
@@ -190,7 +207,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const visibleMenuItems = minimalMenu ? fullMenu.slice(-2) : fullMenu;
   const availableKeys = fullMenu.map(item => item.key);
   //const currentPage = availableKeys.find(key => location.pathname.includes(key)) || availableKeys[0];
-  const currentPage = availableKeys.find(key => location.pathname === `/${key}` || location.pathname.endsWith(`/${key}`)) || availableKeys[0];
+ const currentPage = resolveCurrentKey(location.pathname, availableKeys);
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'chat') {
@@ -228,15 +245,15 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
       {/* Right: Menu + Notifications + Avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 'auto', minWidth: 0 }}>
         <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0 }}>
-          <Menu
-            className="no-ellipsis-menu"
-            mode="horizontal"
-            selectedKeys={[currentPage]}
-            items={visibleMenuItems}
-            onClick={handleMenuClick}
-            style={{ border: 'none', backgroundColor: 'transparent' }}
-            overflowedIndicator={null}
-          />
+         <Menu
+          className="no-ellipsis-menu"
+          mode="horizontal"
+          selectedKeys={currentPage ? [currentPage] : []}  // ✅ ไม่มี current ก็ไม่ต้องไฮไลท์
+          items={visibleMenuItems}
+          onClick={handleMenuClick}
+          style={{ border: 'none', backgroundColor: 'transparent' }}
+          overflowedIndicator={null}
+        />
         </div>
 
         <Notification />

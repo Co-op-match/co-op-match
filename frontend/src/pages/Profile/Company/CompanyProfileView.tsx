@@ -55,7 +55,40 @@ const CompanyProfileview: React.FC = () => {
     () => Number(localStorage.getItem("id")) || null,
     []
   );
+  const extractRoomId = (raw: any): number | null => {
+    if (!raw) return null;
+    // รองรับหลายรูปแบบ response
+    return (
+      raw.room_id ??
+      raw.id ??
+      raw.room?.id ??
+      raw.data?.room_id ??
+      raw.data?.id ??
+      raw.data?.room?.id ??
+      null
+    );
+  };
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+async function mintSessionWithRetry(roomId: number, maxTries = 5, delayMs = 150) {
+  let lastErr: any = null;
+  for (let i = 0; i < maxTries; i++) {
+    try {
+      return await createChatSession(roomId);
+    } catch (e: any) {
+      lastErr = e;
+      const code = e?.response?.status;
+      // ถ้าเป็น 404/400/409 ให้ลองใหม่ เผื่อห้องเพิ่งสร้าง
+      if ([400, 404, 409].includes(Number(code))) {
+        await wait(delayMs);
+        continue;
+      }
+      // error อื่นไม่ต้อง retry
+      throw e;
+    }
+  }
+  throw lastErr;
+}
   // map badge status/สีล่วงหน้า
   const verifyBadge = useMemo(() => {
     switch (verifyStatus) {
@@ -107,56 +140,56 @@ const CompanyProfileview: React.FC = () => {
     };
   }, [companyId]);
 
-  const handleChatClick = useCallback(async () => {
-    if (!currentUserId || !companyOwnerUserId) return;
+const handleChatClick = useCallback(async () => {
+  if (creatingSession) return; // กันกดซ้ำ
+  if (!currentUserId || !companyOwnerUserId) return;
 
-    // กันเคสคุยกับตัวเอง
-    if (currentUserId === companyOwnerUserId) {
-      message.info("ไม่สามารถเริ่มแชทกับบัญชีของตนเองได้");
-      return;
-    }
+  if (currentUserId === companyOwnerUserId) {
+    message.info("ไม่สามารถเริ่มแชทกับบัญชีของตนเองได้");
+    return;
+  }
 
-    setCreatingSession(true);
+  setCreatingSession(true);
+
+  try {
+    // 1) สร้าง/ดึงห้อง
     let roomId: number | null = null;
-
     try {
       const res = await CreateChatRoom(currentUserId, companyOwnerUserId);
-      // รองรับทั้ง 200/201/409
-      if (res?.status === 201 || res?.status === 200) {
-        roomId = res.data?.room_id ?? res.data?.id ?? null;
-      } else if (res?.status === 409) {
-        roomId = res.data?.room_id ?? null;
-      }
+      // รองรับทั้ง axios ที่โยน error เมื่อ 409 หรือไม่
+      roomId = extractRoomId(res?.data) ?? extractRoomId(res) ?? null;
+      // ถ้า backend ส่ง status 409 แบบ throw error จะไปเข้า catch ข้างล่าง
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 409) {
-        roomId = err?.response?.data?.room_id ?? null;
-      } else {
-        console.error("❌ ไม่สามารถสร้างห้องแชทได้:", err);
-        message.error("ไม่สามารถเริ่มแชทได้");
+      // 409 (room exists) ที่ axios โยน error ก็ handle ที่นี่
+      const data = err?.response?.data ?? {};
+      roomId = extractRoomId(data);
+      if (!roomId) {
+        console.error("CreateChatRoom error:", err);
+        message.error("ไม่สามารถเริ่มแชทได้ (สร้างห้องไม่สำเร็จ)");
         setCreatingSession(false);
         return;
       }
     }
 
     if (!roomId) {
-      console.error("❌ ไม่พบ room_id จากการสร้าง/ค้นหาห้อง");
       message.error("ไม่พบห้องแชท");
       setCreatingSession(false);
       return;
     }
 
-    try {
-      const { token } = await createChatSession(roomId);
-      saveChatToken(token);
-      navigate(`/chat/session/${token}`, { replace: true });
-    } catch (e) {
-      console.error("❌ mint chat token ไม่สำเร็จ:", e);
-      message.error("เริ่มแชทไม่สำเร็จ");
-    } finally {
-      setCreatingSession(false);
-    }
-  }, [currentUserId, companyOwnerUserId, navigate]);
+    // 2) mint token ด้วย retry กัน timing issue หลังสร้างห้อง
+    const { token } = await mintSessionWithRetry(roomId, 6, 180);
+
+    // 3) เก็บ token และนำทางทันที
+    saveChatToken(token);
+    navigate(`/chat/session/${token}`, { replace: true });
+  } catch (e) {
+    console.error("เริ่มแชทไม่สำเร็จ:", e);
+    message.error("เริ่มแชทไม่สำเร็จ");
+  } finally {
+    setCreatingSession(false);
+  }
+}, [creatingSession, currentUserId, companyOwnerUserId, navigate]);
 
   return (
     <Layout>
