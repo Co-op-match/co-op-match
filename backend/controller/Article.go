@@ -7,6 +7,7 @@ import (
 
 	"co-op-match.com/co-op-match/config"
 	"co-op-match.com/co-op-match/entity"
+	"co-op-match.com/co-op-match/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,17 +20,15 @@ type CreateArticleInput struct {
 	IsPublished *bool              `json:"is_published" form:"is_published"`
 }
 
+// controller/article.go (เฉพาะฟังก์ชัน CreateArticle)
 func CreateArticle(c *gin.Context) {
 	var in CreateArticleInput
 
 	isMP := strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data")
 	if isMP {
-		// ให้แน่ใจว่า parsed แล้ว แม้เป็น PUT/POST
 		_ = c.Request.ParseMultipartForm(32 << 20)
-		if err := c.ShouldBind(&in); err != nil {
-			// อย่ารีเทิร์น ปล่อยให้ fallback ด้านล่าง
-		}
-		// อ่านค่า is_published ทับอีกชั้นเสมอ
+		_ = c.ShouldBind(&in)
+		// ทับ is_published จากฟอร์ม (เหมือนเดิม)
 		if raw := c.PostForm("is_published"); raw != "" {
 			if b, ok := parseBoolStr(raw); ok {
 				in.IsPublished = &b
@@ -46,16 +45,23 @@ func CreateArticle(c *gin.Context) {
 		}
 	}
 
+	// ดึง admin_id จาก context (มาจาก JWT)
+	aid, ok := middlewares.CurrentAdminID(c)
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{"error": "admin only"})
+		return
+	}
+
 	article := entity.Article{
 		Title:       in.Title,
 		Subtitle:    in.Subtitle,
 		Body:        in.Body,
 		Category:    in.Category,
 		Type:        in.Type,
-		IsPublished: in.IsPublished, // nil ได้ (draft)
+		IsPublished: in.IsPublished,
+		AdminID:     aid,
 	}
 
-	// เซ็ต published_at ตามค่าสถานะจริง
 	if in.IsPublished != nil && *in.IsPublished {
 		now := time.Now()
 		article.PublishedAt = &now
@@ -67,11 +73,7 @@ func CreateArticle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "create failed"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "สร้างเรียบร้อย",
-		"article": article,
-	})
-
+	c.JSON(http.StatusCreated, gin.H{"message": "สร้างเรียบร้อย", "article": article})
 }
 
 // แปลงสตริงเป็นบูล (รองรับ "true/false", "1/0", "on/off", "yes/no")
@@ -110,29 +112,22 @@ func UpdateArticle(c *gin.Context) {
 	}
 
 	var in UpdateArticleInput
-
-	// ลอง bind ตาม Content-Type ก่อน
 	if strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data") {
-		// ให้แน่ใจว่ามีการ parse ฟอร์ม แม้จะเป็น PUT
 		_ = c.Request.ParseMultipartForm(32 << 20)
-		if err := c.ShouldBind(&in); err != nil {
-			// ไม่ต้องรีเทิร์น ลองอ่านด้วยมือด้านล่าง
-		}
+		_ = c.ShouldBind(&in)
 	} else {
-		if err := c.ShouldBindJSON(&in); err != nil {
-			// ถ้า JSON bind ไม่ได้ ค่อย fallback ไปอ่านค่า raw
-		}
+		_ = c.ShouldBindJSON(&in)
 	}
 
-	//  กันพลาด: อ่าน is_published จากฟอร์ม/คิวรี ตรงๆ อีกชั้น (ทับค่าที่ bind มา)
 	if in.IsPublished == nil {
-		raw := c.PostForm("is_published")
-		if raw == "" {
-			// บาง client อาจส่งมาเป็น FormData ที่ method PUT แต่ lib ไปใส่ใน c.Request.Form
-			raw = c.Request.FormValue("is_published")
-		}
-		if b, ok := parseBoolStr(raw); ok {
-			in.IsPublished = &b
+		if raw := c.PostForm("is_published"); raw != "" {
+			if b, ok := parseBoolStr(raw); ok {
+				in.IsPublished = &b
+			}
+		} else if raw := c.Request.FormValue("is_published"); raw != "" {
+			if b, ok := parseBoolStr(raw); ok {
+				in.IsPublished = &b
+			}
 		}
 	}
 
@@ -152,8 +147,6 @@ func UpdateArticle(c *gin.Context) {
 	if in.Type != nil {
 		update["type"] = *in.Type
 	}
-
-	// สำคัญ: pointer != nil ถึงจะอัปเดต แม้เป็น false ก็ต้องอัปเดต
 	if in.IsPublished != nil {
 		update["is_published"] = *in.IsPublished
 		if *in.IsPublished {
@@ -165,7 +158,6 @@ func UpdateArticle(c *gin.Context) {
 	}
 
 	if len(update) == 0 {
-		// ไม่มีอะไรจะอัปเดต (กันเคสส่งมาแต่ไฟล์ไม่ได้/ไม่มีฟิลด์)
 		c.JSON(http.StatusOK, art)
 		return
 	}
@@ -175,11 +167,18 @@ func UpdateArticle(c *gin.Context) {
 		return
 	}
 	db.First(&art, "id = ?", id)
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Article updated successfully",
-		"article": art,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Article updated successfully", "article": art})
+}
 
+func DeleteArticle(c *gin.Context) {
+	id := c.Param("id")
+	db := config.DB()
+
+	if err := db.Delete(&entity.Article{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Article deleted successfully"})
 }
 
 func GetArticle(c *gin.Context) {
@@ -219,17 +218,4 @@ func ListArticles(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, items)
-}
-
-func DeleteArticle(c *gin.Context) {
-	id := c.Param("id")
-	db := config.DB()
-	if err := db.Delete(&entity.Article{}, id).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Article deleted successfully",
-	})
-
 }
