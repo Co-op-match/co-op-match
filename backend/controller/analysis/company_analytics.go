@@ -209,12 +209,15 @@ func CompanyOverview(c *gin.Context) {
 func CompanyTrend(c *gin.Context) {
 	db := config.DB()
 	companyId, _ := strconv.Atoi(c.Param("companyId"))
+
 	startStr := c.Query("start")
 	endStr := c.Query("end")
 
 	var start, end time.Time
 	var err error
-	if startStr != "" && endStr != "" {
+	explicitRange := startStr != "" && endStr != ""
+
+	if explicitRange {
 		start, end, err = betweenStartEnd(startStr, endStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
@@ -224,15 +227,26 @@ func CompanyTrend(c *gin.Context) {
 		start, end = betweenDays(c.Query("days"))
 	}
 
-	// โครงสร้างผลลัพธ์ใหม่
-	type TrendPoint struct {
-		Date  string `json:"date"`
-		Total int64  `json:"total"` // รวมทั้งวัน (ผู้สมัครทั้งหมด)
-		Pass  int64  `json:"pass"`  // ผ่าน
-		Fail  int64  `json:"fail"`  // ไม่ผ่าน + ไม่ได้รับเลือก
+	// --- รวม "วันนี้" เสมอเมื่อใช้โหมด days ---
+	if !explicitRange {
+		now := time.Now()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		if end.Before(today) {
+			end = today
+		}
 	}
 
-	// 1) ดึงสรุปรายวันด้วย conditional aggregation
+	// --- normalize เป็น 00:00 ---
+	start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	end   = time.Date(end.Year(),   end.Month(),   end.Day(),   0, 0, 0, 0, end.Location())
+
+	type TrendPoint struct {
+		Date  string `json:"date"`
+		Total int64  `json:"total"`
+		Pass  int64  `json:"pass"`
+		Fail  int64  `json:"fail"`
+	}
+
 	type row struct {
 		Date  string
 		Total int64
@@ -241,7 +255,6 @@ func CompanyTrend(c *gin.Context) {
 	}
 	var rows []row
 
-	// เงื่อนไข normalize: รวม "ไม่ผ่าน" และ "ไม่ได้รับเลือก" เป็น Fail
 	passCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
 	failCond := `
 		CASE
@@ -270,7 +283,6 @@ func CompanyTrend(c *gin.Context) {
 		return
 	}
 
-	// 2) เติมวันที่ให้ครบช่วง + map เป็นผลลัพธ์สุดท้าย
 	byDate := make(map[string]row, len(rows))
 	for _, r := range rows {
 		byDate[r.Date] = r
@@ -298,6 +310,7 @@ func CompanyTrend(c *gin.Context) {
 
 	c.JSON(http.StatusOK, points)
 }
+
 
 /*=================================== Status Application  ===================================*/
 func CompanyStatusApplication(c *gin.Context) {

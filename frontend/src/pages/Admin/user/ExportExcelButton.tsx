@@ -57,8 +57,6 @@ const fmtLogs = (rows: LoginLogInterface[] = []) =>
   rows.map((l) => ({
     ID: l.ID,
     Email: l.User?.Email ?? "",
-    IP: l.ip ?? "",
-    Device: l.device ?? "",
     LoginAt: l.login_at ? dayjs(l.login_at).format("YYYY-MM-DD HH:mm:ss") : "",
     LogoutAt: l.logout_at ? dayjs(l.logout_at).format("YYYY-MM-DD HH:mm:ss") : "",
   }));

@@ -20,7 +20,6 @@ func GetAllAcademicStaff(c *gin.Context) {
 	err := config.DB().
 		Preload("User").
 		Preload("Address").
-		Preload("Admin").
 		Preload("Gender").
 		Preload("Contact").
 		Find(&academicstaff).Error
@@ -201,7 +200,6 @@ bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
 
 		return tx.Preload("User").
 			Preload("Address").
-			Preload("Admin").
 			Preload("Gender").
 			Preload("Contact").
 			Preload("University").
@@ -340,9 +338,6 @@ func UpdateAcademicStaff(c *gin.Context) {
 	if input.AddressID != 0 && input.AddressID != staff.AddressID {
 		updateData["address_id"] = input.AddressID
 	}
-	if input.AdminID != 0 && input.AdminID != staff.AdminID {
-		updateData["admin_id"] = input.AdminID
-	}
 	if input.GenderID != 0 && input.GenderID != staff.GenderID {
 		updateData["gender_id"] = input.GenderID
 	}
@@ -368,7 +363,6 @@ func UpdateAcademicStaff(c *gin.Context) {
 	if err := config.DB().
 		Preload("User").
 		Preload("Address").
-		Preload("Admin").
 		Preload("Gender").
 		Preload("Contact").
 		Preload("University").

@@ -51,6 +51,7 @@ const CertificationReviewPage: React.FC = () => {
   const fetchVerifications = async () => {
     setLoading(true);
     try {
+      console.log("user_id: ", user_id);
       const [res_verify, res_status, res_admin] = await Promise.all([
         GetAllVerifications(),
         GetAllStatusVerify(),

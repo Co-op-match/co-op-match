@@ -198,7 +198,6 @@ func SignIn(c *gin.Context) {
 	// ตั้งสถานะออนไลน์ + log
 	db.Model(&user).Update("is_logged_in", true)
 	loginLog := entity.LoginLog{
-		IP:      c.ClientIP(),
 		//Device:  c.GetHeader("User-Agent"),
 		LoginAt: time.Now(),
 		UserID:  user.ID,

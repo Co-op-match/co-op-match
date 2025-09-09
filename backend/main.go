@@ -232,7 +232,7 @@ func main() {
 		academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
 		academicstaffGroup.GET("/student/advisor/:user_id", controller.GetAdviseeStudents)
 		academicstaffGroup.GET("/company/advisor/:user_id", controller.GetAdviseeCompanySummary)
-		
+		academicstaffGroup.GET("all", controller.GetAllAcademicStaff)
 	}
 
 	// contact
@@ -252,6 +252,8 @@ func main() {
 		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
 		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
 		adminGroup.GET("/:id", controller.GetAdminByID)
+		adminGroup.POST("", controller.CreateAdmin)
+		adminGroup.POST("/uploads/image", controller.UploadImageByAdmin)
 	}
 
 	// analysis

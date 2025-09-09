@@ -8,7 +8,6 @@ import (
 
 type LoginLog struct {
 	gorm.Model
-	IP       string     `json:"ip"`
 	LoginAt  time.Time  `json:"login_at"`
 	LogoutAt *time.Time `json:"logout_at"`
 

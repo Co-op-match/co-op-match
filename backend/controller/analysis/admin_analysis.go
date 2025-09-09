@@ -19,7 +19,9 @@ func GetTrendForAdmin(c *gin.Context) {
 
 	var start, end time.Time
 	var err error
-	if startStr != "" && endStr != "" {
+	explicitRange := startStr != "" && endStr != ""
+
+	if explicitRange {
 		start, end, err = betweenStartEnd(startStr, endStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
@@ -29,23 +31,36 @@ func GetTrendForAdmin(c *gin.Context) {
 		start, end = betweenDays(c.Query("days"))
 	}
 
+	// --- รวม "วันนี้" เสมอเมื่อใช้โหมด days ---
+	if !explicitRange {
+		now := time.Now()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		if end.Before(today) {
+			end = today
+		}
+	}
+
+	// --- normalize เป็น 00:00 ---
+	start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	end   = time.Date(end.Year(),   end.Month(),   end.Day(),   0, 0, 0, 0, end.Location())
+
 	// 2) โครงสร้างผลลัพธ์
 	type TrendPoint struct {
 		Date        string `json:"date"`
 		Total       int64  `json:"total"`
-		Pass        int64  `json:"pass"`             // ผ่าน
-		Review      int64  `json:"review"`           // กำลังพิจารณา
-		Interviewed int64  `json:"interviewed"`      // นัดสัมภาษณ์แล้ว
-		Waiting     int64  `json:"waiting_schedule"` // รอการนัดสัมภาษณ์
-		Fail        int64  `json:"fail"`             // ไม่ผ่าน + ไม่ได้รับเลือก
+		Pass        int64  `json:"pass"`
+		Review      int64  `json:"review"`
+		Interviewed int64  `json:"interviewed"`
+		Waiting     int64  `json:"waiting_schedule"`
+		Fail        int64  `json:"fail"`
 	}
 
-	// 3) เงื่อนไขนับสถานะ (normalize: ตัดช่องว่าง)
-	passCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
-	reviewCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
+	// 3) เงื่อนไขนับสถานะ
+	passCond        := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
+	reviewCond      := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
 	interviewedCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'นัดสัมภาษณ์แล้ว' THEN 1 ELSE 0 END`
-	waitingCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
-	failCond := `
+	waitingCond     := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
+	failCond        := `
 		CASE
 		  WHEN REPLACE(TRIM(a.status),' ','') = 'ไม่ผ่าน'
 		    OR INSTR(REPLACE(TRIM(a.status),' ',''),'ไม่ผ่าน') > 0
@@ -55,7 +70,7 @@ func GetTrendForAdmin(c *gin.Context) {
 		END
 	`
 
-	// 4) ดึงข้อมูลรวมทั้งระบบ (ไม่จำกัดมหาวิทยาลัย)
+	// 4) ดึงข้อมูลรวมทั้งระบบ
 	type row struct {
 		Date        string
 		Total       int64
@@ -67,9 +82,6 @@ func GetTrendForAdmin(c *gin.Context) {
 	}
 	var rows []row
 
-	// หมายเหตุ:
-	// - ใช้ DATE(a.submit_at) เพื่อ group รายวัน (SQLite/MySQL compatible)
-	// - ใช้ระยะเวลาถึง end + 23:59:59 (end.Add(24h - 1ns))
 	if err := db.Table("applications a").
 		Select(`
 			DATE(a.submit_at) AS date,
@@ -109,8 +121,7 @@ func GetTrendForAdmin(c *gin.Context) {
 			})
 		} else {
 			points = append(points, TrendPoint{
-				Date:  day,
-				Total: 0, Pass: 0, Review: 0, Interviewed: 0, Waiting: 0, Fail: 0,
+				Date: day, Total: 0, Pass: 0, Review: 0, Interviewed: 0, Waiting: 0, Fail: 0,
 			})
 		}
 	}

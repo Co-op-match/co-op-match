@@ -16,6 +16,7 @@ import type { LikeReviewInput } from "../../interfaces/LikeReviewInput";
 import type { AcademicStaffInterface } from "../../interfaces/AcademicStaff";
 import type { InputAcademicStaffInterface } from "@/interfaces/InputAcademicStaff";
 import { API_BASE } from "@/config/env";
+import type { CreateAdminPayload } from "@/interfaces/Admin";
 
 const apiUrl = "http://localhost:8000";
 const Authorization = localStorage.getItem("token");
@@ -182,6 +183,15 @@ export function toFileURL(path?: string) {
   return `${apiUrl}${path}`;
 }
 
+export const UploadImageByAdmin = (file: File) => {
+  const fd = new FormData();
+  fd.append("image", file);
+  return axios.post(`${apiUrl}/admin/uploads/image`, fd, {
+    withCredentials: true,
+    headers: { "Content-Type": "multipart/form-data", Authorization: `${Bearer} ${Authorization}` },
+  });
+};
+
 //=======================================Admin============================================
 export async function GetAdminById(id: number) {
   return await axios
@@ -218,6 +228,13 @@ export async function GetInternshipPostsInAdminByIPostID(id: number) {
     .then((res) => res)
     .catch((e) => e.response);
 }
+export async function CreateAdmin(data: CreateAdminPayload) {
+  return await axios
+    .post(`${apiUrl}/admin`, data, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== Verify ==============================//
 export async function GetAllVerifications() {
   return await axios
@@ -258,7 +275,7 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
 //=======================================AcademicStaffs============================================
 export async function GetAllAcademicStaff() {
   return await axios
-    .get(`${apiUrl}/academic/all`, requestOptions)
+    .get(`${apiUrl}/academicstaff/all`, requestOptions)
     .then((res) => res)
     .catch((e) => e.response);
 }

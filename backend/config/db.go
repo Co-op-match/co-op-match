@@ -242,7 +242,7 @@ func createSeedData(db *gorm.DB) {
 	// แอดมิน (Admin)
 	admins := []entity.Admin{
 		{FirstName: "สมชาย", LastName: "แอดมิน", Birthday: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), UserID: 1},
-		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 5},
+		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 2},
 	}
 	for _, admin := range admins {
 		db.Unscoped().FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
