@@ -73,15 +73,78 @@ const ExportPostsButton: React.FC<ExportProps> = ({ posts }) => {
   };
 
   return (
-    <Button
-      icon={<DownloadOutlined />}
-      onClick={handleExport}
-      disabled={!posts || posts.length === 0}
-      style={{ backgroundColor: "#e6f4ff", border: "1px solid #91caff", color: "#1677ff", borderRadius: 8 }}
-    >
-      ส่งออกข้อมูล
-    </Button>
+    <>
+      <style>{enhancedButtonStyles}</style>
+      <Button
+        icon={<DownloadOutlined />}
+        onClick={handleExport}
+        disabled={!posts || posts.length === 0}
+        className="enhanced-export-button"
+        size="large"
+      >
+        ส่งออกข้อมูล
+      </Button>
+    </>
   );
 };
 
 export default ExportPostsButton;
+
+// Enhanced styles for the button
+const enhancedButtonStyles = `
+  .enhanced-export-button {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    padding: 8px 24px;
+    height: auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .enhanced-export-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  .enhanced-export-button:hover::before {
+    left: 100%;
+  }
+
+  .enhanced-export-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+    color: white;
+  }
+
+  .enhanced-export-button:active {
+    transform: translateY(0);
+  }
+
+  .enhanced-export-button:disabled {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+  }
+
+  .enhanced-export-button:disabled:hover {
+    transform: none;
+    box-shadow: none;
+  }
+`;

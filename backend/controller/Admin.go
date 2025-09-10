@@ -166,14 +166,14 @@ func CreateAdmin(c *gin.Context) {
     // role Admin
     var role entity.Role
     if err := db.Where("role_name = ?", input.Role).First(&role).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "role Admin not found"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่พบข้อมูลบทบาทผู้ใช้"})
         return
     }
 
     // duplicate email?
     var exists entity.User
     if err := db.Where("email = ?", normalizedEmail).First(&exists).Error; err == nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "email is used"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "อีเมลนี้เคยถูกใช้แล้ว"})
         return
     }
 

@@ -286,33 +286,74 @@ const CertificationReviewPage: React.FC = () => {
     <Layout>
       <AdminHeader />
       {contextHolder}
+      <style>{customStyle}</style>
       <Layout className="adminpage-layout">
         <div className="adminpost-header-box">
-          <Row justify="space-between" align="middle">
+          <Row justify="space-between" align="middle" style={{ position: "relative", zIndex: 1 }}>
             <Col>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div style={{ backgroundColor: "#e6f4ff", borderRadius: 12, padding: 12 }}>
-                  <FileTextOutlined style={{ fontSize: 32, color: "#1677ff" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                <div style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: 20,
+                  padding: 20,
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)"
+                }}>
+                  <FileTextOutlined style={{ 
+                    fontSize: 40, 
+                    color: "white",
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                  }} />
                 </div>
                 <div>
-                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>ตรวจสอบการรับรอง</Title>
-                  <Text style={{ color: "#555", fontSize: 16 }}>
+                  <Title level={1} style={{ 
+                    margin: 0, 
+                    color: "white", 
+                    fontSize: 36,
+                    fontWeight: 700,
+                    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    letterSpacing: "-0.5px"
+                  }}>
+                    ตรวจสอบการรับรอง
+                  </Title>
+                  <Text style={{ 
+                    color: "rgba(255, 255, 255, 0.9)", 
+                    fontSize: 18,
+                    fontWeight: 400,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.1)"
+                  }}>
                     ระบบตรวจสอบและอนุมัติการรับรองบุคลากรทางวิชาการและบริษัท
                   </Text>
                 </div>
               </div>
             </Col>
-            <Col />
           </Row>
         </div>
 
-        <Card style={{ borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", border: "none" }}>
-          {/* Filter Section */}
-          <div style={{ marginBottom: 24 }}>
-            <Card className="adminpage-filter-card" styles={{ body: { padding: 20 } }}>
-              <Row gutter={[16, 16]} align="middle">
+        <Card style={{ 
+          borderRadius: 20, 
+          boxShadow: "0 8px 32px rgba(0,0,0,0.08)", 
+          border: "1px solid rgba(59, 130, 246, 0.1)",
+          overflow: "hidden"
+        }}>
+          {/* Enhanced Filter Section */}
+          <div style={{ marginBottom: 32 }}>
+            <Card style={{
+              background: "linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
+              borderRadius: 16,
+              backdropFilter: "blur(10px)"
+            }}>
+              <Row gutter={[24, 24]} align="middle">
                 <Col xs={24} md={12}>
-                  <div className="adminpage-filter-label">กรองตามสถานะ</div>
+                  <div style={{
+                    marginBottom: 12,
+                    fontWeight: 600,
+                    color: "rgb(30, 58, 138)",
+                    fontSize: 16
+                  }}>
+                    กรองตามสถานะ
+                  </div>
                   <Select
                     mode="multiple"
                     value={selectedFilterStatuses}
@@ -325,21 +366,35 @@ const CertificationReviewPage: React.FC = () => {
                     }}
                     style={{ width: "100%" }}
                     size="large"
-                    options={[{ label: "ทั้งหมด", value: "ทั้งหมด" }, ...statusVerifications.map((s) => ({ label: s.status_verify, value: s.status_verify }))]}
+                    options={[
+                      { label: "ทั้งหมด", value: "ทั้งหมด" }, 
+                      ...statusVerifications.map((s) => ({ label: s.status_verify, value: s.status_verify }))
+                    ]}
                     placeholder="เลือกสถานะที่ต้องการแสดง"
                     allowClear
                     maxTagCount="responsive"
                   />
                 </Col>
                 <Col xs={24} md={12}>
-                  <div className="adminpage-filter-label">ค้นหาผู้ขอรับรอง</div>
+                  <div style={{
+                    marginBottom: 12,
+                    fontWeight: 600,
+                    color: "rgb(30, 58, 138)",
+                    fontSize: 16
+                  }}>
+                    ค้นหาผู้ขอรับรอง
+                  </div>
                   <Input
                     placeholder="ค้นหาชื่อบริษัท, Email หรือ ID..."
                     suffix={<SearchOutlined style={{ color: "#bfbfbf", fontSize: 16 }} />}
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     size="large"
-                    className="adminpage-search-input"
+                    style={{
+                      borderRadius: 12,
+                      border: "2px solid rgba(59, 130, 246, 0.2)",
+                      transition: "all 0.3s ease"
+                    }}
                   />
                 </Col>
               </Row>
@@ -360,8 +415,12 @@ const CertificationReviewPage: React.FC = () => {
             }}
             size="middle"
             scroll={{ x: 800 }}
+            style={{
+              borderRadius: 12,
+            }}
           />
         </Card>
+      </Layout>
 
         <DetailModal
           open={detailModalVisible}
@@ -384,8 +443,60 @@ const CertificationReviewPage: React.FC = () => {
 
         <DocumentModal open={documentModalVisible} selectedDocument={selectedDocument} onCancel={() => setDocumentModalVisible(false)} />
       </Layout>
-    </Layout>
   );
 };
 
 export default CertificationReviewPage;
+
+
+const customStyle = `
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(5deg);
+    }
+  }
+
+  .ant-table-thead > tr > th {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%) !important;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2) !important;
+    color: rgb(30, 58, 138) !important;
+    font-weight: 600 !important;
+  }
+
+  .ant-table-tbody > tr:hover > td {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.02) 0%, rgba(59, 130, 246, 0.02) 100%) !important;
+  }
+
+  .ant-select-selector {
+    border-radius: 12px !important;
+    border: 2px solid rgba(59, 130, 246, 0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .ant-select-focused .ant-select-selector {
+    border-color: rgb(59, 130, 246) !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  }
+
+  .ant-input:focus {
+    border-color: rgb(59, 130, 246) !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  }
+
+  .ant-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4) !important;
+  }
+
+  .ant-card {
+    transition: all 0.3s ease;
+  }
+
+  .ant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12) !important;
+  }
+`
