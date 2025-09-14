@@ -38,7 +38,7 @@ import CompanyHeader from "../../Component/CompanyHeader";
 import "./Appointment.css";
 
 const { Title, Text } = Typography;
-const { Header, Content } = Layout; // ⬅️ เพิ่ม Header เข้ามา
+const { Content } = Layout; // ⬅️ เพิ่ม Header เข้ามา
 
 const InterviewDashboard: React.FC = () => {
   const [applications, setApplications] = useState<any[]>([]);
