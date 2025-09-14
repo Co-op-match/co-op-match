@@ -33,7 +33,7 @@ import { SendEmailinterview } from "../../../services/https";
 import CompanyHeader from "../../Component/CompanyHeader";
 
 const { Title, Text } = Typography;
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
 const InterviewDashboard: React.FC = () => {
   const [applications, setApplications] = useState<any[]>([]);
