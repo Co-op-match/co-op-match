@@ -130,7 +130,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
       }
     })();
 
-    // ✅ อัปเดตรูปอัตโนมัติเมื่อโฟกัส/visible/มีสัญญาณอัปเดตรูป
+    //  อัปเดตรูปอัตโนมัติเมื่อโฟกัส/visible/มีสัญญาณอัปเดตรูป
     const onFocus = () => fetchUser();
     const onVisibility = () => { if (document.visibilityState === 'visible') fetchUser(); };
     const onStorage = (e: StorageEvent) => {
@@ -188,9 +188,37 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   ];
 
   const visibleMenuItems = minimalMenu ? fullMenu.slice(-2) : fullMenu;
-  const availableKeys = fullMenu.map(item => item.key);
-  const currentPage = availableKeys.find(key => location.pathname.includes(key)) || availableKeys[0];
+  
+  // แก้ไขการคำนวณ currentPage ให้รองรับ submenu
+  const getCurrentPage = () => {
+    const pathname = location.pathname;
+    
+    // ตรวจสอบ submenu ก่อน
+    if (pathname.includes('favorite-posts')) {
+      return 'profile'; // ให้ parent menu (profile) เป็น selected
+    }
+    
+    // ตรวจสอบ main menu
+    const availableKeys = fullMenu.map(item => item.key);
+    return availableKeys.find(key => 
+      pathname === `/${key}` || 
+      pathname.endsWith(`/${key}`) ||
+      pathname.includes(`/student/${key}`)
+    ) || availableKeys[0];
+  };
 
+  const currentPage = getCurrentPage();
+
+  // แก้ไข selectedKeys ให้รองรับ submenu
+  const getSelectedKeys = () => {
+    const pathname = location.pathname;
+    
+    if (pathname.includes('favorite-posts')) {
+      return ['favorite-posts']; // submenu key
+    }
+    
+    return [currentPage];
+  };
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'chat') {
@@ -200,15 +228,14 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
     }
   };
 
-
-  const avatarUrl =   user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
+  const avatarUrl = user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
 
   return (
     <Header
       style={{
         background: '#fff',
         padding: '0 24px',
-        borderBottom: '1px solid #e5e7eb', // ⬅️ ใช้เส้นบางๆ แทนเงา
+        borderBottom: '1px solid #e5e7eb',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -231,7 +258,7 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
           <Menu
             className="no-ellipsis-menu"
             mode="horizontal"
-            selectedKeys={[currentPage]}
+            selectedKeys={getSelectedKeys()}
             items={visibleMenuItems}
             onClick={handleMenuClick}
             style={{ border: 'none', backgroundColor: 'transparent' }}

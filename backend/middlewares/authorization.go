@@ -14,23 +14,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-ENV ที่ใช้:
-- JWT_SECRET=...   (ต้องตรงกับตอนออก token ใน users.SignIn)
-*/
-
 // ===== JWT helper =====
 func jwtWrapperFromEnv() services.JwtWrapper {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "dev-secret-only" // กันพลาดตอน dev; โปรดตั้งค่าในโปรดักชัน
+		secret = "dev-secret-only" 
 	}
 	return services.JwtWrapper{
 		SecretKey: secret,
 		Issuer:    "AuthService",
 	}
 }
-
 // ===== Auth middleware (รองรับทั้ง Bearer และ Cookie) =====
 func AuthRequired() gin.HandlerFunc {
 	jwtw := jwtWrapperFromEnv()
@@ -47,29 +41,64 @@ func AuthRequired() gin.HandlerFunc {
 		if auth := c.GetHeader("Authorization"); strings.HasPrefix(strings.ToLower(auth), "bearer ") {
 			token = strings.TrimSpace(auth[7:])
 		}
-
 		// 2) Cookie fallback
 		if token == "" {
 			if ck, err := c.Cookie("auth_token"); err == nil {
 				token = ck
 			}
 		}
-
 		if token == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
 			return
 		}
 
-		// Validate
-		if _, err := jwtw.ValidateToken(token); err != nil {
+		claims, err := jwtw.ValidateToken(token)
+		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
+
+		if uid, err := claims.UserID(); err == nil {
+			c.Set("user_id", uid)
+		}
+		if claims.Email != "" {
+			c.Set("email", claims.Email)
+		}
+		if claims.Role != "" {
+			c.Set("role", claims.Role)
+		}
+		if claims.AdminID != nil {
+			c.Set("admin_id", *claims.AdminID)
+		}
+		c.Set("jwt_claims", claims)
 
 		c.Next()
 	}
 }
 
+// ===== Helper สำหรับดึง admin_id จาก Context =====
+func CurrentAdminID(c *gin.Context) (uint, bool) {
+	role, _ := c.Get("role")
+	if s, ok := role.(string); !ok || s != "Admin" {
+		return 0, false
+	}
+	id, ok := c.Get("admin_id")
+	if !ok {
+		return 0, false
+	}
+	aid, ok := id.(uint)
+	return aid, ok
+}
+
+func RequireAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if role, _ := c.Get("role"); role != "Admin" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "admin only"})
+			return
+		}
+		c.Next()
+	}
+}
 // ===== Forgot password rate limit (อิงอีเมล + IP) =====
 
 type bucket struct {
