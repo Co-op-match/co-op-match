@@ -343,3 +343,75 @@ func CompanyStatusApplication(c *gin.Context) {
 
 	c.JSON(http.StatusOK, buckets)
 }
+
+/*=================================== Lastest Application  ===================================*/
+type LatestPendingApplicant struct {
+	ApplicationID   uint       `json:"application_id"`
+	Status          string     `json:"status"`
+	SubmitAt        time.Time  `json:"submit_at"`
+	CompanyNote     string     `json:"company_note"`
+	PostID          uint       `json:"post_id"`
+	PostName        string     `json:"post_name"`
+	StudentID       uint       `json:"student_id"`
+	StudentFullName string     `json:"student_full_name"`
+	StudentPhone    string     `json:"student_phone,omitempty"`
+	InterviewID     *uint      `json:"interview_id,omitempty"`
+	InterviewAt     *time.Time `json:"interview_at,omitempty"`
+	StudentImageURL *string    `json:"student_image_url,omitempty"`
+}
+
+// controller/analysis/company_latest_pending.go
+func CompanyLatestPending(c *gin.Context) {
+	db := config.DB()
+	companyID, _ := strconv.Atoi(c.Param("companyId"))
+
+	// รวมเฉพาะ "ยังไม่ยืนยันผล" (ก่อนตัดสินผ่าน/ไม่ผ่าน)
+	// เลือกได้สองแนว: A) whitelist สถานะที่ต้องการ หรือ B) not-in สถานะจบแล้ว
+	clean := func(s string) string { return strings.ReplaceAll(strings.TrimSpace(s), " ", "") }
+	preDecision := []string{
+		clean("กำลังพิจารณา"),
+		clean("รอการนัดสัมภาษณ์"),
+		clean("นัดสัมภาษณ์แล้ว"),
+	}
+
+	rows := make([]LatestPendingApplicant, 0)
+
+	err := db.Table("applications a").
+		Select(`
+			a.id AS application_id,
+			TRIM(a.status) AS status,
+			a.submit_at,
+			a.company_note,
+			p.id AS post_id,
+			p.post_name AS post_name,
+			s.id AS student_id,
+			(TRIM(s.first_name) || ' ' || TRIM(s.last_name)) AS student_full_name,
+			s.phone_number AS student_phone,
+			ia.id AS interview_id,
+			ia.appointment_date AS interview_at,
+			(SELECT pi.image_url
+			FROM profile_images pi
+			WHERE pi.user_id = s.user_id
+				AND pi.deleted_at IS NULL
+			ORDER BY pi.id DESC
+			LIMIT 1) AS student_image_url  -- ✅ รูปล่าสุด
+		`).
+		Joins("JOIN intership_posts p ON p.id = a.intership_post_id").
+		Joins("JOIN students s ON s.id = a.student_id").
+		Joins(`LEFT JOIN interview_appointments ia 
+			ON ia.student_id = a.student_id AND ia.company_id = p.company_id`).
+		Where("p.company_id = ?", companyID).
+		Where(`REPLACE(TRIM(a.status),' ','') IN (?)`, preDecision).
+		Where("a.deleted_at IS NULL").
+		Group("a.id").
+		Order("a.submit_at DESC, a.id DESC").
+		Scan(&rows).Error
+
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}

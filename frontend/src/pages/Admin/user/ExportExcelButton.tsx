@@ -120,12 +120,39 @@ const ExportExcelButton: React.FC<Props> = ({
         ];
 
   return (
-    <Dropdown menu={{ items }} trigger={["click"]}>
-      <Button icon={<DownloadOutlined />} style={{ borderRadius: 8 }}>
-        ส่งออกข้อมูล
-      </Button>
-    </Dropdown>
+    <>
+    <style>{customStyle}</style>
+      <Dropdown menu={{ items }} trigger={["click"]}>
+        <Button icon={<DownloadOutlined />} className="export-btn">
+          ส่งออกข้อมูล
+        </Button>
+      </Dropdown>
+    </>
   );
 };
 
 export default ExportExcelButton;
+
+const customStyle = `
+  .export-btn {
+    background: linear-gradient(135deg, rgb(30,58,138) 0%, rgb(59,130,246) 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    height: 44px !important;
+    padding: 0 16px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 8px 24px rgba(59,130,246,.35) !important;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .export-btn:hover,
+  .export-btn:focus {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 28px rgba(59,130,246,.45) !important;
+  }
+  .export-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 16px rgba(59,130,246,.3) !important;
+  }
+`;

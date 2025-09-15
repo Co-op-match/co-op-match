@@ -47,7 +47,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl }) => {
       styles={{ body: { padding: 24 } }}
     >
       <div style={{ marginBottom: 20 }}>
-        <Title level={5} style={{ margin: 0, color: "#1677ff", display: "flex", alignItems: "center", gap: 8 }}>
+        <Title level={5} style={{ margin: 0, color: "rgb(30, 58, 138) ", display: "flex", alignItems: "center", gap: 8 }}>
           <FileTextOutlined />
           เอกสารแนบ
         </Title>
@@ -55,10 +55,10 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ documentUrl }) => {
 
       <div
         style={{
-          background: "linear-gradient(135deg, #f8f9ff 0%, #e6f7ff 100%)",
+          background: "linear-gradient(135deg, #f8f9ff 0%, rgba(232, 238, 255, 1) 100%)",
           borderRadius: 12,
           padding: 20,
-          border: "2px dashed #1677ff",
+          border: "2px dashed rgb(30, 58, 138) ",
           height: "inherit",
         }}
       >

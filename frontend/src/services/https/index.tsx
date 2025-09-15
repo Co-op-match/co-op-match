@@ -272,6 +272,12 @@ export async function UpdateVerifyStatus(verifyId: number, data: VerifyInterface
       return e.response;
     });
 }
+export async function GetVerifyStats() {
+  return await axios
+    .get(`${apiUrl}/verify/stats`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
 //=======================================AcademicStaffs============================================
 export async function GetAllAcademicStaff() {
   return await axios
@@ -444,6 +450,12 @@ export async function getStatusApplication (companyId: number) {
     .then((res) => res.data)
     .catch((e) => e.response);
 }
+export async function getLatestPendingApplicants (companyId: number) {
+  return await axios
+    .get(`${apiUrl}/analysis/company/${companyId}/latest-pending`, requestOptions)
+    .then((res) => res.data)
+    .catch((e) => e.response);
+}
 
 export async function getAcademicOverview(userId: number) {
   return await axios
@@ -491,6 +503,20 @@ export async function GetTrendForAdmin (params?: { start?: string; end?: string;
     .then(res => res)
     .catch(e => e.response);
 }
+// ===== Match Effectiveness =====
+export async function GetTopPopular() {
+  return await axios
+    .get(`${apiUrl}/analysis/popular-admin`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+export async function GetUpliftPassFail() {
+  return await axios
+    .get(`${apiUrl}/analysis/uplift`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+
 //=============================== SearchJobs ==============================//
 async function GetProvince() {
   return await axios

@@ -88,22 +88,23 @@ const Post_StatCard: React.FC<Props> = ({ statusList, totalPosts, pendingPosts, 
       <style>{enhancedCardStyles}</style>
       <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
         {showTotalCard && (
-          <Col xs={24} sm={12} md={6} key="__all__">
+          <Col xs={24} sm={12} md={6} className="stat-col" key="__all__">
             <Card
               className="enhanced-stat-card total-stat-card"
               style={{
                 background: "#fff",
+                width: "100%",
                 border: "1px solid #eef2f7",
                 boxShadow: "0 10px 24px rgba(15, 23, 42, 0.08)",
               }}
             >
               <div className="stat-card-content">
                 <div>
-                  <div className="stat-number" style={{ color: "#0f172a" }}>
-                    {totalPosts.toLocaleString()}
-                  </div>
                   <div className="stat-label" style={{ color: "#475569" }}>
                     โพสต์ทั้งหมด
+                  </div>
+                  <div className="stat-number" style={{ color: "#0f172a" }}>
+                    {totalPosts.toLocaleString()}
                   </div>
                 </div>
                 <div
@@ -121,24 +122,15 @@ const Post_StatCard: React.FC<Props> = ({ statusList, totalPosts, pendingPosts, 
           const nameTH = s.status_post_th || "";
           const p = getStatusCardProps(nameTH, counts);
           return (
-            <Col xs={24} sm={12} md={6} key={nameTH || Math.random()}>
+            <Col xs={24} sm={12} md={6} className="stat-col" key={nameTH || Math.random()}>
               <Card 
                 className="enhanced-stat-card"
-                style={{ 
-                  background: p.bg,
-                  boxShadow: `0 12px 32px ${p.shadowColor}`,
-                  border: p.border,
-                  "--gradient": p.gradient
-                } as React.CSSProperties & { "--gradient": string }}
+                style={{ background: p.bg, boxShadow: `0 12px 32px ${p.shadowColor}`, border: p.border }}
               >
                 <div className="stat-card-content">
                   <div>
-                    <div className="stat-number" style={{ color: p.color }}>
-                      {p.count.toLocaleString()}
-                    </div>
-                    <div className="stat-label">
-                      {p.label}
-                    </div>
+                    <div className="stat-label">{p.label}</div>
+                    <div className="stat-number" style={{ color: p.color }}>{p.count.toLocaleString()}</div>
                   </div>
                   {p.icon}
                 </div>
@@ -224,13 +216,19 @@ const enhancedCardStyles = `
   }
 
   .stat-card-content {
-    padding: 16px;
-    height: 100%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;      /* ให้อยู่ด้านเดียวกัน */
+    gap: 24px;                        /* ระยะระหว่างข้อความกับไอคอน */
+    padding: 20px 28px;               /* เพิ่มระยะขอบด้านข้าง */
+    height: 100%;
+    width: 100%;
     position: relative;
     z-index: 1;
+  }
+
+  @media (min-width: 992px) {
+    .stat-card-content { gap: 28px; padding: 24px 32px; }
   }
 
   .stat-number {
@@ -251,11 +249,15 @@ const enhancedCardStyles = `
     margin: 0;
   }
 
-  .stat-icon-container {
-    padding: 12px;
+  .stat-icon-container{
+    width: 56px;
+    height: 56px;
+    padding: 0;
     border-radius: 12px;
-    position: relative;
-    animation: pulse 2s infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;                   /* กันขยาย/บีบ */
   }
 
   .stat-icon {
@@ -284,4 +286,39 @@ const enhancedCardStyles = `
     -webkit-mask-composite: xor;
     z-index: -1;
   }
+  /* ให้คอลัมน์ยืดการ์ดให้เท่ากัน */
+  .stat-col { display: flex; }
+  .stat-col .ant-card { flex: 1 1 auto; height: 100%; }
+
+  /* กำหนดความสูงขั้นต่ำเท่ากันทุกใบ (ปรับได้) */
+  .enhanced-stat-card,
+  .total-stat-card { min-height: 140px; }           /* desktop */
+  @media (max-width: 576px) {
+    .enhanced-stat-card,
+    .total-stat-card { min-height: 128px; }         /* มือถือ */
+  }
+
+  /* ให้ body ของการ์ดยืดเต็มสูง แล้วจัดวางกลางแนวตั้ง */
+  .enhanced-stat-card .ant-card-body,
+  .total-stat-card .ant-card-body {
+    height: 100%;
+    display: flex;
+    padding: 16px;                     /* ให้เท่ากันทุกใบ */
+  }
+
+  /* ทำไอคอนพื้นหลังเป็นสี่เหลี่ยมมุมโค้ง ขนาดคงที่ */
+  .stat-icon-container{
+    width: 56px;
+    height: 56px;
+    padding: 0;                        /* ยกเลิก padding เดิม */
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stat-icon{ font-size: 24px; color: #fff; }
+
+  /* ตัวเลข/ข้อความให้ไม่ดันการ์ดเกิน */
+  .stat-number{ line-height: 1; margin-bottom: 6px; }
+  .stat-label{ line-height: 1.25; }
 `;

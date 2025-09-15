@@ -74,12 +74,12 @@ const ExportPostsButton: React.FC<ExportProps> = ({ posts }) => {
 
   return (
     <>
-      <style>{enhancedButtonStyles}</style>
+      <style>{whitePillBtn}</style>
       <Button
         icon={<DownloadOutlined />}
         onClick={handleExport}
         disabled={!posts || posts.length === 0}
-        className="enhanced-export-button"
+        className="white-pill-btn"
         size="large"
       >
         ส่งออกข้อมูล
@@ -90,61 +90,39 @@ const ExportPostsButton: React.FC<ExportProps> = ({ posts }) => {
 
 export default ExportPostsButton;
 
-// Enhanced styles for the button
-const enhancedButtonStyles = `
-  .enhanced-export-button {
-    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%);
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    padding: 8px 24px;
-    height: auto;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-    position: relative;
-    overflow: hidden;
+const whitePillBtn = `
+  .white-pill-btn {
+    background: #fff;
+    color: #1e3a8a;                 /* น้ำเงินเข้ากับเฮดเดอร์ */
+    border: 2px solid rgba(255,255,255,.7);
+    border-radius: 16px;
+    height: 48px;
+    padding: 0 28px;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(30,58,138,.18);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
   }
-
-  .enhanced-export-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: left 0.5s;
+  .white-pill-btn .anticon {
+    font-size: 18px;
+    margin-right: 10px;
+    color: #1e3a8a;                 /* ไอคอนสีน้ำเงิน */
+    transform: translateY(1px);     /* จูน baseline ให้ตรงข้อความ */
   }
-
-  .enhanced-export-button:hover::before {
-    left: 100%;
+  .white-pill-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(30,58,138,.26);
+    border-color: rgba(255,255,255,.9);
+    color: #1e3a8a;
   }
+  .white-pill-btn:active { transform: translateY(0); }
 
-  .enhanced-export-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
-    color: white;
-  }
-
-  .enhanced-export-button:active {
-    transform: translateY(0);
-  }
-
-  .enhanced-export-button:disabled {
-    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  .white-pill-btn:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
     box-shadow: none;
-    transform: none;
-    cursor: not-allowed;
   }
-
-  .enhanced-export-button:disabled:hover {
-    transform: none;
-    box-shadow: none;
+  @media (max-width: 576px) {
+    .white-pill-btn { height: 44px; padding: 0 22px; }
   }
 `;

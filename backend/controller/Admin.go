@@ -358,3 +358,78 @@ func NextAvailableFilename(dir, filename string) (string, error) {
 		}
 	}
 }
+
+/********************************    Verify Overview     ********************************************/
+type VerifyStatsResponse struct {
+	Total           int64 `json:"total"`
+	NotSubmitted    int64 `json:"not_submitted"` // ยังไม่ได้ส่งคำขอ
+	Pending         int64 `json:"pending"`       // รอรับรอง
+	Approved        int64 `json:"approved"`      // รับรอง
+	Rejected        int64 `json:"rejected"`      // ปฏิเสธ
+	ByStatus        []Item `json:"by_status"`
+}
+type Item struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func GetVerifyStats(c *gin.Context) {
+	db := config.DB()
+
+	// ดึงสถานะทั้งหมด
+	var statuses []entity.StatusVerify
+	if err := db.Find(&statuses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot load status_verifies"})
+		return
+	}
+
+	// นับต่อสถานะ (LEFT JOIN เพื่อให้สถานะที่ยังไม่มีเอกสารขึ้น 0 ได้)
+	type row struct {
+		Status string
+		Count  int64
+	}
+	var rows []row
+	if err := db.
+		Table("status_verifies sv").
+		Select("sv.status_verify AS status, COUNT(v.id) AS count").
+		Joins("LEFT JOIN verifies v ON v.status_verify_id = sv.id AND v.deleted_at IS NULL").
+		Where("sv.deleted_at IS NULL").
+		Group("sv.status_verify").
+		Scan(&rows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot count verify stats"})
+		return
+	}
+
+	var (
+		total        int64
+		notSubmitted int64
+		pending      int64
+		approved     int64
+		rejected     int64
+	)
+	byStatus := make([]Item, 0, len(rows))
+	for _, r := range rows {
+		byStatus = append(byStatus, Item{Status: r.Status, Count: r.Count})
+		total += r.Count
+		switch r.Status {
+		case "ยังไม่ได้ส่งคำขอ":
+			notSubmitted = r.Count
+		case "รอรับรอง":
+			pending = r.Count
+		case "รับรอง":
+			approved = r.Count
+		case "ปฏิเสธ":
+			rejected = r.Count
+		}
+	}
+
+	resp := VerifyStatsResponse{
+		Total:        total,
+		NotSubmitted: notSubmitted,
+		Pending:      pending,
+		Approved:     approved,
+		Rejected:     rejected,
+		ByStatus:     byStatus,
+	}
+	c.JSON(http.StatusOK, resp)
+}

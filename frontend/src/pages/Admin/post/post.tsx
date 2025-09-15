@@ -13,8 +13,9 @@ import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
 import "./Post.css";
 import "../main.css";
+import AdminSectionHeader from "../AdminSectionHeader";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const getStatusTabs = ({
   activeTab,
@@ -393,109 +394,93 @@ const ManagePostsPage = () => {
       {contextHolder}
       <AdminHeader />
       <Layout className="adminpage-layout" style={{ padding: 16 }}>
-        <div className="adminpost-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <div className="gradient-title-frame">
-                <div className="gradient-title-content">
-                  <div className="enhanced-icon-container">
-                    <FileTextOutlined
-                      style={{ fontSize: "32px", color: "white" }}
-                    />
-                  </div>
-                  <div>
-                    <Title level={2} style={{ margin: 0, color: "rgba(255, 255, 255, 1)" }}>
-                      การจัดการโพสต์ฝึกงาน
-                    </Title>
-                    <Text style={{ color: "rgba(255, 255, 255, 1)", fontSize: "16px", fontWeight: "500" }}>
-                      อนุมัติและปฏิเสธโพสต์ฝึกงานจากบริษัทต่างๆ
-                    </Text>
-                  </div>
-                </div>
-              </div>
-            </Col>
-            <Col>
+        <div style={{ margin: 32, marginTop: 16 }}>
+          <AdminSectionHeader
+            icon={<FileTextOutlined style={{ fontSize: 32, color: "white" }} />}
+            title="การจัดการโพสต์ฝึกงาน"
+            subtitle="อนุมัติและปฏิเสธโพสต์ฝึกงานจากบริษัทต่างๆ"
+            actions={
               <Space>
                 <ExportPostsButton posts={filteredPosts} />
               </Space>
-            </Col>
-          </Row>
-        </div>
-
-        <Post_StatCard
-          statusList={status}
-          totalPosts={totalPosts}
-          pendingPosts={pendingPosts}
-          approvedPosts={approvedPosts}
-          rejectedPosts={rejectedPosts}
-        />
-
-        {/* Main Content */}
-        <Card className="enhanced-main-card">
-          {/* Search and Filters */}
-          <div style={{ marginBottom: "24px" }}>
-            <Row justify="space-between" align="middle">
-              <Col xs={24} md={12}>
-                <Input
-                  placeholder="ค้นหาตำแหน่งงาน, บริษัท, หรือประเภทงาน..."
-                  prefix={<SearchOutlined style={{ color: "rgb(59, 130, 246)" }} />}
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  className="enhanced-search-input"
-                  size="large"
-                />
-              </Col>
-            </Row>
-          </div>
-
-          {getStatusTabs({ activeTab, onChange: setActiveTab })}
-
-          <Text
-            type="secondary"
-            style={{ fontSize: "14px", marginTop: "10px", fontWeight: "500" }}
-          >
-            แสดง {getCurrentTabCount()} รายการ
-          </Text>
-
-          <Table
-            columns={columns}
-            dataSource={filteredPosts}
-            rowKey="ID"
-            loading={loading}
-            className="enhanced-table"
-            pagination={{
-              ...pagination,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              onChange: (page, pageSize) => {
-                setPagination({ current: page, pageSize });
-              },
-              style: { marginTop: "24px" },
-            }}
-            scroll={{ x: 1400 }}
-            style={{
-              borderRadius: "16px",
-              overflow: "hidden",
-            }}
-            rowClassName={(record, index) => {
-              const status = record.StatusPost?.status_post;
-              let baseClass = index % 2 === 0 ? "even-row" : "odd-row";
-              if (status === "Pending Approval")
-                baseClass += " pending-highlight";
-              return baseClass;
-            }}
-            locale={{
-              emptyText: (
-                <Empty
-                  description="ไม่พบข้อมูลโพสต์"
-                  style={{ padding: "40px" }}
-                />
-              ),
-            }}
+            }
           />
-        </Card>
+
+          <Post_StatCard
+            statusList={status}
+            totalPosts={totalPosts}
+            pendingPosts={pendingPosts}
+            approvedPosts={approvedPosts}
+            rejectedPosts={rejectedPosts}
+          />
+
+          {/* Main Content */}
+          <Card className="enhanced-main-card">
+            {/* Search and Filters */}
+            <div style={{ marginBottom: "24px" }}>
+              <Row justify="space-between" align="middle">
+                <Col xs={24} md={12}>
+                  <Input
+                    placeholder="ค้นหาตำแหน่งงาน, บริษัท, หรือประเภทงาน..."
+                    prefix={<SearchOutlined style={{ color: "rgb(59, 130, 246)" }} />}
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    className="enhanced-search-input"
+                    size="large"
+                  />
+                </Col>
+              </Row>
+            </div>
+
+            {getStatusTabs({ activeTab, onChange: setActiveTab })}
+
+            <Text
+              type="secondary"
+              style={{ fontSize: "14px", marginTop: "10px", fontWeight: "500" }}
+            >
+              แสดง {getCurrentTabCount()} รายการ
+            </Text>
+
+            <Table
+              columns={columns}
+              dataSource={filteredPosts}
+              rowKey="ID"
+              loading={loading}
+              className="enhanced-table"
+              pagination={{
+                ...pagination,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} จาก ${total} รายการ`,
+                onChange: (page, pageSize) => {
+                  setPagination({ current: page, pageSize });
+                },
+                style: { marginTop: "24px" },
+              }}
+              scroll={{ x: 1400 }}
+              style={{
+                borderRadius: "16px",
+                overflow: "hidden",
+              }}
+              rowClassName={(record, index) => {
+                const status = record.StatusPost?.status_post;
+                let baseClass = index % 2 === 0 ? "even-row" : "odd-row";
+                if (status === "Pending Approval")
+                  baseClass += " pending-highlight";
+                return baseClass;
+              }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    description="ไม่พบข้อมูลโพสต์"
+                    style={{ padding: "40px" }}
+                  />
+                ),
+              }}
+            />
+          </Card>
+        </div>
       </Layout>
     </Layout>
   );

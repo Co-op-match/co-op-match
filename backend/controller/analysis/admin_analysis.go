@@ -128,3 +128,55 @@ func GetTrendForAdmin(c *gin.Context) {
 
 	c.JSON(http.StatusOK, points)
 }
+
+/***********************************   Popular   ***********************************/
+/***********************************   Popular   ***********************************/
+type PopularMajor struct {
+	JobType    string `json:"job_type"`
+	ApplyCount int64  `json:"apply_count"`
+}
+
+type PopularCompany struct {
+	CompanyID   uint   `json:"company_id"`
+	CompanyName string `json:"company_name"`
+	ApplyCount  int64  `json:"apply_count"`
+}
+
+// GET /analysis/popular
+func GetTopPopularAdmin(c *gin.Context) {
+	db := config.DB()
+
+	// Top 5 "สาขา" ยอดนิยม (รวมจำนวนใบสมัครทั้งหมด ไม่กรองวัน)
+	var topMajors []PopularMajor
+	db.Raw(`
+		SELECT
+			COALESCE(jt.job_type, 'ไม่ระบุ') AS job_type,
+			COUNT(a.id) AS apply_count
+		FROM intership_posts ip
+		LEFT JOIN job_types jt ON jt.id = ip.job_type_id
+		LEFT JOIN applications a ON a.intership_post_id = ip.id
+		GROUP BY jt.job_type
+		ORDER BY apply_count DESC
+		LIMIT 5
+	`).Scan(&topMajors)
+
+	// Top 5 บริษัทยอดนิยม (ตามจำนวนใบสมัครทั้งหมด ไม่กรองวัน)
+	var topCompanies []PopularCompany
+	db.Raw(`
+		SELECT
+			c.id AS company_id,
+			c.company_name AS company_name,
+			COUNT(a.id) AS apply_count
+		FROM companies c
+		LEFT JOIN intership_posts ip ON ip.company_id = c.id
+		LEFT JOIN applications a ON a.intership_post_id = ip.id
+		GROUP BY c.id
+		ORDER BY apply_count DESC
+		LIMIT 5
+	`).Scan(&topCompanies)
+
+	c.JSON(http.StatusOK, gin.H{
+		"top_majors":    topMajors,
+		"top_companies": topCompanies,
+	})
+}
