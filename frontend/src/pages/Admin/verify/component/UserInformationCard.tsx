@@ -62,7 +62,7 @@ const UserInformationCard: React.FC<Props> = ({ record, getUserInfo }) => {
           gap: 16,
           marginBottom: 24,
           padding: 16,
-          background: "linear-gradient(135deg, #f8f9ff 0%, rgba(232, 238, 255, 1) 100%)",
+          background: "linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%)",
           borderRadius: 12,
           border: "1px solid #e6f7ff",
         }}

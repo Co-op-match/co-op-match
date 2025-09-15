@@ -9,11 +9,11 @@ import type { StatusPostInterface } from "../../../interface/IStatusPost";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
-import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
 import "./Post.css";
 import "../main.css";
 import AdminSectionHeader from "../AdminSectionHeader";
+import { Post_StatCard } from "../StatCard";
 
 const { Text } = Typography;
 
@@ -394,7 +394,7 @@ const ManagePostsPage = () => {
       {contextHolder}
       <AdminHeader />
       <Layout className="adminpage-layout" style={{ padding: 16 }}>
-        <div style={{ margin: 32, marginTop: 16 }}>
+        <div style={{ margin: 32, marginTop: 8 }}>
           <AdminSectionHeader
             icon={<FileTextOutlined style={{ fontSize: 32, color: "white" }} />}
             title="การจัดการโพสต์ฝึกงาน"

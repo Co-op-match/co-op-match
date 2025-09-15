@@ -28,7 +28,7 @@ export default function AdminSectionHeader({
   return (
     <div className="adminhdr" style={{
       background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
-      borderRadius: 20, overflow: "hidden",
+      borderRadius: 12, overflow: "hidden",
       marginBottom: 32,
     }}>
       <style>{css}</style>
@@ -58,8 +58,8 @@ export default function AdminSectionHeader({
 }
 
 const css = `
-.adminhdr__content{ padding:16px }
-@media(min-width:576px){ .adminhdr__content{ padding:24px } }
+.adminhdr__content{ padding:40px 24px 32px; }
+@media(min-width:576px){ .adminhdr__content{ padding:40px 24px 32px } }
 
 .adminhdr__row{
   display:flex; align-items:center; gap:16px; min-width:0; /* สำคัญ: ให้ลูกบีบได้ */

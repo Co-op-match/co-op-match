@@ -19,9 +19,9 @@ import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import type { AdminInterface } from "../../../interfaces/Admin";
 import { fileURL } from "@/config/env";
 import AdminSectionHeader from "../AdminSectionHeader";
-import Verify_StatCard from "./component/Verify_StatCard";
+import { Verify_StatCard } from "../StatCard";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const user_id = Number(localStorage.getItem("id") || 0);
 
 const CertificationReviewPage: React.FC = () => {
@@ -43,7 +43,7 @@ const CertificationReviewPage: React.FC = () => {
   const [verifications, setVerifications] = useState<VerifyInterface[]>([]);
   const [statusVerifications, setStatusVerifications] = useState<StatusVerifyInterface[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<StatusVerifyInterface>();
-  const [verifyStat, setVerifyStat] = useState({ not_submitted: 0, pending: 0, approved: 0, rejected: 0 });
+  const [verifyStat, setVerifyStat] = useState({ total: 0, not_submitted: 0, pending: 0, approved: 0, rejected: 0 });
 
   const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -85,6 +85,7 @@ const CertificationReviewPage: React.FC = () => {
       try {
         const d = await GetVerifyStats();
         setVerifyStat({
+          total: d.total,
           not_submitted: d.not_submitted,
           pending: d.pending,
           approved: d.approved,
@@ -300,7 +301,7 @@ const CertificationReviewPage: React.FC = () => {
       {contextHolder}
       <style>{customStyle}</style>
       <Layout className="adminpage-layout" style={{ padding: 16 }}>
-        <div style={{ margin: 32, marginTop: 16 }}>
+        <div style={{ margin: 32, marginTop: 8 }}>
           <AdminSectionHeader
             icon={<FileTextOutlined style={{ fontSize: 32, color: "white" }} />}
             title="ตรวจสอบการรับรอง"
@@ -308,10 +309,12 @@ const CertificationReviewPage: React.FC = () => {
           />
 
           <Verify_StatCard
+            total={verifyStat.total}
             notSubmitted={verifyStat.not_submitted}
             pending={verifyStat.pending}
             approved={verifyStat.approved}
             rejected={verifyStat.rejected}
+            showTotalCard
           />
         
           {/* Main Content Card */}
@@ -319,11 +322,6 @@ const CertificationReviewPage: React.FC = () => {
             {/* Enhanced Filter Section */}
             <div className="filter-section">
               <Card className="filter-card">
-                <div className="filter-header">
-                  <Title level={4} className="filter-title">
-                    🔍 ค้นหาและกรองข้อมูล
-                  </Title>
-                </div>
                 <Row gutter={[24, 24]} align="middle">
                   <Col xs={24} md={12}>
                     <div className="input-label">
@@ -440,9 +438,8 @@ const customStyle = `
   }
 
   .filter-card {
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%) !important;
-    border: 2px solid rgba(59, 130, 246, 0.2) !important;
-    border-radius: 20px !important;
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
+    border-radius: 8px !important;
     backdrop-filter: blur(10px);
     animation: fadeInUp 1s ease-out 0.4s both;
     position: relative;
@@ -463,16 +460,6 @@ const customStyle = `
   .filter-header {
     margin-bottom: 20px;
     text-align: left;
-  }
-
-  .filter-title {
-    margin: 0 !important;
-    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%);
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    font-weight: 700 !important;
-    font-size: 20px !important;
   }
 
   .input-label {
@@ -517,19 +504,6 @@ const customStyle = `
   /* Enhanced Table */
   .table-container {
     animation: fadeInUp 1s ease-out 0.6s both;
-  }
-
-  .enhanced-table .ant-table {
-    border-radius: 16px !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
-  }
-
-  .enhanced-table .ant-table-thead > tr > th {
-    background:  rgba(234, 238, 248, 1) !important;
-    border-bottom: 3px solid rgba(59, 130, 246, 0.3) !important;
-    color: rgb(30, 58, 138) !important;
-    font-weight: 700 !important;
-    font-size: 14px !important;
   }
 
   /* Action Button */

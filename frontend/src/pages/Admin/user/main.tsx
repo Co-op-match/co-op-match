@@ -20,7 +20,7 @@ import type { MonthlyUserByRoleInterface } from "@/interfaces/Analysis";
 import "dayjs/locale/th";
 import type { ColumnFilterItem } from "antd/es/table/interface";
 import AdminSectionHeader from "../AdminSectionHeader";
-import User_StatCard from "./StatCard";
+import { User_StatCard } from "../StatCard";
 dayjs.locale("th");
 
 const { Title, Text } = Typography;
@@ -259,7 +259,7 @@ const AdminUserDetailsPage: React.FC = () => {
         <AdminHeader />
         <Layout className="adminpage-layout" style={{ padding: 16, background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)", minHeight: "100vh" }}>
           {contextHolder}
-          <div style={{ margin: 32, marginTop: 16 }}>
+          <div style={{ margin: 32, marginTop: 8 }}>
             <AdminSectionHeader
               icon={<SafetyOutlined style={{ fontSize: 32, color: "white" }} />}
               title="จัดการข้อมูลผู้ใช้ระบบ"
