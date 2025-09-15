@@ -28,9 +28,6 @@ type Student struct {
 	AddressID uint    `json:"address_id"`
 	Address   Address `gorm:"foreignKey:AddressID"`
 
-	AdminID uint  `json:"admin_id"`
-	Admin   Admin `gorm:"foreignKey:AdminID"`
-
 	Education            []Education            `gorm:"foreignKey:StudentID"`
 	StudentSkill         []StudentSkill         `gorm:"foreignKey:StudentID"`
 	StudentInterest      []StudentInterest      `gorm:"foreignKey:StudentID"`

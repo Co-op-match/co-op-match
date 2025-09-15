@@ -15,9 +15,6 @@ type Company struct {
 	AddressID uint    `json:"address_id"`
 	Address   Address `gorm:"foreignKey:AddressID"`
 
-	AdminID uint  `json:"admin_id"`
-	Admin   Admin `gorm:"foreignKey:AdminID"`
-
 	ContactID uint    `json:"contact_id"`
 	Contact   Contact `gorm:"foreignKey:ContactID"`
 

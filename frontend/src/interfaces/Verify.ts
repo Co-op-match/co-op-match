@@ -21,3 +21,12 @@ export interface VerifyInterface {
   DeletedAt?: string | null;
   UpdatedAt?: string;
 }
+
+export interface VerifyStatsResponse {
+  total: number;
+  not_submitted: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  by_status: { status: string; count: number }[];
+}
