@@ -16,7 +16,6 @@ func GetAllStudents(c *gin.Context) {
 
 	err := config.DB().
 		Preload("User").
-		Preload("Admin").
 		Preload("Education").
 		Preload("Gender").
 		Preload("Address").
@@ -41,7 +40,6 @@ func GetStudentByID(c *gin.Context) {
 
 	if err := config.DB().
 		Preload("User").
-		Preload("Admin").
 		Preload("Education").
 		Preload("Gender").
 		Preload("Address").
@@ -71,7 +69,6 @@ func GetStudentByUserID(c *gin.Context) {
 	if err := config.DB().
 		Preload("User").
 		Preload("User.ProfileImage").
-		Preload("Admin").
 		Preload("Education").
 		Preload("Education.University").
 		Preload("Education.Faculty").

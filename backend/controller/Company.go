@@ -74,10 +74,9 @@ func CreateCompany(c *gin.Context) {
 	companyName := c.PostForm("company_name")
 	userIDStr := c.PostForm("user_id")
 	addressIDStr := c.PostForm("address_id")
-	adminIDStr := c.PostForm("admin_id")
 	contactIDStr := c.PostForm("contact_id")
 
-	if companyName == "" || userIDStr == "" || addressIDStr == "" || adminIDStr == "" || contactIDStr == "" {
+	if companyName == "" || userIDStr == "" || addressIDStr == "" || contactIDStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required fields"})
 		return
 	}

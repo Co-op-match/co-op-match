@@ -48,7 +48,7 @@ const UserInformationCard: React.FC<Props> = ({ record, getUserInfo }) => {
       styles={{ body: { padding: 24 } }}
     >
       <div style={{ marginBottom: 20 }}>
-        <Title level={5} style={{ margin: 0, color: "#1677ff", display: "flex", alignItems: "center", gap: 8 }}>
+        <Title level={5} style={{ margin: 0, color: "rgb(30, 58, 138) ", display: "flex", alignItems: "center", gap: 8 }}>
           <UserOutlined />
           ข้อมูลผู้ขอรับรอง
         </Title>
@@ -62,7 +62,7 @@ const UserInformationCard: React.FC<Props> = ({ record, getUserInfo }) => {
           gap: 16,
           marginBottom: 24,
           padding: 16,
-          background: "linear-gradient(135deg, #f8f9ff 0%, #e6f7ff 100%)",
+          background: "linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%)",
           borderRadius: 12,
           border: "1px solid #e6f7ff",
         }}
@@ -93,7 +93,7 @@ const UserInformationCard: React.FC<Props> = ({ record, getUserInfo }) => {
         }}
       >
         <Descriptions.Item label="อีเมล" span={2}>
-          <Text copyable style={{ color: "#1677ff" }}>{record?.User?.Email ?? "-"}</Text>
+          <Text copyable style={{ color: "rgb(30, 58, 138) " }}>{record?.User?.Email ?? "-"}</Text>
         </Descriptions.Item>
 
         {userInfo.position && (

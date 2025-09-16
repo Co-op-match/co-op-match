@@ -73,15 +73,56 @@ const ExportPostsButton: React.FC<ExportProps> = ({ posts }) => {
   };
 
   return (
-    <Button
-      icon={<DownloadOutlined />}
-      onClick={handleExport}
-      disabled={!posts || posts.length === 0}
-      style={{ backgroundColor: "#e6f4ff", border: "1px solid #91caff", color: "#1677ff", borderRadius: 8 }}
-    >
-      ส่งออกข้อมูล
-    </Button>
+    <>
+      <style>{whitePillBtn}</style>
+      <Button
+        icon={<DownloadOutlined />}
+        onClick={handleExport}
+        disabled={!posts || posts.length === 0}
+        className="white-pill-btn"
+        size="large"
+      >
+        ส่งออกข้อมูล
+      </Button>
+    </>
   );
 };
 
 export default ExportPostsButton;
+
+const whitePillBtn = `
+  .white-pill-btn {
+    background: #fff;
+    color: #1e3a8a;                 /* น้ำเงินเข้ากับเฮดเดอร์ */
+    border: 2px solid rgba(255,255,255,.7);
+    border-radius: 16px;
+    height: 48px;
+    padding: 0 28px;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(30,58,138,.18);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
+  }
+  .white-pill-btn .anticon {
+    font-size: 18px;
+    margin-right: 10px;
+    color: #1e3a8a;                 /* ไอคอนสีน้ำเงิน */
+    transform: translateY(1px);     /* จูน baseline ให้ตรงข้อความ */
+  }
+  .white-pill-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(30,58,138,.26);
+    border-color: rgba(255,255,255,.9);
+    color: #1e3a8a;
+  }
+  .white-pill-btn:active { transform: translateY(0); }
+
+  .white-pill-btn:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    box-shadow: none;
+  }
+  @media (max-width: 576px) {
+    .white-pill-btn { height: 44px; padding: 0 22px; }
+  }
+`;

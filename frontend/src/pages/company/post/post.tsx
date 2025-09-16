@@ -38,7 +38,7 @@ import {
   GetWorkModes,
   GetBenefits,
   GetPostByCompanyId,
-  DeletePost, // ✅ ใช้ลบแบบ soft delete
+  DeletePost,
 } from '../../../services/https/post';
 import { GetAllProvinces, GetAllSkill } from '../../../services/https';
 import type { SkillInterface } from '../../../interfaces/Skill';

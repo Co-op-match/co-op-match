@@ -16,8 +16,5 @@ type Admin struct {
 	User   User `gorm:"foreignKey:UserID"`
 
 	IntershipPost []IntershipPost `gorm:"foreignKey:AdminID"`
-	Company       []Company       `gorm:"foreignKey:AdminID"`
-	AcademicStaff []AcademicStaff `gorm:"foreignKey:AdminID"`
-	Student       []Student       `gorm:"foreignKey:AdminID"`
 	CheckedVerifications []Verify `gorm:"foreignKey:AdminID"`
 }
