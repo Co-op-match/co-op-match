@@ -61,7 +61,7 @@ const StatusSelectionCard: React.FC<Props> = ({
       styles={{ body: { padding: 24 } }}
     >
       <div style={{ marginBottom: 20 }}>
-        <Title level={5} style={{ margin: 0, color: "#1677ff", display: "flex", alignItems: "center", gap: 8 }}>
+        <Title level={5} style={{ margin: 0, color: "rgb(30, 58, 138) ", display: "flex", alignItems: "center", gap: 8 }}>
           <CheckCircleOutlined />
           เลือกสถานะการอนุมัติ
         </Title>

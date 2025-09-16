@@ -88,7 +88,7 @@ func CreateApplication(c *gin.Context) {
 		// ไม่พบข้อมูล = สมัครใหม่ได้
 	} else {
 		// พบการสมัครซ้ำ
-		c.JSON(http.StatusBadRequest, gin.H{"error": "You have already applied for this post"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "คุณได้ส่งใบสมัครสำหรับตำแหน่งนี้แล้ว ไม่สามารถส่งซ้ำได้"})
 		return
 	}
 
@@ -193,17 +193,18 @@ func GetApplicationByID(c *gin.Context) {
 
 	formattedDate := application.CreatedAt.Format("02-01-2006 15:04")
 
-	// ✅ ดึงข้อมูล InterviewAppointment
+	// ✅ ดึงข้อมูล InterviewAppointment ล่าสุด
 	var interview entity.InterviewAppointment
 	err := config.DB().
 		Where("student_id = ? AND company_id = ?", application.StudentID, application.IntershipPost.Company.ID).
 		Order("created_at desc").
 		First(&interview).Error
 
-	// สร้าง response object
+	// ✅ สร้าง response object พร้อม post_id
 	response := gin.H{
 		"application":    application,
 		"formatted_date": formattedDate,
+		"post_id":        application.IntershipPostID, // เพิ่มตรงนี้
 	}
 
 	if err == nil {
@@ -220,6 +221,7 @@ func GetApplicationsByIntershipPostID(c *gin.Context) {
 	var applications []entity.Application
 
 	if err := config.DB().
+		Preload("ApplicationDetails.Student.User").
 		Preload("ApplicationDetails.Student").
 		Preload("IntershipPost.Company").
 		Where("intership_post_id = ?", postID).
@@ -231,20 +233,23 @@ func GetApplicationsByIntershipPostID(c *gin.Context) {
 	var response []map[string]interface{}
 	for _, app := range applications {
 		var studentName string
+		var studentUserID uint
 		if len(app.ApplicationDetails) > 0 && app.ApplicationDetails[0].Student.ID != 0 {
 			student := app.ApplicationDetails[0].Student
 			studentName = student.FirstName + " " + student.LastName
+			studentUserID = student.UserID 
 		}
 
 		response = append(response, map[string]interface{}{
 			"id":           app.ID,
+			"student_user_id": studentUserID, 
 			"student_name": studentName,
 			"status":       app.Status,
 			"date":         app.SubmitAt.Format("02-01-2006"),
 			"resume":       app.ResumeUrl,
 			"transcript":   app.TranscriptUrl,
 			"companyNote":  app.CompanyNote,
-			"post_name":    app.IntershipPost.PostName, // ✅ ตรงนี้แก้แล้ว
+			"post_name":    app.IntershipPost.PostName, 
 		})
 
 	}

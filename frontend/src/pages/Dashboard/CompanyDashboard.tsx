@@ -13,6 +13,7 @@ import type { CompanyInterface } from "../../interfaces/Company";
 import CompanyHeader from "../Component/CompanyHeader";
 import TopPostsCard from "../company/analysis/TopPostsCard";
 import { useNavigate } from "react-router-dom";
+import LatestPendingApplicants from "../company/analysis/LatestPendingApplicants";
 
 dayjs.extend(isBetween);
 
@@ -224,8 +225,11 @@ const CompanyDashboard = () => {
               {/* POSTS PERFORMANCE + INTERVIEW STATS */}
               <Row gutter={[16, 16]}>
                 <Col xs={24} lg={16}>
-                  {/* TREND DATA */}
-                  <TrendChart companyId={Number(company?.ID)} />
+                  <LatestPendingApplicants
+                    companyId={Number(company?.ID)}
+                    loadingGlobal={loading}
+                    onViewApplication={(postId) => navigate(`/applications/post/${postId}`)}
+                  />
                 </Col>
                 <Col xs={24} lg={8}>
                   <TopPostsCard
@@ -239,6 +243,8 @@ const CompanyDashboard = () => {
                   />
                 </Col>
               </Row>
+
+              <TrendChart companyId={Number(company?.ID)} />
             </Space>
           </div>
         </ConfigProvider>

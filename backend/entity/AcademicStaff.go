@@ -28,9 +28,6 @@ type AcademicStaff struct {
 	AddressID uint    `json:"address_id"`
 	Address   Address `gorm:"foreignKey:AddressID"`
 	
-	AdminID   uint    `json:"admin_id"`
-	Admin     Admin   `gorm:"foreignKey:AdminID"`
-	
 	GenderID  uint   `json:"gender_id"`
 	Gender    Gender `gorm:"foreignKey:GenderID"`
 

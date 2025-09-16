@@ -198,7 +198,6 @@ func SignIn(c *gin.Context) {
 	// ตั้งสถานะออนไลน์ + log
 	db.Model(&user).Update("is_logged_in", true)
 	loginLog := entity.LoginLog{
-		IP:      c.ClientIP(),
 		//Device:  c.GetHeader("User-Agent"),
 		LoginAt: time.Now(),
 		UserID:  user.ID,
@@ -218,7 +217,16 @@ func SignIn(c *gin.Context) {
 		ExpirationHours: 24,
 	}
 
-	signedToken, err := jwtWrapper.GenerateToken(user.ID, user.Email)
+	var adminID *uint
+	if strings.EqualFold(user.Role.RoleName, "Admin") {
+		var admin entity.Admin
+		if err := db.Where("user_id = ?", user.ID).First(&admin).Error; err == nil {
+			aid := admin.ID
+			adminID = &aid
+		}
+	}
+
+	signedToken, err := jwtWrapper.GenerateToken(user.ID, user.Email, user.Role.RoleName, adminID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error signing token"})
 		return

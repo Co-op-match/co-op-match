@@ -10,28 +10,30 @@ interface ApplicationItem {
   IntershipPost: IntershipPostInterface;
 }
 
-const ApplicationListCard: React.FC = () => {
+interface Props {
+  userId?: number; // ✅ เพิ่ม prop
+}
+
+const ApplicationListCard: React.FC<Props> = ({ userId }) => {
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("id"));
-    if (!isNaN(userId)) {
-      GetApplicationsByUserID(userId)
-        .then((data) => {
-          if (Array.isArray(data)) {
-            setApplications(data);
-            console.table(data)
-          } else {
-            console.error("Expected array but got:", data);
-            setApplications([]);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching applications:", err);
+    if (!userId || isNaN(userId)) return;
+
+    GetApplicationsByUserID(userId)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setApplications(data);
+        } else {
+          console.error("Expected array but got:", data);
           setApplications([]);
-        });
-    }
-  }, []);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching applications:", err);
+        setApplications([]);
+      });
+  }, [userId]);
 
   const columns = [
     {
@@ -58,7 +60,7 @@ const ApplicationListCard: React.FC = () => {
     },
     {
       title: "สถานะ",
-      dataIndex: "status",
+      dataIndex: "Status", // ✅ ใช้ field ชื่อ Status ตาม interface
       render: (status: string | undefined) => {
         if (!status) return <Tag>ไม่ทราบสถานะ</Tag>;
 
@@ -68,15 +70,12 @@ const ApplicationListCard: React.FC = () => {
         else if (status.includes("รับเข้าฝึกงาน")) color = "green";
 
         return <Tag color={color}>{status}</Tag>;
-        }
+      },
     },
   ];
 
   return (
-    <Card
-      className="application-list-card"
-      title="รายการที่สมัครไปทั้งหมด"
-    >
+    <Card className="application-list-card" title="รายการที่สมัครไปทั้งหมด">
       <Table
         columns={columns}
         dataSource={applications}

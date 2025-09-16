@@ -258,6 +258,22 @@ func enqueueEmail(to, subject, html string) {
    Handler
 ========================= */
 
+// ===== helper: format เวลาแบบไทย (เดียวกับใน buildEmailBody แต่ยกมาใช้ใน noti ได้ด้วย) =====
+func thaiDatetimeBangkok(t time.Time) string {
+	loc, _ := time.LoadLocation("Asia/Bangkok")
+	t = t.In(loc)
+	thaiMonths := [...]string{"", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+		"กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"}
+	return fmt.Sprintf("%02d %s %d เวลา %02d:%02d",
+		t.Day(),
+		thaiMonths[int(t.Month())],
+		t.Year(),
+		t.Hour(),
+		t.Minute(),
+	)
+}
+
+// ===== PATCH: SendInterviewEmail เพิ่มสร้าง Notification เหมือน verify =====
 func SendInterviewEmail(c *gin.Context) {
 	tplOnce.Do(initTemplates)
 	workerOnce.Do(initEmailWorker)
@@ -311,8 +327,53 @@ func SendInterviewEmail(c *gin.Context) {
 		return
 	}
 
+	// ✅ ดันเข้าคิวอีเมล (เหมือนเดิม)
 	enqueueEmail(to, "แจ้งเตือนนัดสัมภาษณ์จากระบบ Co-op Match", body)
 
+	// ✅ เพิ่ม: สร้าง Notification ให้ผู้ใช้ (นักศึกษา) คล้าย ๆ verify
+	// แยกข้อความตามสถานะ application.Status
+	go func() {
+		// เลือก title/message ตามสถานะ (ผ่าน/ไม่ผ่าน/อื่น ๆ = นัดสัมภาษณ์)
+		var (
+			title string
+			msg   string
+			lbl   = "นัดสัมภาษณ์"
+		)
+
+		switch strings.TrimSpace(application.Status) {
+		case "ผ่าน":
+			title = "ผลการพิจารณา: ผ่านการคัดเลือก"
+			msg = fmt.Sprintf("คุณผ่านการคัดเลือกสำหรับตำแหน่ง %s จากบริษัท %s",
+				positionName, strings.TrimSpace(appointment.Company.CompanyName))
+			lbl = "ผลคัดเลือก"
+		case "ไม่ผ่าน":
+			title = "ผลการพิจารณา: ไม่ผ่านการคัดเลือก"
+			msg = fmt.Sprintf("ขออภัย คุณไม่ผ่านการคัดเลือกสำหรับตำแหน่ง %s จากบริษัท %s",
+				positionName, strings.TrimSpace(appointment.Company.CompanyName))
+			lbl = "ผลคัดเลือก"
+		default:
+			// นัดสัมภาษณ์ (มีวันที่/เวลา/โหมด)
+			title = "นัดสัมภาษณ์: " + positionName
+			msg = fmt.Sprintf("คุณมีนัดสัมภาษณ์กับบริษัท %s ในวันที่ %s (%s)\nรายละเอียด: %s",
+				strings.TrimSpace(appointment.Company.CompanyName),
+				thaiDatetimeBangkok(appointment.AppointmentDate),
+				strings.TrimSpace(appointment.Mode),
+				strings.TrimSpace(appointment.Details),
+			)
+		}
+
+		// เรียก helper เดิม (จะยิง WS created + count ให้อัตโนมัติ)
+		_ = CreateNotificationForUser(
+			db,
+			appointment.Student.User.ID, // ส่งให้เจ้าของอีเมล (นักศึกษา)
+			"interview",                 // ใช้ typeName = "interview" สำหรับกลุ่มนี้
+			title,
+			msg,
+			lbl, // labelIfCreate: "นัดสัมภาษณ์"/"ผลคัดเลือก"
+		)
+	}()
+
+	// ตอบกลับ (เหมือนเดิม)
 	loc, _ := time.LoadLocation("Asia/Bangkok")
 	c.JSON(202, gin.H{
 		"message": "คิวส่งอีเมลถูกสร้างแล้ว",
@@ -337,6 +398,7 @@ func SendInterviewEmail(c *gin.Context) {
 		},
 	})
 }
+
 
 /* =========================
    Email body

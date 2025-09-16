@@ -9,12 +9,13 @@ import type { StatusPostInterface } from "../../../interface/IStatusPost";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
-import Post_StatCard from "../../../components/adminpage/post/Post_StatCard";
 import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
 import "./post.css";
 import "../main.css";
+import AdminSectionHeader from "../AdminSectionHeader";
+import { Post_StatCard } from "../StatCard";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const getStatusTabs = ({
   activeTab,
@@ -27,7 +28,7 @@ const getStatusTabs = ({
     {
       key: "all",
       label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+        <span style={{ fontSize: "14px", fontWeight: "600" }}>
           <FileTextOutlined /> ทั้งหมด
         </span>
       ),
@@ -35,7 +36,7 @@ const getStatusTabs = ({
     {
       key: "pending",
       label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+        <span style={{ fontSize: "14px", fontWeight: "600" }}>
           <ClockCircleOutlined style={{ color: "#faad14" }} /> รอตรวจสอบ
         </span>
       ),
@@ -43,7 +44,7 @@ const getStatusTabs = ({
     {
       key: "approved",
       label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+        <span style={{ fontSize: "14px", fontWeight: "600" }}>
           <CheckCircleOutlined style={{ color: "#52c41a" }} /> เปิดรับสมัคร
         </span>
       ),
@@ -51,7 +52,7 @@ const getStatusTabs = ({
     {
       key: "rejected",
       label: (
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+        <span style={{ fontSize: "14px", fontWeight: "600" }}>
           <CloseOutlined style={{ color: "#ff4d4f" }} /> ปิดรับสมัคร
         </span>
       ),
@@ -64,6 +65,7 @@ const getStatusTabs = ({
       onChange={onChange}
       size="large"
       items={items}
+      className="enhanced-tabs"
     />
   );
 };
@@ -202,43 +204,35 @@ const ManagePostsPage = () => {
       render: (text: any, record: any) => (
         <div
           style={{
-            padding: "8px 0",
+            padding: "12px 0",
             cursor: "pointer",
           }}
           onClick={() => navigate(`/admin/manage-post/${record.ID}`)}
         >
           {/* ชื่อโพสต์ + ไอคอน */}
           <div
+            className="post-title-enhanced"
             style={{
               fontSize: "16px",
-              fontWeight: "600",
-              color: "#1890ff",
-              marginBottom: "4px",
+              marginBottom: "6px",
               lineHeight: "1.4",
               display: "flex",
               alignItems: "center",
-              gap: "6px",
+              gap: "8px",
             }}
           >
-            <span style={{ textDecoration: "underline" }}>{text}</span>
-            <LinkOutlined style={{ fontSize: "14px", color: "#1890ff" }} />
+            <span>{text}</span>
+            <LinkOutlined style={{ fontSize: "14px" }} />
           </div>
 
           {/* บริษัท */}
-          <div style={{ fontSize: "13px", color: "#666", marginBottom: "2px" }}>
-            <TeamOutlined style={{ marginRight: "4px", color: "#1890ff" }} />
+          <div style={{ fontSize: "13px", color: "#666", marginBottom: "4px" }}>
+            <TeamOutlined className="table-icon-enhanced" style={{ marginRight: "6px" }} />
             {record.Company?.company_name || "ไม่ระบุบริษัท"}
           </div>
 
           {/* ประเภทงาน */}
-          <Tag
-            style={{
-              backgroundColor: "#e6f7ff",
-              border: "1px solid #91d5ff",
-              color: "#096dd9",
-              fontSize: "11px",
-            }}
-          >
+          <Tag className="job-type-tag-enhanced">
             {record.JobType?.job_type || "ไม่ระบุประเภทงาน"}
           </Tag>
         </div>
@@ -282,7 +276,7 @@ const ManagePostsPage = () => {
         >
           {/* จำนวน */}
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <UserOutlined style={{ fontSize: "13px", color: "#bfbfbf" }} />
+            <UserOutlined className="table-icon-enhanced" style={{ fontSize: "13px" }} />
             <span style={{ minWidth: "50px", textAlign: "left" }}>
               {record.quantity || 0} คน
             </span>
@@ -290,7 +284,7 @@ const ManagePostsPage = () => {
 
           {/* GPA */}
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <StarOutlined style={{ fontSize: "13px", color: "#bfbfbf" }} />
+            <StarOutlined className="table-icon-enhanced" style={{ fontSize: "13px" }} />
             <span style={{ minWidth: "50px", textAlign: "left" }}>
               GPA{" "}
               {record.min_gpa !== undefined
@@ -333,11 +327,10 @@ const ManagePostsPage = () => {
       width: 90,
       align: "center",
       render: (record) => (
-        <div style={{ fontSize: "13px", color: "#4c4c4c" }}>
-          <span style={{ minWidth: "50px", textAlign: "left" }}>
+        <div style={{ fontSize: "13px", color: "#4c4c4c", textAlign: "center" }}>
+          <div className="applicant-count-enhanced">
             {record.Applications?.length || 0}
-          </span>
-
+          </div>
           <div style={{ fontSize: "12px", color: "#888" }}>ใบสมัคร</div>
         </div>
       ),
@@ -376,16 +369,13 @@ const ManagePostsPage = () => {
 
         return (
           <div
+            className="status-tag-enhanced"
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "6px 16px",
-              borderRadius: "999px",
               background: style.bgColor,
               color: style.textColor,
-              fontWeight: 600,
-              fontSize: "13px",
               border: style.border,
               boxShadow: style.boxShadow,
             }}
@@ -400,132 +390,315 @@ const ManagePostsPage = () => {
 
   return (
     <Layout>
+      <style>{enhancedStyles}</style>
       {contextHolder}
       <AdminHeader />
-      <Layout className="adminpage-layout">
-        <div className="adminpost-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "16px" }}
-              >
-                <div
-                  style={{
-                    backgroundColor: "#e6f4ff",
-                    borderRadius: "12px",
-                    padding: "12px",
-                  }}
-                >
-                  <FileTextOutlined
-                    style={{ fontSize: "32px", color: "#1677ff" }}
-                  />
-                </div>
-                <div>
-                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>
-                    การจัดการโพสต์ฝึกงาน
-                  </Title>
-                  <Text style={{ color: "#555", fontSize: "16px" }}>
-                    อนุมัติและปฏิเสธโพสต์ฝึกงานจากบริษัทต่างๆ
-                  </Text>
-                </div>
-              </div>
-            </Col>
-            <Col>
+      <Layout className="adminpage-layout" style={{ padding: 16 }}>
+        <div style={{ margin: 32, marginTop: 8 }}>
+          <AdminSectionHeader
+            icon={<FileTextOutlined style={{ fontSize: 32, color: "white" }} />}
+            title="การจัดการโพสต์ฝึกงาน"
+            subtitle="อนุมัติและปฏิเสธโพสต์ฝึกงานจากบริษัทต่างๆ"
+            actions={
               <Space>
                 <ExportPostsButton posts={filteredPosts} />
               </Space>
-            </Col>
-          </Row>
-        </div>
-
-        <Post_StatCard
-          statusList={status}
-          totalPosts={totalPosts}
-          pendingPosts={pendingPosts}
-          approvedPosts={approvedPosts}
-          rejectedPosts={rejectedPosts}
-        />
-
-        {/* Main Content */}
-        <Card
-          style={{
-            borderRadius: "16px",
-            border: "none",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-            background: "white",
-          }}
-        >
-          {/* Search and Filters */}
-          <div style={{ marginBottom: "24px" }}>
-            <Row justify="space-between" align="middle">
-              <Col xs={24} md={12}>
-                <Input
-                  placeholder="ค้นหาตำแหน่งงาน, บริษัท, หรือประเภทงาน..."
-                  prefix={<SearchOutlined style={{ color: "#1890ff" }} />}
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  style={{
-                    borderRadius: "8px",
-                    border: "2px solid #e6f7ff", // Blue border
-                    fontSize: "14px",
-                  }}
-                  size="large"
-                />
-              </Col>
-            </Row>
-          </div>
-
-          {getStatusTabs({ activeTab, onChange: setActiveTab })}
-
-          <Text
-            type="secondary"
-            style={{ fontSize: "14px", marginTop: "10px" }}
-          >
-            แสดง {getCurrentTabCount()} รายการ
-          </Text>
-
-          <Table
-            columns={columns}
-            dataSource={filteredPosts}
-            rowKey="ID"
-            loading={loading}
-            className="adminpage-table"
-            pagination={{
-              ...pagination,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              onChange: (page, pageSize) => {
-                setPagination({ current: page, pageSize });
-              },
-              style: { marginTop: "24px" },
-            }}
-            scroll={{ x: 1400 }}
-            style={{
-              borderRadius: "12px",
-              overflow: "hidden",
-            }}
-            rowClassName={(record, index) => {
-              const status = record.StatusPost?.status_post;
-              let baseClass = index % 2 === 0 ? "even-row" : "odd-row";
-              if (status === "Pending Approval")
-                baseClass += " pending-highlight";
-              return baseClass;
-            }}
-            locale={{
-              emptyText: (
-                <Empty
-                  description="ไม่พบข้อมูลโพสต์"
-                  style={{ padding: "40px" }}
-                />
-              ),
-            }}
+            }
           />
-        </Card>
+
+          <Post_StatCard
+            statusList={status}
+            totalPosts={totalPosts}
+            pendingPosts={pendingPosts}
+            approvedPosts={approvedPosts}
+            rejectedPosts={rejectedPosts}
+          />
+
+          {/* Main Content */}
+          <Card className="enhanced-main-card">
+            {/* Search and Filters */}
+            <div style={{ marginBottom: "24px" }}>
+              <Row justify="space-between" align="middle">
+                <Col xs={24} md={12}>
+                  <Input
+                    placeholder="ค้นหาตำแหน่งงาน, บริษัท, หรือประเภทงาน..."
+                    prefix={<SearchOutlined style={{ color: "rgb(59, 130, 246)" }} />}
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    className="enhanced-search-input"
+                    size="large"
+                  />
+                </Col>
+              </Row>
+            </div>
+
+            {getStatusTabs({ activeTab, onChange: setActiveTab })}
+
+            <Text
+              type="secondary"
+              style={{ fontSize: "14px", marginTop: "10px", fontWeight: "500" }}
+            >
+              แสดง {getCurrentTabCount()} รายการ
+            </Text>
+
+            <Table
+              columns={columns}
+              dataSource={filteredPosts}
+              rowKey="ID"
+              loading={loading}
+              className="enhanced-table"
+              pagination={{
+                ...pagination,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} จาก ${total} รายการ`,
+                onChange: (page, pageSize) => {
+                  setPagination({ current: page, pageSize });
+                },
+                style: { marginTop: "24px" },
+              }}
+              scroll={{ x: 1400 }}
+              style={{
+                borderRadius: "16px",
+                overflow: "hidden",
+              }}
+              rowClassName={(record, index) => {
+                const status = record.StatusPost?.status_post;
+                let baseClass = index % 2 === 0 ? "even-row" : "odd-row";
+                if (status === "Pending Approval")
+                  baseClass += " pending-highlight";
+                return baseClass;
+              }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    description="ไม่พบข้อมูลโพสต์"
+                    style={{ padding: "40px" }}
+                  />
+                ),
+              }}
+            />
+          </Card>
+        </div>
       </Layout>
     </Layout>
   );
 };
 
 export default ManagePostsPage;
+
+// Enhanced styles with blue gradient theme and animations
+const enhancedStyles = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes gradientShift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .adminpost-header-box {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.8s ease-out;
+    box-shadow: 0 20px 40px rgba(30, 58, 138, 0.25);
+    background-size: 200% 200%;
+    animation: fadeInUp 0.8s ease-out, gradientShift 4s ease infinite;
+  }
+
+  .gradient-title-frame {
+    position: relative;
+  }
+
+  .gradient-title-content {
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .enhanced-icon-container {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%);
+    border-radius: 16px;
+    padding: 16px;
+    animation: slideInLeft 0.8s ease-out 0.3s both;
+    border: 1px solid #fff;
+    transition: all 0.3s ease;
+  }
+
+  .enhanced-icon-container:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+  }
+
+  .enhanced-main-card {
+    border-radius: 20px;
+    border: none;
+    background: white;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .enhanced-search-input {
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                rgba(239, 236, 236, 1) border-box;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  }
+
+  .enhanced-search-input:hover,
+  .enhanced-search-input:focus {
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .enhanced-tabs .ant-tabs-tab {
+    border-radius: 12px;
+    margin-right: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .enhanced-tabs .ant-tabs-tab:hover {
+    transform: translateY(-2px);
+  }
+
+  .enhanced-table .ant-table-thead > tr > th {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+    border-bottom: 2px solid rgba(59, 130, 246, 0.1);
+    font-weight: 600;
+    color: rgb(30, 58, 138);
+    position: relative;
+  }
+
+  .enhanced-table .ant-table-tbody > tr {
+    transition: all 0.3s ease;
+  }
+
+  .enhanced-table .ant-table-tbody > tr:hover > td {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.03) 0%, rgba(59, 130, 246, 0.03) 100%) !important;
+    transform: scale(1.002);
+  }
+
+  .enhanced-table .ant-table-tbody > tr.pending-highlight > td {
+    position: relative;
+  }
+
+  .post-title-enhanced {
+    color: rgb(59, 130, 246) !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    position: relative;
+  }
+
+  .post-title-enhanced:hover {
+    color: rgb(30, 58, 138) !important;
+    transform: translateX(4px);
+  }
+
+  .status-tag-enhanced {
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 6px 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .status-tag-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .job-type-tag-enhanced {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: rgb(30, 58, 138);
+    font-size: 11px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .job-type-tag-enhanced:hover {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+    transform: scale(1.05);
+  }
+
+  .applicant-count-enhanced {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgb(59, 130, 246);
+    margin-bottom: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .table-icon-enhanced {
+    color: rgb(59, 130, 246);
+    transition: all 0.3s ease;
+  }
+
+  .table-icon-enhanced:hover {
+    color: rgb(30, 58, 138);
+    transform: scale(1.1);
+  }
+
+  /* Animation delays for sequential loading */
+  .adminpost-header-box { animation-delay: 0s; }
+  .enhanced-main-card { animation-delay: 0.2s; }
+`;

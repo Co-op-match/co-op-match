@@ -216,10 +216,21 @@ const InterviewDashboard: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f8ff" }}>
+      {/* ✅ แท็บบาร์/ส่วนหัวระบบ */}
       <CompanyHeader />
 
-      <Content style={{ padding: "0 24px 24px" }}>
-        <div style={{ maxWidth: 1500, margin: "0 auto" }}>
+      {/* ✅ จัดวางเต็มหน้าจอ ชิดซ้ายขวาพอดี เหมือนหน้าตัวอย่าง */}
+      <Content style={{ padding: 0 }}>
+        <div
+          style={{
+            width: "100vw",
+            maxWidth: "100vw",
+            margin: 0,
+            padding: 24,              // ← เว้นขอบด้านในเหมือนหน้าแรก
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Header Section */}
           <div
             style={{
               display: "flex",
@@ -235,7 +246,7 @@ const InterviewDashboard: React.FC = () => {
           >
             <div>
               <Title level={2} style={{ color: "#1976d2", marginBottom: 4, fontSize: 28, fontWeight: 600 }}>
-                ยืนยันการนัดสัมภาษณ์การสัมภาษณ์
+                ยืนยันการนัดสัมภาษณ์
               </Title>
               <Text style={{ color: "#666", fontSize: 16 }}>รายชื่อผู้รอการผลการสัมภาษณ์</Text>
             </div>
@@ -259,12 +270,13 @@ const InterviewDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Main Content */}
           <Card
             style={{ borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,.08)", border: "1px solid #e3f2fd" }}
             title={
               <Space>
                 <UserOutlined style={{ color: "#1976d2" }} />
-                <Text strong style={{ color: "#1976d2" }}>รายชื่อผู้สมัครที่ผลนัดสัมภาษณ์</Text>
+                <Text strong style={{ color: "#1976d2" }}>รายชื่อผู้สมัครที่นัดสัมภาษณ์แล้ว</Text>
               </Space>
             }
             extra={<Tag color="processing" style={{ fontSize: 12 }}>{applications.length} รายการ</Tag>}
@@ -286,6 +298,7 @@ const InterviewDashboard: React.FC = () => {
         </div>
       </Content>
 
+      {/* Modal */}
       <Modal
         title="เปลี่ยนสถานะการสัมภาษณ์"
         open={isModalOpen}

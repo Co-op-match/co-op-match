@@ -19,6 +19,7 @@ import {
   PictureOutlined,
   FileTextOutlined,
   PaperClipOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { GetAllGender, GetUniversity } from '../../../../../services/https';
@@ -126,7 +127,6 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
         }));
 
         setUniversities(univOptions);
-        // กัน "id แวบ" ถ้ามีค่าเดิม
         hydrateLabelInValue(form, 'university_id', univOptions);
       } catch (err) {
         console.error('โหลดข้อมูลมหาวิทยาลัยล้มเหลว:', err);
@@ -229,7 +229,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
     form.setFieldsValue({ age: typeof age === 'number' ? age : undefined });
   }, [birthdayWatch, form]);
 
-  // upload รูป
+  // upload รูป (โปรไฟล์ — ไม่บังคับ)
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -249,6 +249,12 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
     setImageFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     return false;
+  };
+
+  // อัปโหลดไฟล์ยืนยัน (ทำให้เป็นฟิลด์ที่บังคับในฟอร์ม)
+  const setDocumentField = (file: File | null) => {
+    setDocumentFile(file);
+    form.setFieldsValue({ document_file: file ? { name: file.name } : undefined });
   };
 
   // search
@@ -277,7 +283,12 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
 
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="gender_id" label="เพศ" rules={[{ required: true, message: 'กรุณาเลือกเพศ' }]}>
+          <Form.Item
+            name="gender_id"
+            label="เพศ"
+            required
+            rules={[{ required: true, message: 'กรุณาเลือกเพศ' }]}
+          >
             <Radio.Group>
               {genders.map((g) => (
                 <Radio key={g.ID} value={g.ID}>
@@ -292,6 +303,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
           <Form.Item
             name="academic_position"
             label="ตำแหน่ง"
+            required
             rules={[{ required: true, message: 'กรุณากรอกตำแหน่ง' }]}
           >
             <Input placeholder="เช่น อาจารย์ / เจ้าหน้าที่ ฯลฯ" />
@@ -299,13 +311,27 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
         </Col>
 
         <Col span={12}>
-          <Form.Item name="firstName" label="ชื่อ" rules={[{ validator: validateName }]}>
+          <Form.Item
+            name="firstName"
+            label="ชื่อ"
+            required
+            rules={[
+              { validator: validateName },
+            ]}
+          >
             <Input placeholder="กรอกชื่อ" />
           </Form.Item>
         </Col>
 
         <Col span={12}>
-          <Form.Item name="lastName" label="นามสกุล" rules={[{ validator: validateName }]}>
+          <Form.Item
+            name="lastName"
+            label="นามสกุล"
+            required
+            rules={[
+              { validator: validateName },
+            ]}
+          >
             <Input placeholder="กรอกนามสกุล" />
           </Form.Item>
         </Col>
@@ -315,6 +341,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
           <Form.Item
             name="age"
             label="อายุ"
+            required
             rules={[{ required: true, message: 'กรุณาเลือกวันเกิดเพื่อคำนวณอายุ' }]}
           >
             <Input type="number" placeholder="อายุจะคำนวณอัตโนมัติ" disabled />
@@ -322,7 +349,14 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
         </Col>
 
         <Col span={12}>
-          <Form.Item name="birthday" label="วันเกิด" rules={[{ validator: validateBirthday }]}>
+          <Form.Item
+            name="birthday"
+            label="วันเกิด"
+            required
+            rules={[
+              { validator: validateBirthday },
+            ]}
+          >
             <DatePicker
               style={{ width: '100%' }}
               placeholder="เลือกวันเกิด"
@@ -338,6 +372,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
           <Form.Item
             label="มหาวิทยาลัย"
             name="university_id"
+            required
             rules={[{ required: true, message: 'กรุณาเลือกมหาวิทยาลัย' }]}
             normalize={(v) => v}
           >
@@ -365,6 +400,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
           <Form.Item
             label="คณะ"
             name="faculty_id"
+            required
             rules={[{ required: true, message: 'กรุณาเลือกคณะ' }]}
             normalize={(v) => v}
           >
@@ -389,6 +425,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
           <Form.Item
             label="สาขา"
             name="program_id"
+            required
             rules={[{ required: true, message: 'กรุณาเลือกสาขา' }]}
             normalize={(v) => v}
           >
@@ -406,48 +443,61 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
           </Form.Item>
         </Col>
 
-        {/* อัปโหลดไฟล์ยืนยัน */}
+        {/* อัปโหลดไฟล์ยืนยัน (บังคับ) */}
         <Col span={12}>
-          <Form.Item label="ไฟล์ยืนยัน (PDF หรือ รูปภาพ)" required>
-            <Upload
-              showUploadList={false}
-              beforeUpload={(file: File) => {
-                const isValidType = file.type === 'application/pdf' || file.type.startsWith('image/');
-                if (!isValidType) {
-                  messageApi.error({
-                    content: 'รองรับเฉพาะไฟล์ PDF หรือ รูปภาพ',
-                    style: { marginTop: '20vh' },
-                    duration: 3,
-                  });
-                  return false;
-                }
-                setDocumentFile(file);
-                return false;
-              }}
-              accept=".pdf,image/*"
-            >
-              <div className="document-upload-button">
-                <PaperClipOutlined />
-                {documentFile ? 'เปลี่ยนไฟล์ยืนยัน' : 'คลิกเพื่ออัปโหลดไฟล์ยืนยัน'}
-              </div>
-            </Upload>
+          <Form.Item
+            label="ไฟล์ยืนยัน (PDF หรือ รูปภาพ)"
+            name="document_file"
+            required
+            rules={[{ required: true, message: 'กรุณาอัปโหลดไฟล์ยืนยัน' }]}
+            // ใช้ setFieldsValue คุมค่า แทน valuePropName เพื่อ UI แบบ custom
+          >
+            <div>
+              <Upload
+                showUploadList={false}
+                beforeUpload={(file: File) => {
+                  const isValidType = file.type === 'application/pdf' || file.type.startsWith('image/');
+                  if (!isValidType) {
+                    messageApi.error({
+                      content: 'รองรับเฉพาะไฟล์ PDF หรือ รูปภาพ',
+                      style: { marginTop: '20vh' },
+                      duration: 3,
+                    });
+                    return false;
+                  }
+                  setDocumentField(file);
+                  return false; // ไม่อัปโหลดอัตโนมัติ
+                }}
+                accept=".pdf,image/*"
+              >
+                <div className="document-upload-button">
+                  <PaperClipOutlined />
+                  {documentFile ? 'เปลี่ยนไฟล์ยืนยัน' : 'คลิกเพื่ออัปโหลดไฟล์ยืนยัน'}
+                </div>
+              </Upload>
 
-            {documentFile && (
-              <div className="uploaded-file-wrapper">
-                <Tooltip title={documentFile.name}>
-                  <div className="uploaded-file-tag">
-                    {documentFile.type.startsWith('image/') ? (
-                      <PictureOutlined className="uploaded-file-icon" />
-                    ) : (
-                      <FileTextOutlined className="uploaded-file-icon" />
-                    )}
-                    <span className="uploaded-file-name">
-                      {documentFile.name.length > 30 ? documentFile.name.slice(0, 27) + '...' : documentFile.name}
-                    </span>
-                  </div>
-                </Tooltip>
-              </div>
-            )}
+              {documentFile && (
+                <div className="uploaded-file-wrapper">
+                  <Tooltip title={documentFile.name}>
+                    <div className="uploaded-file-tag">
+                      {documentFile.type.startsWith('image/') ? (
+                        <PictureOutlined className="uploaded-file-icon" />
+                      ) : (
+                        <FileTextOutlined className="uploaded-file-icon" />
+                      )}
+                      <span className="uploaded-file-name">
+                        {documentFile.name.length > 30 ? documentFile.name.slice(0, 27) + '...' : documentFile.name}
+                      </span>
+                      <CloseCircleOutlined
+                        className="uploaded-file-remove"
+                        onClick={() => setDocumentField(null)}
+                        title="ลบไฟล์"
+                      />
+                    </div>
+                  </Tooltip>
+                </div>
+              )}
+            </div>
           </Form.Item>
         </Col>
       </Row>

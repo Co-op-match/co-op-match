@@ -23,7 +23,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ open, selectedDocument, o
             {isPdf ? (
               <FilePdfOutlined style={{ color: "#ff4d4f", fontSize: 20 }} />
             ) : (
-              <FileImageOutlined style={{ color: "#1677ff", fontSize: 20 }} />
+              <FileImageOutlined style={{ color: "rgb(30, 58, 138) ", fontSize: 20 }} />
             )}
             <span>{displayName}</span>
           </div>

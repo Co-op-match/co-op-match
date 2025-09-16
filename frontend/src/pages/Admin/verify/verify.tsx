@@ -8,7 +8,7 @@ import {
   TeamOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { GetAdminByUserId, GetAllStatusVerify, GetAllVerifications, SendEmailVerify, UpdateVerifyStatus } from "../../../services/https";
+import { GetAdminByUserId, GetAllStatusVerify, GetAllVerifications, GetVerifyStats, SendEmailVerify, UpdateVerifyStatus } from "../../../services/https";
 import type { StatusVerifyInterface } from "../../../interfaces/StatusVerify";
 import type { VerifyInterface } from "../../../interfaces/Verify";
 import type { ColumnsType } from "antd/es/table";
@@ -18,8 +18,10 @@ import DetailModal from "./DetailModal";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import type { AdminInterface } from "../../../interfaces/Admin";
 import { fileURL } from "@/config/env";
+import AdminSectionHeader from "../AdminSectionHeader";
+import { Verify_StatCard } from "../StatCard";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const user_id = Number(localStorage.getItem("id") || 0);
 
 const CertificationReviewPage: React.FC = () => {
@@ -41,6 +43,7 @@ const CertificationReviewPage: React.FC = () => {
   const [verifications, setVerifications] = useState<VerifyInterface[]>([]);
   const [statusVerifications, setStatusVerifications] = useState<StatusVerifyInterface[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<StatusVerifyInterface>();
+  const [verifyStat, setVerifyStat] = useState({ total: 0, not_submitted: 0, pending: 0, approved: 0, rejected: 0 });
 
   const [selectedFilterStatuses, setSelectedFilterStatuses] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -51,6 +54,7 @@ const CertificationReviewPage: React.FC = () => {
   const fetchVerifications = async () => {
     setLoading(true);
     try {
+      console.log("user_id: ", user_id);
       const [res_verify, res_status, res_admin] = await Promise.all([
         GetAllVerifications(),
         GetAllStatusVerify(),
@@ -75,6 +79,21 @@ const CertificationReviewPage: React.FC = () => {
       setSelectedStatus(undefined);
     }
   }, [detailModalVisible, verifyForm]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const d = await GetVerifyStats();
+        setVerifyStat({
+          total: d.total,
+          not_submitted: d.not_submitted,
+          pending: d.pending,
+          approved: d.approved,
+          rejected: d.rejected,
+        });
+      } catch (e) { console.error(e); }
+    })();
+  }, []);
 
   // ===== selectors / memo =====
   const filteredVerifications = useMemo(() => {
@@ -196,7 +215,6 @@ const CertificationReviewPage: React.FC = () => {
     {
       title: "ผู้ขอรับรอง",
       key: "user",
-      width: 250,
       render: (_, record) => {
         const userInfo = getUserInfo(record.User);
         const profileImage = fileURL(record?.User?.ProfileImage?.[0]?.image_url);
@@ -215,7 +233,6 @@ const CertificationReviewPage: React.FC = () => {
     {
       title: "ข้อมูลเพิ่มเติม",
       key: "details",
-      width: 200,
       render: (_, record) => {
         const userInfo = getUserInfo(record.User);
         return (
@@ -229,21 +246,19 @@ const CertificationReviewPage: React.FC = () => {
     {
       title: "รหัสการรับรอง",
       key: "id",
-      width: 120,
       render: (_, record) => <Text code style={{ fontSize: 13 }}>VERIFY-{record.ID?.toString().padStart(4, "0")}</Text>,
     },
     {
       title: "วันที่ส่ง",
       key: "createdAt",
-      width: 120,
       render: (_, record) => <div style={{ fontSize: 14 }}>{new Date(record.CreatedAt as any).toLocaleDateString("th-TH")}</div>,
     },
     {
       title: "สถานะ",
       key: "status",
-      width: 150,
       align: "center",
       fixed: "right",
+      width: 150,
       render: (_, record) => {
         const statusText = record.StatusVerify?.status_verify || "รอรับรอง";
         const { bgColor, textColor, border } = getStatusStyle(statusText);
@@ -260,7 +275,6 @@ const CertificationReviewPage: React.FC = () => {
     {
       title: "การดำเนินการ",
       key: "actions",
-      width: 120,
       align: "center",
       fixed: "right",
       render: (_, record) => (
@@ -273,7 +287,7 @@ const CertificationReviewPage: React.FC = () => {
             icon={<EyeOutlined />}
             onClick={() => handleViewDetail(record)}
             disabled={record.StatusVerify?.status_verify === "ยังไม่ได้ส่งคำขอ"}
-            style={{ borderRadius: 16, width: "50%" }}
+            className="action-button"
           />
         </Tooltip>
       ),
@@ -285,106 +299,348 @@ const CertificationReviewPage: React.FC = () => {
     <Layout>
       <AdminHeader />
       {contextHolder}
-      <Layout className="adminpage-layout">
-        <div className="adminpost-header-box">
-          <Row justify="space-between" align="middle">
-            <Col>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div style={{ backgroundColor: "#e6f4ff", borderRadius: 12, padding: 12 }}>
-                  <FileTextOutlined style={{ fontSize: 32, color: "#1677ff" }} />
-                </div>
-                <div>
-                  <Title level={2} style={{ margin: 0, color: "#1677ff" }}>ตรวจสอบการรับรอง</Title>
-                  <Text style={{ color: "#555", fontSize: 16 }}>
-                    ระบบตรวจสอบและอนุมัติการรับรองบุคลากรทางวิชาการและบริษัท
-                  </Text>
-                </div>
-              </div>
-            </Col>
-            <Col />
-          </Row>
-        </div>
-
-        <Card style={{ borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", border: "none" }}>
-          {/* Filter Section */}
-          <div style={{ marginBottom: 24 }}>
-            <Card className="adminpage-filter-card" styles={{ body: { padding: 20 } }}>
-              <Row gutter={[16, 16]} align="middle">
-                <Col xs={24} md={12}>
-                  <div className="adminpage-filter-label">กรองตามสถานะ</div>
-                  <Select
-                    mode="multiple"
-                    value={selectedFilterStatuses}
-                    onChange={(values) => {
-                      if (values.includes("ทั้งหมด")) {
-                        const allStatuses = statusVerifications.map((s) => s.status_verify);
-                        const isAllSelected = selectedFilterStatuses.length === allStatuses.length && allStatuses.every((s) => selectedFilterStatuses.includes(s));
-                        setSelectedFilterStatuses(isAllSelected ? [] : allStatuses);
-                      } else setSelectedFilterStatuses(values);
-                    }}
-                    style={{ width: "100%" }}
-                    size="large"
-                    options={[{ label: "ทั้งหมด", value: "ทั้งหมด" }, ...statusVerifications.map((s) => ({ label: s.status_verify, value: s.status_verify }))]}
-                    placeholder="เลือกสถานะที่ต้องการแสดง"
-                    allowClear
-                    maxTagCount="responsive"
-                  />
-                </Col>
-                <Col xs={24} md={12}>
-                  <div className="adminpage-filter-label">ค้นหาผู้ขอรับรอง</div>
-                  <Input
-                    placeholder="ค้นหาชื่อบริษัท, Email หรือ ID..."
-                    suffix={<SearchOutlined style={{ color: "#bfbfbf", fontSize: 16 }} />}
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                    size="large"
-                    className="adminpage-search-input"
-                  />
-                </Col>
-              </Row>
-            </Card>
-          </div>
-
-          <Table
-            columns={columns}
-            rowKey="ID"
-            loading={loading}
-            dataSource={sortedVerifications}
-            pagination={{
-              ...pagination,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
-            }}
-            size="middle"
-            scroll={{ x: 800 }}
+      <style>{customStyle}</style>
+      <Layout className="adminpage-layout" style={{ padding: 16 }}>
+        <div style={{ margin: 32, marginTop: 8 }}>
+          <AdminSectionHeader
+            icon={<FileTextOutlined style={{ fontSize: 32, color: "white" }} />}
+            title="ตรวจสอบการรับรอง"
+            subtitle="ระบบตรวจสอบและอนุมัติการรับรองบุคลากรทางวิชาการและบริษัท"
           />
-        </Card>
 
-        <DetailModal
-          open={detailModalVisible}
-          record={selectedRecord}
-          onClose={handleCloseDetailModal}
-          onSubmitVerify={handleSubmitVerify}
-          selectedStatus={selectedStatus}
-          setSelectedStatus={setSelectedStatus}
-          statusVerifications={statusVerifications}
-          loading={loading}
-          setLoading={setLoading}
-          isReadOnlyStatus={false}
-          verifyForm={verifyForm}
-          getUserInfo={getUserInfo}
-          handleViewDocument={handleViewDocument}
-          selectedDocument={selectedDocument}
-          setRejectReason={setRejectReason}
-          rejectReason={rejectReason}
-        />
+          <Verify_StatCard
+            total={verifyStat.total}
+            notSubmitted={verifyStat.not_submitted}
+            pending={verifyStat.pending}
+            approved={verifyStat.approved}
+            rejected={verifyStat.rejected}
+            showTotalCard
+          />
+        
+          {/* Main Content Card */}
+          <Card className="main-content-card">
+            {/* Enhanced Filter Section */}
+            <div className="filter-section">
+              <Card className="filter-card">
+                <Row gutter={[24, 24]} align="middle">
+                  <Col xs={24} md={12}>
+                    <div className="input-label">
+                      กรองตามสถานะ
+                    </div>
+                    <Select
+                      mode="multiple"
+                      value={selectedFilterStatuses}
+                      onChange={(values) => {
+                        if (values.includes("ทั้งหมด")) {
+                          const allStatuses = statusVerifications.map((s) => s.status_verify);
+                          const isAllSelected = selectedFilterStatuses.length === allStatuses.length && allStatuses.every((s) => selectedFilterStatuses.includes(s));
+                          setSelectedFilterStatuses(isAllSelected ? [] : allStatuses);
+                        } else setSelectedFilterStatuses(values);
+                      }}
+                      className="enhanced-select"
+                      size="large"
+                      options={[
+                        { label: "ทั้งหมด", value: "ทั้งหมด" }, 
+                        ...statusVerifications.map((s) => ({ label: s.status_verify, value: s.status_verify }))
+                      ]}
+                      placeholder="เลือกสถานะที่ต้องการแสดง"
+                      allowClear
+                      maxTagCount="responsive"
+                      style={{ width: '100%' }}
+                    />
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <div className="input-label">
+                      ค้นหาผู้ขอรับรอง
+                    </div>
+                    <Input
+                      placeholder="ค้นหาชื่อบริษัท, Email หรือ ID..."
+                      suffix={<SearchOutlined className="search-icon" />}
+                      value={searchKeyword}
+                      onChange={(e) => setSearchKeyword(e.target.value)}
+                      size="large"
+                      className="enhanced-input"
+                      style={{ width: '100%' }}
+                    />
+                  </Col>
+                </Row>
+              </Card>
+            </div>
 
-        <DocumentModal open={documentModalVisible} selectedDocument={selectedDocument} onCancel={() => setDocumentModalVisible(false)} />
+            {/* Enhanced Table */}
+            <div className="table-container">
+              <Table
+                columns={columns}
+                rowKey="ID"
+                loading={loading}
+                dataSource={sortedVerifications}
+                pagination={{
+                  ...pagination,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`,
+                  onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+                }}
+                size="middle"
+                scroll={{ x: 'max-content' }}
+                className="enhanced-table"
+              />
+            </div>
+          </Card>
+        </div>
       </Layout>
+
+      <DetailModal
+        open={detailModalVisible}
+        record={selectedRecord}
+        onClose={handleCloseDetailModal}
+        onSubmitVerify={handleSubmitVerify}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+        statusVerifications={statusVerifications}
+        loading={loading}
+        setLoading={setLoading}
+        isReadOnlyStatus={false}
+        verifyForm={verifyForm}
+        getUserInfo={getUserInfo}
+        handleViewDocument={handleViewDocument}
+        selectedDocument={selectedDocument}
+        setRejectReason={setRejectReason}
+        rejectReason={rejectReason}
+      />
+
+      <DocumentModal 
+        open={documentModalVisible} 
+        selectedDocument={selectedDocument} 
+        onCancel={() => setDocumentModalVisible(false)} 
+      />
     </Layout>
   );
 };
 
 export default CertificationReviewPage;
+
+const customStyle = `
+
+  /* Main Content Card */
+  .main-content-card {
+    border-radius: 24px !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+    border: 2px solid rgba(59, 130, 246, 0.1) !important;
+    overflow: hidden !important;
+    animation: fadeInUp 1s ease-out 0.2s both;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  /* Filter Section */
+  .filter-section {
+    margin-bottom: 32px;
+  }
+
+  .filter-card {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px);
+    animation: fadeInUp 1s ease-out 0.4s both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .filter-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+  }
+
+  .filter-header {
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .input-label {
+    margin-bottom: 12px;
+    font-weight: 600;
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 16px;
+  }
+
+  /* Enhanced Form Controls */
+  .enhanced-select .ant-select-selector {
+    border-radius: 16px !important;
+    border: 2px solid rgba(59, 130, 246, 0.3) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1) !important;
+  }
+
+  .enhanced-input {
+    border-radius: 16px !important;
+    border: 2px solid rgba(59, 130, 246, 0.3) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1) !important;
+  }
+
+  .enhanced-input:focus {
+    border-color: rgb(59, 130, 246) !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 8px 24px rgba(59, 130, 246, 0.2) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  .search-icon {
+    color: rgb(59, 130, 246) !important;
+    font-size: 16px !important;
+    display: contents;
+  }
+
+  /* Enhanced Table */
+  .table-container {
+    animation: fadeInUp 1s ease-out 0.6s both;
+  }
+
+  /* Action Button */
+  .action-button {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    width: 50% !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .action-button:hover::before {
+    left: 100%;
+  }
+
+  .action-button:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4) !important;
+  }
+
+  .action-button:active {
+    transform: translateY(-1px) scale(1.02) !important;
+  }
+
+  /* Status Button Enhancements */
+  .adminpage-verify-status-button {
+    border-radius: 20px !important;
+    width: 60% !important;
+    cursor: default !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-size: 12px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .adminpage-verify-status-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    animation: shimmer 3s infinite;
+  }
+
+  /* Pagination Enhancements */
+  .enhanced-table .ant-pagination {
+    margin-top: 24px !important;
+  }
+
+  .enhanced-table .ant-pagination .ant-pagination-item {
+    border-radius: 12px !important;
+    border: 2px solid rgba(59, 130, 246, 0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .enhanced-table .ant-pagination .ant-pagination-item:hover {
+    border-color: rgb(59, 130, 246) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  .enhanced-table .ant-pagination .ant-pagination-item-active {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%) !important;
+    border-color: transparent !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3) !important;
+  }
+
+  .enhanced-table .ant-pagination .ant-pagination-item-active a {
+    color: white !important;
+    font-weight: 600 !important;
+  }
+
+  /* Loading Enhancements */
+  .ant-spin-dot-item {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%) !important;
+  }
+
+  /* Tooltip Enhancements */
+  .ant-tooltip {
+    backdrop-filter: blur(10px) !important;
+  }
+
+  .ant-tooltip-inner {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%) !important;
+    border-radius: 12px !important;
+    padding: 8px 12px !important;
+    font-weight: 500 !important;
+  }
+
+  .ant-tooltip-arrow::before {
+    background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%) !important;
+  }
+
+  /* Avatar Enhancements */
+  .ant-avatar {
+    transition: all 0.3s ease !important;
+  }
+
+  /* Code Text Enhancements */
+  .ant-typography code {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: 8px !important;
+    color: rgb(30, 58, 138) !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+  }
+
+  @media (max-width: 576px) {
+
+    .main-content-card {
+      border-radius: 16px !important;
+    }
+    
+    .filter-card {
+      border-radius: 16px !important;
+    }
+  }
+
+`;
