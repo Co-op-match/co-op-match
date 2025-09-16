@@ -15,7 +15,12 @@ import {
   loadChatToken,
   readRidFromToken,
 } from '../utils/chatToken';
-import CoopMatchHeader from '../pages/Component/Coop_MatchHeader';
+
+import CoopMatchHeader from '@/pages/Component/Coop_MatchHeader';
+import CompanyHeader from '@/pages/Component/CompanyHeader';
+import CoopMatchHeaderDefault from '@/pages/Component/CoopMatchHeaderDefault';
+// ถ้ามี AcademicStaffHeader แยกต่างหาก ให้ import มาด้วย เช่น:
+// import AcademicStaffHeader from './Component/AcademicStaffHeader';
 
 interface Message {
   id?: number;
@@ -43,6 +48,35 @@ const normalizeUrl = (raw?: string | null) => {
   return s.startsWith('http') ? s : `http://localhost:8000${s}`;
 };
 
+
+// ---------- NEW: Header เลือกตาม RoleId ----------
+const getStoredRoleId = (): number => {
+  const raw = localStorage.getItem("roleId");
+  return raw ? Number(raw) : 0;
+};
+
+const RoleHeader: React.FC = () => {
+  const [roleId, setRoleId] = useState<number>(getStoredRoleId());
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "roleId") {
+        setRoleId(getStoredRoleId());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  switch (roleId) {
+    case 3:
+      return <CoopMatchHeader />;
+    case 2:
+      return <CompanyHeader />;
+    default:
+      return <CoopMatchHeaderDefault />;
+  }
+};
 const AdvancedChatInterface: React.FC = () => {
   // ---------- mapping helpers ----------
   const toUiMessage = (m: any, meId: number): Message => ({
@@ -453,153 +487,154 @@ const AdvancedChatInterface: React.FC = () => {
   // ---------- render ----------
   return (
     <>
-       <CoopMatchHeader  />
-       <div style={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-    <div className="chat-container light-mode">
+      {/* ใช้ Header ที่เลือกตาม role */}
+      <RoleHeader />
 
-      {/* Sidebar */}
-      <div className={`sidebar ${showContactList ? 'visible' : 'hidden'} light-mode`}>
-        <div className="sidebar-header light-mode">
-          <div className="sidebar-title">💬 แชท</div>
-          <div className="search-container">
-            <Search className="search-icon" size={16}/>
-            <input onChange={() => {}} placeholder="ค้นหาการสนทนา..." className="search-input"/>
-          </div>
-        </div>
-
-        <div className="contact-list">
-          {contacts.map((contact) => (
-            <div
-              key={contact.id}
-              onClick={() => handleContactClick(contact)}
-              className={`contact-item light-mode ${selectedContact?.id === contact.id ? 'selected' : ''}`}
-            >
-              <div className="contact-info">
-                <div className="contact-avatar">
-                  {normalizeUrl(contact.avatarUrl) ? (
-                    <img src={normalizeUrl(contact.avatarUrl)} alt={contact.name} className="avatar" />
-                  ) : (
-                    <div className="avatar">
-                      {contact?.name?.split(' ')[0]?.charAt(0) || '?'}
-                    </div>
-                  )}
-                </div>
-                <div className="contact-details">
-                  <div className="contact-header">
-                    <h3 className="contact-name light-mode">{contact.name}</h3>
-                    <span className="contact-time">{fmtShortTime(contact.timestamp)}</span>
-                  </div>
-                  <div className="contact-message-row">
-                    <p className="contact-message light-mode">{contact.lastMessage}</p>
-                    {contact.unread > 0 && <div className="unread-badge">{contact.unread}</div>}
-                  </div>
-                </div>
+      <div style={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+        <div className="chat-container light-mode">
+          {/* Sidebar */}
+          <div className={`sidebar ${showContactList ? 'visible' : 'hidden'} light-mode`}>
+            <div className="sidebar-header light-mode">
+              <div className="sidebar-title">💬 แชท</div>
+              <div className="search-container">
+                <Search className="search-icon" size={16}/>
+                <input onChange={() => {}} placeholder="ค้นหาการสนทนา..." className="search-input"/>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Main Chat */}
-      <div className="chat-main">
-        {activeRoomId == null ? (
-          <div className="empty-state light-mode">
-            <div className="empty-inner">
-              <div className="empty-icon">💬</div>
-              <h3>เลือกห้องแชททางซ้าย</h3>
-              <p>คลิกรายชื่อเพื่อเริ่มสนทนา</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="chat-header light-mode">
-              <div className="chat-header-info">
-                <button
-                  onClick={() => setShowContactList(!showContactList)}
-                  className="back-btn light-mode"
+            <div className="contact-list">
+              {contacts.map((contact) => (
+                <div
+                  key={contact.id}
+                  onClick={() => handleContactClick(contact)}
+                  className={`contact-item light-mode ${selectedContact?.id === contact.id ? 'selected' : ''}`}
                 >
-                  <ArrowLeft size={20}/>
-                </button>
-                <div className="chat-avatar">
-                  {normalizeUrl(selectedContact?.avatarUrl) ? (
-                    <img
-                      src={normalizeUrl(selectedContact?.avatarUrl)}
-                      alt={selectedContact?.name || "avatar"}
-                      className="avatar"
-                    />
-                  ) : (
-                    <div className="avatar">
-                      {selectedContact?.name?.split(' ')[0]?.charAt(0) ?? '?'}
-                    </div>
-                  )}
-                </div>
-                <div className="chat-contact-info">
-                  <h3 className="light-mode">
-                    {selectedContact?.name ?? 'เลือกห้องแชท'}
-                  </h3>
-                </div>
-              </div>
-            </div>
-
-            <div className="messages-area light-mode">
-              {messages.map((m, idx) => (
-                <div key={m.id ?? `tmp-${idx}`} className={`message-group ${m.sender}`}>
-                  <div className={`message-container ${m.sender}`}>
-                    {m.sender === 'bot' && (
-                      <div className={`message-avatar ${m.sender}`}>
-                        {normalizeUrl(selectedContact?.avatarUrl) ? (
-                          <img
-                            src={normalizeUrl(selectedContact?.avatarUrl)}
-                            alt={selectedContact?.name || 'user'}
-                            className="avatar"
-                          />
-                        ) : (
-                          <Bot size={16}/>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="message-wrapper">
-                      <div className={`message-bubble ${m.sender}`}>
-                        <p className="message-content">{m.text}</p>
-                        <div className="message-footer">
-                          <p className={`message-time ${m.sender}`}>
-                            {formatTime(m.createdAt)}
-                          </p>
+                  <div className="contact-info">
+                    <div className="contact-avatar">
+                      {normalizeUrl(contact.avatarUrl) ? (
+                        <img src={normalizeUrl(contact.avatarUrl)} alt={contact.name} className="avatar" />
+                      ) : (
+                        <div className="avatar">
+                          {contact?.name?.split(' ')[0]?.charAt(0) || '?'}
                         </div>
+                      )}
+                    </div>
+                    <div className="contact-details">
+                      <div className="contact-header">
+                        <h3 className="contact-name light-mode">{contact.name}</h3>
+                        <span className="contact-time">{fmtShortTime(contact.timestamp)}</span>
+                      </div>
+                      <div className="contact-message-row">
+                        <p className="contact-message light-mode">{contact.lastMessage}</p>
+                        {contact.unread > 0 && <div className="unread-badge">{contact.unread}</div>}
                       </div>
                     </div>
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef}/>
             </div>
+          </div>
 
-            {/* Input Area */}
-            <div className="input-area light-mode">
-              <div className="input-container">
-                <div className="input-btn-wrapper" />
-                <div className="input-wrapper">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="พิมพ์ข้อความ... ✨"
-                    className="message-input light-mode"
-                  />
+          {/* Main Chat */}
+          <div className="chat-main">
+            {activeRoomId == null ? (
+              <div className="empty-state light-mode">
+                <div className="empty-inner">
+                  <div className="empty-icon">💬</div>
+                  <h3>เลือกห้องแชททางซ้าย</h3>
+                  <p>คลิกรายชื่อเพื่อเริ่มสนทนา</p>
                 </div>
-                <button onClick={() => handleSendMessage()} className="input-btn send-btn">
-                  <Send size={20}/>
-                </button>
               </div>
-            </div>
-          </>
-        )}
+            ) : (
+              <>
+                <div className="chat-header light-mode">
+                  <div className="chat-header-info">
+                    <button
+                      onClick={() => setShowContactList(!showContactList)}
+                      className="back-btn light-mode"
+                    >
+                      <ArrowLeft size={20}/>
+                    </button>
+                    <div className="chat-avatar">
+                      {normalizeUrl(selectedContact?.avatarUrl) ? (
+                        <img
+                          src={normalizeUrl(selectedContact?.avatarUrl)}
+                          alt={selectedContact?.name || "avatar"}
+                          className="avatar"
+                        />
+                      ) : (
+                        <div className="avatar">
+                          {selectedContact?.name?.split(' ')[0]?.charAt(0) ?? '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="chat-contact-info">
+                      <h3 className="light-mode">
+                        {selectedContact?.name ?? 'เลือกห้องแชท'}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="messages-area light-mode">
+                  {messages.map((m, idx) => (
+                    <div key={m.id ?? `tmp-${idx}`} className={`message-group ${m.sender}`}>
+                      <div className={`message-container ${m.sender}`}>
+                        {m.sender === 'bot' && (
+                          <div className={`message-avatar ${m.sender}`}>
+                            {normalizeUrl(selectedContact?.avatarUrl) ? (
+                              <img
+                                src={normalizeUrl(selectedContact?.avatarUrl)}
+                                alt={selectedContact?.name || 'user'}
+                                className="avatar"
+                              />
+                            ) : (
+                              <Bot size={16}/>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="message-wrapper">
+                          <div className={`message-bubble ${m.sender}`}>
+                            <p className="message-content">{m.text}</p>
+                            <div className="message-footer">
+                              <p className={`message-time ${m.sender}`}>
+                                {formatTime(m.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef}/>
+                </div>
+
+                {/* Input Area */}
+                <div className="input-area light-mode">
+                  <div className="input-container">
+                    <div className="input-btn-wrapper" />
+                    <div className="input-wrapper">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="พิมพ์ข้อความ... ✨"
+                        className="message-input light-mode"
+                      />
+                    </div>
+                    <button onClick={() => handleSendMessage()} className="input-btn send-btn">
+                      <Send size={20}/>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-    </div>
     </>
   );
 };

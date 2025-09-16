@@ -130,23 +130,21 @@ func CreateAcademicStaff(c *gin.Context) {
 	lastName := c.PostForm("last_name")
 	birthdayStr := c.PostForm("birthday")
 	ageStr := c.PostForm("age") // ไม่คำนวณ ใช้ค่าฟอร์มอย่างเดียว
-		bday, err := parseBirthday(birthdayStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid birthday format (use YYYY-MM-DD or RFC3339)"})
-			return
-		}
+	bday, err := parseBirthday(birthdayStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid birthday format (use YYYY-MM-DD or RFC3339)"})
+		return
+	}
 
-// ถ้าต้องการเก็บเป็น date-only ให้เซ็ตเวลาเป็นเที่ยงคืนโซนไทย
-loc, _ := time.LoadLocation("Asia/Bangkok")
-bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
+	// ถ้าต้องการเก็บเป็น date-only ให้เซ็ตเวลาเป็นเที่ยงคืนโซนไทย
+	loc, _ := time.LoadLocation("Asia/Bangkok")
+	bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
 
 	// เช็คฟิลด์จำเป็น
 	if academicPosition == "" || firstName == "" || lastName == "" || birthdayStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required fields: academic_position, first_name, last_name, birthday"})
 		return
 	}
-
-
 
 	// พาร์ส age จากฟอร์ม (ไม่คำนวณ)
 	ageInt := 0
@@ -160,22 +158,71 @@ bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
 	}
 
 	// IDs
-	userID, err := mustUint(c, "user_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	addressID, err := mustUint(c, "address_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	genderID, err := mustUint(c, "gender_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	contactID, err := mustUint(c, "contact_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	universityID, err := mustUint(c, "university_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	facultyID, err := mustUint(c, "faculty_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	programID, err := mustUint(c, "program_id"); if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
+	userID, err := mustUint(c, "user_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	addressID, err := mustUint(c, "address_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	genderID, err := mustUint(c, "gender_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	contactID, err := mustUint(c, "contact_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	universityID, err := mustUint(c, "university_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	facultyID, err := mustUint(c, "faculty_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	programID, err := mustUint(c, "program_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	// ตรวจความมีอยู่ของ FK (ถ้าไม่มี constraint)
-	if err := checkExists(db, &entity.User{}, userID, "user_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	if err := checkExists(db, &entity.Address{}, addressID, "address_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	if err := checkExists(db, &entity.Gender{}, genderID, "gender_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	if err := checkExists(db, &entity.Contact{}, contactID, "contact_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	if err := checkExists(db, &entity.University{}, universityID, "university_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	if err := checkExists(db, &entity.Faculty{}, facultyID, "faculty_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-	if err := checkExists(db, &entity.Program{}, programID, "program_id"); err != nil { c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
+	if err := checkExists(db, &entity.User{}, userID, "user_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := checkExists(db, &entity.Address{}, addressID, "address_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := checkExists(db, &entity.Gender{}, genderID, "gender_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := checkExists(db, &entity.Contact{}, contactID, "contact_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := checkExists(db, &entity.University{}, universityID, "university_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := checkExists(db, &entity.Faculty{}, facultyID, "faculty_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := checkExists(db, &entity.Program{}, programID, "program_id"); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	var created entity.AcademicStaff
 	err = db.Transaction(func(tx *gorm.DB) error {
@@ -185,7 +232,7 @@ bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
 			LastName:         lastName,
 
 			// เก็บเป็น string (ถ้า entity เป็น string)
-			Birthday: bday, 
+			Birthday: bday,
 			Age:      ageInt,
 
 			UserID:       userID,
@@ -196,7 +243,9 @@ bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
 			FacultyID:    facultyID,
 			ProgramID:    programID,
 		}
-		if err := tx.Create(&staff).Error; err != nil { return err }
+		if err := tx.Create(&staff).Error; err != nil {
+			return err
+		}
 
 		return tx.Preload("User").
 			Preload("Address").
@@ -214,6 +263,7 @@ bday = time.Date(bday.Year(), bday.Month(), bday.Day(), 0, 0, 0, 0, loc)
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Academic staff created successfully", "data": created})
 }
+
 // helper: เช็คความมีอยู่ของ record
 func checkExists(db *gorm.DB, model interface{}, id uint, field string) error {
 	if err := db.First(model, id).Error; err != nil {
@@ -378,15 +428,17 @@ func UpdateAcademicStaff(c *gin.Context) {
 		"data":    staff,
 	})
 }
+
 type CurrentInternshipDTO struct {
-	CompanyName  string     `json:"company_name"`
-	Position     string     `json:"position"`
-	ProvinceName string     `json:"province_name"`
-	Status       string     `json:"status"`
+	CompanyName  string `json:"company_name"`
+	Position     string `json:"position"`
+	ProvinceName string `json:"province_name"`
+	Status       string `json:"status"`
 }
 
 type StudentForAdvisorDTO struct {
 	ID          uint                  `json:"id"`
+	User_ID     uint                  `json:"user_id"`
 	FirstName   string                `json:"first_name"`
 	LastName    string                `json:"last_name"`
 	ProgramName string                `json:"program_name,omitempty"`
@@ -398,11 +450,11 @@ type StudentForAdvisorDTO struct {
 }
 
 type CompanySummaryItemDTO struct {
-	CompanyID    uint                    `json:"company_id"`
-	CompanyName  string                  `json:"company_name"`
-	LogoURL      string                  `json:"logo_url,omitempty"`
-	StudentCount int                     `json:"student_count"`
-	Students     []StudentForAdvisorDTO  `json:"students"`
+	CompanyID    uint                   `json:"company_id"`
+	CompanyName  string                 `json:"company_name"`
+	LogoURL      string                 `json:"logo_url,omitempty"`
+	StudentCount int                    `json:"student_count"`
+	Students     []StudentForAdvisorDTO `json:"students"`
 }
 
 // ====== Handler: รายชื่อนักศึกษาที่ดูแล ======
@@ -499,6 +551,7 @@ func GetAdviseeStudents(c *gin.Context) {
 
 		dto := StudentForAdvisorDTO{
 			ID:          s.ID,
+			User_ID:     s.User.ID,
 			FirstName:   s.FirstName,
 			LastName:    s.LastName,
 			ProgramName: "", // เผื่อไม่มีข้อมูล
@@ -544,7 +597,6 @@ func GetAdviseeStudents(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"students": out})
 }
-
 
 func GetAdviseeCompanySummary(c *gin.Context) {
 	db := config.DB()
@@ -632,7 +684,7 @@ func GetAdviseeCompanySummary(c *gin.Context) {
 			item := &CompanySummaryItemDTO{
 				CompanyID:   comp.ID,
 				CompanyName: comp.CompanyName, // TODO: ปรับชื่อฟิลด์ถ้าไม่ตรง
-				LogoURL:     comp.Logo,     // TODO: ปรับชื่อฟิลด์ถ้าไม่ตรง
+				LogoURL:     comp.Logo,        // TODO: ปรับชื่อฟิลด์ถ้าไม่ตรง
 				Students:    []StudentForAdvisorDTO{},
 			}
 			group[k] = item

@@ -106,6 +106,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       age: values.age,
       gender_id: values.Gender,
       academic_position: values.academic_position,
+      university_id: values.university_id,
+      faculty_id: values.faculty_id,
+      program_id: values.program_id,
     };
     await UpdateAcademicStaff(userId, payload);
     messageApi.success("บันทึกข้อมูลส่วนตัวสำเร็จ!");

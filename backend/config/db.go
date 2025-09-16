@@ -87,6 +87,7 @@ func SetupDatabase() {
 	ImportDistrictsCSV(db, "./config/data/address/districts.csv")
 	ImportPostcodesCSV(db, "./config/data/address/postcode.csv")
 	ImportSubDistrictsCSV(db, "./config/data/address/subdistricts.csv")
+	SeedArticles(db)
 }
 
 func createSeedData(db *gorm.DB) {
@@ -116,13 +117,13 @@ func createSeedData(db *gorm.DB) {
 	//User
 	User := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
-/* 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+ 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, */
+		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, 
 
 		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 
-/* 		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+ 		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
@@ -135,7 +136,7 @@ func createSeedData(db *gorm.DB) {
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn4@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, */
+		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, 
 	}
 	for _, pkg := range User {
 		db.Unscoped().FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
@@ -151,14 +152,14 @@ func createSeedData(db *gorm.DB) {
 			ImageURL: "/uploads/admin-profile.png",
 			UserID:   2,
 		},
-/* 		{
+ 		{
 			ImageURL: "https://img2.pic.in.th/pic/Co-op-match-Photoroom.png",
 			UserID:   3,
 		},
 		{
 			ImageURL: "https://example.com/profiles/user4.jpg",
 			UserID:   4,
-		}, */
+		},
 	}
 	for _, pkg := range profileImages {
 		db.FirstOrCreate(&pkg, entity.ProfileImage{UserID: pkg.UserID})
@@ -211,7 +212,7 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// ที่อยู่ (Address)
-/* 	addresses := []entity.Address{
+ 	addresses := []entity.Address{
 		{HouseNumber: "123", Village: "หมู่บ้าน ABC", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 		{HouseNumber: "456", Village: "หมู่บ้าน XYZ", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
 		{HouseNumber: "789", Village: "หมู่บ้าน QWE", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
@@ -236,18 +237,18 @@ func createSeedData(db *gorm.DB) {
 			SubDistrictID: addr.SubDistrictID,
 			Province:      addr.Province,
 		})
-	} */
+	} 
 
 	// แอดมิน (Admin)
 	admins := []entity.Admin{
 		{FirstName: "สมชาย", LastName: "แอดมิน", Birthday: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), UserID: 1},
-		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 2},
+		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 5},
 	}
 	for _, admin := range admins {
 		db.Unscoped().FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
 	}
 
-/* 	// บุคลากรทางวิชาการ (AcademicStaff)
+ 	// บุคลากรทางวิชาการ (AcademicStaff)
 	staffs := []entity.AcademicStaff{
 		{
 			AcademicPosition: "อาจารย์", Age: 40,
@@ -292,9 +293,9 @@ func createSeedData(db *gorm.DB) {
 			Where(entity.AcademicStaff{UserID: s.UserID}).
 			Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
 			FirstOrCreate(&entity.AcademicStaff{})
-	} */
+	} 
 
-/* 	students := []entity.Student{
+ 	students := []entity.Student{
 		{
 			FirstName:   "สมชาย",
 			LastName:    "ใจดี",
@@ -388,9 +389,9 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, s := range students {
 		db.Unscoped().FirstOrCreate(&s, entity.Student{UserID: s.UserID})
-	} */
+	} 
 
-/* 	companies := []entity.Company{
+ 	companies := []entity.Company{
 		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", UserID: 2, AddressID: 11},
 		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", UserID: 6, AddressID: 12},
 		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", UserID: 7, AddressID: 13},
@@ -399,7 +400,7 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, company := range companies {
 		db.Unscoped().FirstOrCreate(&company, entity.Company{UserID: company.UserID})
-	} */
+	} 
 
 	// สิทธิประโยชน์ (Benefit)
 	benefits := []entity.Benefit{
@@ -422,7 +423,7 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
 	}
 
-/* 	intershipPosts := []entity.IntershipPost{
+ 	intershipPosts := []entity.IntershipPost{
 		{
 			PostName:        "Software Development Intern",
 			PostDescription: "Join our team as a software development intern",
@@ -633,10 +634,10 @@ func createSeedData(db *gorm.DB) {
 		var benefits []entity.Benefit
 		db.Where("id IN ?", benefitIDs).Find(&benefits)
 		db.Model(&intershipPosts[i]).Association("Benefits").Replace(benefits)
-	} */
+	} 
 
 	// Step 2: Map post index → skills
-/* 	skillMap := map[int][]uint{
+ 	skillMap := map[int][]uint{
 		0: {1, 2}, // Software Dev → Python, Java
 		1: {1, 5}, // Data Science → Python, Data Analysis
 		2: {1, 5}, // AI/ML → Python, Data Analysis
@@ -655,9 +656,9 @@ func createSeedData(db *gorm.DB) {
 				db.FirstOrCreate(&reqSkill, reqSkill)
 			}
 		}
-	} */
+	} 
 
-	/*
+	
 		for _, post := range intershipPosts {
 			db.Create(&post)
 			db.Create(&entity.CompanyRequiredSkill{
@@ -682,7 +683,7 @@ func createSeedData(db *gorm.DB) {
 			db.Create(&entity.CompanyRequiredSkill{SkillID: 3, IntershipPostID: 4}) // JavaScript
 			db.Create(&entity.CompanyRequiredSkill{SkillID: 4, IntershipPostID: 4}) // SQL
 		}
-	*/
+	
 
 	// Seed Skills
 	skills := []entity.Skill{
@@ -707,7 +708,7 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.Interest{InterestName: pkg.InterestName})
 	}
 	// Seed Student Skills
-	/* studentSkills := []entity.StudentSkill{
+	 studentSkills := []entity.StudentSkill{
 		{SkillID: 1, StudentID: 1}, // Python
 		{SkillID: 2, StudentID: 1}, // Java
 		{SkillID: 4, StudentID: 1}, // SQL
@@ -716,8 +717,8 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, pkg := range studentSkills {
 		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
-	} */
-	/*
+	} 
+	
 		companyRequiredSkills := []entity.CompanyRequiredSkill{
 			{SkillID: 1, IntershipPostID: 1}, // Python for Software Dev
 			{SkillID: 2, IntershipPostID: 1}, // Java for Software Dev
@@ -731,8 +732,8 @@ func createSeedData(db *gorm.DB) {
 				IntershipPostID: pkg.IntershipPostID,
 			})
 		}
-	*/
-	/* studentInterests := []entity.StudentInterest{
+	
+	 studentInterests := []entity.StudentInterest{
 		{StudentID: 1, InterestID: 1}, // Web Development
 		{StudentID: 1, InterestID: 3}, // Data Science
 		{StudentID: 2, InterestID: 4}, // AI/ML
@@ -744,7 +745,7 @@ func createSeedData(db *gorm.DB) {
 			StudentID:  si.StudentID,
 			InterestID: si.InterestID,
 		})
-	} */
+	} 
 
 	// Seed Educational Background
 	EducationLevels := []entity.EducationLevel{
@@ -756,7 +757,7 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&pkg, entity.EducationLevel{Name: pkg.Name})
 	}
 	// 4. เพิ่มข้อมูล Education
-	/* education := entity.Education{
+	 education := entity.Education{
 		UniversityID:     1,
 		FacultyID:        1,
 		ProgramID:        1,
@@ -771,8 +772,8 @@ func createSeedData(db *gorm.DB) {
 		StudentID: education.StudentID,
 		ProgramID: education.ProgramID,
 		Year:      education.Year,
-	}) */
-	/* interviewAppointments := []entity.InterviewAppointment{
+	}) 
+	 interviewAppointments := []entity.InterviewAppointment{
 		{
 			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
 			Mode:            "ออนไลน์",
@@ -802,7 +803,7 @@ func createSeedData(db *gorm.DB) {
 			CompanyID:       appointment.CompanyID,
 			AppointmentDate: appointment.AppointmentDate,
 		})
-	} */
+	} 
 
 	// Seed Notification Types
 
@@ -827,7 +828,7 @@ func createSeedData(db *gorm.DB) {
 	}
 
 	// ยืนยันตัวตนของ อาจารย์ && บริษัท
-/* 	verifies := []entity.Verify{
+ 	verifies := []entity.Verify{
 		{
 			VerificationDocument: "/uploads/verifyDocument/Company/06-09-2025.png",
 			StatusVerifyID:       2,
@@ -867,9 +868,9 @@ func createSeedData(db *gorm.DB) {
 			Reason:               "",
 		}
 		db.FirstOrCreate(&verify, entity.Verify{UserID: verify.UserID})
-	} */
+	} 
 
-/* 	reviews := []entity.Review{
+	reviews := []entity.Review{
 		{Rating: 5, Comment: "ได้เรียนรู้งานจริงจากโปรเจกต์ในบริษัท ทีมงานใจดีและให้คำแนะนำดีมาก", Like: 10, CreatedAt: time.Date(2024, 2, 1, 10, 0, 0, 0, time.UTC), StudentID: 1, CompanyID: 1},
 		{Rating: 4, Comment: "บรรยากาศในการทำงานดี เพื่อนร่วมงานเป็นกันเอง", Like: 7, CreatedAt: time.Date(2024, 2, 3, 11, 30, 0, 0, time.UTC), StudentID: 2, CompanyID: 1},
 		{Rating: 3, Comment: "ได้รับมอบหมายงานน้อย แต่ได้เรียนรู้ระบบงานจริง", Like: 5, CreatedAt: time.Date(2024, 1, 20, 9, 15, 0, 0, time.UTC), StudentID: 3, CompanyID: 1},
@@ -882,8 +883,8 @@ func createSeedData(db *gorm.DB) {
 	for _, review := range reviews {
 		db.Create(&review)
 	}
- */
-/* 	applications := []entity.Application{
+ 
+ 	applications := []entity.Application{
 		{
 			Status:          "ผ่าน",
 			ResumeUrl:       "resume_student1.pdf",
@@ -950,7 +951,7 @@ func createSeedData(db *gorm.DB) {
 	}
 	for _, app := range applications {
 		db.Create(&app)
-	} */
+	} 
 
 /* 	analysisTypes := []entity.AnalysisType{
 		{TypeCode: "application", TypeName: "การสมัคร"},
@@ -1169,4 +1170,118 @@ func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
 		db.FirstOrCreate(&subDistrict, entity.SubDistrict{NameTH: subDistrict.NameTH, DistrictID: subDistrict.DistrictID})
 	}
 	log.Println("✅ SubDistricts imported")
+}
+
+func SeedArticles(db *gorm.DB) error {
+	now := time.Now()
+	yes := true
+	no := false
+
+	articles := []entity.Article{
+		// -------- News --------
+		{
+			Title:       "เปิดรับสมัครนักศึกษาฝึกงาน ประจำภาคฤดูร้อน 2568",
+			Subtitle:    "เตรียมเรซูเม่และทรานสคริปต์ให้พร้อม",
+			Body:        "บริษัทชั้นนำหลายแห่งเริ่มเปิดรับสมัครนักศึกษาฝึกงานแล้ว นักศึกษาที่สนใจควรเตรียมเอกสารให้พร้อม เช่น Resume, Transcript และจดหมายแนะนำตัว",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+			AdminID:     1,
+		},
+		{
+			Title:       "โครงการจับคู่สถานประกอบการกับนักศึกษา",
+			Subtitle:    "มหาวิทยาลัยร่วมมือบริษัทพันธมิตร",
+			Body:        "มหาวิทยาลัยร่วมกับบริษัทพันธมิตร เปิดโครงการ Coop Match เพื่อช่วยจับคู่สถานประกอบการที่เหมาะสมกับนักศึกษา",
+			Category:    "กิจกรรม",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+			AdminID:     1,
+		},
+		{
+			Title:       "ประกาศ! เพิ่มตำแหน่งฝึกงานด้าน Data Engineer",
+			Subtitle:    "โอกาสใหม่ในสายงาน Big Data",
+			Body:        "บริษัทด้านไอทีเพิ่มตำแหน่งฝึกงานใหม่ สายงาน Data Engineer เพื่อรองรับการเติบโตด้าน Big Data และ AI",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &yes,
+			AdminID:     1,
+		},
+		{
+			Title:       "เชิญร่วมงาน Career Day Online",
+			Subtitle:    "พบกับบริษัทมากกว่า 50 แห่ง",
+			Body:        "งาน Career Day จะจัดในรูปแบบออนไลน์ นักศึกษาสามารถสมัครเข้าร่วมเพื่อพบกับบริษัทต่างๆ และสัมภาษณ์เบื้องต้นได้ทันที",
+			Category:    "กิจกรรม",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &no,
+			AdminID:     1,
+		},
+		{
+			Title:       "ประกาศเลื่อนกำหนดส่งใบสมัครฝึกงาน",
+			Subtitle:    "เลื่อนออกไปอีก 1 สัปดาห์",
+			Body:        "กำหนดส่งเอกสารฝึกงานภาคฤดูร้อน ขยายเวลาออกไปอีก 1 สัปดาห์ เพื่อเปิดโอกาสให้นักศึกษาที่เตรียมตัวไม่ทัน",
+			Category:    "ประกาศ",
+			Type:        entity.ArticleTypeNews,
+			PublishedAt: &now,
+			IsPublished: &no,
+			AdminID:     1,
+		},
+
+		// -------- Career Articles --------
+		{
+			Title:       "5 เคล็ดลับเขียนเรซูเม่ให้โดนใจบริษัท",
+			Subtitle:    "Resume ที่ดีคือใบเบิกทาง",
+			Body:        "การฝึกงานเริ่มต้นที่เรซูเม่ บทความนี้แนะนำวิธีเขียนเรซูเม่ที่กระชับ ชัดเจน และดึงดูด HR",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+			AdminID:     1,
+		},
+		{
+			Title:       "เตรียมตัวอย่างไร ก่อนสัมภาษณ์ฝึกงานครั้งแรก",
+			Subtitle:    "แชร์เทคนิคการตอบคำถามยอดฮิต",
+			Body:        "บทความนี้รวมเทคนิคการตอบคำถามสัมภาษณ์ เช่น 'แนะนำตัวเอง' หรือ 'ทำไมถึงอยากฝึกงานที่นี่' เพื่อให้คุณมั่นใจมากขึ้น",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+			AdminID:     1,
+		},
+		{
+			Title:       "รวมเว็บไซต์และแหล่งหางานฝึกงานที่นักศึกษาควรรู้",
+			Subtitle:    "LinkedIn, JobsDB, Coop Match",
+			Body:        "รวมเว็บไซต์และแพลตฟอร์มหางานฝึกงาน เช่น Coop Match, LinkedIn, JobsDB และเว็บไซต์ของมหาวิทยาลัย",
+			Category:    "แหล่งข้อมูล",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &no,
+			AdminID:     1,
+		},
+		{
+			Title:       "Soft Skills ที่บริษัทมองหาในนักศึกษาฝึกงาน",
+			Subtitle:    "มากกว่าความรู้คือทักษะที่ใช้ได้จริง",
+			Body:        "บริษัทมักมองหาทักษะนอกห้องเรียน เช่น การทำงานเป็นทีม การสื่อสารที่ดี ความรับผิดชอบ และความยืดหยุ่นในการทำงาน",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &yes,
+			AdminID:     1,
+		},
+		{
+			Title:       "Checklist ก่อนเริ่มวันแรกของการฝึกงาน",
+			Subtitle:    "เตรียมตัวให้พร้อมก่อนเริ่มจริง",
+			Body:        "สิ่งที่ควรเตรียม เช่น เสื้อผ้า, เอกสาร, วิธีเดินทาง และการทำความรู้จักทีมล่วงหน้า",
+			Category:    "แนะแนว",
+			Type:        entity.ArticleTypeCareer,
+			PublishedAt: &now,
+			IsPublished: &no,
+			AdminID:     1,
+		},
+	}
+
+	return db.Create(&articles).Error
 }
