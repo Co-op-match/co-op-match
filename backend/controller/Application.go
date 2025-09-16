@@ -221,6 +221,7 @@ func GetApplicationsByIntershipPostID(c *gin.Context) {
 	var applications []entity.Application
 
 	if err := config.DB().
+		Preload("ApplicationDetails.Student.User").
 		Preload("ApplicationDetails.Student").
 		Preload("IntershipPost.Company").
 		Where("intership_post_id = ?", postID).
@@ -232,20 +233,23 @@ func GetApplicationsByIntershipPostID(c *gin.Context) {
 	var response []map[string]interface{}
 	for _, app := range applications {
 		var studentName string
+		var studentUserID uint
 		if len(app.ApplicationDetails) > 0 && app.ApplicationDetails[0].Student.ID != 0 {
 			student := app.ApplicationDetails[0].Student
 			studentName = student.FirstName + " " + student.LastName
+			studentUserID = student.UserID 
 		}
 
 		response = append(response, map[string]interface{}{
 			"id":           app.ID,
+			"student_user_id": studentUserID, 
 			"student_name": studentName,
 			"status":       app.Status,
 			"date":         app.SubmitAt.Format("02-01-2006"),
 			"resume":       app.ResumeUrl,
 			"transcript":   app.TranscriptUrl,
 			"companyNote":  app.CompanyNote,
-			"post_name":    app.IntershipPost.PostName, // ✅ ตรงนี้แก้แล้ว
+			"post_name":    app.IntershipPost.PostName, 
 		})
 
 	}

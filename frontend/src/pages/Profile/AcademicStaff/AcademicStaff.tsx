@@ -14,6 +14,7 @@ import {
   Empty,
   Table,
   Tabs,
+  Alert,
 } from "antd";
 import {
   EditOutlined,
@@ -21,6 +22,7 @@ import {
   UserOutlined,
   TeamOutlined,
   BankOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
@@ -37,6 +39,7 @@ import "./AcademicStaffProfile.css";
 import { fileURL } from "@/config/env";
 import CoopMatchLoader from "../../Component/loading";
 import EditProfileCompanyModal from "../AcademicStaff/Edit/Popup";
+import { useNavigate } from "react-router-dom";
 
 dayjs.locale("th");
 
@@ -45,7 +48,8 @@ const { Text } = Typography;
 
 /* ========= Types ========= */
 export interface StudentForAdvisor {
-  id: number;
+  id: number; // NOTE: ปรับเป็น user_id ถ้าระบบคุณใช้ field อื่นเป็นตัวชี้โปรไฟล์
+  user_id: number;
   prefix_name?: string;
   first_name: string;
   last_name: string;
@@ -54,14 +58,14 @@ export interface StudentForAdvisor {
   year?: number;
   gpa?: number;
   avatar_url?: string;
-  student_id?: string; // ✅ เพิ่มให้ตรงกับ UI ที่อ้างถึง
+  student_id?: string;
   current_internship?:
     | {
         company_id: number;
         company_name: string;
         position?: string;
-        start_date?: string; // ISO
-        end_date?: string; // ISO
+        start_date?: string;
+        end_date?: string;
         status?: string;
         logo_url?: string;
         province_name?: string;
@@ -80,10 +84,33 @@ export interface CompanySummaryItem {
 /* ========= ตั้งค่าว่าจะใช้ MOCK ไหม (ปิด) ========= */
 const USE_MOCK_DATA = false;
 
+/* ===== helpers ลิงก์ & รูป ===== */
+const safeHttp = (url?: string) => {
+  if (!url) return undefined;
+  const hasProto = /^https?:\/\//i.test(url);
+  return hasProto ? url : `https://${url}`;
+};
+const toTel = (p?: string) => (p ? `tel:${p.replace(/\s+/g, "")}` : undefined);
+const toMail = (m?: string) => (m ? `mailto:${m}` : undefined);
+const toLine = (id?: string) => (id ? `https://line.me/R/ti/p/~${id}` : undefined); // รองรับไอดีไลน์
+const toFb = (fb?: string) => {
+  if (!fb) return undefined;
+  return fb.startsWith("http") ? fb : `https://facebook.com/${fb}`;
+};
+const linkOrDash = (text?: string, href?: string) =>
+  href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {text || href}
+    </a>
+  ) : (
+    text || "-"
+  );
+const toSrc = (raw?: string) => (raw ? fileURL(raw) : undefined);
+
 const AcademicStaffProfile: React.FC = () => {
-  const [academicstaff, setAcademicStaff] = useState<
-    AcademicStaffInterface | undefined
-  >(undefined);
+  const navigate = useNavigate();
+
+  const [academicstaff, setAcademicStaff] = useState<AcademicStaffInterface | undefined>(undefined);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
   const [editSection, setEditSection] = useState<"contact" | "address" | "personal" | null>(null);
 
@@ -100,8 +127,8 @@ const AcademicStaffProfile: React.FC = () => {
 
   const userId = localStorage.getItem("id");
 
-  // helper: รับ url ดิบ → คืน src ที่พร้อมใช้ (หรือ undefined ถ้าไม่มี)
-  const toSrc = (raw?: string) => (raw ? fileURL(raw) : undefined);
+  // ✅ ใช้ค่านี้ควบคุมสิทธิ์การเข้าถึงแท็บ/การโหลดข้อมูล
+  const isVerified = verifyStatus === "รับรอง";
 
   // อัปเดตรูปใน state ทันทีที่อัปโหลดสำเร็จ
   const onImageUpdated = (newUrl: string) => setAvatarUrl(fileURL(newUrl));
@@ -130,7 +157,7 @@ const AcademicStaffProfile: React.FC = () => {
       if (!userIdString) return;
       const uid = Number(userIdString);
       try {
-        setStaffLoading(true); // ⬅️ เริ่มโหลด
+        setStaffLoading(true);
 
         const academicstaffData = await GetAcademicStaffByUserId(uid);
         setAcademicStaff(academicstaffData);
@@ -158,10 +185,17 @@ const AcademicStaffProfile: React.FC = () => {
     setAvatarUrl(url ? fileURL(url) : undefined);
   }, [academicstaff]);
 
-  // โหลดนักศึกษา + บริษัทสรุป
+  // โหลดนักศึกษา + บริษัทสรุป (เฉพาะกรณี "รับรอง")
   useEffect(() => {
     (async () => {
       if (!userId) return;
+
+      if (!isVerified) {
+        setStudents([]);
+        setCompanySummary([]);
+        return;
+      }
+
       const uid = Number(userId);
       setStudentsLoading(true);
       try {
@@ -170,7 +204,7 @@ const AcademicStaffProfile: React.FC = () => {
           setCompanySummary([]);
         } else {
           // 1) โหลดนักศึกษา
-          const resStd = await GetAdviseeStudents(uid); // GET /academic/student/advisor/:user_id
+          const resStd = await GetAdviseeStudents(uid);
           if (resStd?.status === 200) {
             const data = resStd.data?.students ?? resStd.data ?? [];
             setStudents(data as StudentForAdvisor[]);
@@ -179,7 +213,7 @@ const AcademicStaffProfile: React.FC = () => {
           }
 
           // 2) โหลดสรุปบริษัท
-          const resSum = await GetAdviseeCompanySummary(uid); // GET /academic/company/advisor/:user_id
+          const resSum = await GetAdviseeCompanySummary(uid);
           if (resSum?.status === 200) {
             const data = resSum.data?.companies ?? resSum.data ?? [];
             setCompanySummary(data as CompanySummaryItem[]);
@@ -198,9 +232,31 @@ const AcademicStaffProfile: React.FC = () => {
         setStudentsLoading(false);
       }
     })();
-  }, [userId]);
+  }, [userId, isVerified]);
 
   const onEditSection = (section: "contact" | "address" | "personal") => setEditSection(section);
+
+  // ✅ การ์ดแจ้งเตือนเมื่อยังไม่ได้รับการรับรอง
+  const NotVerifiedNotice = (
+    <Alert
+      type="warning"
+      showIcon
+      message={
+        <span style={{ fontWeight: 600 }}>
+          <LockOutlined /> ยังไม่สามารถเข้าถึงข้อมูลนักศึกษาและสรุปบริษัทได้
+        </span>
+      }
+      description={
+        <span>
+          สถานะการรับรองปัจจุบัน: <b>{verifyStatus}</b>
+          <br />
+          โปรดส่งคำขอรับรอง/รอการอนุมัติจากผู้ดูแลระบบก่อน จึงจะสามารถดูข้อมูล “นักศึกษาที่ดูแล” และ
+          “บริษัทที่นักศึกษาไปฝึก” ได้
+        </span>
+      }
+      style={{ marginBottom: 16 }}
+    />
+  );
 
   return (
     <Layout>
@@ -210,7 +266,7 @@ const AcademicStaffProfile: React.FC = () => {
       {isLoading && (
         <CoopMatchLoader
           overlay
-          animation="wave-fold" // puzzle-fold | piece-rotate | flip-3d | wave-fold | bounce-assemble
+          animation="wave-fold"
           primaryColor="#2473b2"
           progressMode="indeterminate"
           text="กำลังโหลดข้อมูลอาจารย์และนักศึกษา..."
@@ -298,9 +354,9 @@ const AcademicStaffProfile: React.FC = () => {
                     <h4>
                       <UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลส่วนตัว
                     </h4>
-                    <button className="edit-profile-button" onClick={() => onEditSection("personal")}>
+                    {/* <button className="edit-profile-button" onClick={() => onEditSection("personal")}>
                       <EditOutlined /> แก้ไข
-                    </button>
+                    </button> */}
                   </div>
                   <div style={{ padding: "0px 24px 0px 24px" }}>
                     <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
@@ -330,16 +386,20 @@ const AcademicStaffProfile: React.FC = () => {
                   <div style={{ padding: "0px 24px 0px 24px" }}>
                     <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
                       <Descriptions.Item label="เว็บไซต์">
-                        {academicstaff?.Contact?.website || "-"}
+                        {linkOrDash(academicstaff?.Contact?.website, safeHttp(academicstaff?.Contact?.website))}
                       </Descriptions.Item>
-                      <Descriptions.Item label="ไลน์">{academicstaff?.Contact?.line || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="ไลน์">
+                        {linkOrDash(academicstaff?.Contact?.line, toLine(academicstaff?.Contact?.line))}
+                      </Descriptions.Item>
                       <Descriptions.Item label="เบอร์">
-                        {academicstaff?.Contact?.phone_number || "-"}
+                        {linkOrDash(academicstaff?.Contact?.phone_number, toTel(academicstaff?.Contact?.phone_number))}
                       </Descriptions.Item>
                       <Descriptions.Item label="เฟสบุ๊ค">
-                        {academicstaff?.Contact?.facebook || "-"}
+                        {linkOrDash(academicstaff?.Contact?.facebook, toFb(academicstaff?.Contact?.facebook))}
                       </Descriptions.Item>
-                      <Descriptions.Item label="อีเมล">{academicstaff?.Contact?.email || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="อีเมล">
+                        {linkOrDash(academicstaff?.Contact?.email, toMail(academicstaff?.Contact?.email))}
+                      </Descriptions.Item>
                     </Descriptions>
                   </div>
 
@@ -381,6 +441,9 @@ const AcademicStaffProfile: React.FC = () => {
           {/* CONTENT ROWS */}
           <Row gutter={[16, 24]}>
             <Col span={24}>
+              {/* แจ้งเตือนถ้ายังไม่รับรอง */}
+              {!isVerified && NotVerifiedNotice}
+
               <Tabs
                 defaultActiveKey="students"
                 className="advisor-tabs"
@@ -393,6 +456,7 @@ const AcademicStaffProfile: React.FC = () => {
                         <span>นักศึกษาที่ดูแล</span>
                       </span>
                     ),
+                    disabled: !isVerified,
                     children: (
                       <Card
                         title={
@@ -432,6 +496,14 @@ const AcademicStaffProfile: React.FC = () => {
                             tableLayout="fixed"
                             scroll={{ x: 1200 }}
                             className="table-zebra nice-table"
+                            // ✅ คลิกทั้งแถวไปโปรไฟล์นักศึกษา
+                            onRow={(record) => ({
+                              onClick: () => {
+                                // NOTE: ถ้า field user id จริงชื่ออื่น เช่น user_id → เปลี่ยนตามจริง
+                                navigate(`/profile/${record.user_id}`);
+                              },
+                              style: { cursor: "pointer" },
+                            })}
                             pagination={{
                               pageSize: 10,
                               showSizeChanger: true,
@@ -582,6 +654,7 @@ const AcademicStaffProfile: React.FC = () => {
                         <span>บริษัทที่นักศึกษาไปฝึก</span>
                       </span>
                     ),
+                    disabled: !isVerified,
                     children: (
                       <Card
                         title={
@@ -619,6 +692,11 @@ const AcademicStaffProfile: React.FC = () => {
                             size="middle"
                             tableLayout="fixed"
                             className="table-zebra nice-table"
+                            // ✅ คลิกทั้งแถวไปหน้าโปรไฟล์บริษัท
+                            onRow={(record) => ({
+                              onClick: () => navigate(`/company-profile/${record.company_id}`),
+                              style: { cursor: "pointer" },
+                            })}
                             pagination={{
                               pageSize: 8,
                               showSizeChanger: true,
@@ -664,10 +742,14 @@ const AcademicStaffProfile: React.FC = () => {
                               ),
                               rowExpandable: (record) => record.students && record.students.length > 0,
                               expandIconColumnIndex: 0,
+                              // ✅ กันคลิกลามไป onRow
                               expandIcon: ({ expanded, onExpand, record }) => (
                                 <button
                                   className={`expand-btn ${expanded ? "is-open" : ""}`}
-                                  onClick={(e) => onExpand(record, e)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onExpand(record, e);
+                                  }}
                                   aria-label={expanded ? "ย่อ" : "ขยาย"}
                                 >
                                   <span className="expand-btn__chev">{expanded ? "−" : "+"}</span>
