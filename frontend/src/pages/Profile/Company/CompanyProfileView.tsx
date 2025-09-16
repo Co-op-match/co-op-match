@@ -30,12 +30,41 @@ import CompanyReviews from "./StudentReviews";
 import CompanyJobList from "./CompanyJobList";
 import { saveChatToken } from "../../../utils/chatToken";
 import CoopMatchLoader from "../../Component/loading";
+import CoopMatchHeader from "@/pages/Component/Coop_MatchHeader";
+import AcademicStaffHeader from "@/pages/Component/AcademicStaffHeader";
+import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";
 
 const { Content } = Layout;
-
+const getStoredRoleId = (): number => {
+  const raw = localStorage.getItem("roleId");
+  return raw ? Number(raw) : 0;
+};
 // ✅ ควรตั้งใน .env เช่น VITE_API_BASE_URL
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const RoleHeader: React.FC = () => {
+  const [roleId, setRoleId] = useState<number>(getStoredRoleId());
 
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "roleId") {
+        setRoleId(getStoredRoleId());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  switch (roleId) {    
+    case 2:
+      return <CompanyHeader />;
+    case 3:
+      return <CoopMatchHeader />;
+    case 4:
+      return <AcademicStaffHeader />;
+    default:
+      return <CoopMatchHeaderDefault />;
+  }
+};
 const CompanyProfileview: React.FC = () => {
   const [company, setCompany] = useState<CompanyInterface | null>(null);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
@@ -203,7 +232,7 @@ const handleChatClick = useCallback(async () => {
         // size="lg"  // ถ้าอยากใหญ่ขึ้น ปลดคอมเมนต์ได้
       />
     )}
-      <CompanyHeader />
+      <RoleHeader />
       <Layout className="company-layout">
         <Content>
           <div className="company-profile-title">

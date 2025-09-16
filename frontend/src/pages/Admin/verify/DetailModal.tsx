@@ -107,7 +107,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
           <div
             style={{
-              background: "linear-gradient(135deg, #1677ff 0%, #69b1ff 100%)",
+              background: "linear-gradient(135deg, rgb(30, 58, 138)  0%, #69b1ff 100%)",
               borderRadius: "50%",
               width: 40,
               height: 40,

@@ -232,7 +232,7 @@ func main() {
 		academicstaffGroup.GET("/advisor/:userId", controller.GetAdviseeStudents)
 		academicstaffGroup.GET("/student/advisor/:user_id", controller.GetAdviseeStudents)
 		academicstaffGroup.GET("/company/advisor/:user_id", controller.GetAdviseeCompanySummary)
-		
+		academicstaffGroup.GET("all", controller.GetAllAcademicStaff)
 	}
 
 	// contact
@@ -252,6 +252,8 @@ func main() {
 		adminGroup.GET("/get-allpost", controller.GetAllInternshipPostsInAdmin)
 		adminGroup.GET("/get-post-by-postid/:id", controller.GetInternshipPostsInAdminByIPostID)
 		adminGroup.GET("/:id", controller.GetAdminByID)
+		adminGroup.POST("", controller.CreateAdmin)
+		adminGroup.POST("/uploads/image", controller.UploadImageByAdmin)
 	}
 
 	// analysis
@@ -266,12 +268,15 @@ func main() {
 		//analysisGroup.GET("/users-by-role-series", analysis.GetUsersByRoleSeries)
 		analysisGroup.GET("/top-jobs", analysis.GetTopJobs)
 		analysisGroup.GET("/popular-companies", analysis.GetPopularCompanies)
+		analysisGroup.GET("/popular-admin", analysis.GetTopPopularAdmin)
+		analysisGroup.GET("/uplift", analysis.GetUpliftPassFail)
 	}
 	analysisCompanyGroup := protected.Group("/analysis/company/:companyId")
 	{
 		analysisCompanyGroup.GET("/overview", analysis.CompanyOverview)
 		analysisCompanyGroup.GET("/trend", analysis.CompanyTrend)
 		analysisCompanyGroup.GET("/status-application", analysis.CompanyStatusApplication)
+		analysisCompanyGroup.GET("/latest-pending", analysis.CompanyLatestPending)
 	}
 	analysisAcademicGroup := r.Group("/analysis/academic/user/:userId")
 	{
@@ -305,6 +310,7 @@ func main() {
 		verifyGroup.GET("/user/:user_id/latest", controller.GetLatestVerificationByUserID)
 		verifyGroup.GET("/status", controller.GetAllStatusVerify)
 		verifyGroup.PUT("/update-verify/:id", controller.UpdateVerifyStatus)
+		verifyGroup.GET("/stats", controller.GetVerifyStats)
 	}
 
 	// health

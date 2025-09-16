@@ -209,12 +209,15 @@ func CompanyOverview(c *gin.Context) {
 func CompanyTrend(c *gin.Context) {
 	db := config.DB()
 	companyId, _ := strconv.Atoi(c.Param("companyId"))
+
 	startStr := c.Query("start")
 	endStr := c.Query("end")
 
 	var start, end time.Time
 	var err error
-	if startStr != "" && endStr != "" {
+	explicitRange := startStr != "" && endStr != ""
+
+	if explicitRange {
 		start, end, err = betweenStartEnd(startStr, endStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date range"})
@@ -224,15 +227,26 @@ func CompanyTrend(c *gin.Context) {
 		start, end = betweenDays(c.Query("days"))
 	}
 
-	// โครงสร้างผลลัพธ์ใหม่
-	type TrendPoint struct {
-		Date  string `json:"date"`
-		Total int64  `json:"total"` // รวมทั้งวัน (ผู้สมัครทั้งหมด)
-		Pass  int64  `json:"pass"`  // ผ่าน
-		Fail  int64  `json:"fail"`  // ไม่ผ่าน + ไม่ได้รับเลือก
+	// --- รวม "วันนี้" เสมอเมื่อใช้โหมด days ---
+	if !explicitRange {
+		now := time.Now()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		if end.Before(today) {
+			end = today
+		}
 	}
 
-	// 1) ดึงสรุปรายวันด้วย conditional aggregation
+	// --- normalize เป็น 00:00 ---
+	start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	end   = time.Date(end.Year(),   end.Month(),   end.Day(),   0, 0, 0, 0, end.Location())
+
+	type TrendPoint struct {
+		Date  string `json:"date"`
+		Total int64  `json:"total"`
+		Pass  int64  `json:"pass"`
+		Fail  int64  `json:"fail"`
+	}
+
 	type row struct {
 		Date  string
 		Total int64
@@ -241,7 +255,6 @@ func CompanyTrend(c *gin.Context) {
 	}
 	var rows []row
 
-	// เงื่อนไข normalize: รวม "ไม่ผ่าน" และ "ไม่ได้รับเลือก" เป็น Fail
 	passCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
 	failCond := `
 		CASE
@@ -270,7 +283,6 @@ func CompanyTrend(c *gin.Context) {
 		return
 	}
 
-	// 2) เติมวันที่ให้ครบช่วง + map เป็นผลลัพธ์สุดท้าย
 	byDate := make(map[string]row, len(rows))
 	for _, r := range rows {
 		byDate[r.Date] = r
@@ -298,6 +310,7 @@ func CompanyTrend(c *gin.Context) {
 
 	c.JSON(http.StatusOK, points)
 }
+
 
 /*=================================== Status Application  ===================================*/
 func CompanyStatusApplication(c *gin.Context) {
@@ -329,4 +342,76 @@ func CompanyStatusApplication(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, buckets)
+}
+
+/*=================================== Lastest Application  ===================================*/
+type LatestPendingApplicant struct {
+	ApplicationID   uint       `json:"application_id"`
+	Status          string     `json:"status"`
+	SubmitAt        time.Time  `json:"submit_at"`
+	CompanyNote     string     `json:"company_note"`
+	PostID          uint       `json:"post_id"`
+	PostName        string     `json:"post_name"`
+	StudentID       uint       `json:"student_id"`
+	StudentFullName string     `json:"student_full_name"`
+	StudentPhone    string     `json:"student_phone,omitempty"`
+	InterviewID     *uint      `json:"interview_id,omitempty"`
+	InterviewAt     *time.Time `json:"interview_at,omitempty"`
+	StudentImageURL *string    `json:"student_image_url,omitempty"`
+}
+
+// controller/analysis/company_latest_pending.go
+func CompanyLatestPending(c *gin.Context) {
+	db := config.DB()
+	companyID, _ := strconv.Atoi(c.Param("companyId"))
+
+	// รวมเฉพาะ "ยังไม่ยืนยันผล" (ก่อนตัดสินผ่าน/ไม่ผ่าน)
+	// เลือกได้สองแนว: A) whitelist สถานะที่ต้องการ หรือ B) not-in สถานะจบแล้ว
+	clean := func(s string) string { return strings.ReplaceAll(strings.TrimSpace(s), " ", "") }
+	preDecision := []string{
+		clean("กำลังพิจารณา"),
+		clean("รอการนัดสัมภาษณ์"),
+		clean("นัดสัมภาษณ์แล้ว"),
+	}
+
+	rows := make([]LatestPendingApplicant, 0)
+
+	err := db.Table("applications a").
+		Select(`
+			a.id AS application_id,
+			TRIM(a.status) AS status,
+			a.submit_at,
+			a.company_note,
+			p.id AS post_id,
+			p.post_name AS post_name,
+			s.id AS student_id,
+			(TRIM(s.first_name) || ' ' || TRIM(s.last_name)) AS student_full_name,
+			s.phone_number AS student_phone,
+			ia.id AS interview_id,
+			ia.appointment_date AS interview_at,
+			(SELECT pi.image_url
+			FROM profile_images pi
+			WHERE pi.user_id = s.user_id
+				AND pi.deleted_at IS NULL
+			ORDER BY pi.id DESC
+			LIMIT 1) AS student_image_url  -- ✅ รูปล่าสุด
+		`).
+		Joins("JOIN intership_posts p ON p.id = a.intership_post_id").
+		Joins("JOIN students s ON s.id = a.student_id").
+		Joins(`LEFT JOIN interview_appointments ia 
+			ON ia.student_id = a.student_id AND ia.company_id = p.company_id`).
+		Where("p.company_id = ?", companyID).
+		Where(`REPLACE(TRIM(a.status),' ','') IN (?)`, preDecision).
+		Where("a.deleted_at IS NULL").
+		Group("a.id").
+		Order("a.submit_at DESC, a.id DESC").
+		Scan(&rows).Error
+
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
 }
