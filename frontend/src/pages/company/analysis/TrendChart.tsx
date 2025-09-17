@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, Space, Tag, Checkbox, Empty, Skeleton, Segmented, DatePicker, Button, Divider } from "antd";
+import { Card, Space, Tag, Checkbox, Empty, Skeleton, Segmented, DatePicker, Button, Divider, Typography } from "antd";
 import { DownloadOutlined, CalendarOutlined, EyeOutlined, FilterOutlined } from "@ant-design/icons";
 import { ResponsiveContainer, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
 import { getTrend } from "../../../services/https";
 import dayjs, { Dayjs } from "dayjs";
 import { TrendingUpIcon } from "lucide-react";
+const { Title } = Typography;
 
 type TrendPoint = {
   date: string; // YYYY-MM-DD
@@ -346,6 +347,10 @@ const TrendApplicantsArea: React.FC<Props> = ({
     <Card
       loading={loading}
       className="chart-card"
+      styles={{
+        body: { padding: "12px 16px" }, // body บาง ๆ
+        header: { borderBottom: "1px solid #f0f0f0", padding: "12px 16px" },
+      }}
       title={
         <div
           style={{
@@ -356,23 +361,13 @@ const TrendApplicantsArea: React.FC<Props> = ({
         >
           <div>
             <Space>
-              <div
-                style={{
-                  background: "linear-gradient(135deg, #1677ff, #69c0ff)",
-                  borderRadius: 10,
-                  padding: 8,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <TrendingUpIcon style={{ color: "#fff", fontSize: 16 }} />
+              <div className="icon-circle">
+                <TrendingUpIcon className="inner-icon" />
               </div>
               <div>
-                <div
-                  style={{ fontSize: 18, fontWeight: 700, color: "#1f1f1f" }}
-                >
+                <Title level={4} className="section-title" style={{ marginBottom: "0px" }}>
                   {title}
-                </div>
+                </Title>
                 <div
                   style={{
                     fontSize: 13,
@@ -380,7 +375,8 @@ const TrendApplicantsArea: React.FC<Props> = ({
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    marginTop: 2,
+                    marginTop: 2, 
+                    fontWeight: "lighter"
                   }}
                 >
                   <CalendarOutlined />
