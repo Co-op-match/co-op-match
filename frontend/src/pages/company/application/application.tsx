@@ -3,6 +3,8 @@ import { Layout, Typography } from 'antd';
 import CompanyHeader from '../../Component/CompanyHeader';
 import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../services/https/Application/index';
 import { useParams, useNavigate } from 'react-router-dom';
+import { saveChatToken } from '@/utils/chatToken';
+import { CreateChatRoom, createChatSession } from '@/services/https';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -18,6 +20,7 @@ interface ApplicationInterface {
     transcript?: string;
     submit_at?: string;
     internship_post_id?: number;
+    student_user_id?: number; 
 }
 
 const Dashboard = () => {
@@ -32,6 +35,7 @@ const Dashboard = () => {
     const [searchStatus, setSearchStatus] = useState<string>('');
     const [searchDate, setSearchDate] = useState<string>('');
     const navigate = useNavigate();
+    const [creatingChatId, setCreatingChatId] = useState<number | null>(null);
 
     useEffect(() => {
         const handleNewApplication = (event: any) => {
@@ -64,6 +68,7 @@ const Dashboard = () => {
         if (!postId) return;
         const res = await GetApplicationsByPostId(Number(postId));
         const realApplications = res?.data?.data || [];
+        console.log('app',realApplications)
 
         // ตรวจสอบว่าข้อมูลที่ได้มีจริงหรือไม่
         if (!Array.isArray(realApplications)) {
@@ -81,6 +86,7 @@ const Dashboard = () => {
             transcript: app.transcript,
             submit_at: app.date,
             internship_post_id: Number(postId),
+            student_user_id: app.student_user_id ?? app.student?.user_id ?? app.UserID ?? null, 
         }));
         setApplications(mappedApps);
     };
@@ -98,6 +104,42 @@ const Dashboard = () => {
         });
         setApprovalStats(stats); // ✅ << ตรงนี้แหละ
     };
+    const handleChatWithStudent = async (application: ApplicationInterface) => {
+  try {
+    if (!application?.student_user_id) {
+      alert('ไม่พบรหัสผู้ใช้ของผู้สมัคร (student_user_id)');
+      return;
+    }
+    const companyUserId = Number(localStorage.getItem('id')); // user ฝั่งบริษัทที่ล็อกอิน
+    if (!companyUserId || companyUserId === application.student_user_id) {
+      alert('ไม่สามารถเริ่มแชท (ไม่พบผู้ใช้ หรือคุยกับตนเอง)');
+      return;
+    }
+
+    setCreatingChatId(application.id ?? 0);
+
+    // 1) ขอห้องแชท (มีอยู่แล้วหรือสร้างใหม่)
+    let roomId: number | null = null;
+    try {
+      const res = await CreateChatRoom(companyUserId, application.student_user_id);
+      roomId = res?.data?.room_id ?? res?.data?.id ?? null;
+    } catch (err: any) {
+      // กรณีห้องมีอยู่แล้ว backend อาจตอบ 409
+      roomId = err?.response?.data?.room_id ?? null;
+    }
+    if (!roomId) {
+      alert('ไม่พบห้องแชท');
+      return;
+    }
+
+    // 2) ขอ token แล้วนำทาง
+    const { token } = await createChatSession(roomId);
+    saveChatToken(token);
+    navigate(`/chat/session/${token}`, { replace: true });
+  } finally {
+    setCreatingChatId(null);
+  }
+};
 
     const handleApproval = (
         application: ApplicationInterface,
@@ -236,7 +278,7 @@ const Dashboard = () => {
                                         )
                                         .filter(app => searchDate ? app.submit_at?.startsWith(searchDate) : true)
                                         .map(application => (
-                                            <tr key={application.id} style={tableRowStyle}>
+                                             <tr key={application.id} style={tableRowStyle}>
                                                 <td style={tdStyle}>{application.name}</td>
                                                 <td style={tdStyle}>{application.post_name}</td>
                                                 <td style={tdStyle}>{application.submit_at}</td>
@@ -329,32 +371,37 @@ const Dashboard = () => {
                                                 <span style={getStatusStyle(app.status)}>{app.status}</span>
                                             </td>
                                             <td style={tdStyle}>{app.companyNote || <span style={noDataStyle}>-</span>}</td>
-                                            <td style={tdStyle}>
+                                           <td style={tdStyle}>
+                                            <div style={actionButtonsStyle}>
                                                 {app.status === 'รอการนัดสัมภาษณ์' && (
-                                                    <button
-                                                        onClick={() => handleScheduleInterview(app)}
-                                                        style={{
-                                                            ...interviewButtonStyle,
-                                                            backgroundColor: app.status === 'รอการนัดสัมภาษณ์' ? '#2196f3' : '#cccccc',
-                                                            cursor: app.status === 'รอการนัดสัมภาษณ์' ? 'pointer' : 'not-allowed',
-                                                            opacity: app.status === 'รอการนัดสัมภาษณ์' ? 1 : 0.5,
-                                                        }}
-                                                        disabled={app.status !== 'รอการนัดสัมภาษณ์'}
-                                                        onMouseEnter={(e) => {
-                                                            const target = e.target as HTMLButtonElement;
-                                                            if (app.status === 'รอการนัดสัมภาษณ์') {
-                                                                target.style.transform = 'translateY(-2px) scale(1.05)';
-                                                            }
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            const target = e.target as HTMLButtonElement;
-                                                            target.style.transform = 'translateY(0) scale(1)';
-                                                        }}
-                                                    >
-                                                        🗓️ นัดสัมภาษณ์
-                                                    </button>
+                                                <button
+                                                    onClick={() => handleScheduleInterview(app)}
+                                                    style={{
+                                                    ...interviewButtonStyle,
+                                                    backgroundColor: '#2196f3',
+                                                    cursor: 'pointer',
+                                                    opacity: 1,
+                                                    }}
+                                                    onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.transform = 'translateY(-2px) scale(1.05)'; }}
+                                                    onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.transform = 'translateY(0) scale(1)'; }}
+                                                >
+                                                    🗓️ นัดสัมภาษณ์
+                                                </button>
                                                 )}
+
+                                                {/* ✅ ปุ่มแชทถาวร */}
+                                                <button
+                                                onClick={() => handleChatWithStudent(app)}
+                                                disabled={creatingChatId === app.id}
+                                                style={{ ...interviewButtonStyle, background: '#10b981' }}
+                                                onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.transform = 'translateY(-2px) scale(1.05)'; }}
+                                                onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.transform = 'translateY(0) scale(1)'; }}
+                                                >
+                                                💬 แชท
+                                                </button>
+                                            </div>
                                             </td>
+
                                         </tr>
                                     ))}
                                 </tbody>

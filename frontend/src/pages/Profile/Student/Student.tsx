@@ -172,6 +172,7 @@ const StudentProfile: React.FC = () => {
   // ✅ สถานะโหลดหน้า + อัปโหลดรูป
   const [loadingStudent, setLoadingStudent] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
+   const userIdString = localStorage.getItem("id");
 const showLoader = !authLoading && (loadingStudent || uploadingImage);
   const loaderText = uploadingImage ? "กำลังอัปโหลดรูปโปรไฟล์..." : "กำลังโหลดโปรไฟล์นักศึกษา...";
   useEffect(() => {
@@ -181,7 +182,6 @@ const showLoader = !authLoading && (loadingStudent || uploadingImage);
   const loadStudent = async () => {
     setLoadingStudent(true);
     try {
-      const userIdString = localStorage.getItem("id");
       if (userIdString) {
         const userId = Number(userIdString);
         if (!isNaN(userId)) {
@@ -247,7 +247,7 @@ const showLoader = !authLoading && (loadingStudent || uploadingImage);
 
           <div className="student-dashboard-section">
             <div className="application-list-wrapper">
-              <ApplicationListCard />
+              {userIdString && <ApplicationListCard userId={Number(userIdString)} />}
             </div>
             <div className="calendar-card-wrapper">
               <StudentCalendarCard />

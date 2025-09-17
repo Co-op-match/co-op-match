@@ -32,13 +32,14 @@ import AdminPostDetailManagement from "./pages/Admin/post/PostDetail";
 import LikedPosts from "./pages/LikedPost/LikedPosts";
 import CompanyProfileView from "./pages/Profile/Company/CompanyProfileView";
 import AdminVerify from "./pages/Admin/verify/verify";
-import AdvancedChatInterface from "./logo.png/ChatInterface";
+import AdvancedChatInterface from "./chat/ChatInterface";
 import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 import AdminUser from "./pages/Admin/user/main";
 import CoopMatchLoading from "./pages/Component/loading";
 import AddAcademicStaffForm from "./pages/Profile/AcademicStaff/AddacadamicStaff/AddAcadamicStaffForm";
 import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 import CoopMatchLanding from "./pages/Mainpage/MainPage";
+import StudentProfilePublic from "./pages/Profile/Student/StudentProfile";
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
             <Route path="/sign-up" element={<RegisterPage />} />
             <Route path="/role-select" element={<RoleSelectionPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/profile/:userId" element={<StudentProfilePublic />} />
           </Route>
           {/* Protected Routes */}
           <Route

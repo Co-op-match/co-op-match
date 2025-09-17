@@ -1,249 +1,221 @@
-// import React, { useEffect, useState } from "react";
-// import {
-//   Layout,
-//   Avatar,
-//   Card,
-//   Descriptions,
-//   Table,
-//   Calendar,
-//   Badge,
-//   Divider,
-// } from "antd";
-// import { EditOutlined, UserOutlined } from "@ant-design/icons";
-// import { GetStudentByUserId } from "../../../services/https";
-// import type { StudentInterface } from "../../../interfaces/Student";
-// import "./StudentProfile.css";
-// import CoopMatchHeader from '../../Component/CompanyHeader';
-// import dayjs from "dayjs";
+import React, { useEffect, useState } from "react";
+import { Layout, Avatar, Card, Descriptions, Result } from "antd";
+import { BookOutlined, EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
+import { useParams, useSearchParams } from "react-router-dom";
+import dayjs from "dayjs";
 
-// // ✅ เพิ่ม Loader
-// import CoopMatchLoader from "../../Component/loading";
+import CoopMatchHeader from "../../Component/Coop_MatchHeader";
+import CoopMatchLoader from "../../Component/loading";
 
-// const { Content } = Layout;
+import { GetStudentByUserId } from "../../../services/https";
+import type { StudentInterface } from "../../../interfaces/Student";
+import { fileURL } from "@/config/env";
+import "./StudentProfile.css";
 
-// const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
-//   const firstEducation =
-//     student?.Education && student.Education.length > 0
-//       ? student.Education[0]
-//       : undefined;
+// ✅ NEW: import ApplicationListCard (ต้องเป็นเวอร์ชันที่รองรับ prop userId)
+import ApplicationListCard from "./ApplicationListCard";
+import CompanyHeader from "@/pages/Component/CompanyHeader";
+import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";
+import AcademicStaffHeader from "@/pages/Component/AcademicStaffHeader";
 
-//   return (
-//     <Card bordered style={{ marginBottom: 20 }}>
-//       <div className="student-profile-container">
-//         {/* ซ้าย */}
-//         <div className="student-profile-left">
-//           <div className="student-avatar-container">
-//             <Avatar
-//               src={
-//                 student?.User?.ProfileImage?.[0]?.image_url
-//                   ? `http://localhost:8000${student?.User?.ProfileImage[0].image_url}`
-//                   : undefined
-//               }
-//               size={120}
-//               icon={!student?.User?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-//             />
-//             <div className="student-avatar-edit-icon">
-//               <EditOutlined />
-//             </div>
-//           </div>
-//           <p className="student-name">
-//             {student?.first_name} {student?.last_name}
-//           </p>
-//           <p className="student-university">
-//             {firstEducation?.University?.name_th || "Suranaree University Of Technology"}
-//           </p>
-//           <p className="student-major">
-//             {firstEducation?.Faculty?.name_th|| "Computer Engineering"}
-//           </p>
-//         </div>
+const { Content } = Layout;
+const getStoredRoleId = (): number => {
+  const raw = localStorage.getItem("roleId");
+  return raw ? Number(raw) : 0;
+};
 
-//         {/* เส้น Divider แนวตั้ง */}
-//         <Divider type="vertical" className="studdent-vertical-divider" />
+const RoleHeader: React.FC = () => {
+  const [roleId, setRoleId] = useState<number>(getStoredRoleId());
 
-//         {/* ขวา */}
-//         <div className="student-profile-details">
-//           <Descriptions column={4}>
-//             <Descriptions.Item label="เพศ">
-//               {student?.Gender?.name || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="วันเกิด">
-//               {student?.birthday ? dayjs(student.birthday).format("DD/MM/YYYY") : "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="เบอร์">
-//               {student?.phone_number || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="อายุ">{student?.age || "-"}</Descriptions.Item>
-//             <Descriptions.Item label="สัญชาติ">
-//               {student?.nationality || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="ศาสนา">
-//               {student?.religion || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="น้ำหนัก">
-//               {student?.weight} ก.
-//             </Descriptions.Item>
-//             <Descriptions.Item label="ส่วนสูง">
-//               {student?.height} ซม.
-//             </Descriptions.Item>
-//           </Descriptions>
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "roleId") {
+        setRoleId(getStoredRoleId());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
-//           <div className="studdent-divider-section"></div>
-//           <Divider className="studdent-divider" />
+  switch (roleId) {    
+    case 2:
+      return <CompanyHeader />;
+    case 3:
+      return <CoopMatchHeader />;
+    case 4:
+      return <AcademicStaffHeader />;
+    default:
+      return <CoopMatchHeaderDefault />;
+  }
+};
+const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
+  const edu = student?.Education?.[0];
 
-//           <Descriptions column={4}>
-//             <Descriptions.Item label="GPX">{firstEducation?.grade}</Descriptions.Item>
-//             <Descriptions.Item label="อีเมล">
-//               {student?.User?.Email || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="คณะ">
-//               {firstEducation?.Program?.name_th || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="สาขา">{firstEducation?.Faculty?.name_th || "-"}</Descriptions.Item>
-//             <Descriptions.Item label="ระดับการศึกษา">
-//               {firstEducation?.EducationLevel.name || "-"}
-//             </Descriptions.Item>
-//             <Descriptions.Item label="ชั้นปี">{firstEducation?.year || "-"}</Descriptions.Item>
-//           </Descriptions>
+  return (
+    <Card bordered className="student-profile-card">
+      <div className="student-profile-container">
+        {/* Left */}
+        <div className="student-profile-left">
+          <div className="student-avatar-container">
+            <Avatar
+              src={fileURL(student?.User?.ProfileImage?.[0]?.image_url)}
+              size={120}
+              icon={!student?.User?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+              style={{ border: "2px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+            />
+          </div>
 
-//           <div className="studdent-divider-section">
-//             <Divider className="studdent-divider" />
-//             <Descriptions column={4}>
-//               <Descriptions.Item label="บ้านเลขที่">
-//                 {student?.Address?.house_number}
-//               </Descriptions.Item>
-//               <Descriptions.Item label="หมู่บ้าน">
-//                 {student?.Address?.village}
-//               </Descriptions.Item>
-//               <Descriptions.Item label="ซอย">
-//                 {student?.Address?.sub_street}
-//               </Descriptions.Item>
-//               <Descriptions.Item label="ถนน">{student?.Address?.street}</Descriptions.Item>
-//               <Descriptions.Item label="ตำบล/แขวง">
-//                 {student?.Address?.SubDistrict?.name_th}
-//               </Descriptions.Item>
-//               <Descriptions.Item label="อำเภอ/เขต">
-//                 {student?.Address?.District?.name_th}
-//               </Descriptions.Item>
-//               <Descriptions.Item label="จังหวัด">
-//                 {student?.Address?.Province?.name_th}
-//               </Descriptions.Item>
-//               <Descriptions.Item label="รหัสไปรษณีย์">
-//                 {student?.Address?.Postcode?.post_code}
-//               </Descriptions.Item>
-//             </Descriptions>
-//           </div>
-//         </div>
-//       </div>
-//     </Card>
-//   );
-// };
+          <p className="student-name">
+            {student?.first_name} {student?.last_name}
+          </p>
 
-// const JobTable: React.FC = () => {
-//   const columns = [
-//     { title: "ลำดับ", dataIndex: "index", key: "index" },
-//     { title: "บริษัท", dataIndex: "company", key: "company" },
-//     { title: "สถานะ", dataIndex: "status", key: "status" },
-//     { title: "ข้อมูล", dataIndex: "info", key: "info" },
-//   ];
+          <p className="student-university-major">
+            {edu?.University?.name_th || "-"} <br />
+            {edu?.Faculty?.name_th || "-"} - {edu?.Program?.name_th || "-"}
+          </p>
 
-//   const data = [
-//     {
-//       key: "1",
-//       index: 1,
-//       company: "ตัวอย่างบริษัท",
-//       status: <span style={{ color: "orange" }}>รอสัมภาษณ์</span>,
-//       info: "ดู",
-//     },
-//   ];
+          <p className="student-major">{edu?.Program?.name_th || "-"}</p>
+        </div>
 
-//   return <Table columns={columns} dataSource={data} pagination={false} />;
-// };
+        {/* Right */}
+        <div className="student-profile-details">
+          {/* Personal */}
+          <div className="section-header">
+            <h4>
+              <UserOutlined style={{ color: "#0d47a1" }} /> ข้อมูลทั่วไป
+            </h4>
+          </div>
+          <div style={{ padding: "0px 24px 0px 24px" }}>
+            <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+              <Descriptions.Item label="เพศ">{student?.Gender?.name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="วันเกิด">{student?.birthday ? dayjs(student.birthday).format("DD/MM/YYYY") : "-"}</Descriptions.Item>
+              <Descriptions.Item label="เบอร์">{student?.phone_number || "-"}</Descriptions.Item>
+              <Descriptions.Item label="อายุ">{student?.age || "-"}</Descriptions.Item>
+              <Descriptions.Item label="สัญชาติ">{student?.nationality || "-"}</Descriptions.Item>
+              <Descriptions.Item label="ศาสนา">{student?.religion || "-"}</Descriptions.Item>
+              <Descriptions.Item label="น้ำหนัก">{student?.weight} ก.</Descriptions.Item>
+              <Descriptions.Item label="ส่วนสูง">{student?.height} ซม.</Descriptions.Item>
+            </Descriptions>
+          </div>
 
-// const CalendarCard: React.FC = () => (
-//   <Card title="ปฏิทินแจ้งเตือน" bordered>
-//     <Calendar fullscreen={false} />
-//     <div className="student-calendar-footer">
-//       <Badge status="success" text="No upcoming events" />
-//     </div>
-//   </Card>
-// );
+          {/* Education */}
+          <div className="section-header">
+            <h4>
+              <BookOutlined style={{ color: "#0d47a1" }} /> ข้อมูลการศึกษา
+            </h4>
+          </div>
+          <div style={{ padding: "0px 24px 0px 24px" }}>
+            <Descriptions column={{ xs: 1, sm: 2, md: 3 }}>
+             <Descriptions.Item label="GPX">{edu?.grade}</Descriptions.Item>
+              <Descriptions.Item label="อีเมล">{student?.User?.Email || "-"}</Descriptions.Item>
+              <Descriptions.Item label="คณะ">{edu?.Program?.name_th || "-"}</Descriptions.Item>
+              <Descriptions.Item label="สาขา">{edu?.Faculty?.name_th || "-"}</Descriptions.Item>
+              <Descriptions.Item label="ระดับการศึกษา">{edu?.EducationLevel?.name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="ชั้นปี">{edu?.year || "-"}</Descriptions.Item>
+            </Descriptions>
+          </div>
 
-// const StudentProfile: React.FC = () => {
-//   const [student, setStudent] = useState<StudentInterface | undefined>(undefined);
+          {/* Address */}
+          <div className="section-header">
+            <h4>
+              <EnvironmentOutlined style={{ color: "#0d47a1" }} /> พื้นที่อาศัย 
+            </h4>
+          </div>
+          <div style={{ padding: "0px 24px 0px 24px" }}>
+            <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
+              <Descriptions.Item label="บ้านเลขที่">{student?.Address?.house_number}</Descriptions.Item>
+              <Descriptions.Item label="หมู่บ้าน">{student?.Address?.village}</Descriptions.Item>
+              <Descriptions.Item label="ซอย">{student?.Address?.sub_street}</Descriptions.Item>
+              <Descriptions.Item label="ถนน">{student?.Address?.street}</Descriptions.Item>
+              <Descriptions.Item label="ตำบล/แขวง">{student?.Address?.SubDistrict?.name_th}</Descriptions.Item>
+              <Descriptions.Item label="อำเภอ/เขต">{student?.Address?.District?.name_th}</Descriptions.Item>
+              <Descriptions.Item label="จังหวัด">{student?.Address?.Province?.name_th}</Descriptions.Item>
+              <Descriptions.Item label="รหัสไปรษณีย์">{student?.Address?.Postcode?.post_code}</Descriptions.Item>
+            </Descriptions>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
 
-//   // ✅ สถานะ Loader หน้าโปรไฟล์
-//   const [loadingPage, setLoadingPage] = useState(true);
-//   const [pagePct, setPagePct] = useState(0);
-//   const [loadingText, setLoadingText] = useState("กำลังโหลดโปรไฟล์นักศึกษา...");
+const StudentProfilePublic: React.FC = () => {
+  const { userId: userIdParam } = useParams<{ userId?: string }>();
+  const [query] = useSearchParams();
 
-//   useEffect(() => {
-//     const loadStudent = async () => {
-//       setLoadingPage(true);
-//       setLoadingText("กำลังโหลดโปรไฟล์นักศึกษา...");
-//       setPagePct(30);
-//       const userIdString = localStorage.getItem("id");
+  const [student, setStudent] = useState<StudentInterface | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-//       try {
-//         if (userIdString) {
-//           const userId = Number(userIdString);
-//           if (!isNaN(userId)) {
-//             const studentData = await GetStudentByUserId(userId);
-//             setStudent(studentData);
-//             setPagePct(100);
-//           } else {
-//             console.error("userId ที่ได้ไม่ใช่ตัวเลข");
-//             setPagePct(100);
-//           }
-//         } else {
-//           console.error("ไม่พบ id ใน localStorage");
-//           setPagePct(100);
-//         }
-//       } catch (error) {
-//         console.error("ไม่พบข้อมูลนักเรียนหรือเกิดข้อผิดพลาด:", error);
-//         setPagePct(100);
-//       } finally {
-//         setTimeout(() => setLoadingPage(false), 250); // หน่วงเล็กน้อยให้เห็น 100%
-//       }
-//     };
+  // รับ userId จาก path param หรือ query (?userId=)
+  const resolvedUserId = (() => {
+    if (userIdParam && !isNaN(Number(userIdParam))) return Number(userIdParam);
+    const q = query.get("userId");
+    if (q && !isNaN(Number(q))) return Number(q);
+    return undefined;
+  })();
 
-//     loadStudent();
-//   }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!resolvedUserId) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const data = await GetStudentByUserId(resolvedUserId);
+        if (!data) {
+          setNotFound(true);
+        } else {
+          setStudent(data);
+        }
+      } catch (e) {
+        console.error(e);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [resolvedUserId]);
 
-//   return (
-//     <Layout>
-//       {/* ✅ Loader Overlay */}
-//       {loadingPage && (
-//         <CoopMatchLoader
-//           overlay
-//           animation="puzzle-fold"
-//           progressMode="determinate"
-//           progress={pagePct}
-//           text={loadingText}
-//           // primaryColor="#1890ff"
-//           // speed={2.0}
-//         />
-//       )}
+  return (
+    <Layout>
+      {loading && (
+        <CoopMatchLoader overlay animation="puzzle-fold" progressMode="indeterminate" text="กำลังโหลดโปรไฟล์..." />
+      )}
 
-//       <CoopMatchHeader />
-//       <Layout className="student-layout">
-//         <Content>
-//           <div className="student-profile-title">
-//             <span className="student-profile-text">Student Profile</span>
-//             <div className="student-profile-line" />
-//           </div>
-//           <ProfileCard student={student} />
-//           <div className="student-job-calendar-section">
-//             <div style={{ flex: 1 }}>
-//               <JobTable />
-//             </div>
-//             <div className="student-calendar-card">
-//               <CalendarCard />
-//             </div>
-//           </div>
-//         </Content>
-//       </Layout>
-//     </Layout>
-//   );
-// };
+      <RoleHeader />
+      <Layout className="student-layout">
+        <Content>
+          <div className="student-profile-title">
+            <span className="student-profile-text">Student Profile</span>
+            <div className="student-profile-line" />
+          </div>
 
-// export default StudentProfile;
+          {notFound ? (
+            <Result
+              status="404"
+              title="ไม่พบโปรไฟล์"
+              subTitle={resolvedUserId ? `ไม่พบผู้ใช้ userId = ${resolvedUserId}` : "กรุณาระบุ userId ใน URL"}
+            />
+          ) : (
+            <>
+              <ProfileCard student={student} />
+
+              {/* ✅ NEW: แสดงรายการที่ผู้ใช้คนนี้สมัคร (ใช้ userId จาก URL) */}
+              {resolvedUserId && (
+                <div style={{ marginTop: 16 }}>
+                  <ApplicationListCard userId={resolvedUserId} />
+                </div>
+              )}
+            </>
+          )}
+        </Content>
+      </Layout>
+    </Layout>
+  );
+};
+
+export default StudentProfilePublic;

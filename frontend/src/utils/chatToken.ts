@@ -13,8 +13,6 @@ export function clearChatToken() {
   sessionStorage.removeItem(KEY);
 }
 
-// (optional) decode JWT (ไม่ verify แค่ดึง payload)
-// ใช้เพื่ออ่าน rid ปัจจุบัน
 export function readRidFromToken(t: string | null): number | null {
   try {
     if (!t) return null;

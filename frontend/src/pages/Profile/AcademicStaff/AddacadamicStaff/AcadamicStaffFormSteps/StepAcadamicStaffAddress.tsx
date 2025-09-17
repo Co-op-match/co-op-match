@@ -12,6 +12,8 @@ export interface StepAcadamicStaffAddressProps {
 type SelectOption = { label: string; value: number };
 
 // ------- helpers -------
+const trimOrEmpty = (v?: string) => (typeof v === 'string' ? v.trim() : '');
+
 const getId = (v: unknown): number | undefined => {
   if (v == null) return undefined;
   if (typeof v === 'number') return v;
@@ -33,7 +35,6 @@ const hydrateLabelInValue = (
   if (!id || options.length === 0) return;
   const found = options.find((o) => o.value === id);
   if (!found) return;
-  // ถ้าในฟอร์มยังเป็นแค่ id → เติม label ให้เป็น { value, label }
   if (!(raw && typeof raw === 'object' && 'value' in raw)) {
     form.setFieldsValue({ [field]: { value: found.value, label: found.label } });
   }
@@ -49,6 +50,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
   const provinceField = Form.useWatch('province', form);
   const districtField = Form.useWatch('district', form);
   const subdistrictField = Form.useWatch('subdistrict_id', form);
+  const postcodeField = Form.useWatch('post_code', form);
 
   const provinceId = getId(provinceField);
   const districtId = getId(districtField);
@@ -63,7 +65,6 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
         const data = (res as any).data || res;
         if (!Array.isArray(data)) throw new Error('รูปแบบข้อมูลจังหวัดไม่ถูกต้อง');
 
-        // map id ให้เป็น number เสมอ
         const normalized = data.map((p: any) => ({
           ...p,
           ID: Number(p.ID),
@@ -139,46 +140,61 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
   useEffect(() => {
     if (!loading) hydrateLabelInValue(form, 'province', provinceOptions);
   }, [loading, provinceOptions, form]);
-
   useEffect(() => {
     hydrateLabelInValue(form, 'district', districtOptions);
   }, [districtOptions, form]);
-
   useEffect(() => {
     hydrateLabelInValue(form, 'subdistrict_id', subdistrictOptions);
   }, [subdistrictOptions, form]);
-
   useEffect(() => {
     hydrateLabelInValue(form, 'post_code', postcodeOption);
   }, [postcodeOption, form]);
 
+  // ✅ Auto-fill รหัสไปรษณีย์จากตำบล (ลด human error)
+  useEffect(() => {
+    const pc = selectedSubdistrict?.Postcode;
+    if (pc) {
+      const next = { label: pc.post_code, value: pc.ID };
+      const currId = getId(postcodeField);
+      if (currId !== next.value) {
+        form.setFieldsValue({ post_code: next });
+      }
+    } else if (getId(postcodeField)) {
+      form.setFieldsValue({ post_code: undefined });
+    }
+  }, [selectedSubdistrict, postcodeField, form]);
+
   // ---------- Validators ----------
   const validateHouseNumber = (_: any, value: string) => {
-    if (!value || value.trim() === '') return Promise.reject('กรุณากรอกบ้านเลขที่');
-    const t = value.trim();
+    const t = trimOrEmpty(value);
+    if (!t) return Promise.reject('กรุณากรอกบ้านเลขที่');
     if (t.length > 20) return Promise.reject('บ้านเลขที่ต้องไม่เกิน 20 ตัวอักษร');
-    if (!/^[0-9a-zA-Zก-๙\s\-\/]+$/.test(t)) return Promise.reject('บ้านเลขที่สามารถมีตัวเลข ตัวอักษร เครื่องหมาย - และ / เท่านั้น');
+    if (!/^[0-9a-zA-Zก-๙\s\-\/]+$/.test(t))
+      return Promise.reject('บ้านเลขที่ใช้ได้เฉพาะ 0-9 a-z ก-ฮ ช่องว่าง - และ /');
     return Promise.resolve();
   };
   const validateVillage = (_: any, value: string) => {
-    if (!value) return Promise.resolve();
-    const t = value.trim();
+    const t = trimOrEmpty(value);
+    if (!t) return Promise.resolve();
     if (t.length > 50) return Promise.reject('ชื่อหมู่บ้านต้องไม่เกิน 50 ตัวอักษร');
-    if (!/^[a-zA-Zก-๙\s\-\.0-9]+$/.test(t)) return Promise.reject('ชื่อหมู่บ้านมีรูปแบบไม่ถูกต้อง');
+    if (!/^[0-9a-zA-Zก-๙\s\-\.]+$/.test(t))
+      return Promise.reject('ชื่อหมู่บ้านใช้ได้เฉพาะ 0-9 a-z ก-ฮ ช่องว่าง - .');
     return Promise.resolve();
   };
   const validateStreet = (_: any, value: string) => {
-    if (!value) return Promise.resolve();
-    const t = value.trim();
+    const t = trimOrEmpty(value);
+    if (!t) return Promise.resolve();
     if (t.length > 100) return Promise.reject('ชื่อถนนต้องไม่เกิน 100 ตัวอักษร');
-    if (!/^[a-zA-Zก-๙\s\-\.0-9]+$/.test(t)) return Promise.reject('ชื่อถนนมีรูปแบบไม่ถูกต้อง');
+    if (!/^[0-9a-zA-Zก-๙\s\-\.]+$/.test(t))
+      return Promise.reject('ชื่อถนนใช้ได้เฉพาะ 0-9 a-z ก-ฮ ช่องว่าง - .');
     return Promise.resolve();
   };
   const validateSubStreet = (_: any, value: string) => {
-    if (!value) return Promise.resolve();
-    const t = value.trim();
+    const t = trimOrEmpty(value);
+    if (!t) return Promise.resolve();
     if (t.length > 100) return Promise.reject('ชื่อซอยต้องไม่เกิน 100 ตัวอักษร');
-    if (!/^[a-zA-Zก-๙\s\-\.0-9]+$/.test(t)) return Promise.reject('ชื่อซอยมีรูปแบบไม่ถูกต้อง');
+    if (!/^[0-9a-zA-Zก-๙\s\-\.]+$/.test(t))
+      return Promise.reject('ชื่อซอยใช้ได้เฉพาะ 0-9 a-z ก-ฮ ช่องว่าง - .');
     return Promise.resolve();
   };
 
@@ -205,9 +221,10 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
   const validatePostCode = (_: any, value: any) => {
     const id = getId(value);
     if (!id) return Promise.reject('กรุณาเลือกรหัสไปรษณีย์');
-    const pc = selectedSubdistrict?.Postcode?.ID;
+    const pc = selectedSubdistrict?.Postcode;
     if (!pc) return Promise.reject('กรุณาเลือกตำบล/แขวงก่อน');
-    if (pc !== id) return Promise.reject('รหัสไปรษณีย์ไม่ตรงกับตำบล/แขวงที่เลือก');
+    if (pc.ID !== id) return Promise.reject('รหัสไปรษณีย์ไม่ตรงกับตำบล/แขวงที่เลือก');
+    if (!/^\d{5}$/.test(String(pc.post_code))) return Promise.reject('รูปแบบรหัสไปรษณีย์ไม่ถูกต้อง');
     return Promise.resolve();
   };
 
@@ -227,26 +244,47 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
           <Form.Item
             label="บ้านเลขที่"
             name="house_number"
-            rules={[ { validator: validateHouseNumber }]}
+            required
+            rules={[{ validator: validateHouseNumber }]}
+            normalize={trimOrEmpty}
+            validateTrigger={['onBlur', 'onChange']}
           >
             <Input placeholder="กรอกบ้านเลขที่" maxLength={20} />
           </Form.Item>
         </Col>
 
         <Col span={12}>
-          <Form.Item label="หมู่บ้าน" name="village" rules={[{ validator: validateVillage }]}>
+          <Form.Item
+            label="หมู่บ้าน"
+            name="village"
+            rules={[{ validator: validateVillage }]}
+            normalize={trimOrEmpty}
+            validateTrigger={['onBlur', 'onChange']}
+          >
             <Input placeholder="กรอกชื่อหมู่บ้าน (ถ้ามี)" maxLength={50} />
           </Form.Item>
         </Col>
 
         <Col span={12}>
-          <Form.Item label="ถนน" name="street" rules={[{ validator: validateStreet }]}>
+          <Form.Item
+            label="ถนน"
+            name="street"
+            rules={[{ validator: validateStreet }]}
+            normalize={trimOrEmpty}
+            validateTrigger={['onBlur', 'onChange']}
+          >
             <Input placeholder="กรอกชื่อถนน (ถ้ามี)" maxLength={100} />
           </Form.Item>
         </Col>
 
         <Col span={12}>
-          <Form.Item label="ซอย" name="sub_street" rules={[{ validator: validateSubStreet }]}>
+          <Form.Item
+            label="ซอย"
+            name="sub_street"
+            rules={[{ validator: validateSubStreet }]}
+            normalize={trimOrEmpty}
+            validateTrigger={['onBlur', 'onChange']}
+          >
             <Input placeholder="กรอกชื่อซอย (ถ้ามี)" maxLength={100} />
           </Form.Item>
         </Col>
@@ -256,7 +294,10 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
           <Form.Item
             label="จังหวัด"
             name="province"
-            rules={[ { validator: validateProvince }]}
+            dependencies={[]}
+            rules={[
+              { validator: validateProvince },
+            ]}
             normalize={(v) => v}
           >
             <Select
@@ -272,6 +313,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               allowClear
               onChange={() => {
                 form.setFieldsValue({ district: undefined, subdistrict_id: undefined, post_code: undefined });
+                form.validateFields(['district', 'subdistrict_id', 'post_code']).catch(() => {});
               }}
               onClear={() => {
                 form.setFieldsValue({ province: undefined, district: undefined, subdistrict_id: undefined, post_code: undefined });
@@ -285,7 +327,10 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
           <Form.Item
             label="อำเภอ / เขต"
             name="district"
-            rules={[ { validator: validateDistrict }]}
+            dependencies={['province']}
+            rules={[
+              { validator: validateDistrict },
+            ]}
             normalize={(v) => v}
           >
             <Select
@@ -301,6 +346,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               allowClear
               onChange={() => {
                 form.setFieldsValue({ subdistrict_id: undefined, post_code: undefined });
+                form.validateFields(['subdistrict_id', 'post_code']).catch(() => {});
               }}
               onClear={() => {
                 form.setFieldsValue({ district: undefined, subdistrict_id: undefined, post_code: undefined });
@@ -314,7 +360,10 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
           <Form.Item
             label="ตำบล / แขวง"
             name="subdistrict_id"
-            rules={[ { validator: validateSubdistrict }]}
+            dependencies={['province', 'district']}
+            rules={[
+              { validator: validateSubdistrict },
+            ]}
             normalize={(v) => v}
           >
             <Select
@@ -339,7 +388,10 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
           <Form.Item
             label="รหัสไปรษณีย์"
             name="post_code"
-            rules={[ { validator: validatePostCode }]}
+            dependencies={['subdistrict_id']}
+            rules={[
+              { validator: validatePostCode },
+            ]}
             normalize={(v) => v}
           >
             <Select
