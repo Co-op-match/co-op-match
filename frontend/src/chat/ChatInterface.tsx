@@ -19,6 +19,7 @@ import {
 import CoopMatchHeader from '@/pages/Component/Coop_MatchHeader';
 import CompanyHeader from '@/pages/Component/CompanyHeader';
 import CoopMatchHeaderDefault from '@/pages/Component/CoopMatchHeaderDefault';
+import { fileURL } from '@/config/env';
 // ถ้ามี AcademicStaffHeader แยกต่างหาก ให้ import มาด้วย เช่น:
 // import AcademicStaffHeader from './Component/AcademicStaffHeader';
 
@@ -41,12 +42,12 @@ interface ChatContact {
 }
 
 // ---------- helpers ----------
-const normalizeUrl = (raw?: string | null) => {
-  if (!raw) return '';
-  const s = String(raw).trim();
-  if (!s) return '';
-  return s.startsWith('https') ? s : `api.coop-match.online${s}`;
-};
+// const normalizeUrl = (raw?: string | null) => {
+//   if (!raw) return '';
+//   const s = String(raw).trim();
+//   if (!s) return '';
+//   return s.startsWith('https') ? s : `api.coop-match.online${s}`;
+// };
 
 
 // ---------- NEW: Header เลือกตาม RoleId ----------
@@ -511,8 +512,8 @@ const AdvancedChatInterface: React.FC = () => {
                 >
                   <div className="contact-info">
                     <div className="contact-avatar">
-                      {normalizeUrl(contact.avatarUrl) ? (
-                        <img src={normalizeUrl(contact.avatarUrl)} alt={contact.name} className="avatar" />
+                      {fileURL(contact.avatarUrl) ? (
+                        <img src={fileURL(contact.avatarUrl)} alt={contact.name} className="avatar" />
                       ) : (
                         <div className="avatar">
                           {contact?.name?.split(' ')[0]?.charAt(0) || '?'}
@@ -556,9 +557,9 @@ const AdvancedChatInterface: React.FC = () => {
                       <ArrowLeft size={20}/>
                     </button>
                     <div className="chat-avatar">
-                      {normalizeUrl(selectedContact?.avatarUrl) ? (
+                      {fileURL(selectedContact?.avatarUrl) ? (
                         <img
-                          src={normalizeUrl(selectedContact?.avatarUrl)}
+                          src={fileURL(selectedContact?.avatarUrl)}
                           alt={selectedContact?.name || "avatar"}
                           className="avatar"
                         />
@@ -582,9 +583,9 @@ const AdvancedChatInterface: React.FC = () => {
                       <div className={`message-container ${m.sender}`}>
                         {m.sender === 'bot' && (
                           <div className={`message-avatar ${m.sender}`}>
-                            {normalizeUrl(selectedContact?.avatarUrl) ? (
+                            {fileURL(selectedContact?.avatarUrl) ? (
                               <img
-                                src={normalizeUrl(selectedContact?.avatarUrl)}
+                                src={fileURL(selectedContact?.avatarUrl)}
                                 alt={selectedContact?.name || 'user'}
                                 className="avatar"
                               />

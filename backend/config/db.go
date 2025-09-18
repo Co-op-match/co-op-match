@@ -297,35 +297,35 @@ staffs := []entity.AcademicStaff{
 			FirstName: "สมชาย", LastName: "วิศวกร",
 			Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
 			UserID:   4, AddressID: 1, GenderID: 1,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,ContactID: 1,
 		},
 		{
 			AcademicPosition: "อาจารย์", Age: 38,
 			FirstName: "สุรีย์", LastName: "เคมี",
 			Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
 			UserID:   14, AddressID: 2,  GenderID: 2,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,ContactID: 1,
 		},
 		{
 			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
 			FirstName: "สมพงษ์", LastName: "การตลาด",
 			Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
 			UserID:   15, AddressID: 3,  GenderID: 1,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,ContactID: 1,
 		},
 		{
 			AcademicPosition: "รองศาสตราจารย์", Age: 50,
 			FirstName: "อรทัย", LastName: "ภาษา",
 			Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
 			UserID:   16, AddressID: 4, GenderID: 2,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,ContactID: 1,
 		},
 		{
 			AcademicPosition: "อาจารย์", Age: 35,
 			FirstName: "ธนพล", LastName: "นิติ",
 			Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
 			UserID:   17, AddressID: 5,  GenderID: 1,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
+			UniversityID: 1, FacultyID: 1, ProgramID: 1,ContactID: 1,
 		},
 	}
 
@@ -351,11 +351,11 @@ for _, e := range eds {
 	})
 }
 	companies := []entity.Company{
-		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", UserID: 2},
-		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", UserID: 6},
-		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", UserID: 7},
-		{CompanyName: "Delta Software Co., Ltd.", Logo: "/uploads/companyLogo/d.png", UserID: 8},
-		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "/uploads/companyLogo/e.png", UserID: 9},
+		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", AddressID: 2,ContactID: 1,UserID: 2},
+		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", AddressID: 2,ContactID: 1,UserID: 6},
+		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", AddressID: 2,ContactID: 1,UserID: 7},
+		{CompanyName: "Delta Software Co., Ltd.", Logo: "/uploads/companyLogo/d.png", AddressID: 2,ContactID: 1,UserID: 8},
+		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "/uploads/companyLogo/e.png",AddressID: 2,ContactID: 1, UserID: 9},
 	}
 	for _, c := range companies {
 		// งด AddressID เพื่อกันพังถ้าไม่มี address seed
