@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,30 +12,34 @@ import (
 	"co-op-match.com/co-op-match/entity"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var db *gorm.DB
 
-func DB() *gorm.DB {
-	return db
-}
+func DB() *gorm.DB { return db }
 
 func ConnectionDB() {
-	database, err := gorm.Open(sqlite.Open("co-op-match.db?cache=shared"), &gorm.Config{})
+	database, err := gorm.Open(sqlite.Open("co-op-match.db?_busy_timeout=5000&cache=shared&_journal_mode=WAL"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
-	fmt.Println("connected database")
+	sqlDB, _ := database.DB()
+	// ปรับ PRAGMA เพื่อความเร็ว/ความปลอดภัยที่เหมาะกับ seed
+	if _, err := sqlDB.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+		log.Println("warn: set foreign_keys pragma:", err)
+	}
 	db = database
+	fmt.Println("✅ connected database")
 }
+
 func SetupDatabase() {
-	// Migrate เฉพาะ Entity ที่ระบุ
-	db.AutoMigrate(
+	// Migrate เฉพาะ Entity ที่จำเป็น (ลบ Provinces ซ้ำ)
+	if err := db.AutoMigrate(
 		&entity.Role{},
 		&entity.PasswordResetToken{},
 		&entity.User{},
 		&entity.Gender{},
-		&entity.Provinces{},
 		&entity.LikedPost{},
 		&entity.Address{},
 		&entity.Admin{},
@@ -80,8 +85,13 @@ func SetupDatabase() {
 		&entity.ReviewLike{},
 		&entity.LoginLog{},
 		&entity.ReviewAnalysis{},
-	)
+	); err != nil {
+		log.Fatalf("auto-migrate error: %v", err)
+	}
+
 	createSeedData(db)
+
+	// ✅ โหลด master จาก CSV (ทำให้ fail เป็น soft error — log แล้วไปต่อ)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")
 	ImportProvincesCSV(db, "./config/data/address/provinces.csv")
 	ImportDistrictsCSV(db, "./config/data/address/districts.csv")
@@ -90,39 +100,41 @@ func SetupDatabase() {
 }
 
 func createSeedData(db *gorm.DB) {
-	// สร้าง Role
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("panic recovered in seed: %+v", r)
+		}
+	}()
+
+	// ---------- Roles ----------
 	roles := []entity.Role{
 		{RoleName: "Admin", RoleNameTH: "แอดมิน"},
 		{RoleName: "Company", RoleNameTH: "บริษัท"},
-		{RoleName: "Student", RoleNameTH: "นักเรียน"},
+		{RoleName: "Student", RoleNameTH: "นักศึกษา"},
 		{RoleName: "AcademicStaff", RoleNameTH: "อาจารย์"},
 	}
-	for _, role := range roles {
-		db.FirstOrCreate(&role, entity.Role{RoleName: role.RoleName})
-	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "role_name"}}, DoNothing: true}).Create(&roles)
 
-	// สร้าง Gender
+	// ---------- Genders ----------
 	genders := []entity.Gender{
 		{Name: "Male", NameTH: "ชาย"},
 		{Name: "Female", NameTH: "หญิง"},
 	}
-	for _, gender := range genders {
-		db.FirstOrCreate(&gender, entity.Gender{Name: gender.Name})
-	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "name"}}, DoNothing: true}).Create(&genders)
 
-	// ผู้ใช้ (User)
+	// ---------- Users (แก้คอมเมนต์ค้าง และให้รันซ้ำได้) ----------
 	hashedPassword, _ := HashPassword("123456")
-
-	//User
-	User := []entity.User{
+	users := []entity.User{
 		{Email: "a@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
-/* 		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+		{Email: "c@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "jetsadaphon31852@gmail.com", Password: hashedPassword, RoleID: 3, IsActive: true},
-		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, */
+		{Email: "tn@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 
 		{Email: "a2@example.com", Password: hashedPassword, RoleID: 1, IsActive: true},
 
-/* 		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
+		{Email: "c2@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c3@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c4@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
 		{Email: "c5@example.com", Password: hashedPassword, RoleID: 2, IsActive: true},
@@ -135,36 +147,20 @@ func createSeedData(db *gorm.DB) {
 		{Email: "tn2@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn3@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 		{Email: "tn4@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
-		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true}, */
+		{Email: "tn5@example.com", Password: hashedPassword, RoleID: 4, IsActive: true},
 	}
-	for _, pkg := range User {
-		db.Unscoped().FirstOrCreate(&pkg, entity.User{Email: pkg.Email})
-	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "email"}}, DoNothing: true}).Create(&users)
 
-	// Seed Profile Images
+	// ---------- Profile Images ----------
 	profileImages := []entity.ProfileImage{
-		{
-			ImageURL: "/uploads/admin-profile.png",
-			UserID:   1,
-		},
-		{
-			ImageURL: "/uploads/admin-profile.png",
-			UserID:   2,
-		},
-/* 		{
-			ImageURL: "https://img2.pic.in.th/pic/Co-op-match-Photoroom.png",
-			UserID:   3,
-		},
-		{
-			ImageURL: "https://example.com/profiles/user4.jpg",
-			UserID:   4,
-		}, */
+		{ImageURL: "/uploads/admin-profile.png", UserID: 1},
+		{ImageURL: "/uploads/admin-profile.png", UserID: 2},
 	}
-	for _, pkg := range profileImages {
-		db.FirstOrCreate(&pkg, entity.ProfileImage{UserID: pkg.UserID})
+	for _, pi := range profileImages {
+		tx.FirstOrCreate(&pi, entity.ProfileImage{UserID: pi.UserID})
 	}
 
-	// Seed Job Types
+	// ---------- Job Types / Work Modes / Work Days / Stipends / Benefits ----------
 	jobTypes := []entity.JobType{
 		{JobType: "เทคโนโลยีสารสนเทศ/คอมพิวเตอร์"},
 		{JobType: "บัญชี/การเงิน"},
@@ -175,998 +171,330 @@ func createSeedData(db *gorm.DB) {
 		{JobType: "ศิลปศาสตร์/ภาษา/แปล"},
 		{JobType: "สาธารณสุข/พยาบาล/เภสัช"},
 	}
-	for _, pkg := range jobTypes {
-		db.FirstOrCreate(&pkg, entity.JobType{JobType: pkg.JobType})
-	}
-
-	// Seed Work Modes
-	workModes := []entity.WorkMode{
-		{WorkMode: "On-site"},
-		{WorkMode: "Remote"},
-		{WorkMode: "Hybrid"},
-	}
-	for _, pkg := range workModes {
-		db.FirstOrCreate(&pkg, entity.WorkMode{WorkMode: pkg.WorkMode})
-	}
-
-	// Seed Work Days
-	workDays := []entity.WorkDay{
-		{WorkDay: "จันทร์ - ศุกร์"},
-		{WorkDay: "จันทร์ - เสาร์"},
-		{WorkDay: "บริษัทกำหนดเอง"},
-	}
-	for _, pkg := range workDays {
-		db.FirstOrCreate(&pkg, entity.WorkDay{WorkDay: pkg.WorkDay})
-	}
-
+	workModes := []entity.WorkMode{{WorkMode: "On-site"}, {WorkMode: "Remote"}, {WorkMode: "Hybrid"}}
+	workDays := []entity.WorkDay{{WorkDay: "จันทร์ - ศุกร์"}, {WorkDay: "จันทร์ - เสาร์"}, {WorkDay: "บริษัทกำหนดเอง"}}
 	stipends := []entity.Stipend{
-		{Stipend: "ไม่กำหนด"},
-		{Stipend: "ตามความสามารถนักศึกษา"},
-		{Stipend: "5,000 - 10,000 THB"},
-		{Stipend: "10,000 - 15,000 THB"},
-		{Stipend: "15,000+ THB"},
+		{Stipend: "ไม่กำหนด"}, {Stipend: "ตามความสามารถนักศึกษา"},
+		{Stipend: "5,000 - 10,000 THB"}, {Stipend: "10,000 - 15,000 THB"}, {Stipend: "15,000+ THB"},
 	}
-	for _, pkg := range stipends {
-		db.FirstOrCreate(&pkg, entity.Stipend{Stipend: pkg.Stipend})
-	}
+	benefits := []entity.Benefit{{Benefit: "ค่าเดินทาง"}, {Benefit: "อาหาร"}, {Benefit: "ค่าล่วงเวลา"}, {Benefit: "ที่พัก"}}
 
-	// ที่อยู่ (Address)
-/* 	addresses := []entity.Address{
-		{HouseNumber: "123", Village: "หมู่บ้าน ABC", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "456", Village: "หมู่บ้าน XYZ", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "789", Village: "หมู่บ้าน QWE", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "101", Village: "หมู่บ้าน ASD", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "256", Village: "หมู่บ้าน EFG", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "452", Village: "หมู่บ้าน FRT", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "198", Village: "หมู่บ้าน GLR", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "257", Village: "หมู่บ้าน HTE", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "258", Village: "หมู่บ้าน ITY", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "147", Village: "หมู่บ้าน JFT", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "369", Village: "หมู่บ้าน KNM", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "987", Village: "หมู่บ้าน LPD", Street: "ถนนรอง", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "654", Village: "หมู่บ้าน MNO", Street: "ถนนซอย", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "321", Village: "หมู่บ้าน NRE", Street: "ถนนหลัก", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-		{HouseNumber: "159", Village: "หมู่บ้าน OWN", Street: "ถนนใหญ่", SubStreet: "ซอยรอง", SubDistrictID: 1, DistrictID: 1, ProvinceID: 1, PostcodeID: 1},
-	}
-	for _, addr := range addresses {
-		db.FirstOrCreate(&addr, entity.Address{
-			HouseNumber:   addr.HouseNumber,
-			Village:       addr.Village,
-			DistrictID:    addr.DistrictID,
-			SubDistrictID: addr.SubDistrictID,
-			Province:      addr.Province,
-		})
-	} */
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "job_type"}}, DoNothing: true}).Create(&jobTypes)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "work_mode"}}, DoNothing: true}).Create(&workModes)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "work_day"}}, DoNothing: true}).Create(&workDays)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "stipend"}}, DoNothing: true}).Create(&stipends)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "benefit"}}, DoNothing: true}).Create(&benefits)
 
-	// แอดมิน (Admin)
-	admins := []entity.Admin{
-		{FirstName: "สมชาย", LastName: "แอดมิน", Birthday: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), UserID: 1},
-		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 2},
-	}
-	for _, admin := range admins {
-		db.Unscoped().FirstOrCreate(&admin, entity.AcademicStaff{UserID: admin.UserID})
-	}
-
-/* 	// บุคลากรทางวิชาการ (AcademicStaff)
-	staffs := []entity.AcademicStaff{
-		{
-			AcademicPosition: "อาจารย์", Age: 40,
-			FirstName: "สมชาย", LastName: "วิศวกร",
-			Birthday: time.Date(1985, 1, 15, 0, 0, 0, 0, time.UTC),
-			UserID:   4, AddressID: 1, AdminID: 1, GenderID: 1,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
-		},
-		{
-			AcademicPosition: "อาจารย์", Age: 38,
-			FirstName: "สุรีย์", LastName: "เคมี",
-			Birthday: time.Date(1987, 3, 10, 0, 0, 0, 0, time.UTC),
-			UserID:   14, AddressID: 2, AdminID: 1, GenderID: 2,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
-		},
-		{
-			AcademicPosition: "ผู้ช่วยศาสตราจารย์", Age: 45,
-			FirstName: "สมพงษ์", LastName: "การตลาด",
-			Birthday: time.Date(1980, 6, 5, 0, 0, 0, 0, time.UTC),
-			UserID:   15, AddressID: 3, AdminID: 1, GenderID: 1,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
-		},
-		{
-			AcademicPosition: "รองศาสตราจารย์", Age: 50,
-			FirstName: "อรทัย", LastName: "ภาษา",
-			Birthday: time.Date(1975, 11, 22, 0, 0, 0, 0, time.UTC),
-			UserID:   16, AddressID: 4, AdminID: 1, GenderID: 2,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
-		},
-		{
-			AcademicPosition: "อาจารย์", Age: 35,
-			FirstName: "ธนพล", LastName: "นิติ",
-			Birthday: time.Date(1990, 9, 30, 0, 0, 0, 0, time.UTC),
-			UserID:   17, AddressID: 5, AdminID: 1, GenderID: 1,
-			UniversityID: 1, FacultyID: 1, ProgramID: 1,
-		},
-	}
-
-	for _, s := range staffs {
-		// ถ้ามีอยู่แล้วตาม UserID ก็ไม่สร้างซ้ำ
-		db.Unscoped().
-			Where(entity.AcademicStaff{UserID: s.UserID}).
-			Assign(s). // ถ้าอยากอัปเดตค่าอื่นด้วยให้ใส่ Assign
-			FirstOrCreate(&entity.AcademicStaff{})
-	} */
-
-/* 	students := []entity.Student{
-		{
-			FirstName:   "สมชาย",
-			LastName:    "ใจดี",
-			Birthday:    time.Date(2002, time.January, 1, 0, 0, 0, 0, time.UTC),
-			Age:         21,
-			Nationality: "ไทย",
-			Religion:    "พุทธ",
-			PhoneNumber: "0987654321",
-			Height:      175.0,
-			Weight:      65.0,
-			GenderID:    1,
-			UserID:      3,
-			AddressID:   6,
-			AdminID:     1,
-		},
-		{
-			FirstName:   "อรพินมา",
-			LastName:    "ใจเย็น",
-			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
-			Nationality: "ไทย",
-			Age:         21,
-			Religion:    "พุทธ",
-			PhoneNumber: "0912345678",
-			Height:      160.0,
-			Weight:      50.0,
-			GenderID:    2,
-			UserID:      10,
-			AddressID:   7,
-			AdminID:     1,
-		},
-		{
-			FirstName:   "อรพินนะ",
-			LastName:    "ใจเย็น",
-			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
-			Age:         21,
-			Nationality: "ไทย",
-			Religion:    "พุทธ",
-			PhoneNumber: "0912345678",
-			Height:      160.0,
-			Weight:      50.0,
-			GenderID:    2,
-			UserID:      11,
-			AddressID:   8,
-			AdminID:     1,
-		},
-		{
-			FirstName:   "ใจร้อน",
-			LastName:    "ใจเย็น",
-			Birthday:    time.Date(2001, time.March, 15, 0, 0, 0, 0, time.UTC),
-			Age:         21,
-			Nationality: "ไทย",
-			Religion:    "พุทธ",
-			PhoneNumber: "0912345678",
-			Height:      160.0,
-			Weight:      50.0,
-			GenderID:    2,
-			UserID:      12,
-			AddressID:   9,
-			AdminID:     1,
-		},
-		{
-			FirstName:   "พิมพ์ใจ",
-			LastName:    "คนดี",
-			Birthday:    time.Date(2002, time.February, 10, 0, 0, 0, 0, time.UTC),
-			Age:         22,
-			Nationality: "ไทย",
-			Religion:    "พุทธ",
-			PhoneNumber: "0999999999",
-			Height:      158.0,
-			Weight:      48.0,
-			GenderID:    2,
-			UserID:      13,
-			AddressID:   10,
-			AdminID:     1,
-		},
-		{
-			FirstName:   "วิชญ์",
-			LastName:    "เทคโน",
-			Birthday:    time.Date(2002, 10, 20, 0, 0, 0, 0, time.UTC),
-			Age:         22,
-			Nationality: "ไทย",
-			Religion:    "พุทธ",
-			PhoneNumber: "0891234567",
-			Height:      158.0,
-			Weight:      48.0,
-			GenderID:    1,
-			UserID:      5,
-			AddressID:   4,
-			AdminID:     1,
-		},
-	}
-	for _, s := range students {
-		db.Unscoped().FirstOrCreate(&s, entity.Student{UserID: s.UserID})
-	} */
-
-/* 	companies := []entity.Company{
-		{CompanyName: "Alpha Tech Co., Ltd.", Logo: "/uploads/companyLogo/a.png", UserID: 2, AddressID: 11},
-		{CompanyName: "Beta Solutions Co., Ltd.", Logo: "/uploads/companyLogo/b.png", UserID: 6, AddressID: 12},
-		{CompanyName: "Camma Innovations Co., Ltd.", Logo: "/uploads/companyLogo/c.png", UserID: 7, AddressID: 13},
-		{CompanyName: "Delta Software Co., Ltd.", Logo: "/uploads/companyLogo/d.png", UserID: 8, AddressID: 14},
-		{CompanyName: "Epsilon Systems Co., Ltd.", Logo: "/uploads/companyLogo/e.png", UserID: 9, AddressID: 15},
-	}
-	for _, company := range companies {
-		db.Unscoped().FirstOrCreate(&company, entity.Company{UserID: company.UserID})
-	} */
-
-	// สิทธิประโยชน์ (Benefit)
-	benefits := []entity.Benefit{
-		{Benefit: "ค่าเดินทาง"},
-		{Benefit: "อาหาร"},
-		{Benefit: "ค่าล่วงเวลา"},
-		{Benefit: "ที่พัก"},
-	}
-	for _, b := range benefits {
-		db.FirstOrCreate(&b, entity.Benefit{Benefit: b.Benefit})
-	}
-
-	// Seed Status Posts
-	StatusPosts := []entity.StatusPost{
+	// ---------- Status Posts ----------
+	statusPosts := []entity.StatusPost{
 		{StatusPost: "Open", StatusPostTH: "เปิดรับสมัคร"},
 		{StatusPost: "Closed", StatusPostTH: "ปิดรับสมัคร"},
 		{StatusPost: "Pending Approval", StatusPostTH: "รอตรวจสอบ"},
 	}
-	for _, pkg := range StatusPosts {
-		db.FirstOrCreate(&pkg, entity.StatusPost{StatusPost: pkg.StatusPost})
-	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "status_post"}}, DoNothing: true}).Create(&statusPosts)
 
-/* 	intershipPosts := []entity.IntershipPost{
-		{
-			PostName:        "Software Development Intern",
-			PostDescription: "Join our team as a software development intern",
-			Quantity:        2,
-			MinGpa:          2.0,
-			CreatedAt:       time.Now(),
-			CompanyID:       1,
-			StatusPostID:    1,
-			AdminID:         1,
-			WorkModeID:      1,
-			//Benefits: []entity.Benefit{
-			//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
-			//},
-			WorkDayID: 1,
-			StipendID: 2,
-			JobTypeID: 1,
-		},
-		{
-			PostName:        "Data Science Intern",
-			PostDescription: "Opportunity to work with real-world datasets",
-			Quantity:        1,
-			MinGpa:          2.2,
-			CreatedAt:       time.Now(),
-			CompanyID:       2,
-			StatusPostID:    1,
-			AdminID:         1,
-			WorkModeID:      2,
-			WorkDayID:       2,
-			StipendID:       3,
-			JobTypeID:       4,
-		},
-		{
-			PostName:        "AI/ML Intern",
-			PostDescription: "Explore artificial intelligence projects",
-			Quantity:        1,
-			MinGpa:          2.5,
-			CreatedAt:       time.Now(),
-			CompanyID:       3,
-			StatusPostID:    1,
-			AdminID:         1,
-			WorkModeID:      1,
-			WorkDayID:       3,
-			StipendID:       2,
-			JobTypeID:       4,
-		},
-		{
-			PostName:        "Frontend Developer Intern",
-			PostDescription: "Build beautiful UIs with React",
-			Quantity:        1,
-			MinGpa:          2.8,
-			CreatedAt:       time.Now(),
-			CompanyID:       4,
-			StatusPostID:    1,
-			AdminID:         1,
-			WorkModeID:      1,
-			WorkDayID:       1,
-			StipendID:       2,
-			JobTypeID:       1,
-			//Benefits: []entity.Benefit{
-			//{Model: gorm.Model{ID: 1}}, // Or whichever Benefit ID is appropriate
-			//},
-		}, {
-			PostName:        "Frontend Developer Intern",
-			PostDescription: "พัฒนา UI ด้วย React และ Ant Design",
-			Quantity:        2,
-			MinGpa:          2.5,
-			CreatedAt:       time.Now().AddDate(0, -2, 0),
-			LocationDetail:  "ตึก 1 ชั้น 2",
-			Subdistrict:     "ปทุมวัน",
-			District:        "ปทุมวัน",
-			Province:        "กรุงเทพมหานคร",
-			CompanyID:       5,
-			JobTypeID:       1,
-			StipendID:       1,
-			WorkDayID:       1,
-			WorkModeID:      1,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-		{
-			PostName:        "Backend Developer Intern",
-			PostDescription: "พัฒนา API ด้วย Go และ GORM",
-			Quantity:        1,
-			MinGpa:          2.3,
-			CreatedAt:       time.Now().AddDate(0, -2, -3),
-			LocationDetail:  "อาคารซอฟต์แวร์ ชั้น 4",
-			Subdistrict:     "ลาดยาว",
-			District:        "จตุจักร",
-			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
-			JobTypeID:       2,
-			StipendID:       2,
-			WorkDayID:       2,
-			WorkModeID:      2,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-		{
-			PostName:        "Data Analyst Intern",
-			PostDescription: "วิเคราะห์ข้อมูลด้วย Python และ SQL",
-			Quantity:        1,
-			MinGpa:          2.7,
-			CreatedAt:       time.Now().AddDate(0, -1, -10),
-			LocationDetail:  "ศูนย์วิจัยข้อมูล",
-			Subdistrict:     "คลองหนึ่ง",
-			District:        "คลองหลวง",
-			Province:        "ปทุมธานี",
-			CompanyID:       2,
-			JobTypeID:       3,
-			StipendID:       2,
-			WorkDayID:       1,
-			WorkModeID:      3,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-		{
-			PostName:        "UX/UI Designer Intern",
-			PostDescription: "ออกแบบหน้าจอและปรับปรุงประสบการณ์ผู้ใช้",
-			Quantity:        1,
-			MinGpa:          2.2,
-			CreatedAt:       time.Now().AddDate(0, -1, -5),
-			LocationDetail:  "ฝ่าย UX ชั้น 3",
-			Subdistrict:     "ห้วยขวาง",
-			District:        "ห้วยขวาง",
-			Province:        "กรุงเทพมหานคร",
-			CompanyID:       3,
-			JobTypeID:       4,
-			StipendID:       1,
-			WorkDayID:       2,
-			WorkModeID:      2,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-		{
-			PostName:        "QA Tester Intern",
-			PostDescription: "ทดสอบระบบและเขียน test case",
-			Quantity:        1,
-			MinGpa:          2.0,
-			CreatedAt:       time.Now().AddDate(0, -1, 0),
-			LocationDetail:  "ฝ่าย QA ชั้น 2",
-			Subdistrict:     "บางซื่อ",
-			District:        "บางซื่อ",
-			Province:        "กรุงเทพมหานคร",
-			CompanyID:       4,
-			JobTypeID:       5,
-			StipendID:       3,
-			WorkDayID:       3,
-			WorkModeID:      1,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-		{
-			PostName:        "DevOps Intern",
-			PostDescription: "ช่วยดูแลระบบ CI/CD และการ deploy",
-			Quantity:        1,
-			MinGpa:          2.4,
-			CreatedAt:       time.Now().AddDate(0, 0, -10),
-			LocationDetail:  "ชั้น 5 ห้อง server",
-			Subdistrict:     "พระโขนง",
-			District:        "คลองเตย",
-			Province:        "กรุงเทพมหานคร",
-			CompanyID:       5,
-			JobTypeID:       6,
-			StipendID:       2,
-			WorkDayID:       2,
-			WorkModeID:      3,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-		{
-			PostName:        "System Analyst Intern",
-			PostDescription: "วิเคราะห์ระบบและจัดทำเอกสาร",
-			Quantity:        1,
-			MinGpa:          2.6,
-			CreatedAt:       time.Now().AddDate(0, 0, -3),
-			LocationDetail:  "ห้องประชุมชั้น 6",
-			Subdistrict:     "ดินแดง",
-			District:        "ดินแดง",
-			Province:        "กรุงเทพมหานคร",
-			CompanyID:       1,
-			JobTypeID:       7,
-			StipendID:       3,
-			WorkDayID:       1,
-			WorkModeID:      2,
-			StatusPostID:    1,
-			AdminID:         1,
-		},
-	}
-	// ✅ สร้าง post และผูก benefits แยกต่างหาก
-	for i := range intershipPosts {
-		// 1. Create post
-		db.Create(&intershipPosts[i])
-
-		// 2. เลือก benefit ตาม post index
-		var benefitIDs []uint
-		switch i {
-		case 0:
-			benefitIDs = []uint{1} // Software Dev Intern
-		case 1:
-			benefitIDs = []uint{3} // Data Science Intern
-		case 2:
-			benefitIDs = []uint{2} // AI/ML Intern
-		case 3:
-			benefitIDs = []uint{1, 4} // Frontend Intern
-		}
-
-		// 3. ค้นหา benefit จริงจาก DB แล้วเชื่อมกับโพสต์
-		var benefits []entity.Benefit
-		db.Where("id IN ?", benefitIDs).Find(&benefits)
-		db.Model(&intershipPosts[i]).Association("Benefits").Replace(benefits)
-	} */
-
-	// Step 2: Map post index → skills
-/* 	skillMap := map[int][]uint{
-		0: {1, 2}, // Software Dev → Python, Java
-		1: {1, 5}, // Data Science → Python, Data Analysis
-		2: {1, 5}, // AI/ML → Python, Data Analysis
-		3: {3, 4}, // Frontend → JavaScript, SQL
-	}
-
-	// Step 3: Assign skills safely using FirstOrCreate
-	for postIdx, skillIDs := range skillMap {
-		if postIdx < len(intershipPosts) {
-			postID := intershipPosts[postIdx].ID
-			for _, skillID := range skillIDs {
-				reqSkill := entity.CompanyRequiredSkill{
-					SkillID:         skillID,
-					IntershipPostID: postID,
-				}
-				db.FirstOrCreate(&reqSkill, reqSkill)
-			}
-		}
-	} */
-
-	/*
-		for _, post := range intershipPosts {
-			db.Create(&post)
-			db.Create(&entity.CompanyRequiredSkill{
-				SkillID:         1,
-				IntershipPostID: intershipPosts[0].ID,
-			})
-			db.Create(&entity.CompanyRequiredSkill{
-				SkillID:         2,
-				IntershipPostID: intershipPosts[0].ID,
-			})
-			db.Create(&entity.CompanyRequiredSkill{
-				SkillID:         3,
-				IntershipPostID: intershipPosts[1].ID,
-			})
-			db.Create(&entity.CompanyRequiredSkill{
-				SkillID:         4,
-				IntershipPostID: intershipPosts[1].ID,
-			})
-			db.Create(&entity.CompanyRequiredSkill{SkillID: 1, IntershipPostID: 3}) // Python
-			db.Create(&entity.CompanyRequiredSkill{SkillID: 5, IntershipPostID: 3}) // Data Analysis
-
-			db.Create(&entity.CompanyRequiredSkill{SkillID: 3, IntershipPostID: 4}) // JavaScript
-			db.Create(&entity.CompanyRequiredSkill{SkillID: 4, IntershipPostID: 4}) // SQL
-		}
-	*/
-
-	// Seed Skills
+	// ---------- Skills / Interests ----------
 	skills := []entity.Skill{
-		{SkillName: "Python"},
-		{SkillName: "Java"},
-		{SkillName: "JavaScript"},
-		{SkillName: "SQL"},
-		{SkillName: "Data Analysis"},
+		{SkillName: "Python"}, {SkillName: "Java"}, {SkillName: "JavaScript"}, {SkillName: "SQL"}, {SkillName: "Data Analysis"},
 	}
-	for _, pkg := range skills {
-		db.FirstOrCreate(&pkg, entity.Skill{SkillName: pkg.SkillName})
-	}
-
-	// Seed Interests
 	interests := []entity.Interest{
-		{InterestName: "Web Development"},
-		{InterestName: "Mobile Development"},
-		{InterestName: "Data Science"},
-		{InterestName: "AI/ML"},
+		{InterestName: "Web Development"}, {InterestName: "Mobile Development"},
+		{InterestName: "Data Science"}, {InterestName: "AI/ML"},
 	}
-	for _, pkg := range interests {
-		db.FirstOrCreate(&pkg, entity.Interest{InterestName: pkg.InterestName})
-	}
-	// Seed Student Skills
-	/* studentSkills := []entity.StudentSkill{
-		{SkillID: 1, StudentID: 1}, // Python
-		{SkillID: 2, StudentID: 1}, // Java
-		{SkillID: 4, StudentID: 1}, // SQL
-		{SkillID: 1, StudentID: 2}, // Python
-		{SkillID: 5, StudentID: 2}, // Data Analysis
-	}
-	for _, pkg := range studentSkills {
-		db.FirstOrCreate(&pkg, entity.StudentSkill{SkillID: pkg.SkillID})
-	} */
-	/*
-		companyRequiredSkills := []entity.CompanyRequiredSkill{
-			{SkillID: 1, IntershipPostID: 1}, // Python for Software Dev
-			{SkillID: 2, IntershipPostID: 1}, // Java for Software Dev
-			{SkillID: 1, IntershipPostID: 2}, // Python for Data Science
-			{SkillID: 5, IntershipPostID: 2}, // Data Analysis for Data Science
-		}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "skill_name"}}, DoNothing: true}).Create(&skills)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "interest_name"}}, DoNothing: true}).Create(&interests)
 
-		for _, pkg := range companyRequiredSkills {
-			db.FirstOrCreate(&pkg, entity.CompanyRequiredSkill{
-				SkillID:         pkg.SkillID,
-				IntershipPostID: pkg.IntershipPostID,
-			})
-		}
-	*/
-	/* studentInterests := []entity.StudentInterest{
-		{StudentID: 1, InterestID: 1}, // Web Development
-		{StudentID: 1, InterestID: 3}, // Data Science
-		{StudentID: 2, InterestID: 4}, // AI/ML
-		{StudentID: 3, InterestID: 2}, // Mobile Development
+	// ---------- Education Levels ----------
+	educationLevels := []entity.EducationLevel{
+		{Name: "ปริญญาตรี"}, {Name: "ปริญญาโท"}, {Name: "ปริญญาเอก"},
 	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "name"}}, DoNothing: true}).Create(&educationLevels)
 
-	for _, si := range studentInterests {
-		db.FirstOrCreate(&si, entity.StudentInterest{
-			StudentID:  si.StudentID,
-			InterestID: si.InterestID,
-		})
-	} */
-
-	// Seed Educational Background
-	EducationLevels := []entity.EducationLevel{
-		{Name: "ปริญญาตรี"},
-		{Name: "ปริญญาโท"},
-		{Name: "ปริญญาเอก"},
-	}
-	for _, pkg := range EducationLevels {
-		db.FirstOrCreate(&pkg, entity.EducationLevel{Name: pkg.Name})
-	}
-	// 4. เพิ่มข้อมูล Education
-	/* education := entity.Education{
-		UniversityID:     1,
-		FacultyID:        1,
-		ProgramID:        1,
-		Year:             3,
-		EducationLevelID: 1,
-		Grade:            3.5,
-		StudentID:        1,
-	}
-
-	// Insert เฉพาะถ้ายังไม่มีข้อมูลซ้ำ
-	db.FirstOrCreate(&education, entity.Education{
-		StudentID: education.StudentID,
-		ProgramID: education.ProgramID,
-		Year:      education.Year,
-	}) */
-	/* interviewAppointments := []entity.InterviewAppointment{
-		{
-			AppointmentDate: time.Now().Add(7 * 24 * time.Hour),
-			Mode:            "ออนไลน์",
-			Details:         "ลิงก์ Zoom จะส่งให้ทางอีเมล",
-			StudentID:       1,
-			CompanyID:       1,
-		},
-		{
-			AppointmentDate: time.Now().Add(-3 * 24 * time.Hour),
-			Mode:            "ออนไซต์",
-			Details:         "คุณผ่านการสัมภาษณ์เรียบร้อยแล้ว",
-			StudentID:       2,
-			CompanyID:       2,
-		},
-		{
-			AppointmentDate: time.Now().Add(-4 * 24 * time.Hour),
-			Mode:            "ออนไลน์",
-			Details:         "ขอบคุณที่เข้าร่วมสัมภาษณ์",
-			StudentID:       3,
-			CompanyID:       1,
-		},
-	}
-
-	for _, appointment := range interviewAppointments {
-		db.FirstOrCreate(&appointment, entity.InterviewAppointment{
-			StudentID:       appointment.StudentID,
-			CompanyID:       appointment.CompanyID,
-			AppointmentDate: appointment.AppointmentDate,
-		})
-	} */
-
-	// Seed Notification Types
-
+	// ---------- Notification Types ----------
 	notificationTypes := []entity.NotificationsType{
 		{Name: "interview", Label: "คุณมีนัดสัมภาษณ์กับบริษัท {{.company}} เวลา {{.time}}"},
 		{Name: "match", Label: "คุณได้รับการแมทช์กับ {{.partner}}"},
 		{Name: "chat", Label: "คุณได้รับข้อความใหม่จาก {{.sender}}"},
 	}
-	for _, nt := range notificationTypes {
-		db.FirstOrCreate(&nt, entity.NotificationsType{Name: nt.Name})
-	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "name"}}, DoNothing: true}).Create(&notificationTypes)
 
-	// Seed Status Posts
-	StatusVerifies := []entity.StatusVerify{
+	// ---------- Status Verify ----------
+	statusVerifies := []entity.StatusVerify{
 		{StatusVerify: "ยังไม่ได้ส่งคำขอ"},
 		{StatusVerify: "รอรับรอง"},
 		{StatusVerify: "รับรอง"},
 		{StatusVerify: "ปฏิเสธ"},
 	}
-	for _, pkg := range StatusVerifies {
-		db.FirstOrCreate(&pkg, entity.StatusVerify{StatusVerify: pkg.StatusVerify})
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "status_verify"}}, DoNothing: true}).Create(&statusVerifies)
+
+	// ---------- Review Tags ----------
+	tags := []entity.Tag{
+		{Name: "บรรยากาศดี"}, {Name: "งานท้าทาย"}, {Name: "พี่ๆใจดี"}, {Name: "ได้ลงมือทำจริง"},
+		{Name: "สนับสนุนดี"}, {Name: "เหมาะกับมือใหม่"}, {Name: "ได้เรียนรู้หลากหลาย"}, {Name: "ได้ทำโปรเจกต์จริง"},
+	}
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "name"}}, DoNothing: true}).Create(&tags)
+
+	// ---------- Admin (แก้บั๊ก: ต้อง FirstOrCreate เป็น Admin ไม่ใช่ AcademicStaff) ----------
+	admins := []entity.Admin{
+		{FirstName: "สมชาย", LastName: "แอดมิน", Birthday: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), UserID: 1},
+		{FirstName: "อรพิน", LastName: "ดูแลระบบ", Birthday: time.Date(1985, 6, 15, 0, 0, 0, 0, time.UTC), UserID: 2},
+	}
+	for _, a := range admins {
+		tx.Unscoped().FirstOrCreate(&a, entity.Admin{UserID: a.UserID})
 	}
 
-	// ยืนยันตัวตนของ อาจารย์ && บริษัท
-/* 	verifies := []entity.Verify{
-		{
-			VerificationDocument: "/uploads/verifyDocument/Company/06-09-2025.png",
-			StatusVerifyID:       2,
-			UserID:               2,
-		},
-		{
-			VerificationDocument: "/uploads/verifyDocument/Company/06-09-2025.png",
-			StatusVerifyID:       2,
-			UserID:               6,
-		},
-		{
-			VerificationDocument: "/uploads/verifyDocument/AcademicStaff/06-09-2025.png",
-			StatusVerifyID:       2,
-			UserID:               4,
-		},
-		{
-			VerificationDocument: "/uploads/verifyDocument/AcademicStaff/06-09-2025.png",
-			StatusVerifyID:       2,
-			UserID:               14,
-		},
-	}
-	for _, v := range verifies {
-		v.Reason = "" // เพิ่มไว้เพื่อกัน struct validation error หากมี
-		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
-	}
-
-	// ดึง user ทั้งหมดที่ยังไม่มี Verify
-	var users []entity.User
-	db.Where("id NOT IN (?)", db.Model(&entity.Verify{}).Select("user_id")).
-		Find(&users)
-	// สร้าง Verify สำหรับ user ที่เหลือ
-	for _, u := range users {
-		verify := entity.Verify{
-			StatusVerifyID:       1,
-			UserID:               u.ID,
-			VerificationDocument: "",
-			Reason:               "",
+	// ---------- Ensure Verify exists for ALL users ----------
+	var allUsers []entity.User
+	if err := tx.Find(&allUsers).Error; err == nil {
+		for _, u := range allUsers {
+			v := entity.Verify{
+				UserID:         u.ID,
+				StatusVerifyID: 1, // "ยังไม่ได้ส่งคำขอ"
+				Reason:         "",
+			}
+			tx.FirstOrCreate(&v, entity.Verify{UserID: u.ID})
 		}
-		db.FirstOrCreate(&verify, entity.Verify{UserID: verify.UserID})
-	} */
-
-/* 	reviews := []entity.Review{
-		{Rating: 5, Comment: "ได้เรียนรู้งานจริงจากโปรเจกต์ในบริษัท ทีมงานใจดีและให้คำแนะนำดีมาก", Like: 10, CreatedAt: time.Date(2024, 2, 1, 10, 0, 0, 0, time.UTC), StudentID: 1, CompanyID: 1},
-		{Rating: 4, Comment: "บรรยากาศในการทำงานดี เพื่อนร่วมงานเป็นกันเอง", Like: 7, CreatedAt: time.Date(2024, 2, 3, 11, 30, 0, 0, time.UTC), StudentID: 2, CompanyID: 1},
-		{Rating: 3, Comment: "ได้รับมอบหมายงานน้อย แต่ได้เรียนรู้ระบบงานจริง", Like: 5, CreatedAt: time.Date(2024, 1, 20, 9, 15, 0, 0, time.UTC), StudentID: 3, CompanyID: 1},
-		{Rating: 5, Comment: "มีการอบรมและโค้ชตลอดฝึกงาน ได้ทำงานจริงแบบเต็มที่", Like: 13, CreatedAt: time.Date(2024, 1, 10, 14, 0, 0, 0, time.UTC), StudentID: 4, CompanyID: 1},
-		{Rating: 2, Comment: "ไม่มีคนดูแลชัดเจน ต้องหางานทำเอง", Like: 2, CreatedAt: time.Date(2023, 12, 15, 13, 0, 0, 0, time.UTC), StudentID: 5, CompanyID: 1},
-		{Rating: 4, Comment: "ได้ใช้เทคโนโลยีใหม่ๆ และเรียนรู้การทำงานเป็นทีม", Like: 9, CreatedAt: time.Date(2023, 12, 1, 15, 30, 0, 0, time.UTC), StudentID: 6, CompanyID: 1},
-		{Rating: 1, Comment: "idiot", Like: 1, CreatedAt: time.Now(), StudentID: 7, CompanyID: 1},
+	} else {
+		log.Println("warn: cannot enumerate users for verify:", err)
 	}
 
-	for _, review := range reviews {
-		db.Create(&review)
+	if err := tx.Commit().Error; err != nil {
+		log.Fatalf("seed commit error: %v", err)
 	}
- */
-/* 	applications := []entity.Application{
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student1.pdf",
-			TranscriptUrl:   "transcript_student1.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -10),
-			CompanyNote:     "นักศึกษามีทักษะตรงตามที่ต้องการ",
-			IntershipPostID: 5,
-			StudentID:       1,
-		},
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student2.pdf",
-			TranscriptUrl:   "transcript_student2.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -9),
-			CompanyNote:     "ผลงานโปรเจกต์น่าสนใจ",
-			IntershipPostID: 6,
-			StudentID:       2,
-		},
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student3.pdf",
-			TranscriptUrl:   "transcript_student3.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -8),
-			CompanyNote:     "มีความสนใจในสายงานนี้สูง",
-			IntershipPostID: 7,
-			StudentID:       3,
-		},
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student4.pdf",
-			TranscriptUrl:   "transcript_student4.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -7),
-			CompanyNote:     "สอบสัมภาษณ์ดีมาก",
-			IntershipPostID: 8,
-			StudentID:       4,
-		},
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student5.pdf",
-			TranscriptUrl:   "transcript_student5.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -6),
-			CompanyNote:     "เข้าใจระบบดี",
-			IntershipPostID: 9,
-			StudentID:       5,
-		},
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student6.pdf",
-			TranscriptUrl:   "transcript_student6.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -5),
-			CompanyNote:     "มีทักษะการสื่อสารที่ดี",
-			IntershipPostID: 10,
-			StudentID:       6,
-		},
-		{
-			Status:          "ผ่าน",
-			ResumeUrl:       "resume_student7.pdf",
-			TranscriptUrl:   "transcript_student7.pdf",
-			SubmitAt:        time.Now().AddDate(0, 0, -4),
-			CompanyNote:     "ทำงานเป็นทีมได้ดี",
-			IntershipPostID: 11,
-			StudentID:       7,
-		},
-	}
-	for _, app := range applications {
-		db.Create(&app)
-	} */
-
-/* 	analysisTypes := []entity.AnalysisType{
-		{TypeCode: "application", TypeName: "การสมัคร"},
-		{TypeCode: "review", TypeName: "รีวิวบริษัท"},
-		{TypeCode: "matching", TypeName: "การจับคู่งาน"},
-		{TypeCode: "post", TypeName: "ข้อมูลโพสต์"},
-		{TypeCode: "login", TypeName: "รายงานการเข้าระบบ"},
-	}
-	for _, at := range analysisTypes {
-		db.FirstOrCreate(&at, entity.AnalysisType{TypeCode: at.TypeCode})
-	} */
-
 }
+
+// ====================== CSV LOADERS ======================
 
 type RawEducationData struct {
 	University string
 	Faculty    string
 	Program    string
+	Level      string
 }
 
 func insertEducationFromCSV(db *gorm.DB, filePath string) {
-	file, err := os.Open(filePath)
+	records, header, err := readCSVWithHeader(filePath)
 	if err != nil {
-		log.Println("❌ Failed to open CSV file:", err)
+		log.Println("❌ Education CSV:", err)
 		return
 	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	reader.FieldsPerRecord = -1
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Println("❌ Failed to read CSV:", err)
+	if len(records) == 0 {
+		log.Println("⚠️ Education CSV ไม่มีข้อมูล")
 		return
 	}
 
-	if len(records) < 1 {
-		log.Println("⚠️ CSV ไม่มีข้อมูล")
+	col := mapCols(header)
+	required := []string{"UNIV_NAME_TH", "FAC_NAME", "PROGRAM_NAME", "LEV_NAME_ENG"}
+	if err := ensureCols(col, required...); err != nil {
+		log.Println("❌ Education CSV:", err)
 		return
 	}
 
-	// Header mapping
-	header := records[0]
-	colMap := make(map[string]int)
-	for i, h := range header {
-		colMap[h] = i
-	}
+	// กรองเฉพาะ ป.ตรี/โท/เอก
+	validLevels := map[string]bool{"ป.ตรี": true, "ป.โท": true, "ป.เอก": true}
 
-	requiredCols := []string{"UNIV_NAME_TH", "FAC_NAME", "PROGRAM_NAME", "LEV_NAME_ENG"}
-	for _, col := range requiredCols {
-		if _, ok := colMap[col]; !ok {
-			log.Fatalf("❌ Missing required column: %s", col)
-		}
-	}
-
-	// ✅ กรองเฉพาะระดับการศึกษาที่ต้องการ
-	validLevels := map[string]bool{
-		"ป.ตรี": true,
-		"ป.โท":  true,
-		"ป.เอก": true,
-	}
-
-	var rawData []RawEducationData
-	for _, row := range records[1:] {
-		level := row[colMap["LEV_NAME_ENG"]]
+	var raw []RawEducationData
+	for _, row := range records {
+		level := safe(row, col["LEV_NAME_ENG"])
 		if !validLevels[level] {
 			continue
 		}
-
-		rawData = append(rawData, RawEducationData{
-			University: row[colMap["UNIV_NAME_TH"]],
-			Faculty:    row[colMap["FAC_NAME"]],
-			Program:    row[colMap["PROGRAM_NAME"]],
+		raw = append(raw, RawEducationData{
+			University: safe(row, col["UNIV_NAME_TH"]),
+			Faculty:    safe(row, col["FAC_NAME"]),
+			Program:    safe(row, col["PROGRAM_NAME"]),
+			Level:      level,
 		})
 	}
-
-	// Seed Tags สำหรับรีวิว
-	tags := []entity.Tag{
-		{Name: "บรรยากาศดี"},
-		{Name: "งานท้าทาย"},
-		{Name: "พี่ๆใจดี"},
-		{Name: "ได้ลงมือทำจริง"},
-		{Name: "สนับสนุนดี"},
-		{Name: "เหมาะกับมือใหม่"},
-		{Name: "ได้เรียนรู้หลากหลาย"},
-		{Name: "ได้ทำโปรเจกต์จริง"},
-	}
-
-	for _, tag := range tags {
-		db.FirstOrCreate(&tag, entity.Tag{Name: tag.Name})
-	}
-
-	// Cache for IDs
-	univMap := make(map[string]uint)
-	facultyMap := make(map[string]uint)
-
-	for _, item := range rawData {
-		// 🔹 University
-		univID, ok := univMap[item.University]
-		if !ok {
-			univ := entity.University{NameTH: item.University}
-			db.FirstOrCreate(&univ, entity.University{NameTH: item.University})
-			univID = univ.ID
-			univMap[item.University] = univID
-		}
-
-		// 🔹 Faculty
-		facultyKey := item.University + "|" + item.Faculty
-		facultyID, ok := facultyMap[facultyKey]
-		if !ok {
-			fac := entity.Faculty{NameTH: item.Faculty, UniversityID: univID}
-			db.FirstOrCreate(&fac, entity.Faculty{NameTH: item.Faculty, UniversityID: univID})
-			facultyID = fac.ID
-			facultyMap[facultyKey] = facultyID
-		}
-
-		// 🔹 Program
-		prog := entity.Program{NameTH: item.Program, FacultyID: facultyID}
-		db.FirstOrCreate(&prog, entity.Program{NameTH: item.Program, FacultyID: facultyID})
-	}
-
-	log.Printf("✅ นำเข้าข้อมูลเฉพาะ ป.ตรี/โท/เอก เรียบร้อย: %d รายการ\n", len(rawData))
-}
-func ImportProvincesCSV(db *gorm.DB, filePath string) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalf("❌ Open file error: %v", err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Fatalf("❌ Read CSV error: %v", err)
-	}
-
-	if len(records) <= 1 {
-		log.Println("⚠️ No data found")
+	if len(raw) == 0 {
+		log.Println("⚠️ Education CSV: ไม่พบระดับที่ต้องการ")
 		return
 	}
 
-	for i, row := range records {
-		if i == 0 {
-			log.Printf("🔍 Header: %+v", row)
-			continue
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
-		if len(row) < 3 {
-			log.Printf("⚠️ Skipped row %d: %+v (too few columns)", i, row)
-			continue
-		}
+	}()
 
-		province := entity.Provinces{
-			NameTH: row[1],
-			NameEN: row[2],
+	univMap := map[string]uint{}
+	facultyMap := map[string]uint{}
+
+	for _, item := range raw {
+		// University
+		if _, ok := univMap[item.University]; !ok {
+			u := entity.University{NameTH: item.University}
+			tx.FirstOrCreate(&u, entity.University{NameTH: item.University})
+			univMap[item.University] = u.ID
 		}
-		db.Where("name_th = ?", province.NameTH).FirstOrCreate(&province)
+		// Faculty
+		key := item.University + "|" + item.Faculty
+		if _, ok := facultyMap[key]; !ok {
+			f := entity.Faculty{NameTH: item.Faculty, UniversityID: univMap[item.University]}
+			tx.FirstOrCreate(&f, entity.Faculty{NameTH: item.Faculty, UniversityID: univMap[item.University]})
+			facultyMap[key] = f.ID
+		}
+		// Program
+		p := entity.Program{NameTH: item.Program, FacultyID: facultyMap[key]}
+		tx.FirstOrCreate(&p, entity.Program{NameTH: item.Program, FacultyID: facultyMap[key]})
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Println("❌ commit education csv:", err)
+		return
+	}
+	log.Printf("✅ นำเข้าข้อมูล ป.ตรี/โท/เอก: %d แถว\n", len(raw))
+}
+
+func ImportProvincesCSV(db *gorm.DB, filePath string) {
+	records, header, err := readCSVWithHeader(filePath)
+	if err != nil {
+		log.Println("❌ Provinces CSV:", err)
+		return
+	}
+	col := mapCols(header)
+	need := []string{"id", "name_th", "name_en"}
+	if err := ensureCols(col, need...); err != nil {
+		log.Println("❌ Provinces header:", err)
+		return
+	}
+
+	for _, row := range records {
+		p := entity.Provinces{
+			NameTH: safe(row, col["name_th"]),
+			NameEN: safe(row, col["name_en"]),
+		}
+		if p.NameTH == "" {
+			continue
+		}
+		db.Where("name_th = ?", p.NameTH).FirstOrCreate(&p)
 	}
 	log.Println("✅ Provinces imported")
 }
 
 func ImportDistrictsCSV(db *gorm.DB, filePath string) {
-	file, _ := os.Open(filePath)
-	defer file.Close()
-	reader := csv.NewReader(file)
-	records, _ := reader.ReadAll()
+	records, header, err := readCSVWithHeader(filePath)
+	if err != nil {
+		log.Println("❌ Districts CSV:", err)
+		return
+	}
+	col := mapCols(header)
+	need := []string{"id", "province_id", "name_th", "name_en"}
+	if err := ensureCols(col, need...); err != nil {
+		log.Println("❌ Districts header:", err)
+		return
+	}
 
-	for i, row := range records {
-		if i == 0 {
+	for _, row := range records {
+		pid, _ := strconv.Atoi(safe(row, col["province_id"]))
+		d := entity.District{
+			NameTH:     safe(row, col["name_th"]),
+			NameEN:     safe(row, col["name_en"]),
+			ProvinceID: uint(pid),
+		}
+		if d.NameTH == "" || d.ProvinceID == 0 {
 			continue
 		}
-		provinceID, _ := strconv.Atoi(row[1])
-		district := entity.District{
-			NameTH:     row[2],
-			NameEN:     row[3],
-			ProvinceID: uint(provinceID),
-		}
-		db.FirstOrCreate(&district, entity.District{NameTH: district.NameTH, ProvinceID: district.ProvinceID})
+		db.FirstOrCreate(&d, entity.District{NameTH: d.NameTH, ProvinceID: d.ProvinceID})
 	}
 	log.Println("✅ Districts imported")
 }
-func ImportPostcodesCSV(db *gorm.DB, filePath string) {
-	file, _ := os.Open(filePath)
-	defer file.Close()
-	reader := csv.NewReader(file)
-	records, _ := reader.ReadAll()
 
-	for i, row := range records {
-		if i == 0 {
+func ImportPostcodesCSV(db *gorm.DB, filePath string) {
+	records, header, err := readCSVWithHeader(filePath)
+	if err != nil {
+		log.Println("❌ Postcodes CSV:", err)
+		return
+	}
+	col := mapCols(header)
+	need := []string{"id", "postcode"}
+	if err := ensureCols(col, need...); err != nil {
+		log.Println("❌ Postcodes header:", err)
+		return
+	}
+
+	for _, row := range records {
+		pc := entity.Postcode{Postcode: safe(row, col["postcode"])}
+		if pc.Postcode == "" {
 			continue
 		}
-		postcode := entity.Postcode{
-			Postcode: row[1],
-		}
-		db.FirstOrCreate(&postcode, entity.Postcode{Postcode: postcode.Postcode})
+		db.FirstOrCreate(&pc, entity.Postcode{Postcode: pc.Postcode})
 	}
 	log.Println("✅ Postcodes imported")
 }
-func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
-	file, _ := os.Open(filePath)
-	defer file.Close()
-	reader := csv.NewReader(file)
-	records, _ := reader.ReadAll()
 
-	for i, row := range records {
-		if i == 0 {
+func ImportSubDistrictsCSV(db *gorm.DB, filePath string) {
+	records, header, err := readCSVWithHeader(filePath)
+	if err != nil {
+		log.Println("❌ Subdistricts CSV:", err)
+		return
+	}
+	col := mapCols(header)
+	need := []string{"id", "district_id", "name_th", "name_en", "postcode_id"}
+	if err := ensureCols(col, need...); err != nil {
+		log.Println("❌ Subdistricts header:", err)
+		return
+	}
+
+	for _, row := range records {
+		did, _ := strconv.Atoi(safe(row, col["district_id"]))
+		pcid, _ := strconv.Atoi(safe(row, col["postcode_id"]))
+		sd := entity.SubDistrict{
+			NameTH:     safe(row, col["name_th"]),
+			NameEN:     safe(row, col["name_en"]),
+			DistrictID: uint(did),
+			PostcodeID: uint(pcid),
+		}
+		if sd.NameTH == "" || sd.DistrictID == 0 {
 			continue
 		}
-		districtID, _ := strconv.Atoi(row[1])
-		postcodeID, _ := strconv.Atoi(row[4])
-		subDistrict := entity.SubDistrict{
-			NameTH:     row[2],
-			NameEN:     row[3],
-			DistrictID: uint(districtID),
-			PostcodeID: uint(postcodeID),
-		}
-		db.FirstOrCreate(&subDistrict, entity.SubDistrict{NameTH: subDistrict.NameTH, DistrictID: subDistrict.DistrictID})
+		db.FirstOrCreate(&sd, entity.SubDistrict{NameTH: sd.NameTH, DistrictID: sd.DistrictID})
 	}
 	log.Println("✅ SubDistricts imported")
+}
+
+// ====================== CSV HELPERS ======================
+
+func readCSVWithHeader(path string) (records [][]string, header []string, err error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("open: %w", err)
+	}
+	defer f.Close()
+	r := csv.NewReader(f)
+	r.FieldsPerRecord = -1
+
+	all, err := r.ReadAll()
+	if err != nil {
+		return nil, nil, fmt.Errorf("read: %w", err)
+	}
+	if len(all) < 1 {
+		return nil, nil, errors.New("empty csv")
+	}
+	header = all[0]
+	records = all[1:]
+	return records, header, nil
+}
+
+func mapCols(header []string) map[string]int {
+	m := map[string]int{}
+	for i, h := range header {
+		m[h] = i
+	}
+	return m
+}
+func ensureCols(m map[string]int, cols ...string) error {
+	for _, c := range cols {
+		if _, ok := m[c]; !ok {
+			return fmt.Errorf("missing column: %s", c)
+		}
+	}
+	return nil
+}
+func safe(row []string, idx int) string {
+	if idx < 0 || idx >= len(row) {
+		return ""
+	}
+	return row[idx]
 }
