@@ -40,7 +40,7 @@ const ContactForm: React.FC<CompanyContactFormProps> = ({ form, onChange, initia
           alignItems: "center",
           gap: "8px"
         }}>
-          <ContactsOutlined style={{ color: "#faad14" }} />
+          <ContactsOutlined style={{  color: "#1890ff" }} />
           ข้อมูลการติดต่อ
         </h4>
 

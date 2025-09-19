@@ -133,7 +133,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
           alignItems: "center",
           gap: "8px"
         }}>
-          <TrophyOutlined style={{ color: "#52c41a" }} />
+          <TrophyOutlined style={{  color: "#1890ff" }} />
           ผลการเรียน
         </h4>
         
