@@ -35,13 +35,14 @@ const StepCompanyGeneral: React.FC<StepCompanyInfoProps> = ({
   // ===== Validators / Normalizers =====
   const trim = (v: any) => (typeof v === 'string' ? v.trim() : v);
 
-  // ชื่อบริษัท: ไทย/อังกฤษ/ตัวเลข และอักขระทั่วไป &,.-()/  ความยาว 2–100
-  const validateCompanyName = (_: any, value: string) => {
-    const v = (value || '').trim();
-    if (!v) return Promise.reject('กรุณากรอกชื่อบริษัท');
-    if (v.length < 2) return Promise.reject('ชื่อต้องมีอย่างน้อย 2 ตัวอักษร');
-    if (v.length > 100) return Promise.reject('ชื่อบริษัทต้องไม่เกิน 100 ตัวอักษร');
-  };
+// ชื่อบริษัท: กรอกอะไรก็ได้ ความยาว 2–100
+const validateCompanyName = (_: any, value: string) => {
+  const v = (value || '').trim();
+  if (!v) return Promise.reject('กรุณากรอกชื่อบริษัท');
+  if (v.length < 2) return Promise.reject('ชื่อต้องมีอย่างน้อย 2 ตัวอักษร');
+  if (v.length > 100) return Promise.reject('ชื่อบริษัทต้องไม่เกิน 100 ตัวอักษร');
+  return Promise.resolve();
+};
 
   // อัปโหลดโลโก้ (รูปเท่านั้น, ≤ 5MB)
   const handleBeforeUploadLogo = (file: File) => {
@@ -111,7 +112,7 @@ const StepCompanyGeneral: React.FC<StepCompanyInfoProps> = ({
             label="ชื่อบริษัท"
             normalize={trim}
             validateTrigger="onBlur"
-            rules={[{ validator: validateCompanyName }]}
+            rules={[ { validator: validateCompanyName }]}
           >
             <Input placeholder="กรอกชื่อบริษัท" maxLength={100} />
           </Form.Item>
