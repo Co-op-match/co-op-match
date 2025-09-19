@@ -84,12 +84,14 @@ type AcademicOverviewResponse struct {
 }
 
 type AcademicStudentItem struct {
-	ID        uint   `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Gender    string `json:"gender"`
-	Age       uint   `json:"age"`
-	Email     string `json:"email"`
+	ID          uint    `json:"id"`
+	FirstName   string  `json:"first_name"`
+	LastName    string  `json:"last_name"`
+	Gender      string  `json:"gender"`
+	Age         uint    `json:"age"`
+	Grade       float64 `json:"grade"`
+	Email       string  `json:"email"`
+	PhoneNumber string  `json:"phone_number"`
 
 	ProgramName    string `json:"program_name"`
 	FacultyName    string `json:"faculty_name"`

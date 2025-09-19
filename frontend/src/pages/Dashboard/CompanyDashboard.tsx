@@ -494,4 +494,34 @@ const customStyles = `
     .pill-badge { top: -7px; left: 8px; }
     .pill-badge .ant-badge-count { min-width: 18px; height: 18px; line-height: 18px; font-size: 11px; }
   }
+
+  .section-title{
+    background: linear-gradient(135deg, #1677ff 0%, #722ed1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-title .section-title__icon,
+  .section-title .anticon {
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+    color: #1677ff;
+  }
+
+  .icon-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1677ff, #69c0ff);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-circle .inner-icon {
+    color: #fff;
+    font-size: 18px;
+  }
 `;

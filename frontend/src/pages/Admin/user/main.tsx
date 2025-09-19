@@ -21,6 +21,8 @@ import "dayjs/locale/th";
 import type { ColumnFilterItem } from "antd/es/table/interface";
 import AdminSectionHeader from "../AdminSectionHeader";
 import { User_StatCard } from "../StatCard";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 dayjs.locale("th");
 
 const { Title, Text } = Typography;
@@ -177,10 +179,27 @@ const AdminUserDetailsPage: React.FC = () => {
     } finally { setSubmittingAdd(false); }
   }, [addForm, roles, refreshData, messageApi]);
 
+  // ใช้หา login ล่าสุดของแต่ละผู้ใช้จาก loginLogs (มีอยู่แล้ว)
+  const lastLoginByUserId = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const log of loginLogs) {
+      const uid = (log as any).UserID ?? log.User?.ID;
+      if (!uid) continue;
+      const cur = m.get(uid);
+      if (!cur || dayjs(log.login_at).isAfter(dayjs(cur))) {
+        m.set(uid, log.login_at || "");
+      }
+    }
+    return m;
+  }, [loginLogs]);
+
   /* ----------------------- Columns ----------------------- */
   const userColumns: ColumnsType<UserInterface> = [
     {
-      title: "อีเมล", dataIndex: "Email", key: "Email", ellipsis: true,
+      title: "อีเมล",
+      dataIndex: "Email",
+      key: "Email",
+      ellipsis: true,
       render: (Email: string, record) => {
         const isCompany = record.Role?.RoleName === "Company";
         const raw = isCompany ? record.Company?.[0]?.logo : record.ProfileImage?.[0]?.image_url;
@@ -197,8 +216,11 @@ const AdminUserDetailsPage: React.FC = () => {
       },
     },
     {
-      title: "บทบาท", dataIndex: ["Role", "RoleNameTH"], key: "Role",
-      filters: roleFilters, filteredValue: roleFilterKeys ?? undefined,
+      title: "บทบาท",
+      dataIndex: ["Role", "RoleNameTH"],
+      key: "Role",
+      filters: roleFilters,
+      filteredValue: roleFilterKeys ?? undefined,
       onFilter: (value, record) => String(record.Role?.RoleNameTH) === String(value),
       render: (RoleNameTH: string, record) => {
         const gradient =
@@ -206,33 +228,110 @@ const AdminUserDetailsPage: React.FC = () => {
           : record.Role?.RoleNameTH === "นักเรียน" ? "linear-gradient(135deg, #22c55e 0%, #4ade80 100%)"
           : record.Role?.RoleNameTH === "บริษัท" ? "linear-gradient(135deg, #f97316 0%, #fb923c 100%)"
           : "linear-gradient(135deg, #a855f7 0%, #c084fc 100%)";
-        return <Tag style={{ background: gradient, color: "white", border: "none", borderRadius: 8, fontWeight: 600, padding: "4px 12px", width: "72px", textAlign: "center" }}>{RoleNameTH}</Tag>;
+        return (
+          <Tag style={{ background: gradient, color: "white", border: "none", borderRadius: 8, fontWeight: 600, padding: "4px 12px", width: 72, textAlign: "center" }}>
+            {RoleNameTH}
+          </Tag>
+        );
       },
     },
     {
-      title: "สถานะ", key: "status", width: 160,
+      title: "สถานะ",
+      key: "status",
+      width: 160,
       render: (_, record) => (
-        <Badge status={record.is_active ? "success" : "error"} text={
-          <span style={{ fontWeight: 500, color: record.is_active ? "#22c55e" : "#ef4444" }}>
+        <Badge
+          status={record.is_active ? "success" : "error"}
+          text={<span style={{ fontWeight: 500, color: record.is_active ? "#22c55e" : "#ef4444" }}>
             {record.is_active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-          </span>
-        } />
+          </span>}
+        />
       ),
     },
     {
-      title: "วันที่สร้าง", dataIndex: "CreatedAt", key: "CreatedAt", width: 180,
-      render: (date: string | Date) => <Text style={{ fontWeight: 500, color: "#64748b" }}>{new Date(date).toLocaleDateString("th-TH")}</Text>,
+      title: "วันที่สร้าง",
+      dataIndex: "CreatedAt",
+      key: "CreatedAt",
+      width: 180,
+      sorter: (a, b) => dayjs(a.CreatedAt).valueOf() - dayjs(b.CreatedAt).valueOf(),
+      defaultSortOrder: "descend",
+      render: (date: string | Date) => (
+        <Text style={{ fontWeight: 500, color: "#64748b" }}>
+          {dayjs(date).format("DD/MM/YYYY")}
+        </Text>
+      ),
     },
     {
-      title: "การจัดการ", key: "actions", fixed: "right", width: 150,
+      title: "เข้าใช้งานล่าสุด",
+      key: "last_seen",
+      width: 220,
+      defaultSortOrder: "descend", // ให้เรียงจากล่าสุดก่อนเป็นค่าเริ่มต้น (ถ้าต้องการ)
+      render: (_, record) => {
+        // ออนไลน์อยู่
+        if (record.is_logged_in) {
+          return (
+            <Tag color="green" style={{ borderRadius: 8, fontWeight: 600 }}>
+              ออนไลน์อยู่
+            </Tag>
+          );
+        }
+
+        // มีประวัติล็อกอิน => แสดงเป็นสัมพัทธ์ เช่น "4 ชั่วโมงที่แล้ว", "2 วันที่แล้ว"
+        const last = record.ID ? lastLoginByUserId.get(record.ID) : undefined;
+        if (last) {
+          return (
+            <Space direction="vertical" size={0}>
+              <Text style={{ fontWeight: 500, color: "#64748b" }} title={dayjs(last).format("DD/MM/YYYY HH:mm:ss")}>
+                {dayjs(last).fromNow()}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#94a3b8" }}>
+                {dayjs(last).format("DD/MM/YYYY HH:mm")}
+              </Text>
+            </Space>
+          );
+        }
+
+        // ไม่พบการเข้าสู่ระบบ
+        return (
+          <div style={{ color: "#64748b" }}>-</div>
+        );
+      },
+    },
+    {
+      title: "การจัดการ",
+      key: "actions",
+      fixed: "right",
+      width: 150,
       render: (_, record) => (
         <Space>
-          <Button type="primary" icon={<EyeOutlined />} size="small"
-            style={{ background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)", border: "none", borderRadius: 8, fontWeight: 600 }}
-            onClick={() => { setSelectedUser(record); setIsModalVisible(true); }}>ดู</Button>
-          <Button icon={<EditOutlined />} size="small"
-            style={{ background: "linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)", borderColor: "rgb(30, 58, 138)", color: "rgb(30, 58, 138)", borderRadius: 8, fontWeight: 600 }}
-            onClick={() => { setSelectedUser(record); setEditModalVisible(true); }}>แก้ไข</Button>
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            size="small"
+            style={{
+              background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
+              border: "none",
+              borderRadius: 8,
+              fontWeight: 600,
+            }}
+            onClick={() => { setSelectedUser(record); setIsModalVisible(true); }}
+          >
+            ดู
+          </Button>
+          <Button
+            icon={<EditOutlined />}
+            size="small"
+            style={{
+              background: "linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)",
+              borderColor: "rgb(30, 58, 138)",
+              color: "rgb(30, 58, 138)",
+              borderRadius: 8,
+              fontWeight: 600,
+            }}
+            onClick={() => { setSelectedUser(record); setEditModalVisible(true); }}
+          >
+            แก้ไข
+          </Button>
         </Space>
       ),
     },
@@ -262,7 +361,7 @@ const AdminUserDetailsPage: React.FC = () => {
           <div style={{ margin: 32, marginTop: 8 }}>
             <AdminSectionHeader
               icon={<SafetyOutlined style={{ fontSize: 32, color: "white" }} />}
-              title="จัดการข้อมูลผู้ใช้ระบบ"
+              title="จัดการผู้ใช้ระบบ"
               subtitle="ระบบการจัดการผู้ใช้งานแบบครบถ้วน พร้อมการวิเคราะห์และรายงาน"
               actions={
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddAdminOpen(true)} size="large"

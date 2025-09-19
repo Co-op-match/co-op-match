@@ -34,6 +34,12 @@ const CoopDashboard = () => {
   const [topCompanies, setTopCompanies] = useState<PopularCompanyInterface[]>([]);
   const [uplift, setUplift] = useState<UpliftRespInterface | null>(null);
 
+  // จำนวนที่รอยืนยัน
+  const pendingVerifyCount =
+    overviewData.verify_statuses?.find((s: any) => s.status === "รอรับรอง")?.count || 0;
+  const needAttentionVerify = pendingVerifyCount > 0;
+  const needAttentionPosts = (overviewData.pending_posts || 0) > 0;
+
   /* -------- Effects (รวม refresh 60s ไว้ที่เดียว) -------- */
   useEffect(() => {
     const refreshAll = () => {
@@ -201,15 +207,21 @@ const CoopDashboard = () => {
           <div style={{ margin: 32, marginTop: 16 }}>  
             {/* Header */}
             <div className="dashboard-header">
-              <div className="dashboard-title">แดชบอร์ดแอดมิน - CoopMatch</div>
+              <div className="dashboard-title">แดชบอร์ดผู้ดูแลระบบ - CoopMatch</div>
               <div className="dashboard-subtitle">ภาพรวมระบบสหกิจศึกษา</div>
             </div>
 
             {/* Overview */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
               <Col xs={24} sm={12} lg={6}>
-                <Card className="stats-card">
+                <Card
+                  className={`stats-card clickable`}
+                  onClick={() => navigate("/admin/users")}
+                >
                   <Statistic title="ผู้ใช้ทั้งหมด" value={overviewData.total_users || 0} prefix={<TeamOutlined style={{ color: "#3b82f6" }} />} valueStyle={{ color: "#1e3a8a", fontSize: 28, fontWeight: "bold" }} />
+                  <div className="action-card__cta" style={{ color: needAttentionVerify ? "#d4380d" : "#1e16b5ff" }}>
+                    ดูรายละเอียด <span className="action-card__chev">›</span>
+                  </div>
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
@@ -218,17 +230,53 @@ const CoopDashboard = () => {
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
-                <Card className="stats-card clickable" onClick={() => navigate("/admin/verify")}>
-                  <Statistic title="รอยืนยันตัวตน" value={overviewData.verify_statuses?.find((s: any) => s.status === "รอรับรอง")?.count || 0} prefix={<ClockCircleOutlined style={{ color: "#3b82f6" }} />} valueStyle={{ color: "#1e3a8a", fontSize: 28, fontWeight: "bold" }} />
-                  <div className="action-card__cta" style={{ color: "#1e16b5ff" }}>
+                <Card
+                  className={`stats-card clickable ${needAttentionVerify ? "attention" : ""}`}
+                  onClick={() => navigate("/admin/verify")}
+                >
+                  {/* จุดแดงมุมขวาบนเมื่อมีค้าง */}
+                  {needAttentionVerify && <span className="attention-dot" />}
+                  <Statistic
+                    title="รอยืนยันตัวตน"
+                    value={pendingVerifyCount}
+                    prefix={
+                      <ClockCircleOutlined
+                        style={{ color: needAttentionVerify ? "#fa541c" : "#3b82f6" }}
+                      />
+                    }
+                    valueStyle={{
+                      color: needAttentionVerify ? "#d4380d" : "#1e3a8a",
+                      fontSize: 28,
+                      fontWeight: "bold",
+                    }}
+                  />
+                  <div className="action-card__cta" style={{ color: needAttentionVerify ? "#d4380d" : "#1e16b5ff" }}>
                     ดูรายละเอียด <span className="action-card__chev">›</span>
                   </div>
                 </Card>
               </Col>
+
               <Col xs={24} sm={12} lg={6}>
-                <Card className="stats-card clickable" onClick={() => navigate("/admin/manage-posts")}>
-                  <Statistic title="รอยืนยันโพสต์" value={overviewData.pending_posts} prefix={<ClockCircleOutlined style={{ color: "#3b82f6" }} />} valueStyle={{ color: "#1e3a8a", fontSize: 28, fontWeight: "bold" }} />
-                  <div className="action-card__cta" style={{ color: "#1e16b5ff" }}>
+                <Card
+                  className={`stats-card clickable ${needAttentionPosts ? "attention" : ""}`}
+                  onClick={() => navigate("/admin/manage-posts")}
+                >
+                  {needAttentionPosts && <span className="attention-dot" />}
+                  <Statistic
+                    title="รอยืนยันโพสต์"
+                    value={overviewData.pending_posts}
+                    prefix={
+                      <ClockCircleOutlined
+                        style={{ color: needAttentionPosts ? "#fa541c" : "#3b82f6" }}
+                      />
+                    }
+                    valueStyle={{
+                      color: needAttentionPosts ? "#d4380d" : "#1e3a8a",
+                      fontSize: 28,
+                      fontWeight: "bold",
+                    }}
+                  />
+                  <div className="action-card__cta" style={{ color: needAttentionPosts ? "#d4380d" : "#1e16b5ff" }}>
                     ดูรายละเอียด <span className="action-card__chev">›</span>
                   </div>
                 </Card>
@@ -422,6 +470,7 @@ const styles = `
   .chart-card .ant-card-head-title { color: rgb(30, 58, 138); font-weight: 600; font-size: 18px; }
 
   .activity-card { border-radius: 16px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: white; overflow: hidden; animation: slideInUp 1s ease-out; height: 100% }
+  .activity-card .ant-card-head-title { color: rgb(30, 58, 138); font-weight: 600; font-size: 18px; }
 
   .gradient-button { background: linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%); border: none; border-radius: 8px; color: white; font-weight: 500; transition: all 0.3s ease; }
   .gradient-button:hover { background: linear-gradient(135deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 100%); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4); }
@@ -435,4 +484,38 @@ const styles = `
   .action-card__chev { display: inline-block; transition: transform .15s ease; }
   .stats-card.clickable:hover .action-card__chev { transform: translateX(4px); }
   .stats-card.clickable:hover .action-card__cta { opacity: 1; }
+
+  /* ===== Attention styles ===== */
+  @keyframes glowPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(250, 173, 20, 0.35), 0 12px 40px rgba(250, 173, 20, 0.20); }
+    70%  { box-shadow: 0 0 0 8px rgba(250, 173, 20, 0.00), 0 12px 40px rgba(250, 173, 20, 0.30); }
+    100% { box-shadow: 0 0 0 0 rgba(250, 173, 20, 0.00), 0 12px 40px rgba(250, 173, 20, 0.20); }
+  }
+
+  .stats-card.attention {
+    position: relative;
+    animation: glowPulse 1.8s ease-in-out infinite;
+  }
+
+  /* เปลี่ยนคาดสีด้านบนของการ์ดเมื่อ attention */
+  .stats-card.attention::before {
+    background: linear-gradient(135deg, #faad14 0%, #ff4d4f 100%);
+  }
+
+  /* จุดแจ้งเตือนมุมขวาบน */
+  .attention-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    background: #ff4d4f;
+    border-radius: 999px;
+    box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.2);
+  }
+
+  /* ชื่อสถิติเข้มขึ้นเล็กน้อยตอน attention */
+  .stats-card.attention .ant-statistic-title {
+    color: #d48806;
+  }
 `;

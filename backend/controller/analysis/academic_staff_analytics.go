@@ -10,6 +10,7 @@ import (
 	"co-op-match.com/co-op-match/entity"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // helper: ดึง AcademicStaff จาก user_id
@@ -168,7 +169,7 @@ func GetAcademicTrend(c *gin.Context) {
 
 	// --- ทำให้ start/end เป็น 00:00 ของวันนั้นเสมอ ---
 	start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	end   = time.Date(end.Year(),   end.Month(),   end.Day(),   0, 0, 0, 0, end.Location())
+	end = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
 
 	// 3) โครงสร้างผลลัพธ์
 	type TrendPoint struct {
@@ -182,11 +183,11 @@ func GetAcademicTrend(c *gin.Context) {
 	}
 
 	// 4) เงื่อนไขนับสถานะ
-	passCond        := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
-	reviewCond      := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
+	passCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
+	reviewCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
 	interviewedCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'นัดสัมภาษณ์แล้ว' THEN 1 ELSE 0 END`
-	waitingCond     := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
-	failCond        := `
+	waitingCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
+	failCond := `
 		CASE
 		  WHEN REPLACE(TRIM(a.status),' ','') = 'ไม่ผ่าน'
 		    OR INSTR(REPLACE(TRIM(a.status),' ',''),'ไม่ผ่าน') > 0
@@ -207,6 +208,7 @@ func GetAcademicTrend(c *gin.Context) {
 	}
 	var rows []row
 
+	// เลือก Education ล่าสุดของแต่ละ student เพื่ออ้างอิง university ให้ถูกต้อง
 	latestEdu := db.Table("educations").
 		Select("student_id, MAX(created_at) as max_created_at").
 		Group("student_id")
@@ -254,11 +256,50 @@ func GetAcademicTrend(c *gin.Context) {
 			})
 		} else {
 			points = append(points, TrendPoint{
-				Date: day, Total: 0, Pass: 0, Review: 0, Interviewed: 0, Waiting: 0, Fail: 0,
+				Date:        day,
+				Total:       0,
+				Pass:        0,
+				Review:      0,
+				Interviewed: 0,
+				Waiting:     0,
+				Fail:        0,
 			})
 		}
 	}
 
+	// 6) บันทึก/อัปเดตลง HistoryApplicationStatus (upsert แบบ bulk)
+	loc := start.Location()
+	records := make([]entity.HistoryApplicationStatus, 0, len(points))
+	for _, p := range points {
+		dt, _ := time.ParseInLocation("2006-01-02", p.Date, loc)
+		records = append(records, entity.HistoryApplicationStatus{
+			Date:         dt,
+			UniversityID: universityID,
+			Total:        p.Total,
+			Pass:         p.Pass,
+			Review:       p.Review,
+			Interviewed:  p.Interviewed,
+			Waiting:      p.Waiting,
+			Fail:         p.Fail,
+		})
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		return tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "date"},
+				{Name: "university_id"},
+			},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"total", "pass", "review", "interviewed", "waiting", "fail", "updated_at",
+			}),
+		}).Create(&records).Error
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "save history failed: " + err.Error()})
+		return
+	}
+
+	// 7) ส่งผลลัพธ์ trend กลับตามเดิม
 	c.JSON(http.StatusOK, points)
 }
 
@@ -298,10 +339,12 @@ func ListAcademicStudents(c *gin.Context) {
 			s.last_name,
 			s.age,
 			us.email,
-			COALESCE(genders.name_th, '') AS gender,
-			COALESCE(p.name_th, '')      AS program_name,
-			COALESCE(f.name_th, '')      AS faculty_name,
-			COALESCE(u.name_th, '')      AS university_name,
+			s.phone_number,
+			COALESCE(e.grade, '') 			AS grade,
+			COALESCE(genders.name_th, '')	AS gender,
+			COALESCE(p.name_th, '')      	AS program_name,
+			COALESCE(f.name_th, '')      	AS faculty_name,
+			COALESCE(u.name_th, '')      	AS university_name,
 			(
 			SELECT COUNT(*)
 			FROM applications a
@@ -330,6 +373,8 @@ func ListAcademicStudents(c *gin.Context) {
 		FirstName         string
 		LastName          string
 		Age               uint
+		PhoneNumber       string
+		Grade             float64
 		Gender            string
 		Email             string
 		ProgramName       string
@@ -350,6 +395,8 @@ func ListAcademicStudents(c *gin.Context) {
 			FirstName:         r.FirstName,
 			LastName:          r.LastName,
 			Age:               r.Age,
+			PhoneNumber:       r.PhoneNumber,
+			Grade:             r.Grade,
 			Gender:            r.Gender,
 			Email:             r.Email,
 			ProgramName:       r.ProgramName,

@@ -80,6 +80,7 @@ func SetupDatabase() {
 		&entity.ReviewLike{},
 		&entity.LoginLog{},
 		&entity.ReviewAnalysis{},
+		&entity.HistoryApplicationStatus{},
 	)
 	createSeedData(db)
 	insertEducationFromCSV(db, "./config/data/university_2567.csv")

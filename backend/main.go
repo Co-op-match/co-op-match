@@ -278,14 +278,14 @@ func main() {
 		analysisCompanyGroup.GET("/status-application", analysis.CompanyStatusApplication)
 		analysisCompanyGroup.GET("/latest-pending", analysis.CompanyLatestPending)
 	}
-	analysisAcademicGroup := protected.Group("/analysis/academic/user/:userId")
+	analysisAcademicGroup := r.Group("/analysis/academic/user/:userId")
 	{
 		analysisAcademicGroup.GET("/dashboard/overview", analysis.GetAcademicOverview)
 		analysisAcademicGroup.GET("/trend", analysis.GetAcademicTrend)
 		analysisAcademicGroup.GET("/students", analysis.ListAcademicStudents)
 		analysisAcademicGroup.GET("/applications", analysis.ListAcademicApplications)
 	}
-	analysisAdminGroup := protected.Group("/analysis/admin")
+	analysisAdminGroup := r.Group("/analysis/admin")
 	{
 		analysisAdminGroup.GET("/trend", analysis.GetTrendForAdmin)
 	}
