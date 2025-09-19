@@ -15,6 +15,7 @@ export interface IntershipPostInterface {
   qualifications?: string;
   quantity?: number;
   min_gpa?: string;
+  CompanyID?: number;
   Company?: CompanyInterface;
   WorkMode?: {
     work_mode: string;

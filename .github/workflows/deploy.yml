@@ -7,17 +7,34 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # สำคัญสำหรับ WIF
+  id-token: write
 
 env:
   TAG: ${{ github.sha }}
-  # ชื่ออิมเมจบน Docker Hub (ปรับชื่อ repo ได้ตามต้องการ)
   DH_BACKEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/co-op-match-api
   DH_FRONTEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/coop-frontend
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
   deploy-backend:
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +62,6 @@ jobs:
           service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
       - uses: google-github-actions/setup-gcloud@v2
 
-      # ตรวจ WIF คร่าว ๆ
       - name: Sanity check GCP auth (BE)
         run: |
           gcloud auth list
@@ -64,7 +80,7 @@ jobs:
             --memory 512Mi \
             --max-instances 1 \
             --set-env-vars GIN_MODE=release,DB_DIALECT=sqlite,DB_PATH=/app/data/app.db,DATA_DIR=/app/config,UPLOAD_DIR=/app/public/uploads
-      # ล็อกตอน fail (ช่วยไล่ปัญหา)
+
       - name: Tail Cloud Run logs (BE) on failure
         if: failure()
         run: |
@@ -74,7 +90,8 @@ jobs:
 
   deploy-frontend:
     runs-on: ubuntu-latest
-    needs: deploy-backend   # ให้ FE รันหลัง BE เสร็จ
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -119,6 +136,7 @@ jobs:
             --region  ${{ vars.GCP_REGION }} \
             --allow-unauthenticated \
             --port ${{ vars.FRONTEND_PORT }}
+
       - name: Tail Cloud Run logs (FE) on failure
         if: failure()
         run: |
