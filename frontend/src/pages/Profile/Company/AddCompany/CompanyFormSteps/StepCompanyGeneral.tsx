@@ -41,8 +41,6 @@ const StepCompanyGeneral: React.FC<StepCompanyInfoProps> = ({
     if (!v) return Promise.reject('กรุณากรอกชื่อบริษัท');
     if (v.length < 2) return Promise.reject('ชื่อต้องมีอย่างน้อย 2 ตัวอักษร');
     if (v.length > 100) return Promise.reject('ชื่อบริษัทต้องไม่เกิน 100 ตัวอักษร');
-    const re = /^[A-Za-zก-๙0-9&().,/\-\s]+$/u;
-    return re.test(v) ? Promise.resolve() : Promise.reject('รูปแบบชื่อบริษัทไม่ถูกต้อง');
   };
 
   // อัปโหลดโลโก้ (รูปเท่านั้น, ≤ 5MB)
@@ -113,7 +111,7 @@ const StepCompanyGeneral: React.FC<StepCompanyInfoProps> = ({
             label="ชื่อบริษัท"
             normalize={trim}
             validateTrigger="onBlur"
-            rules={[{ required: true, message: 'กรุณากรอกชื่อบริษัท' }, { validator: validateCompanyName }]}
+            rules={[{ validator: validateCompanyName }]}
           >
             <Input placeholder="กรอกชื่อบริษัท" maxLength={100} />
           </Form.Item>
