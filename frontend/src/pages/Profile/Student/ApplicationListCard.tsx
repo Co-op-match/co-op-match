@@ -60,14 +60,13 @@ const ApplicationListCard: React.FC<Props> = ({ userId }) => {
     },
     {
       title: "สถานะ",
-      dataIndex: "Status", // ✅ ใช้ field ชื่อ Status ตาม interface
+      dataIndex: "status", // ✅ ใช้ field ชื่อ Status ตาม interface
       render: (status: string | undefined) => {
-        if (!status) return <Tag>ไม่ทราบสถานะ</Tag>;
-
+        if (!status) return <Tag>รอดำเนินการ</Tag>;
         let color: "gold" | "red" | "green" | "default" = "default";
-        if (status.includes("กำลังพิจารณา")) color = "gold";
-        else if (status.includes("ไม่ผ่าน")) color = "red";
-        else if (status.includes("รับเข้าฝึกงาน")) color = "green";
+        if (status.includes("นัดสัมภาษณ์แล้ว")) color = "gold";
+        else if (status.includes("ไม่ผ่านการภาษณ์")) color = "red";
+        else if (status.includes("ผ่านการภาษณ์")) color = "green";
 
         return <Tag color={color}>{status}</Tag>;
       },
