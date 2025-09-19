@@ -183,7 +183,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
           alignItems: "center",
           gap: "8px"
         }}>
-          <ReadOutlined style={{ color: "#52c41a" }} />
+          <ReadOutlined style={{ color: "#1890ff" }} />
           ระดับการศึกษา
         </h4>
         
@@ -212,7 +212,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
           alignItems: "center",
           gap: "8px"
         }}>
-          <BankOutlined style={{ color: "#52c41a" }} />
+          <BankOutlined style={{ color: "#1890ff" }} />
           สถาบันการศึกษา
         </h4>
         

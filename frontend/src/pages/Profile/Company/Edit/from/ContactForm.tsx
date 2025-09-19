@@ -74,7 +74,7 @@ const ContactForm: React.FC<CompanyContactFormProps> = ({ form, onChange, initia
             <Input
               placeholder="เช่น example@gmail.com"
               size="large"
-              prefix={<MailOutlined style={{ color: "#52c41a" }} />}
+              prefix={<MailOutlined style={{ color: "#1890ff" }} />}
               onChange={onChange}
             />
           </Form.Item>
@@ -93,7 +93,7 @@ const ContactForm: React.FC<CompanyContactFormProps> = ({ form, onChange, initia
             <Input
               placeholder="เช่น @line123"
               size="large"
-              prefix={<LineOutlined style={{ color: "#00B900" }} />}
+              prefix={<LineOutlined style={{ color: "#1890ff" }} />}
               onChange={onChange}
             />
           </Form.Item>
@@ -124,7 +124,7 @@ const ContactForm: React.FC<CompanyContactFormProps> = ({ form, onChange, initia
           alignItems: "center",
           gap: "8px"
         }}>
-          <PhoneOutlined style={{ color: "#faad14" }} />
+          <PhoneOutlined style={{ color: "#1890ff" }} />
           การติดต่อทางโทรศัพท์
         </h4>
 
@@ -141,7 +141,7 @@ const ContactForm: React.FC<CompanyContactFormProps> = ({ form, onChange, initia
               placeholder="เช่น 0930000000"
               maxLength={10}
               size="large"
-              prefix={<PhoneOutlined style={{ color: "#fa8c16" }} />}
+              prefix={<PhoneOutlined style={{ color: "#1890ff" }} />}
               onChange={onChange}
             />
           </Form.Item>

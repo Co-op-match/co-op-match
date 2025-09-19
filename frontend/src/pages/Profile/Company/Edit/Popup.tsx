@@ -35,13 +35,13 @@ const SECTION_CONFIG = {
   education: {
     title: "แก้ไขข้อมูลการศึกษา",
     icon: <BookOutlined />,
-    color: "#52c41a",
+    color: "#1890ff",
     description: "ข้อมูลมหาวิทยาลัยและการศึกษา",
   },
   address: {
     title: "แก้ไขที่อยู่",
     icon: <HomeOutlined />,
-    color: "#faad14",
+    color: "#1890ff",
     description: "ที่อยู่ปัจจุบันและข้อมูลที่ตั้ง",
   },
 };

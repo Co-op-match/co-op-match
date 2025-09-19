@@ -215,7 +215,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
           alignItems: "center",
           gap: "8px"
         }}>
-          <EnvironmentOutlined style={{ color: "#faad14" }} />
+          <EnvironmentOutlined style={{ color: "#1890ff" }} />
           ตำแหน่งที่ตั้ง
         </h4>
 
