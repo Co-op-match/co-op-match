@@ -65,8 +65,8 @@ const ApplicationListCard: React.FC<Props> = ({ userId }) => {
         if (!status) return <Tag>รอดำเนินการ</Tag>;
         let color: "gold" | "red" | "green" | "default" = "default";
         if (status.includes("นัดสัมภาษณ์แล้ว")) color = "gold";
-        else if (status.includes("ไม่ผ่านการภาษณ์")) color = "red";
-        else if (status.includes("ผ่านการภาษณ์")) color = "green";
+        else if (status.includes("ไม่ผ่าน")) color = "red";
+        else if (status.includes("ผ่าน")) color = "green";
 
         return <Tag color={color}>{status}</Tag>;
       },
