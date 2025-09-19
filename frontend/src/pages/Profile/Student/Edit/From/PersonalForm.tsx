@@ -99,7 +99,7 @@ const PersonalForm: React.FC<PersonalFormProps> = ({ form, onChange }) => {
             loading={loading}
             size="large"
             options={genders.map(g => ({
-              label: g.name,
+              label: g.name_th,
               value: g.ID
             }))}
             onChange={onChange}

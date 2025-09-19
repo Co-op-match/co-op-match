@@ -363,7 +363,7 @@ const AcademicStaffProfile: React.FC = () => {
                       <Descriptions.Item label="ตำแหน่ง">
                         {academicstaff?.academic_position || "-"}
                       </Descriptions.Item>
-                      <Descriptions.Item label="เพศ">{academicstaff?.Gender?.name || "-"}</Descriptions.Item>
+                      <Descriptions.Item label="เพศ">{academicstaff?.Gender?.name_th || "-"}</Descriptions.Item>
                       <Descriptions.Item label="วันเกิด">
                         {academicstaff?.birthday ? dayjs(academicstaff.birthday).format("DD/MM/YYYY") : "-"}
                       </Descriptions.Item>

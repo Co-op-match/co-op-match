@@ -110,7 +110,7 @@ const ProfileCard: React.FC<{
           </div>
           <div style={{ padding: "0px 24px 0px 24px" }}>
             <Descriptions column={{ xs: 1, sm: 2, md: 3, lg: 4 }}>
-              <Descriptions.Item label="เพศ">{student?.Gender?.name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="เพศ">{student?.Gender?.name_th || "-"}</Descriptions.Item>
               <Descriptions.Item label="วันเกิด">{student?.birthday ? dayjs(student.birthday).format("DD/MM/YYYY") : "-"}</Descriptions.Item>
               <Descriptions.Item label="เบอร์">{student?.phone_number || "-"}</Descriptions.Item>
               <Descriptions.Item label="อายุ">{student?.age || "-"}</Descriptions.Item>

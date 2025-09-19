@@ -292,7 +292,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
             <Radio.Group>
               {genders.map((g) => (
                 <Radio key={g.ID} value={g.ID}>
-                  {g.name}
+                  {g.name_th}
                 </Radio>
               ))}
             </Radio.Group>
