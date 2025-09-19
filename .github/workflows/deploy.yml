@@ -30,11 +30,15 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+      - name: Debug filter outputs
+        run: |
+          echo "backend=${{ steps.filter.outputs.backend }}"
+          echo "frontend=${{ steps.filter.outputs.frontend }}"
 
   deploy-backend:
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,15 +75,18 @@ jobs:
       # ----- Deploy Backend -----
       - name: Deploy Backend to Cloud Run
         run: |
+          gcloud config set project ${{ vars.GCP_PROJECT_ID }}
           gcloud run deploy ${{ vars.BACKEND_SERVICE }} \
             --image ${{ env.DH_BACKEND_IMAGE }}:${{ env.TAG }} \
-            --project ${{ vars.GCP_PROJECT_ID }} \
             --region  ${{ vars.GCP_REGION }} \
+            --platform=managed \
             --allow-unauthenticated \
             --port ${{ vars.BACKEND_PORT }} \
             --memory 512Mi \
-            --max-instances 1 \
-            --set-env-vars GIN_MODE=release,DB_DIALECT=sqlite,DB_PATH=/app/data/app.db,DATA_DIR=/app/config,UPLOAD_DIR=/app/public/uploads
+            --cpu 1 \
+            --concurrency 80 \
+            --set-env-vars GIN_MODE=release,DB_DIALECT=sqlite,DB_PATH=/app/data/app.db,DATA_DIR=/app/config,UPLOAD_DIR=/app/public/uploads,TZ=Asia/Bangkok \
+            --quiet
 
       - name: Tail Cloud Run logs (BE) on failure
         if: failure()
@@ -91,7 +98,7 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -130,12 +137,17 @@ jobs:
       # ----- Deploy Frontend -----
       - name: Deploy Frontend to Cloud Run
         run: |
+          gcloud config set project ${{ vars.GCP_PROJECT_ID }}
           gcloud run deploy ${{ vars.FRONTEND_SERVICE }} \
             --image ${{ env.DH_FRONTEND_IMAGE }}:${{ env.TAG }} \
-            --project ${{ vars.GCP_PROJECT_ID }} \
             --region  ${{ vars.GCP_REGION }} \
+            --platform=managed \
             --allow-unauthenticated \
-            --port ${{ vars.FRONTEND_PORT }}
+            --port ${{ vars.FRONTEND_PORT }} \
+            --memory 256Mi \
+            --cpu 1 \
+            --concurrency 200 \
+            --quiet
 
       - name: Tail Cloud Run logs (FE) on failure
         if: failure()

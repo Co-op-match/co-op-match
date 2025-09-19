@@ -459,8 +459,6 @@ func SendVerifyStatusEmail(c *gin.Context) {
 	}
 
 	db := config.DB()
-
-	// ใช้ worker ส่งเมลแบบ async (ครั้งเดียวพอ)
 	workerOnce.Do(initEmailWorker)
 
 	// 1) Verify ล่าสุด
@@ -474,15 +472,16 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		return
 	}
 	status := latestVerify.StatusVerify.StatusVerify
+	reason := strings.TrimSpace(latestVerify.Reason) // <<<<<< ดึง Reason
 
-	// 2) หา Company ก่อน
+	// 2) หา Company
 	var company entity.Company
 	errCompany := db.
 		Preload("User").
 		Where("user_id = ?", userID).
 		First(&company).Error
 
-	// 3) ถ้าไม่เจอ Company -> หา AcademicStaff (พร้อม preload ที่ต้องใช้)
+	// 3) ถ้าไม่เจอ Company -> หา AcademicStaff
 	var staff entity.AcademicStaff
 	var errStaff error
 	if errCompany != nil {
@@ -494,14 +493,13 @@ func SendVerifyStatusEmail(c *gin.Context) {
 			Where("user_id = ?", userID).
 			First(&staff).Error
 	}
-
 	if errCompany != nil && errStaff != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบบริษัทหรืออาจารย์ของผู้ใช้นี้"})
 		return
 	}
 
 	var (
-		role           string // "company" | "academic_staff"
+		role           string
 		recipientEmail string
 		recipientName  string
 		entityName     string
@@ -539,6 +537,7 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		tmplFile = "utils/email_template_Verify_Academic.html"
 		userIDForNoti = staff.User.ID
 	}
+
 	switch status {
 	case "รับรอง":
 		if role == "company" {
@@ -562,7 +561,7 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		subject = "แจ้งสถานะการยืนยันบัญชีจากระบบ Co-op Match"
 	}
 
-	// เตรียมข้อมูล template
+	// เตรียมข้อมูลให้ template (ใส่ Reason ด้วย)
 	logoBase64 := "data:image/png;base64," + getLogoBase64()
 	data := map[string]interface{}{
 		"LogoBase64":     logoBase64,
@@ -573,14 +572,14 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		"PrivacyURL":     "https://coopmatch.example/privacy",
 		"TermsURL":       "https://coopmatch.example/terms",
 		"UnsubscribeURL": "https://coopmatch.example/unsubscribe",
+		"Reason":         reason, // <<<<<< ส่งให้ template
 
-		// ฝั่งอาจารย์ (template บริษัทจะไม่อ้างถึง)
+		// เฉพาะฝั่งอาจารย์
 		"University": staff.University.NameTH,
 		"Faculty":    staff.Faculty.NameTH,
-		"Department": staff.Program.NameTH, // map Program → Department
+		"Department": staff.Program.NameTH,
 	}
 
-	// โหลด + render template
 	tmpl, err := template.ParseFiles(tmplFile)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถโหลด template: " + err.Error()})
@@ -592,26 +591,27 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		return
 	}
 
-	// ตรวจอีเมลผู้รับ
 	if !validEmail(recipientEmail) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "อีเมลผู้รับไม่ถูกต้อง"})
 		return
 	}
 
-	// ✅ ส่งแบบเร็ว: ดันเข้าคิว แล้วตอบกลับทันที
 	enqueueEmail(recipientEmail, subject, body.String())
 
-	// ส่ง Notification แบบ async เล็กน้อย
+	// Notification: ถ้า "ปฏิเสธ" จะพ่วงเหตุผลไปด้วย
 	go func() {
 		title := map[string]string{
 			"company":        "สถานะการยืนยันบริษัท: " + status,
 			"academic_staff": "สถานะการยืนยันบัญชีอาจารย์: " + status,
 		}[role]
+
 		msg := "สถานะล่าสุดของคุณคือ \"" + status + "\" (" + entityName + ")"
+		if status == "ปฏิเสธ" && reason != "" {
+			msg += " | เหตุผล: " + reason
+		}
 		_ = CreateNotificationForUser(db, userIDForNoti, "verify", title, msg, "การยืนยันบัญชี")
 	}()
 
-	// ตอบไว (ไม่บล็อกรอ SMTP)
 	c.JSON(http.StatusAccepted, gin.H{
 		"message":  "คิวส่งอีเมลถูกสร้างแล้ว",
 		"email":    recipientEmail,
@@ -619,8 +619,10 @@ func SendVerifyStatusEmail(c *gin.Context) {
 		"role":     role,
 		"receiver": recipientName,
 		"entity":   entityName,
+		"reason":   reason, // <<<<<< ส่งกลับด้วย เผื่อ frontend แสดง Toast
 	})
 }
+
 
 
 
