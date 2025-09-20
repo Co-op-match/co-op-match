@@ -455,6 +455,7 @@ func GetChatRoomsByUserID(c *gin.Context) {
 	}
 
 	var rooms []entity.ChatRoom
+// เพิ่ม preload ของ AcademicStaff (ไม่มีความสัมพันธ์ย่อยแล้ว)
 	if err := config.DB().
 		Preload("User1").Preload("User1.Company").Preload("User1.Student").Preload("User1.ProfileImage").Preload("User1.AcademicStaff").
 		Preload("User2").Preload("User2.Company").Preload("User2.Student").Preload("User2.ProfileImage").Preload("User2.AcademicStaff").
@@ -463,6 +464,7 @@ func GetChatRoomsByUserID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot fetch chat rooms"})
 		return
 	}
+
 
 	type RoomDTO struct {
 		ID              uint       `json:"id"`
@@ -487,19 +489,29 @@ func GetChatRoomsByUserID(c *gin.Context) {
 		// ---------- ชื่อ ----------
 		name := strings.TrimSpace(other.Email)
 
-		// บริษัทก่อน
+		// 1) บริษัทมาก่อน
 		if len(other.Company) > 0 && strings.TrimSpace(other.Company[0].CompanyName) != "" {
 			name = strings.TrimSpace(other.Company[0].CompanyName)
 
-		// ➜ อาจารย์ (AcademicStaff) มาก่อนนักศึกษา
+		// 2) อาจารย์: ใส่คำนำหน้าตำแหน่งหน้าชื่อ
 		} else if len(other.AcademicStaff) > 0 {
-			fn := strings.TrimSpace(other.AcademicStaff[0].FirstName)
-			ln := strings.TrimSpace(other.AcademicStaff[0].LastName)
-			if full := strings.TrimSpace(fn + " " + ln); full != "" {
+			st  := other.AcademicStaff[0]
+			pos := strings.TrimSpace(st.AcademicPosition) // <-- string ตรงจาก model
+			fn  := strings.TrimSpace(st.FirstName)
+			ln  := strings.TrimSpace(st.LastName)
+
+			full := strings.TrimSpace(strings.Join(
+				[]string{
+					pos,                                   // อาจเป็น "" ก็ได้
+					strings.TrimSpace(fn + " " + ln),
+				},
+				" ",
+			))
+			if full != "" {
 				name = full
 			}
 
-		// นักศึกษา
+		// 3) นักศึกษา
 		} else if len(other.Student) > 0 {
 			fn := strings.TrimSpace(other.Student[0].FirstName)
 			ln := strings.TrimSpace(other.Student[0].LastName)
@@ -508,10 +520,11 @@ func GetChatRoomsByUserID(c *gin.Context) {
 			}
 		}
 
-		// สำรอง
+		// สำรองสุดท้าย
 		if name == "" {
 			name = fmt.Sprintf("User #%d", other.ID)
 		}
+
 
 		// ---------- last message / unread ----------
 		var last entity.ChatMessage
