@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Layout, Avatar, Card, Descriptions, Result } from "antd";
-import { BookOutlined, EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
-import { useParams, useSearchParams } from "react-router-dom";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Layout, Avatar, Card, Descriptions, Result, Button, Tooltip, message } from "antd";
+import { BookOutlined, EnvironmentOutlined, UserOutlined, MessageOutlined, WechatOutlined } from "@ant-design/icons";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
 import CoopMatchHeader from "../../Component/Coop_MatchHeader";
@@ -12,7 +12,10 @@ import type { StudentInterface } from "../../../interfaces/Student";
 import { fileURL } from "@/config/env";
 import "./StudentProfile.css";
 
-// ✅ NEW: import ApplicationListCard (ต้องเป็นเวอร์ชันที่รองรับ prop userId)
+// ✅ NEW: imports สำหรับแชท
+import { CreateChatRoom, createChatSession } from "../../../services/https";
+import { saveChatToken } from "../../../utils/chatToken";
+
 import ApplicationListCard from "./ApplicationListCard";
 import CompanyHeader from "@/pages/Component/CompanyHeader";
 import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";
@@ -37,7 +40,7 @@ const RoleHeader: React.FC = () => {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  switch (roleId) {    
+  switch (roleId) {
     case 2:
       return <CompanyHeader />;
     case 3:
@@ -48,6 +51,7 @@ const RoleHeader: React.FC = () => {
       return <CoopMatchHeaderDefault />;
   }
 };
+
 const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
   const edu = student?.Education?.[0];
 
@@ -106,7 +110,7 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
           </div>
           <div style={{ padding: "0px 24px 0px 24px" }}>
             <Descriptions column={{ xs: 1, sm: 2, md: 3 }}>
-             <Descriptions.Item label="GPX">{edu?.grade}</Descriptions.Item>
+              <Descriptions.Item label="GPX">{edu?.grade}</Descriptions.Item>
               <Descriptions.Item label="อีเมล">{student?.User?.Email || "-"}</Descriptions.Item>
               <Descriptions.Item label="คณะ">{edu?.Program?.name_th || "-"}</Descriptions.Item>
               <Descriptions.Item label="สาขา">{edu?.Faculty?.name_th || "-"}</Descriptions.Item>
@@ -118,7 +122,7 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
           {/* Address */}
           <div className="section-header">
             <h4>
-              <EnvironmentOutlined style={{ color: "#0d47a1" }} /> พื้นที่อาศัย 
+              <EnvironmentOutlined style={{ color: "#0d47a1" }} /> พื้นที่อาศัย
             </h4>
           </div>
           <div style={{ padding: "0px 24px 0px 24px" }}>
@@ -142,18 +146,29 @@ const ProfileCard: React.FC<{ student?: StudentInterface }> = ({ student }) => {
 const StudentProfilePublic: React.FC = () => {
   const { userId: userIdParam } = useParams<{ userId?: string }>();
   const [query] = useSearchParams();
+  const navigate = useNavigate();
 
   const [student, setStudent] = useState<StudentInterface | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // รับ userId จาก path param หรือ query (?userId=)
-  const resolvedUserId = (() => {
+  // ✅ NEW: state สำหรับปุ่มแชท
+  const [creatingSession, setCreatingSession] = useState(false);
+  const [chatHovered, setChatHovered] = useState(false);
+
+  // userId ของ “เจ้าของโปรไฟล์นักศึกษา” (ปลายทางแชท)
+  const resolvedUserId = useMemo(() => {
     if (userIdParam && !isNaN(Number(userIdParam))) return Number(userIdParam);
     const q = query.get("userId");
     if (q && !isNaN(Number(q))) return Number(q);
     return undefined;
-  })();
+  }, [userIdParam, query]);
+
+  // ผู้ใช้ปัจจุบัน
+  const currentUserId = useMemo(() => {
+    const raw = localStorage.getItem("id");
+    return raw ? Number(raw) : null;
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -180,10 +195,105 @@ const StudentProfilePublic: React.FC = () => {
     fetchData();
   }, [resolvedUserId]);
 
+  // ===== helper/flow สำหรับแชท =====
+  const extractRoomId = (raw: any): number | null => {
+    if (!raw) return null;
+    return (
+      raw.room_id ??
+      raw.id ??
+      raw.room?.id ??
+      raw.data?.room_id ??
+      raw.data?.id ??
+      raw.data?.room?.id ??
+      null
+    );
+  };
+
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  async function mintSessionWithRetry(roomId: number, maxTries = 5, delayMs = 150) {
+    let lastErr: any = null;
+    for (let i = 0; i < maxTries; i++) {
+      try {
+        return await createChatSession(roomId);
+      } catch (e: any) {
+        lastErr = e;
+        const code = e?.response?.status;
+        if ([400, 404, 409].includes(Number(code))) {
+          await wait(delayMs);
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastErr;
+  }
+
+  const handleChatClick = useCallback(async () => {
+    if (creatingSession) return;
+    if (!currentUserId || !resolvedUserId) {
+      message.info("กรุณาเข้าสู่ระบบก่อนเริ่มแชท");
+      return;
+    }
+    if (currentUserId === resolvedUserId) {
+      message.info("ไม่สามารถแชทกับบัญชีของตนเองได้");
+      return;
+    }
+
+    setCreatingSession(true);
+    try {
+      // 1) สร้าง/ดึงห้องระหว่าง currentUserId ↔ resolvedUserId
+      let roomId: number | null = null;
+      try {
+        const res = await CreateChatRoom(currentUserId, resolvedUserId);
+        roomId = extractRoomId(res?.data) ?? extractRoomId(res) ?? null;
+      } catch (err: any) {
+        const data = err?.response?.data ?? {};
+        roomId = extractRoomId(data);
+        if (!roomId) {
+          console.error("CreateChatRoom error:", err);
+          message.error("ไม่สามารถเริ่มแชทได้ (สร้างห้องไม่สำเร็จ)");
+          setCreatingSession(false);
+          return;
+        }
+      }
+      if (!roomId) {
+        message.error("ไม่พบห้องแชท");
+        setCreatingSession(false);
+        return;
+      }
+
+      // 2) mint token (กัน timing issue)
+      const { token } = await mintSessionWithRetry(roomId, 6, 180);
+
+      // 3) เก็บ token และไปหน้าแชท
+      saveChatToken(token);
+      navigate(`/chat/session/${token}`, { replace: true });
+    } catch (e) {
+      console.error("เริ่มแชทไม่สำเร็จ:", e);
+      message.error("เริ่มแชทไม่สำเร็จ");
+    } finally {
+      setCreatingSession(false);
+    }
+  }, [creatingSession, currentUserId, resolvedUserId, navigate]);
+
+  const disableChat =
+    loading ||
+    creatingSession ||
+    !resolvedUserId ||
+    !currentUserId ||
+    currentUserId === resolvedUserId ||
+    notFound;
+
   return (
     <Layout>
-      {loading && (
-        <CoopMatchLoader overlay animation="puzzle-fold" progressMode="indeterminate" text="กำลังโหลดโปรไฟล์..." />
+      {(loading || creatingSession) && (
+        <CoopMatchLoader
+          overlay
+          animation={creatingSession ? "bounce-assemble" : "puzzle-fold"}
+          progressMode="indeterminate"
+          text={creatingSession ? "กำลังเริ่มแชทกับนักศึกษา..." : "กำลังโหลดโปรไฟล์..."}
+        />
       )}
 
       <RoleHeader />
@@ -204,7 +314,7 @@ const StudentProfilePublic: React.FC = () => {
             <>
               <ProfileCard student={student} />
 
-              {/* ✅ NEW: แสดงรายการที่ผู้ใช้คนนี้สมัคร (ใช้ userId จาก URL) */}
+              {/* รายการสมัครของ user นี้ */}
               {resolvedUserId && (
                 <div style={{ marginTop: 16 }}>
                   <ApplicationListCard userId={resolvedUserId} />
@@ -213,6 +323,35 @@ const StudentProfilePublic: React.FC = () => {
             </>
           )}
         </Content>
+
+        {/* ✅ NEW: Floating Chat Button */}
+        {!notFound && resolvedUserId && (
+          <div
+            className="chat-floating-wrapper"
+            style={{
+              position: "fixed",
+              right: 24,
+              bottom: 24,
+              zIndex: 1100,
+            }}
+          >
+            <Tooltip title={disableChat ? undefined : "แชทกับนักศึกษา"} placement="left">
+              <Button
+                type="primary"
+                shape="circle"
+                size="large"
+                aria-label="แชทกับนักศึกษา"
+                icon={chatHovered ? <WechatOutlined /> : <MessageOutlined />}
+                onClick={handleChatClick}
+                onMouseEnter={() => setChatHovered(true)}
+                onMouseLeave={() => setChatHovered(false)}
+                className={`chat-floating-button ${chatHovered ? "hovered" : ""}`}
+                disabled={disableChat}
+                loading={creatingSession}
+              />
+            </Tooltip>
+          </div>
+        )}
       </Layout>
     </Layout>
   );
