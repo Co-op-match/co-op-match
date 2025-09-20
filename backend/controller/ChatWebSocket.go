@@ -456,9 +456,8 @@ func GetChatRoomsByUserID(c *gin.Context) {
 
 	var rooms []entity.ChatRoom
 	if err := config.DB().
-		// ✅ preload รูปด้วย
-		Preload("User1").Preload("User1.Company").Preload("User1.Student").Preload("User1.ProfileImage").
-		Preload("User2").Preload("User2.Company").Preload("User2.Student").Preload("User2.ProfileImage").
+		Preload("User1").Preload("User1.Company").Preload("User1.Student").Preload("User1.ProfileImage").Preload("User1.AcademicStaff").
+		Preload("User2").Preload("User2.Company").Preload("User2.Student").Preload("User2.ProfileImage").Preload("User2.AcademicStaff").
 		Where("user1_id = ? OR user2_id = ?", userID, userID).
 		Find(&rooms).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot fetch chat rooms"})
@@ -486,17 +485,30 @@ func GetChatRoomsByUserID(c *gin.Context) {
 		}
 
 		// ---------- ชื่อ ----------
-		name := other.Email
-		if len(other.Company) > 0 && other.Company[0].CompanyName != "" {
-			name = other.Company[0].CompanyName
+		name := strings.TrimSpace(other.Email)
+
+		// บริษัทก่อน
+		if len(other.Company) > 0 && strings.TrimSpace(other.Company[0].CompanyName) != "" {
+			name = strings.TrimSpace(other.Company[0].CompanyName)
+
+		// ➜ อาจารย์ (AcademicStaff) มาก่อนนักศึกษา
+		} else if len(other.AcademicStaff) > 0 {
+			fn := strings.TrimSpace(other.AcademicStaff[0].FirstName)
+			ln := strings.TrimSpace(other.AcademicStaff[0].LastName)
+			if full := strings.TrimSpace(fn + " " + ln); full != "" {
+				name = full
+			}
+
+		// นักศึกษา
 		} else if len(other.Student) > 0 {
 			fn := strings.TrimSpace(other.Student[0].FirstName)
 			ln := strings.TrimSpace(other.Student[0].LastName)
-			full := strings.TrimSpace(fn + " " + ln)
-			if full != "" {
+			if full := strings.TrimSpace(fn + " " + ln); full != "" {
 				name = full
 			}
 		}
+
+		// สำรอง
 		if name == "" {
 			name = fmt.Sprintf("User #%d", other.ID)
 		}
