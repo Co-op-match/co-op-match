@@ -20,6 +20,7 @@ import CoopMatchHeader from '@/pages/Component/Coop_MatchHeader';
 import CompanyHeader from '@/pages/Component/CompanyHeader';
 import CoopMatchHeaderDefault from '@/pages/Component/CoopMatchHeaderDefault';
 import { fileURL } from '@/config/env';
+import AcademicStaffHeader from '@/pages/Component/AcademicStaffHeader';
 // ถ้ามี AcademicStaffHeader แยกต่างหาก ให้ import มาด้วย เช่น:
 // import AcademicStaffHeader from './Component/AcademicStaffHeader';
 
@@ -70,6 +71,8 @@ const RoleHeader: React.FC = () => {
   }, []);
 
   switch (roleId) {
+    case 4:
+      return <AcademicStaffHeader />;
     case 3:
       return <CoopMatchHeader />;
     case 2:
