@@ -108,6 +108,7 @@ func main() {
 	r.GET("/all-login-logs", controller.GetAllLoginLogs)
 	r.PUT("/update-user/:id", controller.UpdateUser)
 	r.PUT("/update-status-posts/:id", controller.UpdateStatusPost)
+	r.GET("/admin/db/export", controller.AdminExportSQLite)
 
 	// ---------- Protected Routes (ใช้ AuthRequired: รับได้ทั้ง Bearer และ Cookie) ----------
 	protected := r.Group("/")

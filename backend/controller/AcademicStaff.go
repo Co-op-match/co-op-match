@@ -607,9 +607,9 @@ func GetAdviseeCompanySummary(c *gin.Context) {
 		return
 	}
 
-	// ดึงนักศึกษาตาม ProgramID ของ staff (เหมือนฟังก์ชันบน)
+	// 1) หาอาจารย์ แล้วใช้ UniversityID เป็นตัวคัด
 	var staff entity.AcademicStaff
-	if err := db.Preload("University").Where("user_id = ?", userID).First(&staff).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).First(&staff).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusOK, gin.H{"companies": []CompanySummaryItemDTO{}})
 			return
@@ -617,14 +617,16 @@ func GetAdviseeCompanySummary(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	if staff.ProgramID == 0 {
+	if staff.UniversityID == 0 {
 		c.JSON(http.StatusOK, gin.H{"companies": []CompanySummaryItemDTO{}})
 		return
 	}
 
-	var eduRows []entity.Education
-	if err := db.Select("DISTINCT student_id").
-		Where("university_id = ?", staff.ProgramID).
+	// 2) ดึง student_id จาก Education ที่อยู่มหาวิทยาลัยเดียวกัน
+	var eduRows []struct{ StudentID uint }
+	if err := db.Model(&entity.Education{}).
+		Select("DISTINCT student_id").
+		Where("university_id = ?", staff.UniversityID).
 		Find(&eduRows).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -634,92 +636,97 @@ func GetAdviseeCompanySummary(c *gin.Context) {
 		return
 	}
 	ids := make([]uint, 0, len(eduRows))
-	seen := map[uint]bool{}
+	seen := make(map[uint]struct{}, len(eduRows))
 	for _, e := range eduRows {
-		if !seen[e.StudentID] {
-			seen[e.StudentID] = true
+		if _, ok := seen[e.StudentID]; !ok {
+			seen[e.StudentID] = struct{}{}
 			ids = append(ids, e.StudentID)
 		}
 	}
 
-	// ดึงใบสมัครล่าสุดของแต่ละ student เพื่อหา "current internship"
+	// 3) หาใบสมัครล่าสุดของแต่ละ student
 	type pair struct {
 		Student entity.Student
 		App     entity.Application
 	}
 	rows := make([]pair, 0, len(ids))
 
+	// (ออปชัน) ถ้าต้องการเฉพาะสถานะที่ถือว่าได้ฝึกจริง ให้เปิดบรรทัดนี้
+	// allowedStatuses := []string{"ผ่านการคัดเลือก", "กำลังฝึกงาน"}
+
 	for _, sid := range ids {
 		var s entity.Student
-		if err := db.Preload("User").Preload("User.ProfileImage").First(&s, sid).Error; err != nil {
+		if err := db.
+			Preload("User").
+			Preload("User.ProfileImage").
+			First(&s, sid).Error; err != nil {
 			continue
 		}
 
 		var app entity.Application
-		_ = db.
+		q := db.
 			Preload("IntershipPost").
 			Preload("IntershipPost.Company").
-			Where("student_id = ?", s.ID).
-			Order("updated_at DESC, id DESC").
-			First(&app).Error
-
-		// ถ้าไม่มี application เลย ข้าม (ไม่ได้ไปฝึก)
+			Where("student_id = ?", s.ID)
+			// .Where("status IN ?", allowedStatuses)
+		if err := q.Order("updated_at DESC, id DESC").First(&app).Error; err != nil {
+			continue
+		}
 		if app.ID == 0 || app.IntershipPost.ID == 0 || app.IntershipPost.Company.ID == 0 {
 			continue
 		}
-
 		rows = append(rows, pair{Student: s, App: app})
 	}
 
-	// Group by CompanyID
-	type key struct {
-		CompanyID uint
-	}
+	// 4) Group ตาม CompanyID
+	type key struct{ CompanyID uint }
 	group := map[key]*CompanySummaryItemDTO{}
 
 	for _, r := range rows {
 		comp := r.App.IntershipPost.Company
 		k := key{CompanyID: comp.ID}
 		if _, ok := group[k]; !ok {
-			item := &CompanySummaryItemDTO{
+			group[k] = &CompanySummaryItemDTO{
 				CompanyID:   comp.ID,
-				CompanyName: comp.CompanyName, // TODO: ปรับชื่อฟิลด์ถ้าไม่ตรง
-				LogoURL:     comp.Logo,        // TODO: ปรับชื่อฟิลด์ถ้าไม่ตรง
+				CompanyName: comp.CompanyName,
+				LogoURL:     comp.Logo, // ปรับตามฟิลด์จริงของคุณ
 				Students:    []StudentForAdvisorDTO{},
 			}
-			group[k] = item
 		}
 
-		// การศึกษาล่าสุด (สำหรับแสดงป้ายตำแหน่งใน expandedRow)
+		// การศึกษาล่าสุด (เอาโปรแกรมไว้แสดง)
 		var latestEdu entity.Education
 		_ = db.Preload("Program").
 			Where("student_id = ?", r.Student.ID).
 			Order("year DESC, id DESC").
 			First(&latestEdu).Error
 
-		studentDTO := StudentForAdvisorDTO{
+		avatar := ""
+		if r.Student.User.ID != 0 && len(r.Student.User.ProfileImage) > 0 {
+			avatar = r.Student.User.ProfileImage[0].ImageURL
+		}
+
+		stu := StudentForAdvisorDTO{
 			ID:        r.Student.ID,
 			FirstName: r.Student.FirstName,
 			LastName:  r.Student.LastName,
-			AvatarURL: r.Student.User.ProfileImage[0].ImageURL, // TODO: ใส่รูปจาก s.User.ProfileImage ถ้ามี
+			AvatarURL: avatar,
 		}
 		if latestEdu.ID != 0 && latestEdu.Program.ID != 0 {
-			// TODO: ปรับชื่อฟิลด์
-			// studentDTO.ProgramName = latestEdu.Program.Name
-			studentDTO.ProgramName = latestEdu.Program.NameTH
+			stu.ProgramName = latestEdu.Program.NameTH // หรือ Name ตามสคีมของคุณ
 		}
 
-		studentDTO.CurrentInt = &CurrentInternshipDTO{
+		stu.CurrentInt = &CurrentInternshipDTO{
 			CompanyName:  comp.CompanyName,
 			Position:     r.App.IntershipPost.PostName,
 			ProvinceName: r.App.IntershipPost.Province,
 			Status:       r.App.Status,
 		}
 
-		group[k].Students = append(group[k].Students, studentDTO)
+		group[k].Students = append(group[k].Students, stu)
 	}
 
-	// สร้าง slice และเติม StudentCount
+	// 5) สร้าง slice + นับ
 	out := make([]CompanySummaryItemDTO, 0, len(group))
 	for _, v := range group {
 		v.StudentCount = len(v.Students)
