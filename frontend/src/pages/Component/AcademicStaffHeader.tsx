@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Avatar, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, HomeOutlined, MenuOutlined, LogoutOutlined } from "@ant-design/icons";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Avatar, Badge, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
+import { UserOutlined, HomeOutlined, MenuOutlined, LogoutOutlined, MessageOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Logo from "../../assets/Co-op match-Photoroom.png";
-import { GetUserByIdhaveStatusData } from "../../services/https";
+import { GetUserByIdhaveStatusData, GetChatRoomsByUserId, createChatSession, createWsByToken } from "../../services/https";
 import type { UserInterface } from "../../interfaces/User";
 import { UserContext } from "../../components/UserContext";
 import { fileURL } from "@/config/env";
@@ -18,9 +18,7 @@ interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
 }
 
-const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
-  minimalMenu = false,
-}) => {
+const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   /* ============================ state / ctx ============================ */
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
@@ -31,6 +29,11 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   const [user, setUser] = useState<UserInterface | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<string | null>(null); // ยังไม่ได้ส่งคำขอ / รอรับรอง / รับรอง / ปฏิเสธ
+
+  // === แชท / unread ===
+  const [totalUnread, setTotalUnread] = useState<number>(0);
+  const wsRef = useRef<WebSocket | null>(null);
+  const unreadMapRef = useRef<Map<number, number>>(new Map());
 
   const userID = Number(localStorage.getItem("id"));
   const isMobile = !screens.md;
@@ -53,11 +56,77 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     }
   };
 
+  const updateTotalUnread = () => {
+    const sum = Array.from(unreadMapRef.current.values()).reduce((a, b) => a + (b || 0), 0);
+    setTotalUnread(sum);
+  };
+
+  const initChatLobby = async () => {
+    if (!userID || Number.isNaN(userID)) return;
+
+    // 1) โหลดห้องเพื่อคำนวณ unread เริ่มต้น
+    try {
+      const rooms: any[] = await GetChatRoomsByUserId(userID);
+      unreadMapRef.current.clear();
+      if (Array.isArray(rooms)) {
+        rooms.forEach((r) => unreadMapRef.current.set(Number(r?.id), Number(r?.unread_count) || 0));
+      }
+      updateTotalUnread();
+    } catch {
+      /* ignore */
+    }
+
+    // 2) เปิด WebSocket ล็อบบี้ (rid=0)
+    try {
+      const { token } = await createChatSession(0);
+      const ws = createWsByToken(token);
+      wsRef.current = ws;
+
+      ws.onmessage = async (event) => {
+        let raw = "";
+        if (typeof event.data === "string") raw = event.data;
+        else if (event.data instanceof ArrayBuffer) raw = new TextDecoder().decode(event.data);
+        else if (event.data instanceof Blob) raw = await event.data.text();
+        else return;
+
+        for (const line of raw.split("\n")) {
+          const s = line.trim();
+          if (!s) continue;
+          let data: any;
+          try { data = JSON.parse(s); } catch { continue; }
+
+          if (data.event === "room_meta" || data.event === "unread") {
+            const rid = Number(data.room_id);
+            const count = Number(data.unread ?? data.count);
+            if (Number.isFinite(rid) && Number.isFinite(count)) {
+              unreadMapRef.current.set(rid, Math.max(0, count));
+              updateTotalUnread();
+            }
+          }
+        }
+      };
+
+      ws.onclose = () => {
+        if (wsRef.current === ws) wsRef.current = null;
+      };
+    } catch {
+      /* ignore */
+    }
+  };
+
   /* ============================ effects ============================ */
   useEffect(() => {
     if (userID) {
       fetchUser();
+      initChatLobby();
     }
+    return () => {
+      if (wsRef.current) {
+        try { wsRef.current.close(); } catch {}
+        wsRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userID]);
 
   // เมื่อสถานะ pending ให้ redirect มา /lecturer/profile เสมอ
@@ -69,25 +138,34 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
   }, [isPending, location.pathname, navigate]);
 
   /* ============================ menu config ============================ */
-  // current tab: ถ้า pending ให้ default เป็น profile
+  // current tab: รวม 'chat' ด้วย
   const currentPage =
-    ["dashboard", "profile"].find((key) => location.pathname.includes(key)) ||
+    ["dashboard", "profile", "chat"].find((key) => location.pathname.includes(key)) ||
     (isPending ? "profile" : "dashboard");
 
-  // เมนู (ลบ "การแจ้งเตือน" ออกแล้ว)
+  // เมนู: เพิ่ม "แชท" + badge
   const fullMenu = useMemo(
     () => [
       { key: "dashboard", icon: <HomeOutlined />, label: "หน้าหลัก" },
+      {
+        key: "chat",
+        icon: <MessageOutlined />,
+        label: (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            แชท
+            <Badge count={totalUnread} overflowCount={99} />
+          </span>
+        ),
+      },
       { key: "profile", icon: <UserOutlined />, label: "โปรไฟล์" },
     ],
-    []
+    [totalUnread]
   );
 
-  const profileOnlyMenu = useMemo(
-    () => fullMenu.filter((i) => i.key === "profile"),
-    [fullMenu]
-  );
+  const profileOnlyMenu = useMemo(() => fullMenu.filter((i) => i.key === "profile"), [fullMenu]);
 
+  // ถ้าอยากให้ "แชท" โผล่แม้สถานะ pending ให้เปลี่ยนบรรทัดนี้เป็น:
+  // const menuItems = minimalMenu ? profileOnlyMenu : fullMenu;
   const menuItems = minimalMenu || isPending ? profileOnlyMenu : fullMenu;
 
   const logoutMenuItem = {
@@ -98,11 +176,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
     onClick: () => handleLogout(),
   };
 
-  const drawerMenuItems = [
-    ...menuItems,
-    { type: "divider" as const },
-    logoutMenuItem,
-  ];
+  const drawerMenuItems = [...menuItems, { type: "divider" as const }, logoutMenuItem];
 
   const profileDropdownItems = [
     {
@@ -127,8 +201,11 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       return;
     }
 
-    // ไม่มีเส้นทาง notifications อีกต่อไป
-    navigate(`/lecturer/${key}`);
+    if (key === "chat") {
+      navigate("/chat");
+    } else {
+      navigate(`/lecturer/${key}`);
+    }
     setDrawerVisible(false);
   };
 
@@ -159,23 +236,13 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
       >
         {/* Left: Logo (ถ้า pending → ไปโปรไฟล์, ไม่งั้นไปแดชบอร์ด) */}
         <div
-          onClick={() =>
-            navigate(isPending ? "/lecturer/profile" : "/lecturer/dashboard")
-          }
-          style={{
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            flex: "0 0 auto",
-          }}
+          onClick={() => navigate(isPending ? "/lecturer/profile" : "/lecturer/dashboard")}
+          style={{ cursor: "pointer", display: "flex", alignItems: "center", flex: "0 0 auto" }}
         >
           <img
             src={Logo}
             alt="Logo"
-            style={{
-              height: isMobile ? 32 : 40,
-              maxWidth: isMobile ? 120 : 150,
-            }}
+            style={{ height: isMobile ? 32 : 40, maxWidth: isMobile ? 120 : 150 }}
           />
         </div>
 
@@ -208,37 +275,19 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({
 
           {/* Mobile Menu Button */}
           {isMobile && (
-            <Button
-              type="text"
-              icon={<MenuOutlined />}
-              onClick={() => setDrawerVisible(true)}
-              style={{ marginRight: 8 }}
-            />
+            <Button type="text" icon={<MenuOutlined />} onClick={() => setDrawerVisible(true)} style={{ marginRight: 8 }} />
           )}
 
           {/* ใช้ Notification component แทนเมนู "การแจ้งเตือน" */}
           {!isPending && <Notification />}
 
           {/* Profile Avatar */}
-          <Dropdown
-            menu={{ items: profileDropdownItems }}
-            placement="bottomRight"
-            trigger={["click"]}
-          >
+          <Dropdown menu={{ items: profileDropdownItems }} placement="bottomRight" trigger={["click"]}>
             <Avatar
               size={30}
-              src={
-                user?.ProfileImage?.[0]?.image_url
-                  ? fileURL(user.ProfileImage[0].image_url)
-                  : undefined
-              }
+              src={user?.ProfileImage?.[0]?.image_url ? fileURL(user.ProfileImage[0].image_url) : undefined}
               icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-              style={{
-                cursor: "pointer",
-                marginLeft: 5,
-                marginRight: 5,
-                flex: "0 0 auto",
-              }}
+              style={{ cursor: "pointer", marginLeft: 5, marginRight: 5, flex: "0 0 auto" }}
             />
           </Dropdown>
         </div>
