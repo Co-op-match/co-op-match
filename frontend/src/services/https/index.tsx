@@ -1028,10 +1028,22 @@ const jsonHeaders = {
 
 // ========== Chat session (JWT สำหรับ chat) ==========
 export async function createChatSession(roomId: number): Promise<{ token: string }> {
+  // Get current token dynamically to ensure it's fresh
+  const Authorization = localStorage.getItem("token");
+  const Bearer = localStorage.getItem("token_type");
+  
+  const options = {
+    withCredentials: true,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  };
+  
   const res = await axios.post(
     `${apiUrl}/chat/session`,
     { room_id: roomId },
-    requestOptions
+    options
   );
   return res.data;
 }
@@ -1065,9 +1077,21 @@ export async function markReadByToken(chatToken: string, roomId: number) {
   return res.data;
 }
 
-// ========== Rooms list (ยังใช้ cookie auth เดิม) ==========
+// ========== Rooms list (ใช้ JWT auth) ==========
 export async function GetChatRoomsByUserId(userId: number) {
-  const res = await axios.get(`${apiUrl}/chat/rooms/${userId}`, requestOptions);
+  // Get current token dynamically to ensure it's fresh
+  const Authorization = localStorage.getItem("token");
+  const Bearer = localStorage.getItem("token_type");
+  
+  const options = {
+    withCredentials: true,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${Bearer} ${Authorization}`,
+    },
+  };
+  
+  const res = await axios.get(`${apiUrl}/chat/rooms/${userId}`, options);
   return res.data;
 }
 
