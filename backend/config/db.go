@@ -1161,47 +1161,156 @@ func createSeedData(db *gorm.DB) {
 
 	// Seed Review data
 	reviews := []entity.Review{
+		// Alpha Tech Co., Ltd. (Company ID: 1) - Software Development
 		{
 			Rating:    5,
 			Comment:   "บริษัทดีมาก สภาพแวดล้อมการทำงานยอดเยียม เพื่อนร่วมงานใจดี พี่ๆ ให้ความรู้เยอะมาก ได้เรียนรู้เทคโนโลยีใหม่ๆ และได้ประสบการณ์การทำงานจริงที่มีคุณค่า แนะนำเลยครับ",
 			StudentID: 1, // เจษฎาภรณ์
-			CompanyID: 1, // TechCorp
-			Like:      15,
+			CompanyID: 1,
+			Like:      25,
 		},
 		{
 			Rating:    4,
-			Comment:   "เป็นบริษัทที่ดีสำหรับการเรียนรู้ด้าน Data Science โปรเจ็กต์ที่ได้ทำท้าทายและน่าสนใจ เครื่องมือที่ใช้ทันสมัย แต่ workload ค่อนข้างเยอะหน่อยในช่วงเดดไลน์ โดยรวมแล้วประสบการณ์ดี",
+			Comment:   "ทีม Backend ที่นี่แข็งแกร่งมาก ได้เรียนรู้ Go และ microservices architecture จริงๆ โปรเจ็กต์ที่ทำมีผลกระทบต่อผู้ใช้งานจริง ประสบการณ์ดีสำหรับคนที่สนใจ backend development",
 			StudentID: 2, // วิชญ์
-			CompanyID: 2, // DataFlow Analytics
-			Like:      8,
-		},
-		{
-			Rating:    5,
-			Comment:   "บริษัทที่เปิดโอกาสให้นักศึกษาได้แสดงความคิดสร้างสรรค์อย่างเต็มที่ ได้ทำงานกับ designer ระดับโปรและเรียนรู้เครื่องมือใหม่ๆ เยอะมาก ทีม Creative มีความอบอุ่นและช่วยเหลือกันดี",
-			StudentID: 3, // อรพิน
-			CompanyID: 3, // CreativeStudio
-			Like:      12,
-		},
-		{
-			Rating:    3,
-			Comment:   "บริษัทมีชื่อเสียงและโปรเจ็กต์ใหญ่ๆ แต่การจัดการนักศึกษาฝึกงานยังไม่ค่อยดี บางทีไม่มีงานให้ทำหรือต้องรอนาน ระบบการฝึกอบรมก็ไม่ชัดเจนมากนัก",
-			StudentID: 4, // พิมพ์ใจ
-			CompanyID: 4, // GlobalTech Solutions
-			Like:      3,
-		},
-		{
-			Rating:    4,
-			Comment:   "บริษัทสตาร์ทอัพที่มีการเปลี่ยนแปลงเร็ว ได้เรียนรู้หลายอย่างในเวลาสั้น ได้ทำงานใกล้ชิดกับผู้บริหาร เรียนรู้การทำ business จริงๆ แต่ hours การทำงานค่อนข้างยืดหยุ่นเกินไป",
-			StudentID: 5, // สุริยา
-			CompanyID: 5, // InnovateNow
-			Like:      7,
+			CompanyID: 1,
+			Like:      18,
 		},
 		{
 			Rating:    5,
 			Comment:   "กลับมาฝึงงานรอบ 2 ได้ทำโปรเจ็กต์ที่ใหญ่ขึ้นและมีส่วนร่วมในการตัดสินใจเทคนิคด้วย ทีมพัฒนาให้การสนับสนุนดีมาก มีการ code review และ mentoring ที่มีประโยชน์",
+			StudentID: 1, // เจษฎาภรณ์ รอบ 2
+			CompanyID: 1,
+			Like:      32,
+		},
+
+		// Beta Solutions Co., Ltd. (Company ID: 2) - Data Science
+		{
+			Rating:    4,
+			Comment:   "เป็นบริษัทที่ดีสำหรับการเรียนรู้ด้าน Data Science โปรเจ็กต์ที่ได้ทำท้าทายและน่าสนใจ เครื่องมือที่ใช้ทันสมัย แต่ workload ค่อนข้างเยอะหน่อยในช่วงเดดไลน์ โดยรวมแล้วประสบการณ์ดี",
+			StudentID: 2, // วิชญ์
+			CompanyID: 2,
+			Like:      22,
+		},
+		{
+			Rating:    5,
+			Comment:   "ได้ทำงานกับ Big Data และ Machine Learning models จริงๆ ที่มีผู้ใช้งานหลายล้านคน ทีม Data Scientists ใจดีมากและให้ feedback ที่มีประโยชน์ ได้เรียนรู้ทั้ง technical และ business side",
+			StudentID: 3, // อรพิน
+			CompanyID: 2,
+			Like:      19,
+		},
+		{
+			Rating:    4,
+			Comment:   "บริษัทมี data infrastructure ที่แข็งแกร่ง ได้ใช้ tools ล่าสุดเช่น Snowflake, dbt, Airflow ได้เรียนรู้ data pipeline และ analytics engineering เยอะมาก แนะนำสำหรับคนที่สนใจ data career",
+			StudentID: 4, // พิมพ์ใจ
+			CompanyID: 2,
+			Like:      16,
+		},
+
+		// Gamma Innovations Co., Ltd. (Company ID: 3) - AI/ML
+		{
+			Rating:    5,
+			Comment:   "บริษัทที่เปิดโอกาสให้นักศึกษาได้แสดงความคิดสร้างสรรค์อย่างเต็มที่ ได้ทำงานกับ AI research team และเรียนรู้ cutting-edge technology เยอะมาก ทีมมีความอบอุ่นและช่วยเหลือกันดี",
+			StudentID: 3, // อรพิน
+			CompanyID: 3,
+			Like:      28,
+		},
+		{
+			Rating:    4,
+			Comment:   "ได้ทำโปรเจ็กต์ Computer Vision ที่น่าตื่นเต้นมาก ใช้ PyTorch และ OpenCV ในงานจริง ทีม AI มี expertise สูงมากและยินดีแชร์ความรู้ เหมาะสำหรับคนที่อยากเข้าสู่ AI field",
+			StudentID: 5, // สุริยา
+			CompanyID: 3,
+			Like:      24,
+		},
+		{
+			Rating:    5,
+			Comment:   "R&D team ที่นี่ทำงานกับ state-of-the-art ML algorithms ได้เรียนรู้ลึกถึง transformer models และ deployment strategies ประสบการณ์ที่หาได้ยากมาก!",
 			StudentID: 1, // เจษฎาภรณ์
-			CompanyID: 1, // TechCorp (รีวิวรอบ 2)
+			CompanyID: 3,
+			Like:      21,
+		},
+
+		// Delta Software Co., Ltd. (Company ID: 4) - Frontend Development
+		{
+			Rating:    3,
+			Comment:   "บริษัทมีชื่อเสียงและโปรเจ็กต์ใหญ่ๆ แต่การจัดการนักศึกษาฝึกงานยังไม่ค่อยดี บางทีไม่มีงานให้ทำหรือต้องรอนาน ระบบการฝึกอบรมก็ไม่ชัดเจนมากนัก",
+			StudentID: 4, // พิมพ์ใจ
+			CompanyID: 4,
+			Like:      8,
+		},
+		{
+			Rating:    4,
+			Comment:   "UI/UX team มี standard สูงมาก ได้เรียนรู้ design system และ React best practices แม้ว่าจะมี process ที่ซับซ้อนหน่อย แต่ผลงานที่ออกมามีคุณภาพดี",
+			StudentID: 3, // อรพิน
+			CompanyID: 4,
+			Like:      15,
+		},
+		{
+			Rating:    4,
+			Comment:   "Frontend stack ที่นี่ทันสมัยมาก ใช้ Next.js, TypeScript, และ Styled Components ได้เรียนรู้การทำ responsive design และ performance optimization อย่างจริงจัง",
+			StudentID: 2, // วิชญ์
+			CompanyID: 4,
+			Like:      12,
+		},
+
+		// Epsilon Systems Co., Ltd. (Company ID: 5) - Startup Environment
+		{
+			Rating:    4,
+			Comment:   "บริษัทสตาร์ทอัพที่มีการเปลี่ยนแปลงเร็ว ได้เรียนรู้หลายอย่างในเวลาสั้น ได้ทำงานใกล้ชิดกับผู้บริหาร เรียนรู้การทำ business จริงๆ แต่ hours การทำงานค่อนข้างยืดหยุ่นเกินไป",
+			StudentID: 5, // สุริยา
+			CompanyID: 5,
+			Like:      17,
+		},
+		{
+			Rating:    5,
+			Comment:   "Startup culture ที่นี่สุดยอด! ได้ลองหลาย role ตั้งแต่ DevOps, Backend, จนถึง Product Management ทีมเล็กแต่ทุกคนมี ownership สูง เรียนรู้ได้เร็วมาก",
+			StudentID: 1, // เจษฎาภรณ์
+			CompanyID: 5,
+			Like:      26,
+		},
+		{
+			Rating:    4,
+			Comment:   "ได้ทำงานกับ cloud infrastructure (AWS) และ CI/CD pipelines จริงๆ ทีมเทคทำงานเร็วและ agile มาก เหมาะสำหรับคนที่ชอบความท้าทายและเรียนรู้เร็ว",
+			StudentID: 4, // พิมพ์ใจ
+			CompanyID: 5,
+			Like:      14,
+		},
+
+		// รีวิวเพิ่มเติมจากมุมมองต่างๆ
+		{
+			Rating:    5,
+			Comment:   "การฝึกงานที่ Alpha Tech เปิดโลกใหม่ให้ผมมาก ได้เรียนรู้ clean code, SOLID principles, และ testing strategies ที่เอาไปใช้ได้ตลอดชีวิต mentor ที่นี่เก่งและใจดีมาก",
+			StudentID: 5, // สุริยา
+			CompanyID: 1,
+			Like:      23,
+		},
+		{
+			Rating:    3,
+			Comment:   "Beta Solutions มี tools ดีและ data sets น่าสนใจ แต่การให้ feedback และ guidance อาจจะช้าไปหน่อย โดยเฉพาะช่วงที่ทีมยุ่งกับโปรเจ็กต์ใหญ่",
+			StudentID: 1, // เจษฎาภรณ์
+			CompanyID: 2,
+			Like:      9,
+		},
+		{
+			Rating:    4,
+			Comment:   "Gamma Innovations มีวัฒนธรรมการทำงานที่ส่งเสริมการเรียนรู้มาก มี internal tech talks และ paper readings ที่น่าสนใจ ได้เข้าใจ AI industry ลึกขึ้นเยอะ",
+			StudentID: 4, // พิมพ์ใจ
+			CompanyID: 3,
 			Like:      20,
+		},
+		{
+			Rating:    3,
+			Comment:   "Delta Software มี process และ quality assurance ที่ดี แต่อาจจะ rigid เกินไปสำหรับนักศึกษาบางคน ใช้เวลานานในการเรียนรู้ workflow ของบริษัท",
+			StudentID: 5, // สุริยา
+			CompanyID: 4,
+			Like:      7,
+		},
+		{
+			Rating:    5,
+			Comment:   "Epsilon Systems ให้โอกาสนักศึกษาได้ contribute ในการตัดสินใจสำคัญ ได้เรียนรู้การทำ product roadmap และ user research ประสบการณ์ที่ได้นอกจาก coding มีค่ามาก",
+			StudentID: 2, // วิชญ์
+			CompanyID: 5,
+			Like:      18,
 		},
 	}
 	for i, review := range reviews {
@@ -1213,35 +1322,68 @@ func createSeedData(db *gorm.DB) {
 		reviews[i] = existingReview
 	}
 
-	// Seed ReviewLike data
+	// Seed ReviewLike data - สร้างความสมจริงในการกด like
 	reviewLikes := []entity.ReviewLike{
-		// Student 2 likes Student 1's TechCorp review
-		{ReviewID: 1, StudentID: 2},
-		{ReviewID: 1, StudentID: 3},
-		{ReviewID: 1, StudentID: 4},
-		{ReviewID: 1, StudentID: 5},
+		// Alpha Tech รีวิว 1 (ID: 1) - รีวิวดีมาก 25 likes
+		{ReviewID: 1, StudentID: 2}, {ReviewID: 1, StudentID: 3}, {ReviewID: 1, StudentID: 4}, {ReviewID: 1, StudentID: 5},
 
-		// Student 1 likes Student 2's DataFlow review
-		{ReviewID: 2, StudentID: 1},
-		{ReviewID: 2, StudentID: 3},
+		// Alpha Tech รีวิว 2 (ID: 2) - รีวิว backend 18 likes
+		{ReviewID: 2, StudentID: 1}, {ReviewID: 2, StudentID: 3}, {ReviewID: 2, StudentID: 4},
 
-		// Multiple students like CreativeStudio review
-		{ReviewID: 3, StudentID: 1},
-		{ReviewID: 3, StudentID: 2},
-		{ReviewID: 3, StudentID: 4},
+		// Alpha Tech รีวิว 3 (ID: 3) - รอบ 2 มาก 32 likes
+		{ReviewID: 3, StudentID: 2}, {ReviewID: 3, StudentID: 3}, {ReviewID: 3, StudentID: 4}, {ReviewID: 3, StudentID: 5},
 
-		// Only few likes for the negative GlobalTech review
-		{ReviewID: 4, StudentID: 2},
+		// Beta Solutions รีวิว 1 (ID: 4) - Data Science 22 likes
+		{ReviewID: 4, StudentID: 1}, {ReviewID: 4, StudentID: 3}, {ReviewID: 4, StudentID: 4}, {ReviewID: 4, StudentID: 5},
 
-		// InnovateNow review gets some likes
-		{ReviewID: 5, StudentID: 1},
-		{ReviewID: 5, StudentID: 3},
+		// Beta Solutions รีวิว 2 (ID: 5) - Big Data 19 likes
+		{ReviewID: 5, StudentID: 1}, {ReviewID: 5, StudentID: 2}, {ReviewID: 5, StudentID: 4},
 
-		// The second TechCorp review gets many likes
-		{ReviewID: 6, StudentID: 2},
-		{ReviewID: 6, StudentID: 3},
-		{ReviewID: 6, StudentID: 4},
-		{ReviewID: 6, StudentID: 5},
+		// Beta Solutions รีวิว 3 (ID: 6) - Data Pipeline 16 likes
+		{ReviewID: 6, StudentID: 1}, {ReviewID: 6, StudentID: 3}, {ReviewID: 6, StudentID: 5},
+
+		// Gamma Innovations รีวิว 1 (ID: 7) - AI Creative 28 likes
+		{ReviewID: 7, StudentID: 1}, {ReviewID: 7, StudentID: 2}, {ReviewID: 7, StudentID: 4}, {ReviewID: 7, StudentID: 5},
+
+		// Gamma Innovations รีวิว 2 (ID: 8) - Computer Vision 24 likes
+		{ReviewID: 8, StudentID: 1}, {ReviewID: 8, StudentID: 2}, {ReviewID: 8, StudentID: 3}, {ReviewID: 8, StudentID: 4},
+
+		// Gamma Innovations รีวิว 3 (ID: 9) - ML Algorithms 21 likes
+		{ReviewID: 9, StudentID: 2}, {ReviewID: 9, StudentID: 4}, {ReviewID: 9, StudentID: 5},
+
+		// Delta Software รีวิว 1 (ID: 10) - รีวิวแย่ 8 likes
+		{ReviewID: 10, StudentID: 2}, {ReviewID: 10, StudentID: 3},
+
+		// Delta Software รีวิว 2 (ID: 11) - UI/UX 15 likes
+		{ReviewID: 11, StudentID: 1}, {ReviewID: 11, StudentID: 2}, {ReviewID: 11, StudentID: 5},
+
+		// Delta Software รีวิว 3 (ID: 12) - Frontend Stack 12 likes
+		{ReviewID: 12, StudentID: 1}, {ReviewID: 12, StudentID: 4}, {ReviewID: 12, StudentID: 5},
+
+		// Epsilon Systems รีวิว 1 (ID: 13) - Startup 17 likes
+		{ReviewID: 13, StudentID: 1}, {ReviewID: 13, StudentID: 2}, {ReviewID: 13, StudentID: 3},
+
+		// Epsilon Systems รีวิว 2 (ID: 14) - Culture 26 likes
+		{ReviewID: 14, StudentID: 2}, {ReviewID: 14, StudentID: 3}, {ReviewID: 14, StudentID: 4}, {ReviewID: 14, StudentID: 5},
+
+		// Epsilon Systems รีวิว 3 (ID: 15) - DevOps 14 likes
+		{ReviewID: 15, StudentID: 1}, {ReviewID: 15, StudentID: 2}, {ReviewID: 15, StudentID: 3},
+
+		// รีวิวเพิ่มเติม (ID: 16-20)
+		// Alpha Tech รีวิว 4 (ID: 16) - Clean Code 23 likes
+		{ReviewID: 16, StudentID: 1}, {ReviewID: 16, StudentID: 2}, {ReviewID: 16, StudentID: 3}, {ReviewID: 16, StudentID: 4},
+
+		// Beta Solutions รีวิว 4 (ID: 17) - Feedback ช้า 9 likes
+		{ReviewID: 17, StudentID: 2}, {ReviewID: 17, StudentID: 4},
+
+		// Gamma รีวิว 4 (ID: 18) - Tech Talks 20 likes
+		{ReviewID: 18, StudentID: 1}, {ReviewID: 18, StudentID: 2}, {ReviewID: 18, StudentID: 3},
+
+		// Delta รีวิว 4 (ID: 19) - Rigid Process 7 likes
+		{ReviewID: 19, StudentID: 3}, {ReviewID: 19, StudentID: 4},
+
+		// Epsilon รีวิว 4 (ID: 20) - Product Decision 18 likes
+		{ReviewID: 20, StudentID: 1}, {ReviewID: 20, StudentID: 3}, {ReviewID: 20, StudentID: 4},
 	}
 	for _, rl := range reviewLikes {
 		db.FirstOrCreate(&rl, entity.ReviewLike{ReviewID: rl.ReviewID, StudentID: rl.StudentID})
