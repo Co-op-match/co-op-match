@@ -1,12 +1,12 @@
 /* ========================================
-   ULTRA RESPONSIVE STUDENT LAYOUT
+   ULTRA COMPACT STUDENT LAYOUT
    ======================================== */
 
-/* Main Layout - Adaptive Padding */
+/* Main Layout - Minimal Padding */
 .student-layout {
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 16px;
   min-height: 100vh;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 1) 0%, 
@@ -14,297 +14,122 @@
     rgba(207, 234, 250, 1) 60%, 
     rgba(159, 218, 252, 1) 100%
   );
-  transition: padding 0.3s ease;
 }
 
-/* Responsive Layout Adjustments */
-@media (max-width: 576px) {
-  .student-layout {
-    padding: 16px 8px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .student-layout {
-    padding: 32px 24px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-}
-
-/* Title Section - Responsive */
+/* Title Section - Extra Small */
 .student-profile-title {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 0 4px;
-  animation: fadeInDown 0.6s ease-out;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  margin-bottom: 10px;
+  padding: 0 2px;
 }
 
 .student-profile-text {
   font-weight: 700;
-  font-size: clamp(18px, 4vw, 28px);
+  font-size: 22px;
   color: #0d47a1;
   white-space: nowrap;
-  margin-right: 16px;
+  margin-right: 14px;
   margin-top: 1px;
   margin-bottom: 3px;
   text-shadow: 1px 1px 4px rgba(13, 71, 161, 0.2);
   letter-spacing: -0.3px;
-  transition: all 0.3s ease;
-}
-
-.student-profile-text:hover {
-  text-shadow: 2px 2px 8px rgba(13, 71, 161, 0.3);
-  transform: translateX(2px);
 }
 
 .student-profile-line {
   flex: 1;
   margin-top: 5px;
   margin-bottom: 2px;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, 
     rgba(13, 71, 161, 0.6) 0%, 
     rgba(64, 169, 255, 0.4) 50%,
     rgba(13, 71, 161, 0.1) 100%
   );
-  border-radius: 2px;
-  box-shadow: 0 2px 4px rgba(13, 71, 161, 0.1);
-  animation: expandLine 1s ease-out 0.3s both;
+  border-radius: 1px;
+  box-shadow: 0 1px 2px rgba(13, 71, 161, 0.1);
 }
 
-@keyframes expandLine {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-  to {
-    width: 100%;
-    opacity: 1;
-  }
-}
-
-/* Mobile Adjustments */
-@media (max-width: 576px) {
-  .student-profile-title {
-    margin-bottom: 16px;
-    padding: 0 2px;
-  }
-  
-  .student-profile-text {
-    margin-right: 12px;
-  }
-}
-
-/* ✅ Enhanced Student Profile Card */
 .student-profile-card {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
   box-shadow: 
-    0 8px 32px rgba(13, 71, 161, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.06);
-  margin: 20px;
+    0 3px 12px rgba(13, 71, 161, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+  margin : 20px 20px 0px 20px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeInUp 0.8s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.student-profile-card:hover {
-  box-shadow: 
-    0 12px 48px rgba(13, 71, 161, 0.16),
-    0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+  transition: all 0.2s ease;
 }
 
 .student-profile-card .ant-card-body {
   padding: 0;
 }
 
-/* ✅ Responsive Container */
 .student-profile-container {
-  display: grid;
-  grid-template-columns: minmax(280px, 350px) 1fr;
-  gap: 24px;
-  align-items: start;
-  padding: 24px;
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  padding: 16px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 992px) {
-  .student-profile-container {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 20px;
-  }
-}
-
-@media (max-width: 576px) {
-  .student-profile-container {
-    padding: 16px;
-    gap: 16px;
-  }
-}
-
-/* ✅ Enhanced Left Profile Section */
+/* Left Profile Section - Extra Compact */
 .student-profile-left {
   text-align: center;
-  padding: 28px 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+  max-width: 350px;
   background: linear-gradient(145deg, 
-    rgba(255, 255, 255, 0.9) 0%, 
-    rgba(248, 252, 255, 0.95) 50%,
-    rgba(240, 248, 255, 0.9) 100%
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(248, 252, 255, 0.9) 100%
   );
-  border-radius: 12px;
-  border: 1px solid rgba(13, 71, 161, 0.08);
-  box-shadow: 
-    inset 0 2px 4px rgba(255, 255, 255, 0.5),
-    0 4px 12px rgba(13, 71, 161, 0.06);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 71, 161, 0.06);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
-.student-profile-left::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(24, 144, 255, 0.6) 50%, 
-    transparent 100%
-  );
-  animation: shimmer 2s infinite ease-in-out;
-}
-
-@keyframes shimmer {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-@media (max-width: 576px) {
-  .student-profile-left {
-    padding: 20px 16px;
-  }
-}
-
-/* ✅ Enhanced Avatar Container */
+/* Avatar Container - Smaller */
 .student-avatar-container {
   position: relative;
   display: inline-block;
-  margin-bottom: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: avatarFloat 3s ease-in-out infinite;
-}
-
-@keyframes avatarFloat {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-3px); }
-}
-
-.student-avatar-container:hover {
-  transform: scale(1.05) translateY(-2px);
-  animation-play-state: paused;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
 }
 
 .student-avatar-container .ant-avatar {
-  width: 140px !important;
-  height: 140px !important;
-  font-size: 56px;
-  border: 4px solid rgba(255, 255, 255, 0.9);
+  width: 120px !important;
+  height: 120px !important;
+  font-size: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
   box-shadow: 
-    0 8px 24px rgba(13, 71, 161, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(145deg, #f8faff, #e8f4ff);
+    0 4px 15px rgba(13, 71, 161, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
-.student-avatar-container:hover .ant-avatar {
-  box-shadow: 
-    0 12px 32px rgba(13, 71, 161, 0.2),
-    0 6px 16px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-@media (max-width: 576px) {
-  .student-avatar-container .ant-avatar {
-    width: 120px !important;
-    height: 120px !important;
-    font-size: 48px;
-  }
-}
-
-/* ✅ Enhanced Edit Icon */
 .student-avatar-edit-icon {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 36px;
-  height: 36px;
+  bottom: 3px;
+  right: 3px;
+  width: 28px;
+  height: 28px;
   background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 16px;
+  font-size: 12px;
   box-shadow: 
-    0 0 0 3px white,
-    0 4px 12px rgba(24, 144, 255, 0.3),
-    0 2px 6px rgba(0, 0, 0, 0.1);
+    0 0 0 2px white,
+    0 2px 8px rgba(24, 144, 255, 0.25);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 2;
-}
-
-.student-avatar-edit-icon:hover {
-  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 
-    0 0 0 3px white,
-    0 6px 20px rgba(24, 144, 255, 0.4),
-    0 3px 10px rgba(0, 0, 0, 0.15);
-}
-
-@media (max-width: 576px) {
-  .student-avatar-edit-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-    bottom: 6px;
-    right: 6px;
-  }
+  transition: all 0.2s ease;
 }
 
 .student-avatar-container:hover .ant-avatar {
@@ -322,55 +147,29 @@
     0 3px 8px rgba(24, 144, 255, 0.3);
 }
 
-/* ✅ Enhanced Text Elements */
 .student-name {
-  font-size: clamp(20px, 3.5vw, 26px);
+  font-size: 20px;
   font-weight: 700;
   color: #0d47a1;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   line-height: 1.2;
-  letter-spacing: -0.3px;
-  text-align: center;
-  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  transition: all 0.3s ease;
+  letter-spacing: -0.2px;
 }
 
-.student-university-major {
-  font-size: clamp(14px, 2.5vw, 16px);
-  font-weight: 500;
+.student-university {
+  font-size: 15px;
+  font-weight: 600;
   color: #1565c0;
-  margin: 8px 0 12px 0;
-  line-height: 1.4;
-  text-align: center;
-  opacity: 0.9;
-  transition: opacity 0.3s ease;
-}
-
-.student-university-major:hover {
-  opacity: 1;
+  margin: 3px 0 6px 0;
+  line-height: 1.3;
 }
 
 .student-major {
-  font-size: clamp(12px, 2vw, 14px);
+  font-size: 12px;
   color: #666;
   font-style: italic;
-  margin: 4px 0 0 0;
-  opacity: 0.8;
-  text-align: center;
-  transition: opacity 0.3s ease;
-}
-
-@media (max-width: 576px) {
-  .student-name {
-    margin-bottom: 6px;
-  }
-  
-  .student-university-major {
-    margin: 6px 0 10px 0;
-  }
+  margin: 0;
+  opacity: 0.85;
 }
 
 .student-dashboard-section {
@@ -397,207 +196,87 @@
   min-width: 350px;
 }
 
-/* ✅ Enhanced Section Headers */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 0.8) 0%, 
-    rgba(255, 255, 255, 0.4) 100%
-  );
-  border: 1px solid rgba(13, 71, 161, 0.08);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(13, 71, 161, 0.04);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(13, 71, 161, 0.06);
   background: linear-gradient(90deg, 
-    rgba(24, 144, 255, 0.6) 0%, 
-    rgba(64, 169, 255, 0.4) 50%,
-    rgba(24, 144, 255, 0.6) 100%
+    rgba(240, 248, 255, 0.2) 0%, 
+    transparent 100%
   );
-}
-
-.section-header:hover {
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 0.9) 0%, 
-    rgba(255, 255, 255, 0.6) 100%
-  );
-  box-shadow: 0 4px 12px rgba(13, 71, 161, 0.08);
+  padding-left: 8px;
+  padding-right: 4px;
+  border-radius: 4px;
 }
 
 .section-header h4 {
-  font-size: clamp(14px, 2.5vw, 18px);
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: #0d47a1;
   margin: 0;
-  letter-spacing: -0.2px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: color 0.3s ease;
+  letter-spacing: -0.1px;
 }
 
-.section-header h4:hover {
-  color: #1565c0;
-}
-
-/* ✅ Enhanced Edit Button */
 .edit-profile-button {
   background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 5px 10px;
+  border-radius: 5px;
   border: none;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 3px;
+  transition: all 0.2s ease;
   box-shadow: 
-    0 3px 8px rgba(24, 144, 255, 0.2),
-    0 1px 3px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.edit-profile-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.2) 50%, 
-    transparent 100%
-  );
-  transition: left 0.5s ease;
+    0 2px 4px rgba(24, 144, 255, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .edit-profile-button:hover {
   background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-0.5px);
   box-shadow: 
-    0 6px 16px rgba(24, 144, 255, 0.3),
-    0 2px 6px rgba(0, 0, 0, 0.15);
+    0 2px 6px rgba(24, 144, 255, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.edit-profile-button:hover::before {
-  left: 100%;
-}
-
-.edit-profile-button:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-@media (max-width: 576px) {
-  .section-header {
-    padding: 10px 12px;
-    margin-bottom: 12px;
-  }
-  
-  .edit-profile-button {
-    padding: 6px 12px;
-    font-size: 11px;
-  }
-}
-
-/* ✅ Enhanced Descriptions Styling */
-.student-profile-details {
-  padding: 0 8px;
-}
-
+/* Descriptions Styling - Extra Compact */
 .student-profile-details .ant-descriptions {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
 
 .student-profile-details .ant-descriptions-item {
-  padding-bottom: 12px;
-  transition: all 0.3s ease;
-}
-
-.student-profile-details .ant-descriptions-item:hover {
-  transform: translateX(2px);
+  padding-bottom: 4px;
 }
 
 .student-profile-details .ant-descriptions-item-label {
   font-weight: 600;
   color: #0d47a1;
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 0.8) 0%,
-    rgba(224, 242, 254, 0.6) 100%
-  );
-  padding: 6px 12px;
-  border-radius: 6px;
-  margin-right: 8px;
-  font-size: 12px;
-  border: 1px solid rgba(13, 71, 161, 0.1);
-  box-shadow: 0 2px 4px rgba(13, 71, 161, 0.06);
-  transition: all 0.3s ease;
-  min-width: fit-content;
-  white-space: nowrap;
-}
-
-.student-profile-details .ant-descriptions-item-label:hover {
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 1) 0%,
-    rgba(224, 242, 254, 0.8) 100%
-  );
-  box-shadow: 0 3px 6px rgba(13, 71, 161, 0.1);
+  background: rgba(240, 248, 255, 0.3);
+  padding: 3px 7px;
+  border-radius: 4px;
+  margin-right: 5px;
+  font-size: 11px;
+  border: 1px solid rgba(13, 71, 161, 0.08);
 }
 
 .student-profile-details .ant-descriptions-item-content {
   color: #333;
   font-weight: 500;
-  padding: 6px 12px;
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(248, 252, 255, 0.7) 100%
-  );
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  min-height: 32px;
+  padding: 3px 7px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  min-height: 24px;
   display: flex;
   align-items: center;
-  font-size: 13px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
-}
-
-.student-profile-details .ant-descriptions-item-content:hover {
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(248, 252, 255, 0.9) 100%
-  );
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
-}
-
-@media (max-width: 768px) {
-  .student-profile-details {
-    padding: 0 4px;
-  }
-  
-  .student-profile-details .ant-descriptions-item-label,
-  .student-profile-details .ant-descriptions-item-content {
-    padding: 4px 8px;
-    font-size: 12px;
-  }
+  font-size: 11px;
 }
 
 /* Dividers - Thinner */

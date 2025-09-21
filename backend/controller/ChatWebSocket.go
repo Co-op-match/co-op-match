@@ -406,8 +406,11 @@ func CreateChatRoom(c *gin.Context) {
 
 func GetMessagesByChatRoomID(c *gin.Context) {
 	roomIDStr := c.Param("room_id")
+	fmt.Printf("🔍 GetMessagesByChatRoomID called for room: %s\n", roomIDStr)
+
 	roomID64, err := strconv.ParseUint(roomIDStr, 10, 64)
 	if err != nil {
+		fmt.Printf("❌ Invalid room_id: %s\n", roomIDStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room_id"})
 		return
 	}
@@ -415,7 +418,10 @@ func GetMessagesByChatRoomID(c *gin.Context) {
 
 	// ลองใช้ chat token ก่อน ถ้าไม่ได้ใช้ JWT token
 	bearerToken := getBearer(c)
+	fmt.Printf("🔑 Bearer token received: %v\n", bearerToken != "")
+
 	if bearerToken == "" {
+		fmt.Printf("❌ No authorization header found. Headers: %+v\n", c.Request.Header)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
 		return
 	}
