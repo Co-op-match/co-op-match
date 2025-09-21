@@ -190,12 +190,20 @@ func main() {
 	}
 
 	// chat APIs ที่ต้องล็อกอิน
-	chatGroup := protected.Group("/chat")
-	{
-		chatGroup.POST("/session", controller.CreateChatSession)
-		chatGroup.POST("/room", controller.CreateChatRoom)
-		chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
-	}
+		chatGroup := protected.Group("/chat")
+		{
+			chatGroup.POST("/session", controller.CreateChatSession)
+
+			// 🔄 สร้างห้องแชท
+			chatGroup.POST("/room", controller.CreateChatRoom)
+
+			// 📋 ดึงห้องแชททั้งหมดของ user
+			chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
+
+			// 🔌 WebSocket เชื่อมต่อ
+			// chatGroup.GET("/ws", controller.ChatWebSocket)
+		}
+
 
 	// notification (ส่วนที่เป็น action)
 	notificationGroup := protected.Group("/notification")

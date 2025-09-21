@@ -72,17 +72,23 @@ type chatSessionReq struct {
 }
 
 func CreateChatSession(c *gin.Context) {
+	fmt.Println("🔍 CreateChatSession called")
+
 	// ดึง user หลักจาก cookie JWT หรือ Authorization header
 	var tokenStr string
 	var err error
 
 	// ลองดึงจาก cookie ก่อน
 	tokenStr, err = c.Cookie("auth_token")
+	fmt.Printf("🍪 Cookie auth_token: %v (error: %v)\n", tokenStr != "", err)
+
 	if err != nil {
 		// ถ้าไม่มี cookie ลองดึงจาก Authorization header
 		bearerToken := getBearer(c)
+		fmt.Printf("🔑 Authorization header token: %v\n", bearerToken != "")
 		if bearerToken == "" {
 			fmt.Println("❌ No auth token found in cookie or header")
+			fmt.Printf("📋 Request headers: %+v\n", c.Request.Header)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: missing token"})
 			return
 		}
@@ -106,16 +112,23 @@ func CreateChatSession(c *gin.Context) {
 	}
 	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
 	userID := uint(userID64)
+	fmt.Printf("✅ JWT validated successfully. UserID: %d\n", userID)
 
 	var req chatSessionReq
 	_ = c.ShouldBindJSON(&req)
-	fmt.Println("CreateChatSession room:", req.RoomID, "user:", userID)
+	fmt.Printf("📝 CreateChatSession request - room: %d, user: %d\n", req.RoomID, userID)
 
 	// ตรวจสิทธิ์ในห้อง (ยกเว้น lobby = 0)
-	if !isMember(userID, req.RoomID) {
+	memberCheck := isMember(userID, req.RoomID)
+	fmt.Printf("👥 isMember check - userID: %d, roomID: %d, result: %v\n", userID, req.RoomID, memberCheck)
+
+	if !memberCheck {
+		fmt.Printf("❌ Access denied: User %d is not a member of room %d\n", userID, req.RoomID)
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not a member"})
 		return
 	}
+
+	fmt.Printf("✅ Access granted: User %d creating chat session for room %d\n", userID, req.RoomID)
 
 	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
 	tok, err := chatTok.Mint(userID, req.RoomID)

@@ -23,6 +23,30 @@ const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
 axios.defaults.withCredentials = true;
 
+// Debug function - exposed to window for testing
+declare global {
+  interface Window {
+    debugAuth: () => void;
+  }
+}
+
+window.debugAuth = () => {
+  const token = localStorage.getItem("token");
+  const tokenType = localStorage.getItem("token_type");
+  const isLogin = localStorage.getItem("isLogin");
+  const role = localStorage.getItem("role");
+  
+  console.log("🔍 Authentication Debug:", {
+    hasToken: !!token,
+    tokenLength: token?.length,
+    tokenPreview: token?.substring(0, 30) + "...",
+    tokenType,
+    isLogin,
+    role,
+    authHeaderWillBe: tokenType && token ? `${tokenType} ${token}` : "MISSING"
+  });
+};
+
 const requestOptions = {
    withCredentials: true,
   headers: {
@@ -1032,6 +1056,19 @@ export async function createChatSession(roomId: number): Promise<{ token: string
   const Authorization = localStorage.getItem("token");
   const Bearer = localStorage.getItem("token_type");
   
+  // Debug logging
+  console.log("🔍 createChatSession debug:", {
+    Authorization: Authorization ? `${Authorization.substring(0, 20)}...` : "null",
+    Bearer: Bearer,
+    roomId
+  });
+  
+  // Check if tokens exist
+  if (!Authorization || !Bearer) {
+    console.error("❌ Missing authentication tokens:", { Authorization: !!Authorization, Bearer: !!Bearer });
+    throw new Error("Authentication tokens not found in localStorage");
+  }
+  
   const options = {
     withCredentials: true,
     headers: {
@@ -1040,12 +1077,33 @@ export async function createChatSession(roomId: number): Promise<{ token: string
     },
   };
   
-  const res = await axios.post(
-    `${apiUrl}/chat/session`,
-    { room_id: roomId },
-    options
-  );
-  return res.data;
+  console.log("📤 Sending chat session request with headers:", {
+    ...options.headers,
+    Authorization: `${Bearer} ${Authorization?.substring(0, 20)}...`
+  });
+  
+  try {
+    const res = await axios.post(
+      `${apiUrl}/chat/session`,
+      { room_id: roomId },
+      options
+    );
+    console.log("✅ Chat session created successfully:", res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ Chat session creation failed:", {
+      status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      data: error?.response?.data,
+      headers: error?.response?.headers,
+      config: {
+        url: error?.config?.url,
+        method: error?.config?.method,
+        headers: error?.config?.headers
+      }
+    });
+    throw error;
+  }
 }
 
 // ========== WebSocket ==========
