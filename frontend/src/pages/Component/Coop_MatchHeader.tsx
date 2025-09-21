@@ -256,6 +256,7 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
             cursor: "pointer", 
             display: "flex", 
             alignItems: "center", 
+            marginLeft: isSmallMobile ? 6 : isMobile ? 4 : isTablet ? 8 : 0,
             marginRight: isMobile ? 12 : 24, 
             flexShrink: 0,
             transition: "all 0.3s ease"

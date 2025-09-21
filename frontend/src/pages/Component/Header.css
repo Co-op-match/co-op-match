@@ -1245,11 +1245,12 @@
 /* Student Mobile Specific Styles */
 @media (max-width: 576px) {
   .student-header-responsive {
-    padding: 0 8px !important;
+    padding: 0 16px !important;
   }
   
   .student-logo-container {
-    margin-right: 8px !important;
+    margin-left: 4px !important;
+    margin-right: 12px !important;
   }
   
   .student-logo-container img {
@@ -1313,8 +1314,8 @@
     max-width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
     margin-right: calc(-50vw + 50%) !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 }
 
@@ -1379,5 +1380,58 @@
   .hamburger-icon span {
     width: 20px !important;
     height: 2px !important;
+  }
+}
+
+/* ===========================================
+   LOGO POSITIONING IMPROVEMENTS
+   =========================================== */
+
+/* Logo Container Spacing for all headers */
+.logo-container-responsive,
+.header-default-logo-container,
+.coop-match-default-logo-container,
+.company-logo-container,
+.header-company-logo-container,
+.student-logo-container {
+  margin-left: 4px !important;
+}
+
+/* Mobile Logo Adjustments */
+@media (max-width: 576px) {
+  .logo-container-responsive,
+  .header-default-logo-container,
+  .coop-match-default-logo-container,
+  .company-logo-container,
+  .header-company-logo-container,
+  .student-logo-container {
+    margin-left: 6px !important;
+    margin-right: 12px !important;
+  }
+}
+
+/* Tablet Logo Adjustments */
+@media (min-width: 577px) and (max-width: 768px) {
+  .logo-container-responsive,
+  .header-default-logo-container,
+  .coop-match-default-logo-container,
+  .company-logo-container,
+  .header-company-logo-container,
+  .student-logo-container {
+    margin-left: 8px !important;
+    margin-right: 16px !important;
+  }
+}
+
+/* Desktop Logo Adjustments */
+@media (min-width: 769px) {
+  .logo-container-responsive,
+  .header-default-logo-container,
+  .coop-match-default-logo-container,
+  .company-logo-container,
+  .header-company-logo-container,
+  .student-logo-container {
+    margin-left: 0 !important;
+    margin-right: 20px !important;
   }
 }

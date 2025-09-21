@@ -271,6 +271,8 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
             cursor: "pointer", 
             display: "flex", 
             alignItems: "center",
+            marginLeft: isSmallMobile ? 6 : isMobile ? 4 : isTablet ? 8 : 0,
+            marginRight: isMobile ? 12 : 20,
             transition: "all 0.3s ease"
           }}
         >
