@@ -1,3 +1,11 @@
+/* ให้ Header เต็มจอทุกกรณี */
+.ant-layout-header {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 /* ซ่อนสกอร์บาร์ใน Chrome/Safari */
 .menu-scroll::-webkit-scrollbar { display: none; }
 
@@ -20,8 +28,20 @@
    =========================================== */
 
 .academic-staff-header-responsive {
+  width: 100% !important;
+  background: #fff !important;
+  padding: 0 24px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
   transition: all 0.3s ease;
   overflow: hidden;
+  margin: 0 !important;
+  max-width: none !important;
 }
 
 .logo-container-responsive:hover img {
@@ -76,6 +96,7 @@
    =========================================== */
 
 .coop-match-default-header {
+  width: 100% !important;
   background: #fff !important;
   padding: 0 24px !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
@@ -86,6 +107,8 @@
   top: 0 !important;
   z-index: 1000 !important;
   transition: all 0.3s ease !important;
+  margin: 0 !important;
+  max-width: none !important;
 }
 
 .coop-match-default-logo-container {
@@ -296,6 +319,7 @@
    =========================================== */
 
 .header-company-responsive {
+  width: 100% !important;
   background: #fff !important;
   padding: 0 24px !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
@@ -306,6 +330,8 @@
   top: 0 !important;
   z-index: 1000 !important;
   transition: all 0.3s ease !important;
+  margin: 0 !important;
+  max-width: none !important;
 }
 
 .header-company-logo-container {
@@ -515,6 +541,7 @@
    =========================================== */
 
 .header-default-responsive {
+  width: 100% !important;
   background: #fff !important;
   padding: 0 24px !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
@@ -525,6 +552,8 @@
   top: 0 !important;
   z-index: 1000 !important;
   transition: all 0.3s ease !important;
+  margin: 0 !important;
+  max-width: none !important;
 }
 
 .header-default-logo-container {
@@ -1031,8 +1060,20 @@
    =========================================== */
 
 .company-header-responsive {
+  width: 100% !important;
+  background: #fff !important;
+  padding: 0 24px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
   transition: all 0.3s ease;
   overflow: hidden;
+  margin: 0 !important;
+  max-width: none !important;
 }
 
 .company-logo-container:hover img {
@@ -1253,5 +1294,39 @@
   .student-mobile-menu-button:active {
     transform: scale(0.95);
     background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ===========================================
+   GLOBAL HEADER FULL WIDTH OVERRIDE
+   =========================================== */
+
+/* รับประกันว่าทุก Header เต็มจอบนทุกหน้าจอ */
+@media (max-width: 576px) {
+  .ant-layout-header,
+  .academic-staff-header-responsive,
+  .header-default-responsive,
+  .coop-match-default-header,
+  .company-header-responsive,
+  .header-company-responsive {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+@media (min-width: 577px) {
+  .ant-layout-header,
+  .academic-staff-header-responsive,
+  .header-default-responsive,
+  .coop-match-default-header,
+  .company-header-responsive,
+  .header-company-responsive {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
   }
 }
