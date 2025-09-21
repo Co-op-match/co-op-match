@@ -1319,7 +1319,7 @@
   }
 }
 
-@media (min-width: 577px) {
+@media (min-width: 577px) and (max-width: 1199px) {
   .ant-layout-header,
   .academic-staff-header-responsive,
   .header-default-responsive,
@@ -1329,6 +1329,23 @@
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .ant-layout-header,
+  .academic-staff-header-responsive,
+  .header-default-responsive,
+  .coop-match-default-header,
+  .company-header-responsive,
+  .header-company-responsive {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
   }
 }
 
@@ -1431,7 +1448,20 @@
   .company-logo-container,
   .header-company-logo-container,
   .student-logo-container {
-    margin-left: 0 !important;
-    margin-right: 20px !important;
+    margin-left: 12px !important;
+    margin-right: 24px !important;
+  }
+}
+
+/* Large Desktop Logo Adjustments */
+@media (min-width: 1200px) {
+  .logo-container-responsive,
+  .header-default-logo-container,
+  .coop-match-default-logo-container,
+  .company-logo-container,
+  .header-company-logo-container,
+  .student-logo-container {
+    margin-left: 16px !important;
+    margin-right: 32px !important;
   }
 }
