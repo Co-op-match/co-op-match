@@ -46,7 +46,7 @@ interface CompanyReviewsProps {
 const CompanyReviews: React.FC<CompanyReviewsProps> = ({
   user_id,
   allowLike,
-  allowCreateReview,
+
 }) => {
   const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
