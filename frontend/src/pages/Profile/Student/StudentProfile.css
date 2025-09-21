@@ -552,3 +552,157 @@
     font-size: 8px;
   }
 }
+
+/* ===========================================
+   ENHANCED RESPONSIVE STUDENT PROFILE STYLES
+   =========================================== */
+
+/* Mobile Specific Styles (≤576px) */
+@media (max-width: 576px) {
+  .student-mobile .student-layout {
+    padding: 8px !important;
+  }
+  
+  .student-mobile .student-profile-text {
+    font-size: 18px !important;
+  }
+  
+  .student-mobile .student-dashboard-section {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  
+  .student-mobile .application-list-wrapper,
+  .student-mobile .calendar-card-wrapper {
+    width: 100% !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .student-mobile .student-profile-container {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    min-height: auto !important;
+  }
+  
+  .student-mobile .student-profile-left {
+    width: 100% !important;
+    margin-bottom: 16px !important;
+    text-align: center !important;
+  }
+  
+  .student-mobile .student-profile-details {
+    width: 100% !important;
+  }
+  
+  .student-mobile .section-header h4 {
+    font-size: 14px !important;
+  }
+  
+  .student-mobile .ant-descriptions-item-label {
+    font-size: 12px !important;
+  }
+  
+  .student-mobile .ant-descriptions-item-content {
+    font-size: 12px !important;
+  }
+}
+
+/* Small Mobile (577px - 767px) */
+@media (min-width: 577px) and (max-width: 767px) {
+  .student-layout {
+    padding: 12px !important;
+  }
+  
+  .student-profile-text {
+    font-size: 20px !important;
+  }
+  
+  .student-dashboard-section {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+  
+  .application-list-wrapper,
+  .calendar-card-wrapper {
+    width: 100% !important;
+  }
+  
+  .student-profile-container {
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .student-tablet .student-layout {
+    padding: 16px !important;
+  }
+  
+  .student-tablet .student-dashboard-section {
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+  
+  .student-tablet .student-profile-container {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+  
+  .student-tablet .student-profile-left {
+    width: 100% !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .student-tablet .student-profile-details {
+    width: 100% !important;
+  }
+  
+  .student-tablet .application-list-wrapper,
+  .student-tablet .calendar-card-wrapper {
+    width: 100% !important;
+  }
+}
+
+/* Small Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .student-layout {
+    padding: 20px !important;
+  }
+  
+  .student-dashboard-section {
+    gap: 28px !important;
+  }
+}
+
+/* Large Desktop (1200px - 1600px) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .student-layout {
+    padding: 32px !important;
+  }
+  
+  .student-profile-text {
+    font-size: 26px !important;
+  }
+  
+  .student-dashboard-section {
+    gap: 40px !important;
+  }
+}
+
+/* Ultra-wide Desktop (1601px+) */
+@media (min-width: 1601px) {
+  .student-layout {
+    padding: 48px !important;
+  }
+  
+  .student-profile-text {
+    font-size: 30px !important;
+  }
+  
+  .student-dashboard-section {
+    gap: 48px !important;
+  }
+}

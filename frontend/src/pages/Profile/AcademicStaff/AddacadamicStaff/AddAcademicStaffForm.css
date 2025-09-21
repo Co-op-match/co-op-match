@@ -105,14 +105,129 @@
   z-index: 10;
 }
 
-/* (ออปชัน) ตอบสนองหน้าจอเล็ก */
-@media (max-width: 992px) {
-  .add-academicstaff-card {
-    width: 100%;
-    padding: 24px 16px;
+/* ===========================================
+   RESPONSIVE ADD ACADEMIC STAFF FORM STYLES
+   =========================================== */
+
+/* Mobile Specific Styles (≤576px) */
+@media (max-width: 576px) {
+  .add-academicstaff-mobile .add-academicstaff-layout {
+    padding: 8px !important;
   }
+  
+  .add-academicstaff-mobile .add-academicstaff-card {
+    width: 100% !important;
+    padding: 16px 12px !important;
+    border-radius: 12px !important;
+  }
+  
+  .add-academicstaff-mobile .add-academicstaff-title {
+    font-size: 18px !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .add-academicstaff-mobile .add-academicstaff-steps {
+    margin-bottom: 16px !important;
+  }
+  
+  .add-academicstaff-mobile .step-card {
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+  
+  .add-academicstaff-mobile .form-section-title {
+    font-size: 16px !important;
+  }
+  
+  .add-academicstaff-mobile .ant-form-item {
+    margin-bottom: 16px !important;
+  }
+  
+  .add-academicstaff-mobile .ant-form-item-label > label {
+    font-size: 14px !important;
+  }
+  
+  .add-academicstaff-mobile .ant-input,
+  .add-academicstaff-mobile .ant-select-selector {
+    height: 40px !important;
+  }
+}
+
+/* Small Mobile (577px - 767px) */
+@media (min-width: 577px) and (max-width: 767px) {
+  .add-academicstaff-layout {
+    padding: 12px !important;
+  }
+  
+  .add-academicstaff-card {
+    width: 100% !important;
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+  }
+  
   .add-academicstaff-title {
-    font-size: 20px;
-    margin-bottom: 20px;
+    font-size: 20px !important;
+    margin-bottom: 20px !important;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .add-academicstaff-tablet .add-academicstaff-layout {
+    padding: 16px !important;
+  }
+  
+  .add-academicstaff-tablet .add-academicstaff-card {
+    width: 100% !important;
+    padding: 32px 24px !important;
+    max-width: 700px !important;
+  }
+  
+  .add-academicstaff-tablet .add-academicstaff-title {
+    font-size: 22px !important;
+  }
+}
+
+/* Small Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .add-academicstaff-layout {
+    padding: 20px !important;
+  }
+  
+  .add-academicstaff-card {
+    width: 800px !important;
+    padding: 40px 32px !important;
+  }
+}
+
+/* Large Desktop (1200px - 1600px) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .add-academicstaff-layout {
+    padding: 32px !important;
+  }
+  
+  .add-academicstaff-card {
+    width: 1000px !important;
+    padding: 60px 40px !important;
+  }
+  
+  .add-academicstaff-title {
+    font-size: 28px !important;
+  }
+}
+
+/* Ultra-wide Desktop (1601px+) */
+@media (min-width: 1601px) {
+  .add-academicstaff-layout {
+    padding: 48px !important;
+  }
+  
+  .add-academicstaff-card {
+    width: 1200px !important;
+    padding: 80px 60px !important;
+  }
+  
+  .add-academicstaff-title {
+    font-size: 32px !important;
   }
 }

@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Avatar, Badge, Dropdown, Layout, Menu } from 'antd';
+import { Avatar, Badge, Dropdown, Layout, Menu, Button, Drawer, Grid } from 'antd';
 import {
   UserOutlined,
   HomeOutlined,
   MessageOutlined,
+  MenuOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -14,8 +16,10 @@ import { GetCompanyByUserID } from '@/services/https/Application';
 import type { CompanyInterface } from '@/interfaces/Company';
 import { createChatSession, createWsByToken, GetChatRoomsByUserId } from '@/services/https';
 import { fetchVerifyStatus } from '../authentication/Login/routeAfterAuth';
+import "./Header.css";
 
 const { Header } = Layout;
+const { useBreakpoint } = Grid;
 
 interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
@@ -24,6 +28,13 @@ interface CoopMatchHeaderDefaultProps {
 const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const screens = useBreakpoint();
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+  const isSmallMobile = !screens.sm;
+  const isLargeScreen = screens.xl;
   const [company, setCompany] = useState<CompanyInterface | null>(null);
   const [avatarVersion, setAvatarVersion] = useState<number>(0);
   const [totalUnread, setTotalUnread] = useState<number>(0);
@@ -234,45 +245,146 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
   };
 
   return (
-    <Header
-      style={{
-        background: '#fff',
-        padding: '0 24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-      }}
-    >
-      {/* Logo */}
-      <div onClick={handleLogoClick} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
-        <img src={Logo} alt="Logo" style={{ height: 40 }} />
-      </div>
-
-      {/* Menu + Notification + Avatar + Logout */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Menu
-          mode="horizontal"
-          items={menuItems}
-          onClick={handleMenuClick}
-          selectedKeys={selectedKey ? [selectedKey] : []}   // ✅ ไฮไลต์ตรงหน้า
-          // ❌ เอา defaultOpenKeys/openKeys ออก -> dropdown จะไม่ค้างเปิด
-          style={{ border: 'none', backgroundColor: 'transparent', minWidth: 160 }}
-        />
-        {/* ถ้าอยู่ช่วงรอรับรอง สามารถเลือกปิด Notification ได้เลย ถ้าอยากซ่อน */}
-        {!isPending && <Notification />}
-        <Dropdown overlay={logoutMenu} placement="bottomRight" trigger={['click']}>
-          <Avatar
-            src={avatarSrc}
-            icon={!avatarSrc ? <UserOutlined /> : undefined}
-            style={{ cursor: "pointer", marginLeft: 16 }}
+    <>
+      <Header
+        className="company-header-responsive"
+        style={{
+          background: '#fff',
+          padding: isSmallMobile ? "0 12px" : isMobile ? "0 16px" : "0 24px",
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          maxWidth: isLargeScreen ? "1400px" : "100%",
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
+        {/* Logo */}
+        <div 
+          onClick={handleLogoClick} 
+          className="company-logo-container"
+          style={{ 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "center",
+            transition: "all 0.3s ease"
+          }}
+        >
+          <img 
+            src={Logo} 
+            alt="Logo" 
+            style={{ 
+              height: isSmallMobile ? 28 : isMobile ? 32 : isTablet ? 36 : 40,
+              maxWidth: isSmallMobile ? 100 : isMobile ? 120 : isTablet ? 140 : 150,
+              transition: "all 0.3s ease"
+            }} 
           />
-        </Dropdown>
-      </div>
-    </Header>
+        </div>
+
+        {/* Menu + Notification + Avatar + Logout */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {/* Desktop Menu */}
+          {!isMobile && (
+            <Menu
+              mode="horizontal"
+              items={menuItems}
+              onClick={handleMenuClick}
+              selectedKeys={selectedKey ? [selectedKey] : []}
+              className="company-responsive-menu-horizontal"
+              style={{ 
+                border: 'none', 
+                backgroundColor: 'transparent', 
+                minWidth: 160,
+                maxWidth: isTablet ? "350px" : isLargeScreen ? "700px" : "600px",
+                fontSize: isTablet ? "14px" : "15px",
+              }}
+            />
+          )}
+
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ fontSize: isSmallMobile ? "18px" : "20px" }} />}
+              onClick={() => setDrawerVisible(true)}
+              className="company-mobile-menu-button"
+              style={{ 
+                marginRight: 8,
+                width: isSmallMobile ? "40px" : "44px",
+                height: isSmallMobile ? "40px" : "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            />
+          )}
+
+          {!isPending && <Notification />}
+          <Dropdown overlay={logoutMenu} placement="bottomRight" trigger={['click']}>
+            <Avatar
+              src={avatarSrc}
+              icon={!avatarSrc ? <UserOutlined /> : undefined}
+              size={isSmallMobile ? 28 : isMobile ? 30 : 32}
+              className="company-profile-avatar-responsive"
+              style={{ 
+                cursor: "pointer", 
+                marginLeft: isSmallMobile ? 8 : 16,
+                transition: "all 0.3s ease"
+              }}
+            />
+          </Dropdown>
+        </div>
+      </Header>
+
+      {/* Mobile Drawer Menu */}
+      <Drawer
+        title={
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center",
+            fontSize: isSmallMobile ? "16px" : "18px"
+          }}>
+            <span>เมนู</span>
+          </div>
+        }
+        placement="right"
+        onClose={() => setDrawerVisible(false)}
+        open={drawerVisible}
+        width={isSmallMobile ? 260 : 280}
+        styles={{ body: { padding: 0 } }}
+        className="company-responsive-drawer"
+      >
+        <Menu
+          mode="inline"
+          selectedKeys={selectedKey ? [selectedKey] : []}
+          items={[...menuItems, { type: "divider" as const }, {
+            key: "logout",
+            icon: <LogoutOutlined />,
+            label: "ออกจากระบบ",
+            danger: true,
+            onClick: () => {
+              localStorage.clear();
+              navigate("/");
+            },
+          }]}
+          onClick={(info) => {
+            if (info.key !== 'logout') {
+              handleMenuClick(info);
+            }
+            setDrawerVisible(false);
+          }}
+          className="company-responsive-drawer-menu"
+          style={{ 
+            border: "none",
+            fontSize: isSmallMobile ? "14px" : "15px"
+          }}
+        />
+      </Drawer>
+    </>
   );
 };
 

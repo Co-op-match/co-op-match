@@ -1,4 +1,5 @@
 import React from "react";
+import { Grid } from 'antd';
 import "./CoopMatchLoader.css";
 import logo from '../../assets/Co-op match-Logo.png'
 
@@ -42,6 +43,8 @@ export interface CoopMatchLoaderProps {
 const clamp = (v: number, min: number, max: number) =>
   Math.max(min, Math.min(max, v));
 
+const { useBreakpoint } = Grid;
+
 const CoopMatchLoader: React.FC<CoopMatchLoaderProps> = ({
   animation = "puzzle-fold",
   size = "md",
@@ -56,6 +59,18 @@ const CoopMatchLoader: React.FC<CoopMatchLoaderProps> = ({
   className,
   style,
 }) => {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+  
+  // Auto-adjust size based on screen size if not explicitly set
+  const responsiveSize = (() => {
+    if (size !== "md") return size; // Respect explicit size setting
+    if (isMobile) return "sm";
+    if (isTablet) return "md";
+    return "lg";
+  })();
+
   const rootVars: React.CSSProperties = {
     ...(primaryColor ? ({ ["--cml-primary" as any]: primaryColor } as React.CSSProperties) : {}),
     ...(speed ? ({ ["--cml-speed" as any]: `${speed}s` } as React.CSSProperties) : {}),
@@ -68,8 +83,11 @@ const CoopMatchLoader: React.FC<CoopMatchLoaderProps> = ({
     <div
       className={[
         "cml-root",
+        "cml-responsive",
         overlay ? "cml-overlay" : "",
-        `cml-size-${size}`,
+        `cml-size-${responsiveSize}`,
+        isMobile ? "cml-mobile" : "",
+        isTablet ? "cml-tablet" : "",
         className || "",
       ].join(" ").trim()}
       style={rootVars}

@@ -14,6 +14,7 @@ import {
   Col,
   Tag,
   message,
+  Grid,
 } from "antd";
 import {
   EditOutlined,
@@ -42,6 +43,7 @@ import CoopMatchLoader from '../../Component/loading';
 
 const { Content } = Layout;
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 interface ReviewResponse {
   reviewer: string;
@@ -56,6 +58,10 @@ interface ReviewResponse {
 }
 
 const CompanyProfile: React.FC = () => {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
   const [company, setCompany] = useState<CompanyInterface | undefined>(undefined);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
@@ -250,7 +256,7 @@ const CompanyProfile: React.FC = () => {
       )}
 
       <CompanyHeader />
-      <Layout className="company-layout">
+      <Layout className={`company-layout ${isMobile ? 'company-mobile' : ''} ${isTablet ? 'company-tablet' : ''}`}>
         <Content>
           <div className="company-profile-title">
             <span className="company-profile-text">Company Profile</span>
@@ -453,8 +459,8 @@ const CompanyProfile: React.FC = () => {
                       pointerEvents: "none",
                     }}
                   />
-                  <Row gutter={[16, 16]} align="middle" style={{ position: "relative", zIndex: 1 }}>
-                    <Col span={8}>
+                  <Row gutter={[{ xs: 8, sm: 12, md: 16 }, { xs: 12, sm: 14, md: 16 }]} align="middle" style={{ position: "relative", zIndex: 1 }}>
+                    <Col xs={24} sm={12} md={8}>
                       <div
                         style={{
                           textAlign: "center",
@@ -491,7 +497,7 @@ const CompanyProfile: React.FC = () => {
                       </div>
                     </Col>
 
-                    <Col span={16}>
+                    <Col xs={24} sm={12} md={16}>
                       <div style={{ padding: "4px 0" }}>
                         {[5, 4, 3, 2, 1].map((star, index) => (
                           <div

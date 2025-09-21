@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Dropdown, Badge, Typography, Button, Space, Divider, Empty, message } from 'antd';
+import { Dropdown, Badge, Typography, Button, Space, Divider, Empty, message, Grid } from 'antd';
 import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/th';
+import './Header.css';
 
 dayjs.extend(relativeTime);
 dayjs.locale('th');
@@ -22,6 +23,7 @@ interface NotificationItem {
 }
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 // ====== ปรับตามสภาพแวดล้อมของคุณ ======
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.coop-match.online';
@@ -38,13 +40,16 @@ const Notification: React.FC = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<number | null>(null);
   const reconnectAttempts = useRef(0);
-const PAGE_SIZE = 20;
+  const PAGE_SIZE = 20;
 
-const [loading, setLoading] = useState(false);
-const [hasMore, setHasMore] = useState(true);
-const [cursor, setCursor] = useState<string | null>(null); // ใช้ createdAt เป็น cursor
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<string | null>(null); // ใช้ createdAt เป็น cursor
 
   const userId = Number(localStorage.getItem('id') || 0);
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
 
   // ---------- helpers ----------
   const mapIconType = (t?: string): NotificationType => {
@@ -306,9 +311,10 @@ ws.onmessage = (ev) => {
   // ---------- UI ----------
   const renderDropdown = () => (
     <div
+      className={`notification-dropdown ${isMobile ? 'notification-mobile' : ''} ${isTablet ? 'notification-tablet' : ''}`}
       style={{
-        width: 380,
-        maxHeight: 500,
+        width: isMobile ? 320 : isTablet ? 350 : 380,
+        maxHeight: isMobile ? 400 : 500,
         background: '#fff',
         borderRadius: 8,
         boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
@@ -317,21 +323,22 @@ ws.onmessage = (ev) => {
     >
       {/* Header */}
       <div
+        className="notification-header"
         style={{
-          padding: '16px 20px 12px',
+          padding: isMobile ? '12px 16px 8px' : '16px 20px 12px',
           background: 'linear-gradient(135deg, #1890ff 0%, #722ed1 100%)',
           color: '#fff',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text strong style={{ color: '#fff', fontSize: 16 }}>การแจ้งเตือน</Text>
-          <Badge count={badgeCount} style={{ backgroundColor: '#fff', color: '#1890ff', fontSize: 12, fontWeight: 'bold' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 6 : 8 }}>
+          <Text strong style={{ color: '#fff', fontSize: isMobile ? 14 : 16 }}>การแจ้งเตือน</Text>
+          <Badge count={badgeCount} style={{ backgroundColor: '#fff', color: '#1890ff', fontSize: isMobile ? 10 : 12, fontWeight: 'bold' }} />
         </div>
         <Space>
           <Button
             type="link"
-            size="small"
-            style={{ color: '#fff', padding: 0, height: 'auto', fontSize: 12 }}
+            size={isMobile ? "small" : "small"}
+            style={{ color: '#fff', padding: 0, height: 'auto', fontSize: isMobile ? 11 : 12 }}
             onClick={markAllAsRead}
             disabled={(badgeCount ?? 0) === 0}
           >
@@ -342,7 +349,8 @@ ws.onmessage = (ev) => {
 
       {/* List */}
 <div
-  style={{ maxHeight: 400, overflowY: 'auto' }}
+  className="notification-list"
+  style={{ maxHeight: isMobile ? 300 : 400, overflowY: 'auto' }}
   onScroll={(e) => {
     const el = e.currentTarget;
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
@@ -354,8 +362,9 @@ ws.onmessage = (ev) => {
     notifications.map((item, index) => (
       <div key={item.id}>
                       <div
+                className="notification-item"
                 style={{
-                  padding: '16px 20px',
+                  padding: isMobile ? '12px 16px' : '16px 20px',
                   cursor: 'pointer',
                   backgroundColor: item.read ? '#fff' : '#f6ffed',
                   borderLeft: item.read ? 'none' : '4px solid #52c41a',
@@ -369,14 +378,14 @@ ws.onmessage = (ev) => {
                 <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                   {getNotificationIcon(item.type)}
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                      <Text strong style={{ fontSize: 14, color: '#262626', lineHeight: 1.4 }}>{item.title}</Text>
-                      {!item.read && <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#1890ff', marginLeft: 8, marginTop: 4, flexShrink: 0 }} />}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isMobile ? 2 : 4 }}>
+                      <Text strong style={{ fontSize: isMobile ? 12 : 14, color: '#262626', lineHeight: 1.4 }}>{item.title}</Text>
+                      {!item.read && <div style={{ width: isMobile ? 6 : 8, height: isMobile ? 6 : 8, borderRadius: '50%', backgroundColor: '#1890ff', marginLeft: 8, marginTop: 4, flexShrink: 0 }} />}
                     </div>
-                    <Text style={{ fontSize: 13, color: '#8c8c8c', display: 'block', marginBottom: 6, lineHeight: 1.4 }}>
+                    <Text style={{ fontSize: isMobile ? 11 : 13, color: '#8c8c8c', display: 'block', marginBottom: isMobile ? 4 : 6, lineHeight: 1.4 }}>
                       {item.description}
                     </Text>
-                    <Text style={{ fontSize: 11, color: '#bfbfbf', fontWeight: 500 }}>
+                    <Text style={{ fontSize: isMobile ? 9 : 11, color: '#bfbfbf', fontWeight: 500 }}>
                       {dayjs(item.createdAt).fromNow()}
                     </Text>
                   </div>
@@ -388,13 +397,13 @@ ws.onmessage = (ev) => {
       </div>
     ))
   ) : (
-    <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+    <div style={{ padding: isMobile ? '30px 16px' : '40px 20px', textAlign: 'center' }}>
       <Empty description="ไม่มีการแจ้งเตือน" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ margin: 0 }} />
     </div>
   )}
 
   {/* แถบสถานะโหลด/หมด */}
-  <div style={{ padding: 8, textAlign: 'center', color: '#8c8c8c', fontSize: 12 }}>
+  <div style={{ padding: isMobile ? 6 : 8, textAlign: 'center', color: '#8c8c8c', fontSize: isMobile ? 10 : 12 }}>
     {loading ? 'กำลังโหลด...' : !hasMore ? '' : null}
   </div>
 </div>

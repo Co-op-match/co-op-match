@@ -14,3 +14,1244 @@
   font-size: var(--menu-font);
   white-space: nowrap;
 }
+
+/* ===========================================
+   ACADEMIC STAFF HEADER RESPONSIVE STYLES
+   =========================================== */
+
+.academic-staff-header-responsive {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.logo-container-responsive:hover img {
+  transform: scale(1.05);
+}
+
+.responsive-menu-horizontal .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.responsive-menu-horizontal .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.mobile-menu-button {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.mobile-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: scale(1.05);
+}
+
+.profile-avatar-responsive {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.profile-avatar-responsive:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.responsive-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.responsive-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+/* ===========================================
+   COOP MATCH DEFAULT HEADER RESPONSIVE STYLES
+   =========================================== */
+
+.coop-match-default-header {
+  background: #fff !important;
+  padding: 0 24px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  transition: all 0.3s ease !important;
+}
+
+.coop-match-default-logo-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.coop-match-default-logo-container:hover {
+  transform: scale(1.05);
+}
+
+.coop-match-default-logo {
+  height: 40px;
+  transition: all 0.3s ease;
+}
+
+.coop-match-default-desktop-menu {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.coop-match-default-menu {
+  border: none !important;
+  background-color: transparent !important;
+  min-width: 350px;
+}
+
+.coop-match-default-menu .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.coop-match-default-menu .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.coop-match-default-avatar-desktop {
+  cursor: pointer;
+  margin-left: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.coop-match-default-avatar-desktop:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.coop-match-default-mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.coop-match-default-avatar-mobile {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.coop-match-default-menu-button {
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.coop-match-default-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  transform: scale(1.05);
+}
+
+.coop-match-default-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.coop-match-default-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+.coop-match-default-drawer-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.coop-match-default-logout-button {
+  height: 40px !important;
+  border-radius: 8px !important;
+  background-color: #f5f5f5 !important;
+  transition: all 0.3s ease !important;
+}
+
+.coop-match-default-logout-button:hover {
+  background-color: #ff4d4f !important;
+  color: white !important;
+}
+
+/* Mobile Specific Styles (≤576px) */
+@media (max-width: 576px) {
+  .coop-match-default-header {
+    padding: 0 8px !important;
+  }
+  
+  .coop-match-default-logo {
+    height: 26px !important;
+  }
+  
+  .coop-match-default-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .coop-match-default-avatar-mobile {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .coop-match-default-drawer {
+    width: 240px !important;
+  }
+}
+
+/* Small Mobile (577px - 767px) */
+@media (min-width: 577px) and (max-width: 767px) {
+  .coop-match-default-header {
+    padding: 0 12px !important;
+  }
+  
+  .coop-match-default-logo {
+    height: 32px !important;
+  }
+  
+  .coop-match-default-menu-button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .coop-match-default-drawer {
+    width: 260px !important;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .coop-match-default-menu {
+    min-width: 280px !important;
+  }
+  
+  .coop-match-default-logo {
+    height: 36px !important;
+  }
+}
+
+/* Small Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .coop-match-default-menu {
+    min-width: 320px !important;
+  }
+}
+
+/* Large Desktop (1200px - 1600px) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .coop-match-default-header {
+    padding: 0 32px !important;
+  }
+  
+  .coop-match-default-logo {
+    height: 44px !important;
+  }
+  
+  .coop-match-default-menu {
+    min-width: 380px !important;
+  }
+}
+
+/* Ultra-wide Desktop (1601px+) */
+@media (min-width: 1601px) {
+  .coop-match-default-header {
+    padding: 0 48px !important;
+  }
+  
+  .coop-match-default-logo {
+    height: 48px !important;
+  }
+  
+  .coop-match-default-menu {
+    min-width: 420px !important;
+  }
+  
+  .coop-match-default-avatar-desktop {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* ===========================================
+   HEADER COMPANY RESPONSIVE STYLES
+   =========================================== */
+
+.header-company-responsive {
+  background: #fff !important;
+  padding: 0 24px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  transition: all 0.3s ease !important;
+}
+
+.header-company-logo-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.header-company-logo-container:hover {
+  transform: scale(1.05);
+}
+
+.header-company-logo {
+  height: 40px;
+  transition: all 0.3s ease;
+}
+
+.header-company-desktop-menu {
+  display: flex;
+  align-items: center;
+}
+
+.header-company-menu {
+  border: none !important;
+  background-color: transparent !important;
+  min-width: 160px;
+}
+
+.header-company-menu .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.header-company-menu .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.header-company-avatar-desktop {
+  cursor: pointer;
+  margin-left: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.header-company-avatar-desktop:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.header-company-mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-company-avatar-mobile {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.header-company-menu-button {
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.header-company-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  transform: scale(1.05);
+}
+
+.header-company-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.header-company-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+.header-company-drawer-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.header-company-logout-button {
+  height: 40px !important;
+  border-radius: 8px !important;
+  background-color: #f5f5f5 !important;
+  transition: all 0.3s ease !important;
+}
+
+.header-company-logout-button:hover {
+  background-color: #ff4d4f !important;
+  color: white !important;
+}
+
+/* Mobile Specific Styles (≤576px) */
+@media (max-width: 576px) {
+  .header-company-responsive {
+    padding: 0 8px !important;
+  }
+  
+  .header-company-logo {
+    height: 26px !important;
+  }
+  
+  .header-company-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .header-company-avatar-mobile {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .header-company-drawer {
+    width: 240px !important;
+  }
+}
+
+/* Small Mobile (577px - 767px) */
+@media (min-width: 577px) and (max-width: 767px) {
+  .header-company-responsive {
+    padding: 0 12px !important;
+  }
+  
+  .header-company-logo {
+    height: 32px !important;
+  }
+  
+  .header-company-menu-button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .header-company-drawer {
+    width: 260px !important;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .header-company-menu {
+    min-width: 140px !important;
+  }
+  
+  .header-company-logo {
+    height: 36px !important;
+  }
+}
+
+/* Small Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .header-company-menu {
+    min-width: 150px !important;
+  }
+}
+
+/* Large Desktop (1200px - 1600px) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .header-company-responsive {
+    padding: 0 32px !important;
+  }
+  
+  .header-company-logo {
+    height: 44px !important;
+  }
+  
+  .header-company-menu {
+    min-width: 180px !important;
+  }
+}
+
+/* Ultra-wide Desktop (1601px+) */
+@media (min-width: 1601px) {
+  .header-company-responsive {
+    padding: 0 48px !important;
+  }
+  
+  .header-company-logo {
+    height: 48px !important;
+  }
+  
+  .header-company-menu {
+    min-width: 200px !important;
+  }
+  
+  .header-company-avatar-desktop {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* ===========================================
+   HEADER DEFAULT RESPONSIVE STYLES
+   =========================================== */
+
+.header-default-responsive {
+  background: #fff !important;
+  padding: 0 24px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  transition: all 0.3s ease !important;
+}
+
+.header-default-logo-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.header-default-logo-container:hover {
+  transform: scale(1.05);
+}
+
+.header-default-logo {
+  height: 40px;
+  transition: all 0.3s ease;
+}
+
+.header-default-desktop-menu {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header-default-menu {
+  border: none !important;
+  background-color: transparent !important;
+  min-width: 350px;
+}
+
+.header-default-menu .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.header-default-menu .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.header-default-avatar-desktop {
+  cursor: pointer;
+  margin-left: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.header-default-avatar-desktop:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.header-default-mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-default-avatar-mobile {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.header-default-menu-button {
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.header-default-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  transform: scale(1.05);
+}
+
+.header-default-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.header-default-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+.header-default-drawer-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.header-default-logout-button {
+  height: 40px !important;
+  border-radius: 8px !important;
+  background-color: #f5f5f5 !important;
+  transition: all 0.3s ease !important;
+}
+
+.header-default-logout-button:hover {
+  background-color: #ff4d4f !important;
+  color: white !important;
+}
+
+/* Mobile Specific Styles (≤576px) */
+@media (max-width: 576px) {
+  .header-default-responsive {
+    padding: 0 8px !important;
+  }
+  
+  .header-default-logo {
+    height: 26px !important;
+  }
+  
+  .header-default-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .header-default-avatar-mobile {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .header-default-drawer {
+    width: 240px !important;
+  }
+}
+
+/* Small Mobile (577px - 767px) */
+@media (min-width: 577px) and (max-width: 767px) {
+  .header-default-responsive {
+    padding: 0 12px !important;
+  }
+  
+  .header-default-logo {
+    height: 32px !important;
+  }
+  
+  .header-default-menu-button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .header-default-drawer {
+    width: 260px !important;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .header-default-menu {
+    min-width: 280px !important;
+  }
+  
+  .header-default-logo {
+    height: 36px !important;
+  }
+}
+
+/* Small Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .header-default-menu {
+    min-width: 320px !important;
+  }
+}
+
+/* Large Desktop (1200px - 1600px) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .header-default-responsive {
+    padding: 0 32px !important;
+  }
+  
+  .header-default-logo {
+    height: 44px !important;
+  }
+  
+  .header-default-menu {
+    min-width: 380px !important;
+  }
+}
+
+/* Ultra-wide Desktop (1601px+) */
+@media (min-width: 1601px) {
+  .header-default-responsive {
+    padding: 0 48px !important;
+  }
+  
+  .header-default-logo {
+    height: 48px !important;
+  }
+  
+  .header-default-menu {
+    min-width: 420px !important;
+  }
+  
+  .header-default-avatar-desktop {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* ===========================================
+   NOTIFICATION COMPONENT RESPONSIVE STYLES
+   =========================================== */
+
+.notification-dropdown {
+  transition: all 0.3s ease;
+}
+
+.notification-header {
+  transition: all 0.3s ease;
+}
+
+.notification-list {
+  scroll-behavior: smooth;
+}
+
+.notification-item {
+  transition: all 0.2s ease !important;
+}
+
+.notification-item:hover {
+  transform: translateX(2px);
+}
+
+/* Mobile Specific Styles (≤768px) */
+@media (max-width: 768px) {
+  .notification-mobile {
+    width: 300px !important;
+    max-height: 380px !important;
+  }
+  
+  .notification-mobile .notification-header {
+    padding: 10px 12px 6px !important;
+  }
+  
+  .notification-mobile .notification-list {
+    max-height: 280px !important;
+  }
+  
+  .notification-mobile .notification-item {
+    padding: 10px 12px !important;
+  }
+}
+
+/* Small Mobile (≤576px) */
+@media (max-width: 576px) {
+  .notification-mobile {
+    width: 280px !important;
+    max-height: 360px !important;
+  }
+  
+  .notification-mobile .notification-list {
+    max-height: 260px !important;
+  }
+}
+
+/* Tablet Specific Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .notification-tablet {
+    width: 340px !important;
+  }
+}
+
+/* Mobile Specific Styles (≤576px) */
+@media (max-width: 576px) {
+  .academic-staff-header-responsive {
+    padding: 0 8px !important;
+  }
+  
+  .logo-container-responsive img {
+    max-height: 26px !important;
+    max-width: 90px !important;
+  }
+  
+  .mobile-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .profile-avatar-responsive {
+    margin: 0 2px !important;
+  }
+  
+  .responsive-drawer {
+    width: 240px !important;
+  }
+  
+  .responsive-drawer-menu .ant-menu-item {
+    height: 44px;
+    line-height: 44px;
+    font-size: 14px;
+  }
+}
+
+/* Small Tablets (577px - 768px) */
+@media (min-width: 577px) and (max-width: 768px) {
+  .academic-staff-header-responsive {
+    padding: 0 14px !important;
+  }
+  
+  .logo-container-responsive img {
+    max-height: 30px !important;
+    max-width: 110px !important;
+  }
+  
+  .responsive-menu-horizontal {
+    max-width: 320px !important;
+  }
+}
+
+/* Medium Tablets (769px - 992px) */
+@media (min-width: 769px) and (max-width: 992px) {
+  .academic-staff-header-responsive {
+    padding: 0 18px !important;
+  }
+  
+  .responsive-menu-horizontal {
+    max-width: 400px !important;
+  }
+}
+
+/* Large Screens (993px - 1200px) */
+@media (min-width: 993px) and (max-width: 1200px) {
+  .academic-staff-header-responsive {
+    padding: 0 22px !important;
+  }
+  
+  .responsive-menu-horizontal {
+    max-width: 550px !important;
+  }
+}
+
+/* Extra Large Screens (1201px - 1600px) */
+@media (min-width: 1201px) and (max-width: 1600px) {
+  .academic-staff-header-responsive {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  
+  .responsive-menu-horizontal {
+    max-width: 650px !important;
+  }
+}
+
+/* Ultra Wide Screens (1601px+) */
+@media (min-width: 1601px) {
+  .academic-staff-header-responsive {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .responsive-menu-horizontal {
+    max-width: 700px !important;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .logo-container-responsive img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+  .mobile-menu-button:hover {
+    transform: none;
+  }
+  
+  .mobile-menu-button:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+  
+  .responsive-drawer-menu .ant-menu-item {
+    min-height: 48px;
+  }
+}
+
+/* ===========================================
+   ADMIN HEADER RESPONSIVE STYLES
+   =========================================== */
+
+.admin-header-responsive {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.admin-logo-container:hover img {
+  transform: scale(1.05);
+}
+
+.admin-responsive-menu-horizontal .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.admin-responsive-menu-horizontal .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.admin-responsive-menu-horizontal .ant-menu-submenu {
+  transition: all 0.3s ease;
+}
+
+.admin-mobile-menu-button {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.admin-mobile-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: scale(1.05);
+}
+
+.admin-profile-avatar-responsive {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.admin-profile-avatar-responsive:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.admin-responsive-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.admin-responsive-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+/* Admin Mobile Specific Styles */
+@media (max-width: 576px) {
+  .admin-header-responsive {
+    padding: 0 8px !important;
+  }
+  
+  .admin-logo-container img {
+    max-height: 26px !important;
+    max-width: 90px !important;
+  }
+  
+  .admin-mobile-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .admin-profile-avatar-responsive {
+    margin: 0 2px !important;
+  }
+  
+  .admin-responsive-drawer {
+    width: 240px !important;
+  }
+  
+  .admin-responsive-drawer-menu .ant-menu-item {
+    height: 44px;
+    line-height: 44px;
+    font-size: 14px;
+  }
+}
+
+/* Admin Small Tablets */
+@media (min-width: 577px) and (max-width: 768px) {
+  .admin-header-responsive {
+    padding: 0 14px !important;
+  }
+  
+  .admin-responsive-menu-horizontal {
+    max-width: 320px !important;
+  }
+}
+
+/* Admin Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+  .admin-mobile-menu-button:hover {
+    transform: none;
+  }
+  
+  .admin-mobile-menu-button:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ===========================================
+   COMPANY HEADER RESPONSIVE STYLES
+   =========================================== */
+
+.company-header-responsive {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.company-logo-container:hover img {
+  transform: scale(1.05);
+}
+
+.company-responsive-menu-horizontal .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.company-responsive-menu-horizontal .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.company-responsive-menu-horizontal .ant-menu-submenu {
+  transition: all 0.3s ease;
+}
+
+.company-mobile-menu-button {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.company-mobile-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: scale(1.05);
+}
+
+.company-profile-avatar-responsive {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.company-profile-avatar-responsive:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.company-responsive-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.company-responsive-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+/* Company Mobile Specific Styles */
+@media (max-width: 576px) {
+  .company-header-responsive {
+    padding: 0 8px !important;
+  }
+  
+  .company-logo-container img {
+    max-height: 26px !important;
+    max-width: 90px !important;
+  }
+  
+  .company-mobile-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .company-profile-avatar-responsive {
+    margin-left: 6px !important;
+  }
+  
+  .company-responsive-drawer {
+    width: 240px !important;
+  }
+  
+  .company-responsive-drawer-menu .ant-menu-item {
+    height: 44px;
+    line-height: 44px;
+    font-size: 14px;
+  }
+}
+
+/* Company Small Tablets */
+@media (min-width: 577px) and (max-width: 768px) {
+  .company-header-responsive {
+    padding: 0 14px !important;
+  }
+  
+  .company-responsive-menu-horizontal {
+    max-width: 320px !important;
+  }
+}
+
+/* Company Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+  .company-mobile-menu-button:hover {
+    transform: none;
+  }
+  
+  .company-mobile-menu-button:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ===========================================
+   STUDENT HEADER RESPONSIVE STYLES
+   =========================================== */
+
+.student-header-responsive {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.student-logo-container:hover img {
+  transform: scale(1.05);
+}
+
+.student-responsive-menu-horizontal .ant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.student-responsive-menu-horizontal .ant-menu-item:hover {
+  transform: translateY(-1px);
+}
+
+.student-responsive-menu-horizontal .ant-menu-submenu {
+  transition: all 0.3s ease;
+}
+
+.student-mobile-menu-button {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.student-mobile-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: scale(1.05);
+}
+
+.student-profile-avatar-responsive {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.student-profile-avatar-responsive:hover {
+  border-color: #1890ff;
+  transform: scale(1.1);
+}
+
+.student-responsive-drawer .ant-drawer-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.student-responsive-drawer-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+/* Student Mobile Specific Styles */
+@media (max-width: 576px) {
+  .student-header-responsive {
+    padding: 0 8px !important;
+  }
+  
+  .student-logo-container {
+    margin-right: 8px !important;
+  }
+  
+  .student-logo-container img {
+    max-height: 26px !important;
+    max-width: 90px !important;
+  }
+  
+  .student-mobile-menu-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  .student-responsive-drawer {
+    width: 240px !important;
+  }
+  
+  .student-responsive-drawer-menu .ant-menu-item {
+    height: 44px;
+    line-height: 44px;
+    font-size: 14px;
+  }
+}
+
+/* Student Small Tablets */
+@media (min-width: 577px) and (max-width: 768px) {
+  .student-header-responsive {
+    padding: 0 14px !important;
+  }
+  
+  .student-responsive-menu-horizontal {
+    max-width: 320px !important;
+  }
+}
+
+/* Student Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+  .student-mobile-menu-button:hover {
+    transform: none;
+  }
+  
+  .student-mobile-menu-button:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}

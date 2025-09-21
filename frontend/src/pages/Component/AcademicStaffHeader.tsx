@@ -10,6 +10,7 @@ import { UserContext } from "../../components/UserContext";
 import { fileURL } from "@/config/env";
 import { fetchVerifyStatus } from "../authentication/Login/routeAfterAuth";
 import Notification from "../Component/Notification";
+import "./Header.css";
 
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -38,6 +39,8 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
   const userID = Number(localStorage.getItem("id"));
   const isMobile = !screens.md;
   const isTablet = screens.md && !screens.lg;
+  const isSmallMobile = !screens.sm;
+  const isLargeScreen = screens.xl;
 
   /* ============================ fetchers ============================ */
   const fetchUser = async () => {
@@ -221,9 +224,10 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
     <>
       {contextHolder}
       <Header
+        className="academic-staff-header-responsive"
         style={{
           background: "#fff",
-          padding: isMobile ? "0 16px" : "0 24px",
+          padding: isSmallMobile ? "0 12px" : isMobile ? "0 16px" : "0 24px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           display: "flex",
           alignItems: "center",
@@ -232,17 +236,31 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
           top: 0,
           zIndex: 1000,
           height: "64px",
+          maxWidth: isLargeScreen ? "1400px" : "100%",
+          margin: "0 auto",
+          width: "100%",
         }}
       >
         {/* Left: Logo (ถ้า pending → ไปโปรไฟล์, ไม่งั้นไปแดชบอร์ด) */}
         <div
           onClick={() => navigate(isPending ? "/lecturer/profile" : "/lecturer/dashboard")}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center", flex: "0 0 auto" }}
+          className="logo-container-responsive"
+          style={{ 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "center", 
+            flex: "0 0 auto",
+            transition: "all 0.3s ease"
+          }}
         >
           <img
             src={Logo}
             alt="Logo"
-            style={{ height: isMobile ? 32 : 40, maxWidth: isMobile ? 120 : 150 }}
+            style={{ 
+              height: isSmallMobile ? 28 : isMobile ? 32 : isTablet ? 36 : 40, 
+              maxWidth: isSmallMobile ? 100 : isMobile ? 120 : isTablet ? 140 : 150,
+              transition: "all 0.3s ease"
+            }}
           />
         </div>
 
@@ -263,19 +281,34 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
               selectedKeys={[currentPage]}
               items={menuItems}
               onClick={handleMenuClick}
+              className="responsive-menu-horizontal"
               style={{
                 border: "none",
                 backgroundColor: "transparent",
                 flex: "1 1 auto",
                 justifyContent: "flex-end",
-                maxWidth: isTablet ? "400px" : "600px",
+                maxWidth: isTablet ? "350px" : isLargeScreen ? "700px" : "600px",
+                fontSize: isTablet ? "14px" : "15px",
               }}
             />
           )}
 
           {/* Mobile Menu Button */}
           {isMobile && (
-            <Button type="text" icon={<MenuOutlined />} onClick={() => setDrawerVisible(true)} style={{ marginRight: 8 }} />
+            <Button 
+              type="text" 
+              icon={<MenuOutlined style={{ fontSize: isSmallMobile ? "18px" : "20px" }} />} 
+              onClick={() => setDrawerVisible(true)} 
+              className="mobile-menu-button"
+              style={{ 
+                marginRight: 8,
+                width: isSmallMobile ? "40px" : "44px",
+                height: isSmallMobile ? "40px" : "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }} 
+            />
           )}
 
           {/* ใช้ Notification component แทนเมนู "การแจ้งเตือน" */}
@@ -284,10 +317,17 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
           {/* Profile Avatar */}
           <Dropdown menu={{ items: profileDropdownItems }} placement="bottomRight" trigger={["click"]}>
             <Avatar
-              size={30}
+              size={isSmallMobile ? 28 : isMobile ? 30 : 32}
               src={user?.ProfileImage?.[0]?.image_url ? fileURL(user.ProfileImage[0].image_url) : undefined}
               icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-              style={{ cursor: "pointer", marginLeft: 5, marginRight: 5, flex: "0 0 auto" }}
+              className="profile-avatar-responsive"
+              style={{ 
+                cursor: "pointer", 
+                marginLeft: isSmallMobile ? 3 : 5, 
+                marginRight: isSmallMobile ? 3 : 5, 
+                flex: "0 0 auto",
+                transition: "all 0.3s ease"
+              }}
             />
           </Dropdown>
         </div>
@@ -295,19 +335,32 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
 
       {/* Mobile Drawer Menu */}
       <Drawer
-        title={<div style={{ display: "flex", alignItems: "center" }}><span>เมนู</span></div>}
+        title={
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center",
+            fontSize: isSmallMobile ? "16px" : "18px"
+          }}>
+            <span>เมนู</span>
+          </div>
+        }
         placement="right"
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
-        width={280}
+        width={isSmallMobile ? 260 : 280}
         styles={{ body: { padding: 0 } }}
+        className="responsive-drawer"
       >
         <Menu
           mode="inline"
           selectedKeys={[currentPage]}
           items={drawerMenuItems}
           onClick={handleMenuClick}
-          style={{ border: "none" }}
+          className="responsive-drawer-menu"
+          style={{ 
+            border: "none",
+            fontSize: isSmallMobile ? "14px" : "15px"
+          }}
         />
       </Drawer>
     </>

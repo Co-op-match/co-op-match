@@ -1,5 +1,5 @@
 import React, { useContext, useEffect,  useRef, useState } from 'react';
-import { Avatar, Dropdown, Layout, Menu, Badge } from 'antd';
+import { Avatar, Dropdown, Layout, Menu, Badge, Button, Drawer, Grid } from 'antd';
 import {
   SearchOutlined,
   UserOutlined,
@@ -9,7 +9,8 @@ import {
   MessageOutlined,
   LogoutOutlined,
   DownOutlined,
-  HeartOutlined
+  HeartOutlined,
+  MenuOutlined
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -17,10 +18,12 @@ import { GetUserById, GetChatRoomsByUserId, createChatSession, createWsByToken }
 import type { UserInterface } from '../../interfaces/User';
 import Notification from '../Component/Notification';
 import { UserContext } from '../../components/UserContext';
-import './CoopMStchHeader.css'
+import './CoopMStchHeader.css';
+import "./Header.css";
 import { fileURL } from '@/config/env';
 
 const { Header } = Layout;
+const { useBreakpoint } = Grid;
 
 interface CoopMatchHeaderDefaultProps {
   minimalMenu?: boolean;
@@ -45,6 +48,13 @@ const flattenKeys = (items: MenuItem[] = []): string[] => {
 const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const screens = useBreakpoint();
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+  const isSmallMobile = !screens.sm;
+  const isLargeScreen = screens.xl;
   const [user, setUser] = useState<UserInterface | null>(null);
   const [totalUnread, setTotalUnread] = useState<number>(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -220,72 +230,171 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
   const avatarUrl = user?.ProfileImage?.[0]?.image_url? fileURL( user?.ProfileImage?.[0]?.image_url) : undefined;
 
   return (
-    <Header
-      style={{
-        background: '#fff',
-        padding: '0 24px',
-        borderBottom: '1px solid #e5e7eb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    <>
+      <Header
+        className="student-header-responsive"
+        style={{
+          background: '#fff',
+          padding: isSmallMobile ? "0 12px" : isMobile ? "0 16px" : "0 24px",
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: isLargeScreen ? "1400px" : "100%",
+          margin: "0 auto",
+          width: "100%",
         position: 'sticky',
         top: 0,
         zIndex: 1000,
       }}
     >
-      {/* Left: Logo */}
-      <div
-        onClick={() => navigate("/student/dashboard")}
-        style={{ cursor: "pointer", display: "flex", alignItems: "center", marginRight: 24, flexShrink: 0 }}
-      >
-        <img src={Logo} alt="Logo" style={{ height: 40 }} />
-      </div>
-
-      {/* Right: Menu + Notifications + Avatar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 'auto', minWidth: 0 }}>
-        <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0 }}>
-         <Menu
-          className="no-ellipsis-menu"
-          mode="horizontal"
-          selectedKeys={currentPage ? [currentPage] : []}  // ✅ ไม่มี current ก็ไม่ต้องไฮไลท์
-          items={visibleMenuItems}
-          onClick={handleMenuClick}
-          style={{ border: 'none', backgroundColor: 'transparent' }}
-          overflowedIndicator={null}
-        />
+        {/* Left: Logo */}
+        <div
+          onClick={() => navigate("/student/dashboard")}
+          className="student-logo-container"
+          style={{ 
+            cursor: "pointer", 
+            display: "flex", 
+            alignItems: "center", 
+            marginRight: isMobile ? 12 : 24, 
+            flexShrink: 0,
+            transition: "all 0.3s ease"
+          }}
+        >
+          <img 
+            src={Logo} 
+            alt="Logo" 
+            style={{ 
+              height: isSmallMobile ? 28 : isMobile ? 32 : isTablet ? 36 : 40,
+              maxWidth: isSmallMobile ? 100 : isMobile ? 120 : isTablet ? 140 : 150,
+              transition: "all 0.3s ease"
+            }} 
+          />
         </div>
 
-        <Notification />
+        {/* Right: Menu + Notifications + Avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, marginLeft: 'auto', minWidth: 0 }}>
+          {/* Desktop Menu */}
+          {!isMobile && (
+            <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0 }}>
+              <Menu
+                className="no-ellipsis-menu student-responsive-menu-horizontal"
+                mode="horizontal"
+                selectedKeys={currentPage ? [currentPage] : []}
+                items={visibleMenuItems}
+                onClick={handleMenuClick}
+                style={{ 
+                  border: 'none', 
+                  backgroundColor: 'transparent',
+                  maxWidth: isTablet ? "350px" : isLargeScreen ? "700px" : "600px",
+                  fontSize: isTablet ? "14px" : "15px",
+                }}
+                overflowedIndicator={null}
+              />
+            </div>
+          )}
 
-        <Dropdown
-          overlay={
-            <Menu
-              onClick={({ key }) => {
-                if (key === "logout") {
-                  handleLogout();
-                } else {
-                  navigate(`/student/${key}`);
-                }
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ fontSize: isSmallMobile ? "18px" : "20px" }} />}
+              onClick={() => setDrawerVisible(true)}
+              className="student-mobile-menu-button"
+              style={{ 
+                marginRight: 8,
+                width: isSmallMobile ? "40px" : "44px",
+                height: isSmallMobile ? "40px" : "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
               }}
-              items={[
-                { type: 'divider' as const },
-                { key: 'logout', icon: <LogoutOutlined />, label: 'ออกจากระบบ', danger: true },
-              ]}
             />
-          }
-          placement="bottomRight"
-          trigger={['hover']}
-        >
-          <Avatar
-            size={36}
-            shape="circle"
-            src={avatarUrl}
-            icon={!avatarUrl ? <UserOutlined /> : undefined}
-            style={{ border: '2px solid #f0f0f0', overflow: 'hidden', flexShrink: 0, cursor: 'pointer' }}
-          />
-        </Dropdown>
-      </div>
-    </Header>
+          )}
+
+          <Notification />
+
+          <Dropdown
+            overlay={
+              <Menu
+                onClick={({ key }) => {
+                  if (key === "logout") {
+                    handleLogout();
+                  } else {
+                    navigate(`/student/${key}`);
+                  }
+                }}
+                items={[
+                  { type: 'divider' as const },
+                  { key: 'logout', icon: <LogoutOutlined />, label: 'ออกจากระบบ', danger: true },
+                ]}
+              />
+            }
+            placement="bottomRight"
+            trigger={['hover']}
+          >
+            <Avatar
+              size={isSmallMobile ? 28 : isMobile ? 32 : 36}
+              shape="circle"
+              src={avatarUrl}
+              icon={!avatarUrl ? <UserOutlined /> : undefined}
+              className="student-profile-avatar-responsive"
+              style={{ 
+                border: '2px solid #f0f0f0', 
+                overflow: 'hidden', 
+                flexShrink: 0, 
+                cursor: 'pointer',
+                transition: "all 0.3s ease"
+              }}
+            />
+          </Dropdown>
+        </div>
+      </Header>
+
+      {/* Mobile Drawer Menu */}
+      <Drawer
+        title={
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center",
+            fontSize: isSmallMobile ? "16px" : "18px"
+          }}>
+            <span>เมนู</span>
+          </div>
+        }
+        placement="right"
+        onClose={() => setDrawerVisible(false)}
+        open={drawerVisible}
+        width={isSmallMobile ? 260 : 280}
+        styles={{ body: { padding: 0 } }}
+        className="student-responsive-drawer"
+      >
+        <Menu
+          mode="inline"
+          selectedKeys={currentPage ? [currentPage] : []}
+          items={[...visibleMenuItems, { type: "divider" as const }, {
+            key: "logout",
+            icon: <LogoutOutlined />,
+            label: "ออกจากระบบ",
+            danger: true,
+            onClick: () => {
+              handleLogout();
+            },
+          }]}
+          onClick={(info) => {
+            if (info.key !== 'logout') {
+              handleMenuClick(info);
+            }
+            setDrawerVisible(false);
+          }}
+          className="student-responsive-drawer-menu"
+          style={{ 
+            border: "none",
+            fontSize: isSmallMobile ? "14px" : "15px"
+          }}
+        />
+      </Drawer>
+    </>
   );
 };
 

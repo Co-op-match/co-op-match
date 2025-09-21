@@ -15,6 +15,7 @@ import {
   Table,
   Tabs,
   Alert,
+  Grid,
 } from "antd";
 import {
   EditOutlined,
@@ -45,6 +46,7 @@ dayjs.locale("th");
 
 const { Content } = Layout;
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 /* ========= Types ========= */
 export interface StudentForAdvisor {
@@ -109,6 +111,9 @@ const toSrc = (raw?: string) => (raw ? fileURL(raw) : undefined);
 
 const AcademicStaffProfile: React.FC = () => {
   const navigate = useNavigate();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
 
   const [academicstaff, setAcademicStaff] = useState<AcademicStaffInterface | undefined>(undefined);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
@@ -284,7 +289,7 @@ const AcademicStaffProfile: React.FC = () => {
         />
       )}
 
-      <Layout className="academicstaff-layout">
+      <Layout className={`academicstaff-layout ${isMobile ? 'academicstaff-mobile' : ''} ${isTablet ? 'academicstaff-tablet' : ''}`}>
         <Content>
           <div className="academicstaff-profile-title">
             <span className="academicstaff-profile-text">AcademicStaff Profile</span>
@@ -439,7 +444,7 @@ const AcademicStaffProfile: React.FC = () => {
           </div>
 
           {/* CONTENT ROWS */}
-          <Row gutter={[16, 24]}>
+          <Row gutter={[{ xs: 8, sm: 12, md: 16, lg: 20 }, { xs: 16, sm: 20, md: 24, lg: 28 }]}>
             <Col span={24}>
               {/* แจ้งเตือนถ้ายังไม่รับรอง */}
               {!isVerified && NotVerifiedNotice}

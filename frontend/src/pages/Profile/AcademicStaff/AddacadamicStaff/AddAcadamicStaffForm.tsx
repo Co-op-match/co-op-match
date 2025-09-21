@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Layout, Card, Steps, Form, Button, message } from 'antd';
+import { Layout, Card, Steps, Form, Button, message, Grid } from 'antd';
 import {
   CreateProfileImage,
   GetAllGender,
@@ -23,6 +23,7 @@ import type { InputAcademicStaffInterface } from '@/interfaces/InputAcademicStaf
 import CoopMatchLoader from '../../../Component/loading';
 
 const { Content } = Layout;
+const { useBreakpoint } = Grid;
 
 /* =======================
    helpers: map labelInValue -> id
@@ -55,6 +56,10 @@ const mapIdFields = <T extends Record<string, any>>(
 /* ======================= */
 
 const AddAcademicStaffForm: React.FC = () => {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
   const [form] = Form.useForm();
   const [genders, setGenders] = useState<GenderInterface[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -318,14 +323,15 @@ const AddAcademicStaffForm: React.FC = () => {
       )}
 
       <CoopMatchHeaderDefault />
-      <Layout className="add-academicstaff-layout">
+      <Layout className={`add-academicstaff-layout ${isMobile ? 'add-academicstaff-mobile' : ''} ${isTablet ? 'add-academicstaff-tablet' : ''}`}>
         <Content className="add-academicstaff-content">
           <Card className="add-academicstaff-card">
             <h2 className="add-academicstaff-title">เพิ่มข้อมูล</h2>
 
             <Steps
               current={currentStep}
-              size="small"
+              size={isMobile ? "small" : "default"}
+              direction={isMobile ? "vertical" : "horizontal"}
               className="add-academicstaff-steps"
               items={steps.map((s) => ({ title: s.title }))}
             />

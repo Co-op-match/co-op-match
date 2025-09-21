@@ -4,6 +4,7 @@ import {
   Avatar,
   Card,
   Descriptions,
+  Grid,
 } from "antd";
 import { BookOutlined, EditOutlined, EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
 import { GetStudentByUserId, UpdateProfileImage } from "../../../services/https";
@@ -21,6 +22,7 @@ import CoopMatchLoader from '../../Component/loading';
 import { UserContext } from "@/components/UserContext";
 
 const { Content } = Layout;
+const { useBreakpoint } = Grid;
 
 const ProfileCard: React.FC<{
   student?: StudentInterface;
@@ -163,6 +165,10 @@ const ProfileCard: React.FC<{
 };
 
 const StudentProfile: React.FC = () => {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
   const [student, setStudent] = useState<StudentInterface | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [section, setSection] = useState<"personal" | "education" | "address">("personal");
@@ -228,7 +234,7 @@ const showLoader = !authLoading && (loadingStudent || uploadingImage);
       )}
 
       <CoopMatchHeader key={imageRefreshKey} />
-      <Layout className="student-layout">
+      <Layout className={`student-layout ${isMobile ? 'student-mobile' : ''} ${isTablet ? 'student-tablet' : ''}`}>
         <Content>
           <div className="student-profile-title">
             <span className="student-profile-text">Student Profile</span>

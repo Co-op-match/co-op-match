@@ -1,22 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Layout, Menu } from 'antd';
+import { Avatar, Layout, Menu, Button, Drawer, Grid } from 'antd';
 import {
   UserOutlined,
   BellOutlined,
   SettingOutlined,
   HomeOutlined,
+  MenuOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
+import "./Header.css";
 
 const { Header } = Layout;
+
+const { useBreakpoint } = Grid;
 
 const CoopMatchHeaderDefault: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const screens = useBreakpoint();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -62,8 +69,25 @@ const CoopMatchHeaderDefault: React.FC = () => {
   };
 
   const handleLogoClick = () => {
-  navigate("/student/dashboard");
-};
+    navigate("/student/dashboard");
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/');
+    setDrawerVisible(false);
+  };
+
+  const toggleDrawer = () => {
+    setDrawerVisible(!drawerVisible);
+  };
+
+  const handleDrawerMenuClick = ({ key }: { key: string }) => {
+    handleMenuClick({ key });
+    setDrawerVisible(false);
+  };
+
+  const isMobile = !screens.md;
 
   const menuItems = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
@@ -72,52 +96,80 @@ const CoopMatchHeaderDefault: React.FC = () => {
   ];
 
   return (
-    <Header
-      style={{
-        background: '#fff',
-        padding: '0 24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-      }}
-    >
-<div
-  onClick={handleLogoClick}
-  style={{
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-  }}
->
-  <img src={Logo} alt="Logo" style={{ height: 40 }} />
-</div>
+    <>
+      <Header className="coop-match-default-header">
+        <div 
+          className="coop-match-default-logo-container"
+          onClick={handleLogoClick}
+        >
+          <img src={Logo} alt="Logo" className="coop-match-default-logo" />
+        </div>
 
+        {isMobile ? (
+          <>
+            <div className="coop-match-default-mobile-controls">
+              <Avatar
+                src={user?.ProfileImage?.[0]?.image_url
+                  ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
+                  : undefined}
+                icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+                className="coop-match-default-avatar-mobile"
+              />
+              <Button
+                type="text"
+                icon={<MenuOutlined />}
+                onClick={toggleDrawer}
+                className="coop-match-default-menu-button"
+              />
+            </div>
 
-<div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-<Menu
-        mode="horizontal"
-        selectedKeys={[currentPage]}
-        items={menuItems}
-        onClick={handleMenuClick}
-    style={{
-      border: 'none',
-      backgroundColor: 'transparent',
-      minWidth: 350,
-    }}
-  />
-  <Avatar
-    src={user?.ProfileImage?.[0]?.image_url
-      ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
-      : undefined}
-    icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-    style={{ cursor: "pointer", marginLeft: 16 }}
-  />
-</div>
-    </Header>
+            <Drawer
+              title="เมนู"
+              placement="right"
+              onClose={() => setDrawerVisible(false)}
+              open={drawerVisible}
+              className="coop-match-default-drawer"
+            >
+              <Menu
+                mode="vertical"
+                selectedKeys={[currentPage]}
+                items={menuItems}
+                onClick={handleDrawerMenuClick}
+                className="coop-match-default-drawer-menu"
+              />
+              <div className="coop-match-default-drawer-footer">
+                <Button
+                  type="text"
+                  icon={<LogoutOutlined />}
+                  onClick={handleLogout}
+                  block
+                  className="coop-match-default-logout-button"
+                >
+                  ออกจากระบบ
+                </Button>
+              </div>
+            </Drawer>
+          </>
+        ) : (
+          <div className="coop-match-default-desktop-menu">
+            <Menu
+              mode="horizontal"
+              selectedKeys={[currentPage]}
+              items={menuItems}
+              onClick={handleMenuClick}
+              className="coop-match-default-menu"
+            />
+            <Avatar
+              src={user?.ProfileImage?.[0]?.image_url
+                ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
+                : undefined}
+              icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
+              className="coop-match-default-avatar-desktop"
+            />
+          </div>
+        )}
+      </Header>
+    </>
   );
 };
 
