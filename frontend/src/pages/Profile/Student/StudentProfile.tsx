@@ -20,6 +20,7 @@ import ApplicationListCard from "./ApplicationListCard";
 import CompanyHeader from "@/pages/Component/CompanyHeader";
 import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";
 import AcademicStaffHeader from "@/pages/Component/AcademicStaffHeader";
+import ProfileSkeleton from "./ProfileSkeleton";
 
 const { Content } = Layout;
 const getStoredRoleId = (): number => {
@@ -287,6 +288,7 @@ const StudentProfilePublic: React.FC = () => {
 
   return (
     <Layout>
+      {/* แสดง Loader เมื่อกำลังโหลดหรือสร้างแชท */}
       {(loading || creatingSession) && (
         <CoopMatchLoader
           overlay
@@ -297,62 +299,79 @@ const StudentProfilePublic: React.FC = () => {
       )}
 
       <RoleHeader />
-      <Layout className="student-layout">
-        <Content>
-          <div className="student-profile-title">
-            <span className="student-profile-text">Student Profile</span>
-            <div className="student-profile-line" />
-          </div>
+      
+      {/* แสดง content เฉพาะเมื่อโหลดเสร็จแล้วเท่านั้น */}
+      {!loading ? (
+        <Layout className="student-layout">
+          <Content>
+            <div className="student-profile-title">
+              <span className="student-profile-text">Student Profile</span>
+              <div className="student-profile-line" />
+            </div>
 
-          {notFound ? (
-            <Result
-              status="404"
-              title="ไม่พบโปรไฟล์"
-              subTitle={resolvedUserId ? `ไม่พบผู้ใช้ userId = ${resolvedUserId}` : "กรุณาระบุ userId ใน URL"}
-            />
-          ) : (
-            <>
-              <ProfileCard student={student} />
-
-              {/* รายการสมัครของ user นี้ */}
-              {resolvedUserId && (
-                <div style={{ marginTop: 16 }}>
-                  <ApplicationListCard userId={resolvedUserId} />
-                </div>
-              )}
-            </>
-          )}
-        </Content>
-
-        {/* ✅ NEW: Floating Chat Button */}
-        {!notFound && resolvedUserId && (
-          <div
-            className="chat-floating-wrapper"
-            style={{
-              position: "fixed",
-              right: 24,
-              bottom: 24,
-              zIndex: 1100,
-            }}
-          >
-            <Tooltip title={disableChat ? undefined : "แชทกับนักศึกษา"} placement="left">
-              <Button
-                type="primary"
-                shape="circle"
-                size="large"
-                aria-label="แชทกับนักศึกษา"
-                icon={chatHovered ? <WechatOutlined /> : <MessageOutlined />}
-                onClick={handleChatClick}
-                onMouseEnter={() => setChatHovered(true)}
-                onMouseLeave={() => setChatHovered(false)}
-                className={`chat-floating-button ${chatHovered ? "hovered" : ""}`}
-                disabled={disableChat}
-                loading={creatingSession}
+            {notFound ? (
+              <Result
+                status="404"
+                title="ไม่พบโปรไฟล์"
+                subTitle={resolvedUserId ? `ไม่พบผู้ใช้ userId = ${resolvedUserId}` : "กรุณาระบุ userId ใน URL"}
               />
-            </Tooltip>
-          </div>
-        )}
-      </Layout>
+            ) : student ? (
+              <div className="student-profile-content-loaded">
+                <ProfileCard student={student} />
+
+                {/* รายการสมัครของ user นี้ */}
+                {resolvedUserId && (
+                  <div style={{ marginTop: 16 }}>
+                    <ApplicationListCard userId={resolvedUserId} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              // แสดง Skeleton เมื่อยังไม่มีข้อมูล student
+              <>
+                <ProfileSkeleton />
+                {resolvedUserId && (
+                  <div style={{ marginTop: 16 }}>
+                    <ApplicationListCard userId={resolvedUserId} />
+                  </div>
+                )}
+              </>
+            )}
+          </Content>
+
+          {/* ✅ NEW: Floating Chat Button */}
+          {!notFound && resolvedUserId && (
+            <div
+              className="chat-floating-wrapper"
+              style={{
+                position: "fixed",
+                right: 24,
+                bottom: 24,
+                zIndex: 1100,
+              }}
+            >
+              <Tooltip title={disableChat ? undefined : "แชทกับนักศึกษา"} placement="left">
+                <Button
+                  type="primary"
+                  shape="circle"
+                  size="large"
+                  aria-label="แชทกับนักศึกษา"
+                  icon={chatHovered ? <WechatOutlined /> : <MessageOutlined />}
+                  onClick={handleChatClick}
+                  onMouseEnter={() => setChatHovered(true)}
+                  onMouseLeave={() => setChatHovered(false)}
+                  className={`chat-floating-button ${chatHovered ? "hovered" : ""}`}
+                  disabled={disableChat}
+                  loading={creatingSession}
+                />
+              </Tooltip>
+            </div>
+          )}
+        </Layout>
+      ) : (
+        // แสดงพื้นหลังสวยๆ เมื่อกำลังโหลด เพื่อให้ Loader เด่นขึ้น
+        <div className="student-loading-background" style={{ minHeight: '100vh' }} />
+      )}
     </Layout>
   );
 };

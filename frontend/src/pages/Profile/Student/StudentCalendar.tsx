@@ -15,6 +15,7 @@ const StudentCalendarCard: React.FC = () => {
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
     const [events, setEvents] = useState<EventItem[]>([]);
+    const [loading, setLoading] = useState(false);
     const { Option } = Select;
     
 useEffect(() => {
@@ -22,10 +23,19 @@ useEffect(() => {
   const userId = userIdStr ? parseInt(userIdStr) : null;
   if (!userId) return;
 
-  GetEventsStudentByUserId(userId).then((result) => {
-    console.log("✅ Loaded events:", result); // ⬅ เพิ่ม log
-    setEvents(result); 
-  });
+  setLoading(true);
+  GetEventsStudentByUserId(userId)
+    .then((result) => {
+      console.log("✅ Loaded events:", result);
+      setEvents(result); 
+    })
+    .catch((error) => {
+      console.error("Error loading events:", error);
+      setEvents([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
 }, []);
 
 
@@ -63,7 +73,13 @@ const filteredEvents = selectedDate && Array.isArray(events)
   const today = dayjs();
 
   return (
-    <Card title="ปฏิทินแจ้งเตือน" bordered className="calendar-card" headStyle={{ background: "transparent" }}>
+    <Card 
+      title="ปฏิทินแจ้งเตือน" 
+      bordered 
+      className="calendar-card" 
+      headStyle={{ background: "transparent" }}
+      loading={loading}
+    >
       <div className="calendar-container">
         <div className="calendar-section">
 <div className="calendar-header">

@@ -801,6 +801,101 @@ func createSeedData(db *gorm.DB) {
 		db.FirstOrCreate(&sv, entity.StatusVerify{StatusVerify: sv.StatusVerify})
 	}
 
+	// Helper function สำหรับ pointer
+	toPtr := func(id uint) *uint { return &id }
+
+	// Seed Verify records สำหรับบริษัทและอาจารย์ให้มีสถานะ "รับรอง"
+	verifyTime := time.Now()
+	verifies := []entity.Verify{
+		// บริษัทที่ได้รับการรับรอง (UserID 2, 6, 7, 8, 9 เป็นบริษัท)
+		{
+			VerificationDocument: "/uploads/verify/company_alpha_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3,              // "รับรอง"
+			UserID:               2,              // Alpha Tech Co., Ltd.
+			AdminID:              toPtr(uint(1)), // Admin ที่อนุมัติ
+		},
+		{
+			VerificationDocument: "/uploads/verify/company_beta_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3, // "รับรอง"
+			UserID:               6, // Beta Solutions Co., Ltd.
+			AdminID:              toPtr(uint(1)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/company_gamma_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3, // "รับรอง"
+			UserID:               7, // Gamma Innovations Co., Ltd.
+			AdminID:              toPtr(uint(2)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/company_delta_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3, // "รับรอง"
+			UserID:               8, // Delta Software Co., Ltd.
+			AdminID:              toPtr(uint(1)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/company_epsilon_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3, // "รับรอง"
+			UserID:               9, // Epsilon Systems Co., Ltd.
+			AdminID:              toPtr(uint(2)),
+		},
+
+		// อาจารย์ที่ได้รับการรับรอง (UserID 4, 14, 15, 16, 17 เป็นอาจารย์)
+		{
+			VerificationDocument: "/uploads/verify/academic_somchai_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3, // "รับรอง"
+			UserID:               4, // อ.สมชาย วิศวกร
+			AdminID:              toPtr(uint(1)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/academic_suree_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3,  // "รับรอง"
+			UserID:               14, // อ.สุรีย์ เคมี
+			AdminID:              toPtr(uint(2)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/academic_sompong_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3,  // "รับรอง"
+			UserID:               15, // ผศ.สมพงษ์ การตลาด
+			AdminID:              toPtr(uint(1)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/academic_orathai_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3,  // "รับรอง"
+			UserID:               16, // รศ.อรทัย ภาษา
+			AdminID:              toPtr(uint(2)),
+		},
+		{
+			VerificationDocument: "/uploads/verify/academic_thanpon_doc.pdf",
+			Reason:               "",
+			VerifiedAt:           &verifyTime,
+			StatusVerifyID:       3,  // "รับรอง"
+			UserID:               17, // อ.ธนพล นิติ
+			AdminID:              toPtr(uint(1)),
+		},
+	}
+
+	for _, v := range verifies {
+		db.FirstOrCreate(&v, entity.Verify{UserID: v.UserID})
+	}
+
 	// Seed Articles
 	publishedTrue := true
 	now := time.Now()

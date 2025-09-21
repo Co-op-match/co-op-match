@@ -16,10 +16,12 @@ interface Props {
 
 const ApplicationListCard: React.FC<Props> = ({ userId }) => {
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || isNaN(userId)) return;
 
+    setLoading(true);
     GetApplicationsByUserID(userId)
       .then((data) => {
         if (Array.isArray(data)) {
@@ -32,6 +34,9 @@ const ApplicationListCard: React.FC<Props> = ({ userId }) => {
       .catch((err) => {
         console.error("Error fetching applications:", err);
         setApplications([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [userId]);
 
@@ -106,6 +111,7 @@ const columns = [
         rowKey={(record) => record?.ID ?? record?.IntershipPost?.ID ?? Math.random()}
         pagination={false}
         size="small"
+        loading={loading}
       />
     </Card>
   );

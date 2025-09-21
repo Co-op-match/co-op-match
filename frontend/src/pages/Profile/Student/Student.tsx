@@ -17,8 +17,9 @@ import StudentCalendarCard from "./StudentCalendar";
 import ApplicationListCard from "./ApplicationListCard";
 import { fileURL } from "@/config/env";
 
-// ✅ เพิ่ม Loader
+// ✅ เพิ่ม Loader และ Skeleton
 import CoopMatchLoader from '../../Component/loading';
+import ProfileSkeleton from './ProfileSkeleton';
 import { UserContext } from "@/components/UserContext";
 
 const { Content } = Layout;
@@ -234,43 +235,61 @@ const showLoader = !authLoading && (loadingStudent || uploadingImage);
       )}
 
       <CoopMatchHeader key={imageRefreshKey} />
-      <Layout className={`student-layout ${isMobile ? 'student-mobile' : ''} ${isTablet ? 'student-tablet' : ''}`}>
-        <Content>
-          <div className="student-profile-title">
-            <span className="student-profile-text">Student Profile</span>
-            <div className="student-profile-line" />
-          </div>
-
-          <ProfileCard
-            student={student}
-            onEditSection={(sec) => {
-              setSection(sec);
-              setModalOpen(true);
-            }}
-            onImageUpdated={handleImageUpdated}
-            onUploadStatusChange={setUploadingImage} // ✅ รับสถานะจากลูก
-          />
-
-          <div className="student-dashboard-section">
-            <div className="application-list-wrapper">
-              {userIdString && <ApplicationListCard userId={Number(userIdString)} />}
+      
+      {/* แสดง content เฉพาะเมื่อโหลดเสร็จและไม่ได้อัปโหลดรูป */}
+      {!loadingStudent ? (
+        <Layout className={`student-layout ${isMobile ? 'student-mobile' : ''} ${isTablet ? 'student-tablet' : ''}`}>
+          <Content>
+            <div className="student-profile-title">
+              <span className="student-profile-text">Student Profile</span>
+              <div className="student-profile-line" />
             </div>
-            <div className="calendar-card-wrapper">
-              <StudentCalendarCard />
-            </div>
-          </div>
 
-          <EditProfileModal
-            open={modalOpen}
-            section={section}
-            onClose={() => {
-              setModalOpen(false);
-              loadStudent(); // รีโหลดข้อมูลหลังปิด Modal
-            }}
-            initialData={student}
-          />
-        </Content>
-      </Layout>
+            {student ? (
+              <div className="student-profile-content-loaded">
+                <ProfileCard
+                  student={student}
+                  onEditSection={(sec) => {
+                    setSection(sec);
+                    setModalOpen(true);
+                  }}
+                  onImageUpdated={handleImageUpdated}
+                  onUploadStatusChange={setUploadingImage} // ✅ รับสถานะจากลูก
+                />
+              </div>
+            ) : (
+              <ProfileSkeleton />
+            )}
+
+            <div className="student-dashboard-section">
+              <div className="application-list-wrapper">
+                {userIdString && <ApplicationListCard userId={Number(userIdString)} />}
+              </div>
+              <div className="calendar-card-wrapper">
+                <StudentCalendarCard />
+              </div>
+            </div>
+
+            <EditProfileModal
+              open={modalOpen}
+              section={section}
+              onClose={() => {
+                setModalOpen(false);
+                loadStudent(); // รีโหลดข้อมูลหลังปิด Modal
+              }}
+              initialData={student}
+            />
+          </Content>
+        </Layout>
+      ) : (
+        // แสดงพื้นหลังสวยๆ เมื่อกำลังโหลด
+        <div className="student-loading-background" style={{ 
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }} />
+      )}
     </Layout>
   );
 };
