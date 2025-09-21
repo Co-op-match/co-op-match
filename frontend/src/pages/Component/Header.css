@@ -1314,8 +1314,8 @@
     max-width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
     margin-right: calc(-50vw + 50%) !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
 }
 
@@ -1329,8 +1329,8 @@
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
-    padding-left: 24px !important;
-    padding-right: 24px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 }
 
@@ -1344,8 +1344,8 @@
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
-    padding-left: 32px !important;
-    padding-right: 32px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
   }
 }
 
@@ -1422,8 +1422,8 @@
   .company-logo-container,
   .header-company-logo-container,
   .student-logo-container {
-    margin-left: 6px !important;
-    margin-right: 12px !important;
+    margin-left: 4px !important;
+    margin-right: 8px !important;
   }
 }
 
@@ -1435,8 +1435,8 @@
   .company-logo-container,
   .header-company-logo-container,
   .student-logo-container {
-    margin-left: 8px !important;
-    margin-right: 16px !important;
+    margin-left: 6px !important;
+    margin-right: 12px !important;
   }
 }
 
@@ -1448,8 +1448,8 @@
   .company-logo-container,
   .header-company-logo-container,
   .student-logo-container {
-    margin-left: 12px !important;
-    margin-right: 24px !important;
+    margin-left: 8px !important;
+    margin-right: 16px !important;
   }
 }
 
@@ -1461,7 +1461,7 @@
   .company-logo-container,
   .header-company-logo-container,
   .student-logo-container {
-    margin-left: 16px !important;
-    margin-right: 32px !important;
+    margin-left: 12px !important;
+    margin-right: 20px !important;
   }
 }

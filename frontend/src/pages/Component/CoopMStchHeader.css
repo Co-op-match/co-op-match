@@ -1,7 +1,9 @@
 /* ทำให้เมนูไม่ขึ้น ... และเลื่อนในแนวนอนได้เมื่อพื้นที่ไม่พอ */
 .no-ellipsis-menu .ant-menu-overflow {
-  overflow-x: auto;           /* เลื่อนซ้ายขวาแทน */
+  overflow: visible !important;           /* แสดงเมนูทั้งหมด */
   scrollbar-width: none;      /* Firefox: ซ่อนสกรอลบาร์ */
+  width: 100% !important;
+  max-width: none !important;
 }
 .no-ellipsis-menu .ant-menu-overflow::-webkit-scrollbar {
   display: none;              /* WebKit: ซ่อนสกรอลบาร์ */
@@ -10,11 +12,25 @@
 /* ไม่ให้ไอเท็มถูกบีบจนย้ายไปอยู่เมนูรวม */
 .no-ellipsis-menu .ant-menu-item,
 .no-ellipsis-menu .ant-menu-submenu {
-  flex: 0 0 auto;             /* คงความกว้างของไอเท็ม */
+  flex: 0 0 auto !important;             /* คงความกว้างของไอเท็ม */
+  display: inline-block !important;      /* บังคับแสดงผล */
+  visibility: visible !important;        /* ป้องกันการซ่อน */
+  opacity: 1 !important;                 /* ป้องกันการซ่อน */
 }
 
 /* ซ่อนปุ่ม "..." (rest item) ของ antd */
 .no-ellipsis-menu .ant-menu-overflow-item-rest {
+  display: none !important;
+}
+
+/* Override Ant Design's default responsive behavior */
+.no-ellipsis-menu .ant-menu-overflow-item {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.no-ellipsis-menu .ant-menu-overflow-item-suffix {
   display: none !important;
 }
 
@@ -23,4 +39,52 @@
   display: flex;
   align-items: center;
   min-width: 0;
+  flex: 1;
+  overflow: visible;
+  transition: all 0.3s ease;
+}
+
+/* รับประกันว่าเมนูแชทแสดงผล */
+.student-responsive-menu-horizontal {
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  transition: all 0.3s ease !important;
+}
+
+.student-responsive-menu-horizontal .ant-menu-item {
+  white-space: nowrap !important;
+  min-width: auto !important;
+  display: inline-block !important;
+  visibility: visible !important;
+}
+
+.student-responsive-menu-horizontal .ant-menu-submenu {
+  white-space: nowrap !important;
+  min-width: auto !important;
+  display: inline-block !important;
+  visibility: visible !important;
+}
+
+/* Chat menu specific styling */
+.student-responsive-menu-horizontal .ant-menu-item[data-menu-id$="chat"] {
+  display: inline-block !important;
+  visibility: visible !important;
+}
+
+/* รองรับการ resize หน้าจอ */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .student-responsive-menu-horizontal .ant-menu-item,
+  .student-responsive-menu-horizontal .ant-menu-submenu {
+    padding: 0 8px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .student-responsive-menu-horizontal .ant-menu-item,
+  .student-responsive-menu-horizontal .ant-menu-submenu {
+    padding: 0 12px !important;
+    font-size: 14px !important;
+  }
 }

@@ -102,8 +102,8 @@ const CoopMatchHeaderDefault: React.FC = () => {
           className="coop-match-default-logo-container"
           onClick={handleLogoClick}
           style={{
-            marginLeft: isMobile ? 4 : screens.xl ? 16 : 12,
-            marginRight: isMobile ? 12 : screens.xl ? 32 : 24,
+            marginLeft: isMobile ? 4 : screens.xl ? 12 : 8,
+            marginRight: isMobile ? 8 : screens.xl ? 20 : 16,
           }}
         >
           <img src={Logo} alt="Logo" className="coop-match-default-logo" />

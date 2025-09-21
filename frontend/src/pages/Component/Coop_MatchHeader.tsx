@@ -55,6 +55,10 @@ const CoopMatchHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = 
   const isTablet = screens.md && !screens.lg;
   const isSmallMobile = !screens.sm;
   const isLargeScreen = screens.xl;
+  const isDesktop = screens.lg && !screens.xl;
+  
+  // Force re-render เมื่อหน้าจอ resize
+  const [, forceRender] = useState({});
   const [user, setUser] = useState<UserInterface | null>(null);
   const [totalUnread, setTotalUnread] = useState<number>(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -180,6 +184,16 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
     };
   }, [userId]);
 
+  // Handle window resize เพื่อแก้ปัญหาเมนูหายตอน resize
+  useEffect(() => {
+    const handleResize = () => {
+      forceRender({});
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [forceRender]);
+
   const fullMenu = [
     { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
     { key: 'search', icon: <SearchOutlined />, label: 'ค้นหางาน' },
@@ -256,8 +270,8 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
             cursor: "pointer", 
             display: "flex", 
             alignItems: "center", 
-            marginLeft: isSmallMobile ? 6 : isMobile ? 4 : isTablet ? 8 : isLargeScreen ? 16 : 12,
-            marginRight: isSmallMobile ? 8 : isMobile ? 12 : isTablet ? 16 : isLargeScreen ? 32 : 24, 
+            marginLeft: isSmallMobile ? 4 : isMobile ? 4 : isTablet ? 6 : isLargeScreen ? 12 : 8,
+            marginRight: isSmallMobile ? 8 : isMobile ? 8 : isTablet ? 12 : isLargeScreen ? 20 : 16, 
             flexShrink: 0,
             transition: "all 0.3s ease"
           }}
@@ -274,10 +288,10 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
         </div>
 
         {/* Right: Menu + Notifications + Avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, marginLeft: 'auto', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, marginLeft: 'auto', minWidth: 0, flex: 1 }}>
           {/* Desktop Menu */}
           {!isMobile && (
-            <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0 }}>
+            <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
               <Menu
                 className="no-ellipsis-menu student-responsive-menu-horizontal"
                 mode="horizontal"
@@ -287,8 +301,13 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
                 style={{ 
                   border: 'none', 
                   backgroundColor: 'transparent',
-                  maxWidth: isTablet ? "350px" : isLargeScreen ? "700px" : "600px",
-                  fontSize: isTablet ? "14px" : "15px",
+                  width: '100%',
+                  minWidth: isSmallMobile ? "280px" : isTablet ? "320px" : isDesktop ? "450px" : "500px",
+                  maxWidth: isSmallMobile ? "350px" : isTablet ? "400px" : isDesktop ? "600px" : "700px",
+                  fontSize: isSmallMobile ? "12px" : isTablet ? "13px" : "14px",
+                  whiteSpace: 'nowrap',
+                  flex: 1,
+                  overflow: 'visible',
                 }}
                 overflowedIndicator={null}
               />

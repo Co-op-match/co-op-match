@@ -251,8 +251,8 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
             display: "flex", 
             alignItems: "center", 
             flex: "0 0 auto",
-            marginLeft: isSmallMobile ? 6 : isMobile ? 4 : isTablet ? 8 : isLargeScreen ? 16 : 12,
-            marginRight: isSmallMobile ? 8 : isMobile ? 12 : isTablet ? 16 : isLargeScreen ? 32 : 24,
+            marginLeft: isSmallMobile ? 4 : isMobile ? 4 : isTablet ? 6 : isLargeScreen ? 12 : 8,
+            marginRight: isSmallMobile ? 8 : isMobile ? 8 : isTablet ? 12 : isLargeScreen ? 20 : 16,
             transition: "all 0.3s ease"
           }}
         >
