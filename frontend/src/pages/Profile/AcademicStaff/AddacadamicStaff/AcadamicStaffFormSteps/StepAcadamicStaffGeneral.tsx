@@ -78,6 +78,7 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
 }) => {
   const [genders, setGenders] = useState<GenderInterface[]>([]);
   const [universities, setUniversities] = useState<UniversityOption[]>([]);
+  const [formReady, setFormReady] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   // watch (เพราะใช้ labelInValue)
@@ -128,6 +129,11 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
 
         setUniversities(univOptions);
         hydrateLabelInValue(form, 'university_id', univOptions);
+        
+        // Initialize form ready state after data is loaded
+        Promise.resolve().then(() => {
+          setFormReady(true);
+        });
       } catch (err) {
         console.error('โหลดข้อมูลมหาวิทยาลัยล้มเหลว:', err);
       }
@@ -380,7 +386,8 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
               labelInValue
               showSearch
               placeholder="เลือกมหาวิทยาลัย"
-              options={universities}
+              options={formReady ? universities : []}
+              disabled={!formReady}
               optionLabelProp="label"
               optionFilterProp="label"
               filterOption={filterOption}
@@ -407,8 +414,8 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
             <Select
               labelInValue
               placeholder={universityId ? 'เลือกคณะ' : 'เลือกมหาวิทยาลัยก่อน'}
-              options={facultyOptions}
-              disabled={!universityId}
+              options={formReady ? facultyOptions : []}
+              disabled={!formReady || !universityId}
               optionLabelProp="label"
               optionFilterProp="label"
               showSearch
@@ -432,8 +439,8 @@ const StepAcadamicStaffGeneral: React.FC<StepGeneralInfoProps> = ({
             <Select
               labelInValue
               placeholder={facultyId ? 'เลือกสาขา' : 'เลือกคณะก่อน'}
-              options={programOptions}
-              disabled={!facultyId}
+              options={formReady ? programOptions : []}
+              disabled={!formReady || !facultyId}
               optionLabelProp="label"
               optionFilterProp="label"
               showSearch

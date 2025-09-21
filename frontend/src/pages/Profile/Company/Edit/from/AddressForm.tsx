@@ -57,17 +57,20 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
             }))
           );
 
-          form.setFieldsValue({
-            house_number: init.house_number,
-            village: init.village,
-            street: init.street,
-            sub_street: init.sub_street,
-            province_id: init.Province?.ID,
-            district_id: init.District?.ID,
-            subdistrict_id: init.SubDistrict?.ID,
-            postcode: init.Postcode?.post_code,
-            postcode_id: init.Postcode?.ID,
-          });
+          // ✅ ตั้งค่า form หลังจากที่ options พร้อมแล้ว
+          setTimeout(() => {
+            form.setFieldsValue({
+              house_number: init.house_number,
+              village: init.village,
+              street: init.street,
+              sub_street: init.sub_street,
+              province_id: init.Province?.ID,
+              district_id: init.District?.ID,
+              subdistrict_id: init.SubDistrict?.ID,
+              postcode: init.Postcode?.post_code,
+              postcode_id: init.Postcode?.ID,
+            });
+          }, 50);
         }
       } catch (err) {
         console.error("Error loading address data:", err);
@@ -226,7 +229,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
             rules={[{ required: true, message: "กรุณาเลือกจังหวัด" }]}
           >
             <Select
-              placeholder="ค้นหาและเลือกจังหวัด"
+              placeholder={loading ? "กำลังโหลด..." : "ค้นหาและเลือกจังหวัด"}
               options={provinceOptions}
               onChange={handleProvinceChange}
               loading={loading}
@@ -249,10 +252,11 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
               rules={[{ required: true, message: "กรุณาเลือกอำเภอ" }]}
             >
               <Select
-                placeholder="เลือกอำเภอ"
+                placeholder={loading ? "กำลังโหลด..." : "เลือกอำเภอ"}
                 options={districtOptions}
                 onChange={handleDistrictChange}
                 disabled={!form.getFieldValue("province_id")}
+                loading={loading && !districtOptions.length}
                 showSearch
                 size="large"
                 filterOption={(input, option) =>
@@ -267,10 +271,11 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
               rules={[{ required: true, message: "กรุณาเลือกตำบล" }]}
             >
               <Select
-                placeholder="เลือกตำบล"
+                placeholder={loading ? "กำลังโหลด..." : "เลือกตำบล"}
                 options={subdistrictOptions}
                 onChange={handleSubdistrictChange}
                 disabled={!form.getFieldValue("district_id")}
+                loading={loading && !subdistrictOptions.length}
                 showSearch
                 size="large"
                 filterOption={(input, option) =>

@@ -43,6 +43,7 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
   // raw tree จาก API (normalize id เป็น number)
   const [rawProvinces, setRawProvinces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formReady, setFormReady] = useState(false);
 
   // watch form values (เพราะใช้ labelInValue)
   const provinceField = Form.useWatch('province', form);
@@ -78,6 +79,11 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
           : [];
 
         setRawProvinces(normalized);
+        
+        // Initialize form ready state after data is loaded
+        Promise.resolve().then(() => {
+          setFormReady(true);
+        });
       } finally {
         setLoading(false);
       }
@@ -198,9 +204,10 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
             <Select
               labelInValue
               showSearch
-              options={provinceOptions}
+              options={formReady ? provinceOptions : []}
               placeholder="เลือกจังหวัด"
               loading={loading}
+              disabled={!formReady}
               optionLabelProp="label"
               optionFilterProp="label"
               filterOption={filterOption}
@@ -228,9 +235,9 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
             <Select
               labelInValue
               showSearch
-              options={districtOptions}
+              options={formReady ? districtOptions : []}
               placeholder={provinceId ? 'เลือกอำเภอ / เขต' : 'เลือกจังหวัดก่อน'}
-              disabled={!provinceId || districtOptions.length === 0}
+              disabled={!formReady || !provinceId || districtOptions.length === 0}
               optionLabelProp="label"
               optionFilterProp="label"
               filterOption={filterOption}
@@ -257,9 +264,9 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
             <Select
               labelInValue
               showSearch
-              options={subdistrictOptions}
+              options={formReady ? subdistrictOptions : []}
               placeholder={districtId ? 'เลือกตำบล / แขวง' : 'เลือกอำเภอ/เขตก่อน'}
-              disabled={!districtId || subdistrictOptions.length === 0}
+              disabled={!formReady || !districtId || subdistrictOptions.length === 0}
               optionLabelProp="label"
               optionFilterProp="label"
               filterOption={filterOption}
@@ -285,8 +292,8 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
           >
             <Select
               labelInValue
-              disabled={!selectedSubdistrict?.Postcode}
-              options={postcodeOption}
+              disabled={!formReady || !selectedSubdistrict?.Postcode}
+              options={formReady ? postcodeOption : []}
               placeholder={selectedSubdistrict ? 'เลือกรหัสไปรษณีย์' : 'เลือกตำบล/แขวงก่อน'}
               optionLabelProp="label"
               optionFilterProp="label"

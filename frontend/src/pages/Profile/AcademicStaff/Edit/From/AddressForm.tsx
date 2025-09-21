@@ -57,17 +57,20 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
             }))
           );
 
-          form.setFieldsValue({
-            house_number: init.house_number,
-            village: init.village,
-            street: init.street,
-            sub_street: init.sub_street,
-            province_id: init.Province?.ID,
-            district_id: init.District?.ID,
-            subdistrict_id: init.SubDistrict?.ID,
-            postcode: init.Postcode?.post_code,
-            postcode_id: init.Postcode?.ID,
-          });
+          // ✅ ตั้งค่า form หลังจากที่ options พร้อมแล้ว
+          setTimeout(() => {
+            form.setFieldsValue({
+              house_number: init.house_number,
+              village: init.village,
+              street: init.street,
+              sub_street: init.sub_street,
+              province_id: init.Province?.ID,
+              district_id: init.District?.ID,
+              subdistrict_id: init.SubDistrict?.ID,
+              postcode: init.Postcode?.post_code,
+              postcode_id: init.Postcode?.ID,
+            });
+          }, 50);
         }
       } catch (err) {
         console.error("Error loading address data:", err);

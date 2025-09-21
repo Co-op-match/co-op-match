@@ -45,6 +45,7 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
   const [universities, setUniversities] = useState<UniversityOption[]>([]);
   const [educationLevels, setEducationLevels] = useState<LevelOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formReady, setFormReady] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   // watch form (เพราะใช้ labelInValue)
@@ -87,6 +88,11 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
         // hydrate ทันที กัน id แว้บ
         hydrateLabelInValue(form, 'university_id', univOptions);
         hydrateLabelInValue(form, 'education_level_id', levelOptions);
+        
+        // Initialize form ready state after data is loaded
+        Promise.resolve().then(() => {
+          setFormReady(true);
+        });
       } catch (e) {
         console.error(e);
         messageApi.error('โหลดข้อมูลการศึกษาไม่สำเร็จ');
@@ -203,8 +209,9 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
               labelInValue
               showSearch
               placeholder="เลือกมหาวิทยาลัย"
-              loading={!univReady}
-              options={universities}
+              loading={!formReady}
+              disabled={!formReady}
+              options={formReady ? universities : []}
               fieldNames={{ label: 'label', value: 'value' }}
               optionLabelProp="label"
               optionFilterProp="label"

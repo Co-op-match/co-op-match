@@ -20,6 +20,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
   const [subdistrictOptions, setSubdistrictOptions] = useState<SelectOption[]>([]);
   const [rawProvinces, setRawProvinces] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [formReady, setFormReady] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,17 +58,24 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
             }))
           );
 
-          form.setFieldsValue({
-            house_number: init.house_number,
-            village: init.village,
-            street: init.street,
-            sub_street: init.sub_street,
-            province_id: init.Province?.ID,
-            district_id: init.District?.ID,
-            subdistrict_id: init.SubDistrict?.ID,
-            postcode: init.Postcode?.post_code,
-            postcode_id: init.Postcode?.ID,
+          // ✅ ตั้งค่า form หลังจากที่ options พร้อมแล้ว - ใช้ Promise แทน setTimeout
+          Promise.resolve().then(() => {
+            form.setFieldsValue({
+              house_number: init.house_number,
+              village: init.village,
+              street: init.street,
+              sub_street: init.sub_street,
+              province_id: init.Province?.ID,
+              district_id: init.District?.ID,
+              subdistrict_id: init.SubDistrict?.ID,
+              postcode: init.Postcode?.post_code,
+              postcode_id: init.Postcode?.ID,
+            });
+            setFormReady(true);
           });
+        } else {
+          // ถ้าไม่มี initial data ก็ให้ form พร้อมเลย
+          setFormReady(true);
         }
       } catch (err) {
         console.error("Error loading address data:", err);
@@ -226,12 +234,13 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
             rules={[{ required: true, message: "กรุณาเลือกจังหวัด" }]}
           >
             <Select
-              placeholder="ค้นหาและเลือกจังหวัด"
-              options={provinceOptions}
+              placeholder={loading || !formReady ? "กำลังโหลด..." : "ค้นหาและเลือกจังหวัด"}
+              options={formReady ? provinceOptions : []}
               onChange={handleProvinceChange}
-              loading={loading}
+              loading={loading || !formReady}
               showSearch
               size="large"
+              disabled={!formReady}
               filterOption={(input, option) =>
                 (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
               }
@@ -249,10 +258,11 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
               rules={[{ required: true, message: "กรุณาเลือกอำเภอ" }]}
             >
               <Select
-                placeholder="เลือกอำเภอ"
-                options={districtOptions}
+                placeholder={loading || !formReady ? "กำลังโหลด..." : "เลือกอำเภอ"}
+                options={formReady ? districtOptions : []}
                 onChange={handleDistrictChange}
-                disabled={!form.getFieldValue("province_id")}
+                disabled={!formReady || !form.getFieldValue("province_id")}
+                loading={loading || !formReady}
                 showSearch
                 size="large"
                 filterOption={(input, option) =>
@@ -267,10 +277,11 @@ const AddressForm: React.FC<AddressFormProps> = ({ form, initialData, onChange }
               rules={[{ required: true, message: "กรุณาเลือกตำบล" }]}
             >
               <Select
-                placeholder="เลือกตำบล"
-                options={subdistrictOptions}
+                placeholder={loading || !formReady ? "กำลังโหลด..." : "เลือกตำบล"}
+                options={formReady ? subdistrictOptions : []}
                 onChange={handleSubdistrictChange}
-                disabled={!form.getFieldValue("district_id")}
+                disabled={!formReady || !form.getFieldValue("district_id")}
+                loading={loading || !formReady}
                 showSearch
                 size="large"
                 filterOption={(input, option) =>

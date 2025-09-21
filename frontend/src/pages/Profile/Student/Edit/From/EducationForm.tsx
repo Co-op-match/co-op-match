@@ -32,6 +32,7 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
   const [programs, setPrograms] = useState<ProgramOption[]>([]);
   const [educationLevels, setEducationLevels] = useState<{ label: string; value: number }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [formReady, setFormReady] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -63,17 +64,9 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
         setUniversities(univOptions);
         setEducationLevels(levelOptions);
 
+        // ✅ ตั้งค่า dropdown options และ form values พร้อมกัน
         const init = initialData?.Education?.[0];
         if (init) {
-          form.setFieldsValue({
-            grade: init.grade,
-            education_level_id: init.EducationLevel?.ID,
-            university_id: init.University?.ID,
-            faculty_id: init.Faculty?.ID,
-            program_id: init.Program?.ID,
-            year: init.year,
-          });
-
           const selectedUniv = univOptions.find((u) => u.value === init.University?.ID);
           if (selectedUniv) {
             setFaculties(selectedUniv.faculties);
@@ -83,6 +76,21 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
               setPrograms(selectedFac.programs);
             }
           }
+
+          // ✅ ตั้งค่า form หลังจากที่ options พร้อมแล้ว
+          Promise.resolve().then(() => {
+            form.setFieldsValue({
+              grade: init.grade,
+              education_level_id: init.EducationLevel?.ID,
+              university_id: init.University?.ID,
+              faculty_id: init.Faculty?.ID,
+              program_id: init.Program?.ID,
+              year: init.year,
+            });
+            setFormReady(true);
+          });
+        } else {
+          setFormReady(true);
         }
       } catch (err) {
         console.error("❌ โหลดข้อมูลล้มเหลว:", err);
@@ -193,9 +201,10 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
           rules={[{ required: true, message: "กรุณาเลือกระดับการศึกษา" }]}
         >
           <Select 
-            options={educationLevels} 
-            placeholder="เลือกระดับการศึกษา"
-            loading={loading}
+            options={formReady ? educationLevels : []} 
+            placeholder={loading || !formReady ? "กำลังโหลด..." : "เลือกระดับการศึกษา"}
+            loading={loading || !formReady}
+            disabled={!formReady}
             size="large"
           />
         </Form.Item>
@@ -223,10 +232,11 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
             rules={[{ required: true, message: "กรุณาเลือกมหาวิทยาลัย" }]}
           >
             <Select
-              options={universities}
-              placeholder="ค้นหาและเลือกมหาวิทยาลัย"
+              options={formReady ? universities : []}
+              placeholder={loading || !formReady ? "กำลังโหลด..." : "ค้นหาและเลือกมหาวิทยาลัย"}
               onChange={handleUniversityChange}
-              loading={loading}
+              loading={loading || !formReady}
+              disabled={!formReady}
               showSearch
               size="large"
               filterOption={(input, option) =>
@@ -241,10 +251,11 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
             rules={[{ required: true, message: "กรุณาเลือกคณะ" }]}
           >
             <Select
-              options={faculties}
-              placeholder="เลือกคณะ"
+              options={formReady ? faculties : []}
+              placeholder={loading || !formReady ? "กำลังโหลด..." : "เลือกคณะ"}
               onChange={handleFacultyChange}
-              disabled={!form.getFieldValue("university_id")}
+              disabled={!formReady || !form.getFieldValue("university_id")}
+              loading={loading || !formReady}
               showSearch
               size="large"
               filterOption={(input, option) =>
@@ -259,9 +270,10 @@ const EducationForm: React.FC<EducationFormProps> = ({ form, initialData, onChan
             rules={[{ required: true, message: "กรุณาเลือกสาขาวิชา" }]}
           >
             <Select
-              options={programs}
-              placeholder="เลือกสาขาวิชา"
-              disabled={!form.getFieldValue("faculty_id")}
+              options={formReady ? programs : []}
+              placeholder={loading || !formReady ? "กำลังโหลด..." : "เลือกสาขาวิชา"}
+              disabled={!formReady || !form.getFieldValue("faculty_id")}
+              loading={loading || !formReady}
               showSearch
               size="large"
               filterOption={(input, option) =>

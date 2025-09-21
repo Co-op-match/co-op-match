@@ -42,6 +42,7 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
   // raw data จาก API
   const [rawProvinces, setRawProvinces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formReady, setFormReady] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   // watch ค่าฟอร์ม (เพราะใช้ labelInValue)
@@ -80,6 +81,11 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
         }));
 
         setRawProvinces(normalized);
+        
+        // Initialize form ready state after data is loaded
+        Promise.resolve().then(() => {
+          setFormReady(true);
+        });
       } catch (error) {
         console.error('โหลดจังหวัดล้มเหลว:', error);
         messageApi.error({
@@ -273,9 +279,10 @@ const StepAddress: React.FC<StepAddressProps> = ({ form }) => {
             <Select
               labelInValue
               showSearch
-              options={provinceOptions}
+              options={formReady ? provinceOptions : []}
               placeholder="เลือกจังหวัด"
               loading={loading}
+              disabled={!formReady}
               optionLabelProp="label"
               optionFilterProp="label"
               filterOption={filterOption}

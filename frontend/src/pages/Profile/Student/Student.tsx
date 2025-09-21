@@ -179,9 +179,11 @@ const StudentProfile: React.FC = () => {
   // ✅ สถานะโหลดหน้า + อัปโหลดรูป
   const [loadingStudent, setLoadingStudent] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
-   const userIdString = localStorage.getItem("id");
-const showLoader = !authLoading && (loadingStudent || uploadingImage);
+  
+  const userIdString = localStorage.getItem("id");
+  const showLoader = !authLoading && (loadingStudent || uploadingImage);
   const loaderText = uploadingImage ? "กำลังอัปโหลดรูปโปรไฟล์..." : "กำลังโหลดโปรไฟล์นักศึกษา...";
+
   useEffect(() => {
     loadStudent();
   }, []);
@@ -275,7 +277,14 @@ const showLoader = !authLoading && (loadingStudent || uploadingImage);
               section={section}
               onClose={() => {
                 setModalOpen(false);
-                loadStudent(); // รีโหลดข้อมูลหลังปิด Modal
+                // ไม่ต้อง reload ทั้งหน้า เพียงแค่ปิด Modal
+              }}
+              onUpdateSuccess={(updatedData: Partial<StudentInterface>) => {
+                // อัปเดต state โดยตรงแทนการ reload
+                if (updatedData && student) {
+                  setStudent({...student, ...updatedData});
+                }
+                setModalOpen(false);
               }}
               initialData={student}
             />

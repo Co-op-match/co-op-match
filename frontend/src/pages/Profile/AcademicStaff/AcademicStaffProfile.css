@@ -1,10 +1,10 @@
 /* ========================================
-   BASE LAYOUT
+   ENHANCED RESPONSIVE LAYOUT
    ======================================== */
 .academicstaff-layout {
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 32px 24px;
   min-height: 100vh;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 1) 0%, 
@@ -12,42 +12,86 @@
     rgba(207, 234, 250, 1) 60%, 
     rgba(159, 218, 252, 1) 100%
   );
-  background-attachment: fixed; /* 🔒 ให้พื้นหลังอยู่กับที่ขณะ scroll */
+  background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
+  transition: padding 0.3s ease;
+}
+
+/* Responsive Layout Adjustments */
+@media (max-width: 576px) {
+  .academicstaff-layout {
+    padding: 16px 8px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .academicstaff-layout {
+    padding: 28px 20px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .academicstaff-layout {
+    padding: 40px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 }
 
 /* ========================================
-   TITLE SECTION
+   ENHANCED TITLE SECTION
    ======================================== */
 .academicstaff-profile-title {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
-  padding: 0 2px;
+  margin-bottom: 24px;
+  padding: 0 4px;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .academicstaff-profile-text {
   font-weight: 700;
-  font-size: 22px;
+  font-size: clamp(20px, 4vw, 32px);
   color: #0d47a1;
   white-space: nowrap;
-  margin-right: 14px;
+  margin-right: 18px;
   margin-top: 1px;
   margin-bottom: 3px;
-  text-shadow: 1px 1px 4px rgba(13, 71, 161, 0.2);
-  letter-spacing: -0.3px;
+  text-shadow: 2px 2px 6px rgba(13, 71, 161, 0.3);
+  letter-spacing: -0.4px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.academicstaff-profile-text:hover {
+  text-shadow: 3px 3px 8px rgba(13, 71, 161, 0.4);
+  transform: translateX(3px);
 }
 
 .academicstaff-profile-line {
   flex: 1;
   margin-top: 5px;
   margin-bottom: 2px;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(90deg, 
-    rgba(13, 71, 161, 0.6) 0%, 
-    rgba(64, 169, 255, 0.4) 50%,
-    rgba(13, 71, 161, 0.1) 100%
+    rgba(13, 71, 161, 0.7) 0%, 
+    rgba(64, 169, 255, 0.5) 50%,
+    rgba(13, 71, 161, 0.2) 100%
   );
   border-radius: 1px;
   box-shadow: 0 1px 2px rgba(13, 71, 161, 0.1);

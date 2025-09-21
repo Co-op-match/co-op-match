@@ -26,6 +26,7 @@ interface EditProfileModalProps {
   open: boolean;
   section: "personal" | "education" | "address";
   onClose: () => void;
+  onUpdateSuccess?: (updatedData: Partial<StudentInterface>) => void;
   initialData?: StudentInterface;
 }
 
@@ -54,6 +55,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   open,
   section,
   onClose,
+  onUpdateSuccess,
   initialData,
 }) => {
   const [form] = Form.useForm();
@@ -64,11 +66,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [submitValues, setSubmitValues] = useState<any>(null);
+  const [formDataCached, setFormDataCached] = useState(false);
 
   const sectionConfig = SECTION_CONFIG[section];
 
   useEffect(() => {
-    if (open && initialData) {
+    if (open && initialData && !formDataCached) {
       const firstEducation = initialData.Education?.[0];
 
       form.setFieldsValue({
@@ -84,8 +87,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       });
 
       setFormChanged(false);
+      setFormDataCached(true);
     }
-  }, [open, initialData, form]);
+  }, [open, initialData, form, formDataCached]);
 
   const handleFormChange = () => setFormChanged(true);
 
@@ -149,6 +153,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     const userId = Number(localStorage.getItem("id"));
     const roleId = Number(localStorage.getItem("roleId"));
 
+    // ✅ Optimistic update - อัปเดต UI ทันทีก่อน
+    if (onUpdateSuccess) {
+      onUpdateSuccess(values);
+    }
+
     try {
       setLoading(true);
       setLoadingText(
@@ -171,7 +180,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           break;
       }
       setFormChanged(false);
-      onClose();
+      
+      // ปิด Modal หลังบันทึกสำเร็จ
+      if (!onUpdateSuccess) {
+        onClose();
+      }
+      
+      // รีเซ็ต cache สำหรับครั้งต่อไป
+      setFormDataCached(false);
     } catch (err) {
       console.error("❌ Update Failed", err);
       messageApi.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");

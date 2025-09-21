@@ -24,6 +24,7 @@ interface EditProfileModalProps {
   open: boolean;
   section: "personal" | "contact" | "address";
   onClose: () => void;
+  onUpdateSuccess?: () => void;
   initialData?: AcademicStaffInterface;
 }
 

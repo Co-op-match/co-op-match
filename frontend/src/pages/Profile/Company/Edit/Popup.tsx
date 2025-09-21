@@ -22,6 +22,7 @@ interface EditProfileModalProps {
   open: boolean;
   section: "contact" | "address";
   onClose: () => void;
+  onUpdateSuccess?: () => void;
   initialData?: CompanyInterface;
 }
 
@@ -50,6 +51,7 @@ const EditProfileCompanyModal: React.FC<EditProfileModalProps> = ({
   open,
   section,
   onClose,
+  onUpdateSuccess,
   initialData,
 }) => {
   const [form] = Form.useForm();
@@ -136,7 +138,12 @@ const EditProfileCompanyModal: React.FC<EditProfileModalProps> = ({
           await handleAddressSubmit(values, userId, roleId);
           break;
       }
+      
       setFormChanged(false);
+      
+      // ✅ Optimistic Update: แจ้ง parent ให้อัปเดตข้อมูลทันที
+      onUpdateSuccess?.();
+      
       onClose();
     } catch (err) {
       console.error("❌ Update Failed", err);
