@@ -1,3 +1,4 @@
+// ✅ CompanyProfileview.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Layout,
@@ -35,12 +36,15 @@ import AcademicStaffHeader from "@/pages/Component/AcademicStaffHeader";
 import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";
 
 const { Content } = Layout;
+
 const getStoredRoleId = (): number => {
   const raw = localStorage.getItem("roleId");
   return raw ? Number(raw) : 0;
 };
+
 // ✅ ควรตั้งใน .env เช่น VITE_API_BASE_URL
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.coop-match.online";
+
 const RoleHeader: React.FC = () => {
   const [roleId, setRoleId] = useState<number>(getStoredRoleId());
 
@@ -54,7 +58,7 @@ const RoleHeader: React.FC = () => {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  switch (roleId) {    
+  switch (roleId) {
     case 2:
       return <CompanyHeader />;
     case 3:
@@ -65,6 +69,7 @@ const RoleHeader: React.FC = () => {
       return <CoopMatchHeaderDefault />;
   }
 };
+
 const CompanyProfileview: React.FC = () => {
   const [company, setCompany] = useState<CompanyInterface | null>(null);
   const [verifyStatus, setVerifyStatus] = useState<string>("ยังไม่ได้ส่งคำขอ");
@@ -72,6 +77,10 @@ const CompanyProfileview: React.FC = () => {
   const [chatHovered, setChatHovered] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
   const isBusy = loading || creatingSession;
+
+  // 🔒 นักศึกษาเท่านั้น
+  const roleId = useMemo(() => Number(localStorage.getItem("roleId") || 0), []);
+  const isStudent = roleId === 3;
 
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -84,9 +93,9 @@ const CompanyProfileview: React.FC = () => {
     () => Number(localStorage.getItem("id")) || null,
     []
   );
+
   const extractRoomId = (raw: any): number | null => {
     if (!raw) return null;
-    // รองรับหลายรูปแบบ response
     return (
       raw.room_id ??
       raw.id ??
@@ -97,28 +106,27 @@ const CompanyProfileview: React.FC = () => {
       null
     );
   };
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function mintSessionWithRetry(roomId: number, maxTries = 5, delayMs = 150) {
-  let lastErr: any = null;
-  for (let i = 0; i < maxTries; i++) {
-    try {
-      return await createChatSession(roomId);
-    } catch (e: any) {
-      lastErr = e;
-      const code = e?.response?.status;
-      // ถ้าเป็น 404/400/409 ให้ลองใหม่ เผื่อห้องเพิ่งสร้าง
-      if ([400, 404, 409].includes(Number(code))) {
-        await wait(delayMs);
-        continue;
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  async function mintSessionWithRetry(roomId: number, maxTries = 5, delayMs = 150) {
+    let lastErr: any = null;
+    for (let i = 0; i < maxTries; i++) {
+      try {
+        return await createChatSession(roomId);
+      } catch (e: any) {
+        lastErr = e;
+        const code = e?.response?.status;
+        if ([400, 404, 409].includes(Number(code))) {
+          await wait(delayMs);
+          continue;
+        }
+        throw e;
       }
-      // error อื่นไม่ต้อง retry
-      throw e;
     }
+    throw lastErr;
   }
-  throw lastErr;
-}
-  // map badge status/สีล่วงหน้า
+
   const verifyBadge = useMemo(() => {
     switch (verifyStatus) {
       case "รับรอง":
@@ -169,69 +177,61 @@ async function mintSessionWithRetry(roomId: number, maxTries = 5, delayMs = 150)
     };
   }, [companyId]);
 
-const handleChatClick = useCallback(async () => {
-  if (creatingSession) return; // กันกดซ้ำ
-  if (!currentUserId || !companyOwnerUserId) return;
+  const handleChatClick = useCallback(async () => {
+    if (creatingSession) return;
+    if (!currentUserId || !companyOwnerUserId) return;
 
-  if (currentUserId === companyOwnerUserId) {
-    message.info("ไม่สามารถเริ่มแชทกับบัญชีของตนเองได้");
-    return;
-  }
-
-  setCreatingSession(true);
-
-  try {
-    // 1) สร้าง/ดึงห้อง
-    let roomId: number | null = null;
-    try {
-      const res = await CreateChatRoom(currentUserId, companyOwnerUserId);
-      // รองรับทั้ง axios ที่โยน error เมื่อ 409 หรือไม่
-      roomId = extractRoomId(res?.data) ?? extractRoomId(res) ?? null;
-      // ถ้า backend ส่ง status 409 แบบ throw error จะไปเข้า catch ข้างล่าง
-    } catch (err: any) {
-      // 409 (room exists) ที่ axios โยน error ก็ handle ที่นี่
-      const data = err?.response?.data ?? {};
-      roomId = extractRoomId(data);
-      if (!roomId) {
-        console.error("CreateChatRoom error:", err);
-        message.error("ไม่สามารถเริ่มแชทได้ (สร้างห้องไม่สำเร็จ)");
-        setCreatingSession(false);
-        return;
-      }
-    }
-
-    if (!roomId) {
-      message.error("ไม่พบห้องแชท");
-      setCreatingSession(false);
+    if (currentUserId === companyOwnerUserId) {
+      message.info("ไม่สามารถเริ่มแชทกับบัญชีของตนเองได้");
       return;
     }
 
-    // 2) mint token ด้วย retry กัน timing issue หลังสร้างห้อง
-    const { token } = await mintSessionWithRetry(roomId, 6, 180);
+    setCreatingSession(true);
 
-    // 3) เก็บ token และนำทางทันที
-    saveChatToken(token);
-    navigate(`/chat/session/${token}`, { replace: true });
-  } catch (e) {
-    console.error("เริ่มแชทไม่สำเร็จ:", e);
-    message.error("เริ่มแชทไม่สำเร็จ");
-  } finally {
-    setCreatingSession(false);
-  }
-}, [creatingSession, currentUserId, companyOwnerUserId, navigate]);
+    try {
+      let roomId: number | null = null;
+      try {
+        const res = await CreateChatRoom(currentUserId, companyOwnerUserId);
+        roomId = extractRoomId(res?.data) ?? extractRoomId(res) ?? null;
+      } catch (err: any) {
+        const data = err?.response?.data ?? {};
+        roomId = extractRoomId(data);
+        if (!roomId) {
+          console.error("CreateChatRoom error:", err);
+          message.error("ไม่สามารถเริ่มแชทได้ (สร้างห้องไม่สำเร็จ)");
+          setCreatingSession(false);
+          return;
+        }
+      }
+
+      if (!roomId) {
+        message.error("ไม่พบห้องแชท");
+        setCreatingSession(false);
+        return;
+      }
+
+      const { token } = await mintSessionWithRetry(roomId, 6, 180);
+      saveChatToken(token);
+      navigate(`/chat/session/${token}`, { replace: true });
+    } catch (e) {
+      console.error("เริ่มแชทไม่สำเร็จ:", e);
+      message.error("เริ่มแชทไม่สำเร็จ");
+    } finally {
+      setCreatingSession(false);
+    }
+  }, [creatingSession, currentUserId, companyOwnerUserId, navigate]);
 
   return (
     <Layout>
-          {isBusy && (
-      <CoopMatchLoader
-        overlay
-        animation={creatingSession ? "bounce-assemble" : "wave-fold"}
-        primaryColor="#2473b2"
-        progressMode="indeterminate"
-        text={creatingSession ? "กำลังเริ่มแชทกับบริษัท..." : "กำลังโหลดโปรไฟล์บริษัท..."}
-        // size="lg"  // ถ้าอยากใหญ่ขึ้น ปลดคอมเมนต์ได้
-      />
-    )}
+      {isBusy && (
+        <CoopMatchLoader
+          overlay
+          animation={creatingSession ? "bounce-assemble" : "wave-fold"}
+          primaryColor="#2473b2"
+          progressMode="indeterminate"
+          text={creatingSession ? "กำลังเริ่มแชทกับบริษัท..." : "กำลังโหลดโปรไฟล์บริษัท..."}
+        />
+      )}
       <RoleHeader />
       <Layout className="company-layout">
         <Content>
@@ -251,11 +251,7 @@ const handleChatClick = useCallback(async () => {
                     <div className="company-logo-container">
                       <label style={{ cursor: "pointer" }}>
                         <Avatar
-                          src={
-                            company?.logo
-                              ? `${API_BASE}${company.logo}`
-                              : undefined
-                          }
+                          src={company?.logo ? `${API_BASE}${company.logo}` : undefined}
                           size={120}
                           icon={!company?.logo ? <UserOutlined /> : undefined}
                           style={{
@@ -333,10 +329,15 @@ const handleChatClick = useCallback(async () => {
             </Card>
           </div>
 
-          {/* Reviews */}
+          {/* Reviews: 🔒 ส่งสิทธิ์เฉพาะนักศึกษา */}
           {companyOwnerUserId && (
             <div style={{ marginTop: 24 }}>
-              <CompanyReviews user_id={companyOwnerUserId} />
+              <CompanyReviews
+                user_id={companyOwnerUserId}
+                // 🔒 ปลดล็อกเฉพาะ role 3
+                allowLike={isStudent}
+                allowCreateReview={isStudent}
+              />
             </div>
           )}
 
@@ -346,7 +347,7 @@ const handleChatClick = useCallback(async () => {
           </div>
         </Content>
 
-        {/* Floating Chat Button */}
+        {/* Floating Chat Button (คงเดิม ไม่ได้จำกัด) */}
         <div className="chat-floating-wrapper">
           <Tooltip title="แชทกับบริษัท" placement="left">
             <Button
