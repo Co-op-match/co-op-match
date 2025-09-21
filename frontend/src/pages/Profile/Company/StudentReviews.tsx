@@ -62,7 +62,7 @@ const CompanyReviews: React.FC<CompanyReviewsProps> = ({
   // === สิทธิ์ (default: เฉพาะ roleId === 3 ถึงจะกดไลค์/สร้างรีวิวได้) ===
   const roleId = Number(localStorage.getItem("roleId") || 0);
   const canLike = allowLike ?? roleId === 3;
-  const canCreate = allowCreateReview ?? roleId === 3;
+
 
   const startAutoPlay = () => {
     if (autoPlayInterval.current) return;
