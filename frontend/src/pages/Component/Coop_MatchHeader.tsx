@@ -288,10 +288,10 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
         </div>
 
         {/* Right: Menu + Notifications + Avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, marginLeft: 'auto', minWidth: 0, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, marginLeft: 'auto', minWidth: 0 }}>
           {/* Desktop Menu */}
           {!isMobile && (
-            <div className="header-menu-wrap" style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
+            <div className="header-menu-wrap" style={{ display: 'flex', justifyContent: 'flex-end', marginRight: 16 }}>
               <Menu
                 className="no-ellipsis-menu student-responsive-menu-horizontal"
                 mode="horizontal"
@@ -301,13 +301,14 @@ const resolveCurrentKey = (pathname: string, keys: string[]): string | null => {
                 style={{ 
                   border: 'none', 
                   backgroundColor: 'transparent',
-                  width: '100%',
+                  width: 'auto',
                   minWidth: isSmallMobile ? "280px" : isTablet ? "320px" : isDesktop ? "450px" : "500px",
                   maxWidth: isSmallMobile ? "350px" : isTablet ? "400px" : isDesktop ? "600px" : "700px",
                   fontSize: isSmallMobile ? "12px" : isTablet ? "13px" : "14px",
                   whiteSpace: 'nowrap',
-                  flex: 1,
                   overflow: 'visible',
+                  justifyContent: 'flex-end',
+                  textAlign: 'right',
                 }}
                 overflowedIndicator={null}
               />

@@ -2,8 +2,10 @@
 .no-ellipsis-menu .ant-menu-overflow {
   overflow: visible !important;           /* แสดงเมนูทั้งหมด */
   scrollbar-width: none;      /* Firefox: ซ่อนสกรอลบาร์ */
-  width: 100% !important;
+  width: auto !important;
   max-width: none !important;
+  display: flex !important;
+  justify-content: flex-end !important;
 }
 .no-ellipsis-menu .ant-menu-overflow::-webkit-scrollbar {
   display: none;              /* WebKit: ซ่อนสกรอลบาร์ */
@@ -38,18 +40,20 @@
 .header-menu-wrap {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   min-width: 0;
-  flex: 1;
   overflow: visible;
   transition: all 0.3s ease;
 }
 
 /* รับประกันว่าเมนูแชทแสดงผล */
 .student-responsive-menu-horizontal {
-  width: 100% !important;
+  width: auto !important;
   max-width: none !important;
   overflow: visible !important;
   transition: all 0.3s ease !important;
+  display: flex !important;
+  justify-content: flex-end !important;
 }
 
 .student-responsive-menu-horizontal .ant-menu-item {
