@@ -44,7 +44,6 @@ const hydrateLabelInValue = (
 const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
   const [universities, setUniversities] = useState<UniversityOption[]>([]);
   const [educationLevels, setEducationLevels] = useState<LevelOption[]>([]);
-  const [loading, setLoading] = useState(true);
   const [formReady, setFormReady] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -61,7 +60,6 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        setLoading(true);
         const [univData, levelData] = await Promise.all([GetUniversity(), GetAllEducationLevel()]);
 
         const univOptions: UniversityOption[] = (univData || []).map((univ: any) => ({
@@ -96,8 +94,6 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
       } catch (e) {
         console.error(e);
         messageApi.error('โหลดข้อมูลการศึกษาไม่สำเร็จ');
-      } finally {
-        setLoading(false);
       }
     };
     load();
@@ -188,10 +184,6 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
     return label.includes(s);
   };
 
-  const univReady = !loading && universities.length > 0;
-  const facReady = !!universityId && facultyOptions.length > 0;
-  const progReady = !!facultyId && programOptions.length > 0;
-
   return (
     <>
       {contextHolder}
@@ -239,10 +231,10 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
             <Select
               labelInValue
               placeholder={universityId ? 'เลือกคณะ' : 'เลือกมหาวิทยาลัยก่อน'}
-              options={facultyOptions}
+              options={formReady ? facultyOptions : []}
               fieldNames={{ label: 'label', value: 'value' }}
-              disabled={!universityId}
-              loading={!!universityId && !facReady}
+              disabled={!formReady || !universityId}
+              loading={!formReady}
               optionLabelProp="label"
               optionFilterProp="label"
               showSearch
@@ -270,10 +262,10 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
             <Select
               labelInValue
               placeholder={facultyId ? 'เลือกสาขา' : 'เลือกคณะก่อน'}
-              options={programOptions}
+              options={formReady ? programOptions : []}
               fieldNames={{ label: 'label', value: 'value' }}
-              disabled={!facultyId}
-              loading={!!facultyId && !progReady}
+              disabled={!formReady || !facultyId}
+              loading={!formReady}
               optionLabelProp="label"
               optionFilterProp="label"
               showSearch
@@ -294,8 +286,10 @@ const StepEducation: React.FC<StepEducationProps> = ({ form }) => {
             <Select
               labelInValue
               placeholder="เลือกระดับการศึกษา"
-              options={educationLevels}
+              options={formReady ? educationLevels : []}
               fieldNames={{ label: 'label', value: 'value' }}
+              disabled={!formReady}
+              loading={!formReady}
               showSearch
               optionLabelProp="label"
               optionFilterProp="label"
