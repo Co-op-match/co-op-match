@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Avatar, Badge, Button, Dropdown, Layout, Menu, Drawer, Grid, message } from "antd";
-import { UserOutlined, HomeOutlined, MenuOutlined, LogoutOutlined, MessageOutlined } from "@ant-design/icons";
+import { UserOutlined, HomeOutlined, LogoutOutlined, MessageOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Logo from "../../assets/Co-op match-Photoroom.png";
@@ -10,6 +10,7 @@ import { UserContext } from "../../components/UserContext";
 import { fileURL } from "@/config/env";
 import { fetchVerifyStatus } from "../authentication/Login/routeAfterAuth";
 import Notification from "../Component/Notification";
+import HamburgerIcon from "./HamburgerIcon";
 import "./Header.css";
 
 const { Header } = Layout;
@@ -297,7 +298,7 @@ const AcademicStaffHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMen
           {isMobile && (
             <Button 
               type="text" 
-              icon={<MenuOutlined style={{ fontSize: isSmallMobile ? "18px" : "20px" }} />} 
+              icon={<HamburgerIcon size={isSmallMobile ? 18 : 20} />} 
               onClick={() => setDrawerVisible(true)} 
               className="mobile-menu-button"
               style={{ 

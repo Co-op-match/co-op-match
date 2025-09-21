@@ -4,7 +4,6 @@ import {
   UserOutlined,
   HomeOutlined,
   MessageOutlined,
-  MenuOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
@@ -16,6 +15,7 @@ import { GetCompanyByUserID } from '@/services/https/Application';
 import type { CompanyInterface } from '@/interfaces/Company';
 import { createChatSession, createWsByToken, GetChatRoomsByUserId } from '@/services/https';
 import { fetchVerifyStatus } from '../authentication/Login/routeAfterAuth';
+import HamburgerIcon from './HamburgerIcon';
 import "./Header.css";
 
 const { Header } = Layout;
@@ -309,7 +309,7 @@ const CompanyHeader: React.FC<CoopMatchHeaderDefaultProps> = ({ minimalMenu = fa
           {isMobile && (
             <Button
               type="text"
-              icon={<MenuOutlined style={{ fontSize: isSmallMobile ? "18px" : "20px" }} />}
+              icon={<HamburgerIcon size={isSmallMobile ? 18 : 20} />}
               onClick={() => setDrawerVisible(true)}
               className="company-mobile-menu-button"
               style={{ 

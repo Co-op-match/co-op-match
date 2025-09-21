@@ -1330,3 +1330,54 @@
     margin: 0 !important;
   }
 }
+
+/* ===========================================
+   MOBILE HAMBURGER ICON STYLES
+   =========================================== */
+
+/* Hamburger Icon Styling */
+.hamburger-icon {
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon:hover {
+  transform: scale(1.1);
+}
+
+.hamburger-icon span {
+  transition: all 0.3s ease;
+}
+
+/* Mobile Menu Button Hover Effects */
+.mobile-menu-button:hover .hamburger-icon span,
+.company-mobile-menu-button:hover .hamburger-icon span,
+.header-default-menu-button:hover .hamburger-icon span,
+.header-company-menu-button:hover .hamburger-icon span,
+.coop-match-default-menu-button:hover .hamburger-icon span {
+  background-color: #1890ff !important;
+}
+
+/* Responsive Hamburger Size */
+@media (max-width: 576px) {
+  .hamburger-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .hamburger-icon span {
+    width: 18px !important;
+    height: 2px !important;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .hamburger-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .hamburger-icon span {
+    width: 20px !important;
+    height: 2px !important;
+  }
+}

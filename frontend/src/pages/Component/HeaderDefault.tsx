@@ -5,13 +5,13 @@ import {
   BellOutlined,
   SettingOutlined,
   HomeOutlined,
-  MenuOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
+import HamburgerIcon from './HamburgerIcon';
 import "./Header.css";
 
 const { Header } = Layout;
@@ -116,7 +116,7 @@ const CoopMatchHeaderDefault: React.FC = () => {
               />
               <Button
                 type="text"
-                icon={<MenuOutlined />}
+                icon={<HamburgerIcon size={20} />}
                 onClick={toggleDrawer}
                 className="header-default-menu-button"
               />

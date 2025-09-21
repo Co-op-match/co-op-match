@@ -853,7 +853,7 @@ func createSeedData(db *gorm.DB) {
 	// Seed Applications
 	applications := []entity.Application{
 		{
-			Status:          "pending",
+			Status:          "ผ่าน",
 			ResumeUrl:       "/uploads/resumes/student1_resume.pdf",
 			TranscriptUrl:   "/uploads/transcripts/student1_transcript.pdf",
 			SubmitAt:        time.Now().AddDate(0, 0, -5),
@@ -862,25 +862,25 @@ func createSeedData(db *gorm.DB) {
 			StudentID:       1,
 		},
 		{
-			Status:          "approved",
+			Status:          "ไม่ผ่าน",
 			ResumeUrl:       "/uploads/resumes/student2_resume.pdf",
 			TranscriptUrl:   "/uploads/transcripts/student2_transcript.pdf",
 			SubmitAt:        time.Now().AddDate(0, 0, -10),
-			CompanyNote:     "ผ่านการคัดเลือกเบื้องต้น รอการสัมภาษณ์",
+			CompanyNote:     "ไม่ตรงตามคุณสมบัติที่ต้องการ",
 			IntershipPostID: 2, // Data Science Intern
 			StudentID:       2,
 		},
 		{
-			Status:          "rejected",
+			Status:          "นัดสัมภาษณ์แล้ว",
 			ResumeUrl:       "/uploads/resumes/student3_resume.pdf",
 			TranscriptUrl:   "/uploads/transcripts/student3_transcript.pdf",
 			SubmitAt:        time.Now().AddDate(0, 0, -15),
-			CompanyNote:     "ไม่ตรงตามคุณสมบัติที่ต้องการ",
+			CompanyNote:     "รอสัมภาษณ์",
 			IntershipPostID: 3, // AI/ML Intern
 			StudentID:       3,
 		},
 		{
-			Status:          "pending",
+			Status:          "ผ่าน",
 			ResumeUrl:       "/uploads/resumes/student4_resume.pdf",
 			TranscriptUrl:   "/uploads/transcripts/student4_transcript.pdf",
 			SubmitAt:        time.Now().AddDate(0, 0, -3),
@@ -889,11 +889,11 @@ func createSeedData(db *gorm.DB) {
 			StudentID:       4,
 		},
 		{
-			Status:          "approved",
+			Status:          "นัดสัมภาษณ์แล้ว",
 			ResumeUrl:       "/uploads/resumes/student5_resume.pdf",
 			TranscriptUrl:   "/uploads/transcripts/student5_transcript.pdf",
 			SubmitAt:        time.Now().AddDate(0, 0, -8),
-			CompanyNote:     "เข้าเกณฑ์ดี รอพิจารณาขั้นต่อไป",
+			CompanyNote:     "รอสัมภาษณ์",
 			IntershipPostID: 1, // Software Development Intern (student 5 also applied)
 			StudentID:       5,
 		},
