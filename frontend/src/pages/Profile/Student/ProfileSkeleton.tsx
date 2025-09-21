@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Skeleton, Avatar } from "antd";
+import { Card, Skeleton } from "antd";
 import "./StudentProfile.css";
 
 const ProfileSkeleton: React.FC = () => {
