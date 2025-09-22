@@ -72,29 +72,12 @@ type chatSessionReq struct {
 }
 
 func CreateChatSession(c *gin.Context) {
-	fmt.Println("🔍 CreateChatSession called")
-
-	// ดึง user หลักจาก cookie JWT หรือ Authorization header
-	var tokenStr string
-	var err error
-
-	// ลองดึงจาก cookie ก่อน
-	tokenStr, err = c.Cookie("auth_token")
-	fmt.Printf("🍪 Cookie auth_token: %v (error: %v)\n", tokenStr != "", err)
-
+	// ดึง user หลักจาก cookie JWT (ของระบบคุณ)
+	tokenStr, err := c.Cookie("auth_token")
 	if err != nil {
-		// ถ้าไม่มี cookie ลองดึงจาก Authorization header
-		bearerToken := getBearer(c)
-		fmt.Printf("🔑 Authorization header token: %v\n", bearerToken != "")
-		if bearerToken == "" {
-			fmt.Println("❌ No auth token found in cookie or header")
-			fmt.Printf("📋 Request headers: %+v\n", c.Request.Header)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: missing token"})
-			return
-		}
-		tokenStr = bearerToken
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: missing token"})
+		return
 	}
-
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		secret = "dev-secret-only"
@@ -106,44 +89,20 @@ func CreateChatSession(c *gin.Context) {
 	}
 	claims, err := jwtWrapper.ValidateToken(tokenStr)
 	if err != nil {
-		fmt.Printf("❌ JWT validation failed: %v\n", err)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: invalid token"})
 		return
 	}
 	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
 	userID := uint(userID64)
-	fmt.Printf("✅ JWT validated successfully. UserID: %d\n", userID)
 
 	var req chatSessionReq
 	_ = c.ShouldBindJSON(&req)
-	fmt.Printf("📝 CreateChatSession request - room: %d, user: %d\n", req.RoomID, userID)
+	fmt.Println("CreateChatSession room:", req.RoomID, "user:", userID)
 
 	// ตรวจสิทธิ์ในห้อง (ยกเว้น lobby = 0)
-	if req.RoomID == 0 {
-		// Lobby room - อนุญาตทุกคน
-		fmt.Printf("✅ Lobby access granted: User %d\n", userID)
-	} else {
-		// ตรวจสอบว่าห้องมีอยู่หรือไม่
-		var existingRoom entity.ChatRoom
-		err := config.DB().First(&existingRoom, req.RoomID).Error
-
-		if err != nil {
-			fmt.Printf("⚠️  Room %d not found, will need to be created first\n", req.RoomID)
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-				"error":   "room_not_found",
-				"message": "Chat room does not exist. Please create the room first.",
-			})
-			return
-		}
-
-		// ห้องมีอยู่แล้ว ตรวจสิทธิ์
-		if existingRoom.User1ID != userID && existingRoom.User2ID != userID {
-			fmt.Printf("❌ Access denied: User %d is not a member of room %d\n", userID, req.RoomID)
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not a member"})
-			return
-		}
-
-		fmt.Printf("✅ Access granted: User %d is member of room %d\n", userID, req.RoomID)
+	if !isMember(userID, req.RoomID) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not a member"})
+		return
 	}
 
 	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
@@ -230,14 +189,8 @@ func readMessages(client *hub.Client) {
 
 		switch in.Event {
 		case "message":
-			// ตรวจสอบข้อความว่าง
-			if strings.TrimSpace(in.Message) == "" {
-				fmt.Println("⚠️  Empty message ignored from user:", client.UserID)
-				continue
-			}
-
 			rec := entity.ChatMessage{
-				Message:    strings.TrimSpace(in.Message), // ล้างช่องว่าง
+				Message:    in.Message,
 				Read:       false,
 				ChatRoomID: client.RoomID,
 				UserID:     client.UserID,
@@ -371,20 +324,15 @@ func writeMessages(client *hub.Client) {
 
 // สร้างห้องแชทระหว่าง user1 กับ user2
 func CreateChatRoom(c *gin.Context) {
-	fmt.Println("🏠 CreateChatRoom called")
-
 	var input struct {
 		User1ID uint `json:"user1_id"`
 		User2ID uint `json:"user2_id"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		fmt.Printf("❌ Invalid input: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-
-	fmt.Printf("📝 Creating/finding room for users: %d ↔ %d\n", input.User1ID, input.User2ID)
 
 	var existingRoom entity.ChatRoom
 	err := config.DB().Where(
@@ -394,7 +342,6 @@ func CreateChatRoom(c *gin.Context) {
 
 	if err == nil {
 		// ห้องมีอยู่แล้ว
-		fmt.Printf("✅ Room already exists with ID: %d\n", existingRoom.ID)
 		c.JSON(http.StatusConflict, gin.H{
 			"error":   "Chat room already exists",
 			"room_id": existingRoom.ID,
@@ -416,12 +363,10 @@ func CreateChatRoom(c *gin.Context) {
 	}
 
 	if err := config.DB().Create(&newRoom).Error; err != nil {
-		fmt.Printf("❌ Failed to create room: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot create chat room"})
 		return
 	}
 
-	fmt.Printf("✅ New room created successfully with ID: %d\n", newRoom.ID)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Chat room created",
 		"room_id": newRoom.ID,
@@ -430,54 +375,21 @@ func CreateChatRoom(c *gin.Context) {
 
 func GetMessagesByChatRoomID(c *gin.Context) {
 	roomIDStr := c.Param("room_id")
-	fmt.Printf("🔍 GetMessagesByChatRoomID called for room: %s\n", roomIDStr)
-
 	roomID64, err := strconv.ParseUint(roomIDStr, 10, 64)
 	if err != nil {
-		fmt.Printf("❌ Invalid room_id: %s\n", roomIDStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room_id"})
 		return
 	}
 	roomID := uint(roomID64)
 
-	// ลองใช้ chat token ก่อน ถ้าไม่ได้ใช้ JWT token
-	bearerToken := getBearer(c)
-	fmt.Printf("🔑 Bearer token received: %v\n", bearerToken != "")
-
-	if bearerToken == "" {
-		fmt.Printf("❌ No authorization header found. Headers: %+v\n", c.Request.Header)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
+	claims, err := chatTok.Parse(getBearer(c))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid chat token"})
 		return
 	}
-
-	var userID uint
-
-	// ลองเป็น chat token ก่อน
-	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
-	claims, err := chatTok.Parse(bearerToken)
-	if err != nil {
-		// ถ้าไม่ใช่ chat token ลองเป็น JWT token
-		secret := os.Getenv("JWT_SECRET")
-		if secret == "" {
-			secret = "dev-secret-only"
-		}
-		jwtWrapper := services.JwtWrapper{
-			SecretKey:       secret,
-			Issuer:          "AuthService",
-			ExpirationHours: 24,
-		}
-		jwtClaims, jwtErr := jwtWrapper.ValidateToken(bearerToken)
-		if jwtErr != nil {
-			fmt.Printf("❌ Neither chat token nor JWT token valid: chat=%v, jwt=%v\n", err, jwtErr)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			return
-		}
-		userID64, _ := strconv.ParseUint(jwtClaims.Subject, 10, 64)
-		userID = uint(userID64)
-	} else {
-		userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
-		userID = uint(userID64)
-	}
+	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
+	userID := uint(userID64)
 
 	if !isMember(userID, roomID) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
@@ -500,41 +412,14 @@ func MarkMessagesAsRead(c *gin.Context) {
 	roomID64, _ := strconv.ParseUint(c.Param("room_id"), 10, 64)
 	roomID := uint(roomID64)
 
-	// รองรับทั้ง chat token และ JWT token
-	bearerToken := getBearer(c)
-	if bearerToken == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
+	claims, err := chatTok.Parse(getBearer(c))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid chat token"})
 		return
 	}
-
-	var userID uint
-
-	// ลองเป็น chat token ก่อน
-	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
-	claims, err := chatTok.Parse(bearerToken)
-	if err != nil {
-		// ถ้าไม่ใช่ chat token ลองเป็น JWT token
-		secret := os.Getenv("JWT_SECRET")
-		if secret == "" {
-			secret = "dev-secret-only"
-		}
-		jwtWrapper := services.JwtWrapper{
-			SecretKey:       secret,
-			Issuer:          "AuthService",
-			ExpirationHours: 24,
-		}
-		jwtClaims, jwtErr := jwtWrapper.ValidateToken(bearerToken)
-		if jwtErr != nil {
-			fmt.Printf("❌ Neither chat token nor JWT token valid: chat=%v, jwt=%v\n", err, jwtErr)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			return
-		}
-		userID64, _ := strconv.ParseUint(jwtClaims.Subject, 10, 64)
-		userID = uint(userID64)
-	} else {
-		userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
-		userID = uint(userID64)
-	}
+	userID64, _ := strconv.ParseUint(claims.Subject, 10, 64)
+	userID := uint(userID64)
 
 	if !isMember(userID, roomID) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not allowed"})
@@ -570,16 +455,17 @@ func GetChatRoomsByUserID(c *gin.Context) {
 	}
 
 	var rooms []entity.ChatRoom
-	// เพิ่ม preload ของ AcademicStaff พร้อมจัดการ error
+// เพิ่ม preload ของ AcademicStaff (ไม่มีความสัมพันธ์ย่อยแล้ว)
 	if err := config.DB().
 		Preload("User1").Preload("User1.Company").Preload("User1.Student").Preload("User1.ProfileImage").Preload("User1.AcademicStaff").
 		Preload("User2").Preload("User2.Company").Preload("User2.Student").Preload("User2.ProfileImage").Preload("User2.AcademicStaff").
 		Where("user1_id = ? OR user2_id = ?", userID, userID).
 		Find(&rooms).Error; err != nil {
-		fmt.Printf("❌ Database error when fetching chat rooms for user %d: %v\n", userID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot fetch chat rooms"})
 		return
 	}
+
+
 	type RoomDTO struct {
 		ID              uint       `json:"id"`
 		User1ID         uint       `json:"user1_id"`
@@ -595,12 +481,6 @@ func GetChatRoomsByUserID(c *gin.Context) {
 	out := make([]RoomDTO, 0, len(rooms))
 
 	for _, r := range rooms {
-		// ป้องกันข้อมูล User ที่เป็น nil
-		if r.User1.ID == 0 || r.User2.ID == 0 {
-			fmt.Printf("⚠️  Skipping room %d: incomplete user data\n", r.ID)
-			continue
-		}
-
 		other := r.User1
 		if r.User1ID == uint(userID) {
 			other = r.User2
@@ -613,35 +493,25 @@ func GetChatRoomsByUserID(c *gin.Context) {
 		if len(other.Company) > 0 && strings.TrimSpace(other.Company[0].CompanyName) != "" {
 			name = strings.TrimSpace(other.Company[0].CompanyName)
 
-			// 2) อาจารย์: ปรับให้แสดงชื่อเสถียรมากขึ้น
+		// 2) อาจารย์: ใส่คำนำหน้าตำแหน่งหน้าชื่อ
 		} else if len(other.AcademicStaff) > 0 {
-			st := other.AcademicStaff[0]
+			st  := other.AcademicStaff[0]
+			pos := strings.TrimSpace(st.AcademicPosition) // <-- string ตรงจาก model
+			fn  := strings.TrimSpace(st.FirstName)
+			ln  := strings.TrimSpace(st.LastName)
 
-			// ตรวจสอบว่าข้อมูล AcademicStaff ไม่เป็น zero value
-			if st.ID == 0 {
-				fmt.Printf("⚠️  AcademicStaff data incomplete for user %d\n", other.ID)
-			} else {
-				// ล้างช่องว่างและตรวจสอบค่าว่าง
-				pos := strings.TrimSpace(st.AcademicPosition)
-				fn := strings.TrimSpace(st.FirstName)
-				ln := strings.TrimSpace(st.LastName)
-
-				// สร้างชื่อเต็ม (ชื่อ + นามสกุล)
-				fullName := strings.TrimSpace(fn + " " + ln)
-
-				// ถ้ามีตำแหน่งและชื่อ ให้แสดงแบบ "ตำแหน่ง ชื่อ นามสกุล"
-				if pos != "" && fullName != "" {
-					name = strings.TrimSpace(pos + " " + fullName)
-				} else if fullName != "" {
-					// ถ้าไม่มีตำแหน่งแต่มีชื่อ ให้แสดงแค่ชื่อ
-					name = fullName
-				} else if pos != "" {
-					// ถ้ามีแค่ตำแหน่งไม่มีชื่อ (กรณีพิเศษ)
-					name = pos
-				}
+			full := strings.TrimSpace(strings.Join(
+				[]string{
+					pos,                                   // อาจเป็น "" ก็ได้
+					strings.TrimSpace(fn + " " + ln),
+				},
+				" ",
+			))
+			if full != "" {
+				name = full
 			}
 
-			// 3) นักศึกษา
+		// 3) นักศึกษา
 		} else if len(other.Student) > 0 {
 			fn := strings.TrimSpace(other.Student[0].FirstName)
 			ln := strings.TrimSpace(other.Student[0].LastName)
@@ -654,6 +524,7 @@ func GetChatRoomsByUserID(c *gin.Context) {
 		if name == "" {
 			name = fmt.Sprintf("User #%d", other.ID)
 		}
+
 
 		// ---------- last message / unread ----------
 		var last entity.ChatMessage

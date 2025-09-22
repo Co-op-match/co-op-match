@@ -92,33 +92,17 @@ const AdvancedChatInterface: React.FC = () => {
   });
 
   const toUiContact = (room: any): ChatContact => {
-    // ปรับปรุงการหา avatar URL ให้เสถียรมากขึ้น
-    const fallbackAvatar = 
+    const fallbackAvatar =
       room?.avatar_url ??
-      room?.AvatarURL ??  // Backend ใหม่ใช้ชื่อนี้
       room?.company?.logo ??
       room?.Company?.logo ??
       room?.student?.User?.ProfileImage?.[0]?.image_url ??
       room?.Student?.User?.ProfileImage?.[0]?.image_url ??
       '';
-    
-    // ปรับปรุงการจัดการชื่อให้รองรับ AcademicStaff ดีขึ้น
-    let displayName = room.name || room.Name || '';
-    
-    // ถ้าไม่มีชื่อ ให้ fallback เป็น email
-    if (!displayName && room.email) {
-      displayName = room.email;
-    }
-    
-    // ถ้ายังไม่มี ให้แสดงเป็น User #ID
-    if (!displayName && room.other_user_id) {
-      displayName = `User #${room.other_user_id}`;
-    }
-    
     return {
       id: room.id,
       other_user_id: room.other_user_id,
-      name: displayName,
+      name: room.name,
       lastMessage: room.last_message ?? '',
       timestamp: room.last_message_time ?? '',
       unread: room.unread_count ?? 0,
@@ -133,8 +117,6 @@ const AdvancedChatInterface: React.FC = () => {
 
   const [newMessage, setNewMessage] = useState('');
   const [showContactList, setShowContactList] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -283,15 +265,10 @@ const AdvancedChatInterface: React.FC = () => {
         return saved;
       }
 
-      try {
-        const { token } = await createChatSession(0); // rid=0
-        setChatToken(token);
-        saveChatToken(token);
-        return token;
-      } catch (error) {
-        console.error('❌ Failed to create chat session:', error);
-        return null;
-      }
+      const { token } = await createChatSession(0); // rid=0
+      setChatToken(token);
+      saveChatToken(token);
+      return token;
     };
 
     let ws: WebSocket | null = null;
@@ -307,8 +284,6 @@ const AdvancedChatInterface: React.FC = () => {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        setIsConnected(true);
-        setIsLoading(false);
         flushOutbox?.();
         const ridNow = currentRoomRef.current; // null เมื่อ /chat
         if (ridNow && ridNow > 0) {
@@ -397,31 +372,7 @@ const AdvancedChatInterface: React.FC = () => {
         }
       };
 
-      ws.onclose = (event) => { 
-        if (wsRef.current === ws) wsRef.current = null; 
-        setIsConnected(false);
-        
-        // Auto-reconnect หลัง 3 วินาที เว้นแต่จะปิดด้วยตัวเอง
-        if (event.code !== 1000) { // 1000 = normal closure
-          console.log('🔄 WebSocket disconnected, attempting reconnect in 3s...');
-          setTimeout(() => {
-            if (!wsRef.current) { // ยังไม่ได้เชื่อมต่อใหม่
-              console.log('🔄 Reconnecting WebSocket...');
-              // เรียกฟังก์ชันเดิมซ้ำเพื่อ reconnect
-              ensureToken().then(token => {
-                if (token && ws) {
-                  const newWs = createWsByToken(token);
-                  wsRef.current = newWs;
-                  // ต้องกำหนด handlers ใหม่
-                  newWs.onopen = ws.onopen;
-                  newWs.onmessage = ws.onmessage;
-                  newWs.onclose = ws.onclose;
-                }
-              }).catch(err => console.error('❌ Reconnection failed:', err));
-            }
-          }, 3000);
-        }
-      };
+      ws.onclose = () => { if (wsRef.current === ws) wsRef.current = null; };
     })();
 
     // cleanup เมื่อ unmount
@@ -435,30 +386,13 @@ const AdvancedChatInterface: React.FC = () => {
     const load = async () => {
       if (!chatToken) return;
       const rid = readRidFromToken(chatToken);
-      console.log("🔍 Loading messages for room:", rid, "with token:", chatToken?.substring(0, 30) + "...");
-      
-      if (!rid || rid <= 0) { 
-        console.log("⚠️ Invalid room ID, clearing messages");
-        setMessages([]); 
-        return; 
-      }
+      if (!rid || rid <= 0) { setMessages([]); return; }
 
-      try {
-        console.log("📤 Calling getMessagesByToken for room:", rid);
-        const data = await getMessagesByToken(chatToken, rid);
-        console.log("✅ Messages loaded successfully:", data?.length || 0, "messages");
-        setMessages(Array.isArray(data) ? data.map((m:any)=>toUiMessage(m, meId)) : []);
-        
-        console.log("📤 Marking messages as read for room:", rid);
-        await markReadByToken(chatToken, rid).catch((error) => {
-          console.error("❌ Failed to mark as read:", error);
-        });
-        
-        updateContacts(prev => prev.map(c => c.id === rid ? { ...c, unread: 0 } : c));
-        requestAnimationFrame(() => scrollToBottom());
-      } catch (error) {
-        console.error("❌ Failed to load messages:", error);
-      }
+      const data = await getMessagesByToken(chatToken, rid);
+      setMessages(Array.isArray(data) ? data.map((m:any)=>toUiMessage(m, meId)) : []);
+      await markReadByToken(chatToken, rid).catch(()=>{});
+      updateContacts(prev => prev.map(c => c.id === rid ? { ...c, unread: 0 } : c));
+      requestAnimationFrame(() => scrollToBottom());
     };
     load();
   }, [chatToken, meId, scrollToBottom]);
@@ -487,25 +421,17 @@ const AdvancedChatInterface: React.FC = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       if (!meId) return;
-      
-      try {
-        setIsLoading(true);
-        const res = await GetChatRoomsByUserId(meId);
-        if (Array.isArray(res)) {
-          const items = res.map(toUiContact).sort(sortByTime);
-          setContacts(items);
+      const res = await GetChatRoomsByUserId(meId);
+      if (Array.isArray(res)) {
+        const items = res.map(toUiContact).sort(sortByTime);
+        setContacts(items);
 
-          if (!isLobbyRoute) {
-            const rid = activeRoomId ?? readRidFromToken(chatToken ?? '') ?? null;
-            setSelectedContact(rid ? (items.find(c => c.id === rid) || null) : null);
-          } else {
-            setSelectedContact(null); // อยู่ /chat ให้ว่างเสมอ
-          }
+        if (!isLobbyRoute) {
+          const rid = activeRoomId ?? readRidFromToken(chatToken ?? '') ?? null;
+          setSelectedContact(rid ? (items.find(c => c.id === rid) || null) : null);
+        } else {
+          setSelectedContact(null); // อยู่ /chat ให้ว่างเสมอ
         }
-      } catch (error) {
-        console.error('❌ Failed to load chat rooms:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchRooms();
@@ -525,12 +451,6 @@ const AdvancedChatInterface: React.FC = () => {
     if (activeRoomId == null) return; // lobby ห้ามส่ง
     const messageText = (text ?? newMessage).trim();
     if (!messageText) return;
-    
-    // ตรวจสอบการเชื่อมต่อ WebSocket
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.warn('⚠️  Cannot send message: WebSocket not connected');
-      return;
-    }
 
     setMessages(prev => [...prev, {
       text: messageText,
@@ -558,10 +478,7 @@ const AdvancedChatInterface: React.FC = () => {
       setActiveRoomId(readRidFromToken(token) ?? contact.id);
       // ตอนนี้ค่อยเปลี่ยน URL ให้เป็นแบบเจาะห้อง
       navigate(`/chat/session/${token}`, { replace: true });
-    } catch (error) {
-      console.error('❌ Failed to create chat session for contact:', contact.id, error);
-      // You could add user-facing error notification here
-    }
+    } catch {}
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -582,14 +499,7 @@ const AdvancedChatInterface: React.FC = () => {
           {/* Sidebar */}
           <div className={`sidebar ${showContactList ? 'visible' : 'hidden'} light-mode`}>
             <div className="sidebar-header light-mode">
-              <div className="sidebar-title">
-                💬 แชท 
-                {!isConnected && (
-                  <span style={{ color: '#ff4d4f', fontSize: '12px', marginLeft: '8px' }}>
-                    (ไม่เชื่อมต่อ)
-                  </span>
-                )}
-              </div>
+              <div className="sidebar-title">💬 แชท</div>
               <div className="search-container">
                 <Search className="search-icon" size={16}/>
                 <input onChange={() => {}} placeholder="ค้นหาการสนทนา..." className="search-input"/>
@@ -597,16 +507,7 @@ const AdvancedChatInterface: React.FC = () => {
             </div>
 
             <div className="contact-list">
-              {isLoading ? (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-                  กำลังโหลดการสนทนา...
-                </div>
-              ) : contacts.length === 0 ? (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-                  ไม่มีการสนทนา
-                </div>
-              ) : (
-                contacts.map((contact) => (
+              {contacts.map((contact) => (
                 <div
                   key={contact.id}
                   onClick={() => handleContactClick(contact)}
@@ -634,8 +535,7 @@ const AdvancedChatInterface: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                ))
-              )}
+              ))}
             </div>
           </div>
 
