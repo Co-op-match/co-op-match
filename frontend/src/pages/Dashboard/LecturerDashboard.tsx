@@ -6,6 +6,7 @@ import {
 import {
   UsergroupAddOutlined, FileTextOutlined, ReloadOutlined, ExportOutlined,
   ShopOutlined, TeamOutlined, ArrowRightOutlined, DashboardOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -233,7 +234,7 @@ const AcademicDashboard = () => {
 
           {/* Header */}
           <div className="dashboard-header">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
               <div>
                 <Title level={1} className="dashboard-title">
                   <DashboardOutlined style={{ marginRight: 12, color: "#1677ff" }} />
@@ -241,7 +242,7 @@ const AcademicDashboard = () => {
                 </Title>
                 <div className="dashboard-subtitle">ภาพรวมการสมัคร บริษัทที่ร่วมโครงการ Co-op และข้อมูลนักศึกษาทั้งหมด</div>
               </div>
-              <Space size={16} wrap>
+              <Space size={8} wrap>
                 <AcademicExport
                   students={students}
                   companiesCoop={companiesCoop}
@@ -255,7 +256,8 @@ const AcademicDashboard = () => {
           <Spin spinning={loading}>
             {/* KPI Cards */}
             <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-              <Col xs={24} sm={12} lg={8}>
+              {/* จำนวนนักศึกษา */}
+              <Col xs={24} sm={8} lg={8}>
                 <div className="kpi-card" style={{ animationDelay: ".02s" }}>
                   <div className="kpi-content">
                     <div className="kpi-icon"><UsergroupAddOutlined /></div>
@@ -270,7 +272,8 @@ const AcademicDashboard = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={12} lg={8}>
+              {/* ใบสมัครทั้งหมด */}
+              <Col xs={24} sm={8} lg={8}>
                 <div className="kpi-card" style={{ animationDelay: ".08s" }}>
                   <div className="kpi-content">
                     <div className="kpi-icon"><FileTextOutlined /></div>
@@ -284,23 +287,39 @@ const AcademicDashboard = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* นักศึกษาที่ผ่าน (ไม่ซ้ำคน) */}
+              <Col xs={24} sm={8} lg={8}>
+                <div className="kpi-card pass" style={{ animationDelay: ".14s" }}>
+                  <div className="kpi-content">
+                    <div className="kpi-icon pass"><CheckCircleOutlined/></div>
+                    <div style={{ flex: 1 }}>
+                      <Statistic
+                        title={<span style={{ color: "#475569", fontSize: 14, fontWeight: 600 }}>นักศึกษาที่ผ่าน</span>}
+                        value={overview?.passed_students_distinct || 0}
+                        valueStyle={{ color: "#16a34a", fontSize: 28, fontWeight: 800 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Col>
             </Row>
 
             {/* Lists Section */}
             <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-              <Col xs={24} md={12} xl={8}>
+              <Col xs={24} md={12} xl={8} lg={8}>
                 <Card
                   className="list-card"
                   title={
                     <Space>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1677ff, #1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
                         <ShopOutlined />
                       </div>
                       <span className="gradient-text">บริษัทที่คนสมัครเยอะสุด</span>
                     </Space>
                   }
                   extra={<Button type="link" icon={<ArrowRightOutlined />} style={{ color: "#1677ff", fontWeight: 600 }} onClick={() => navigate("/lecturer/profile")}>ดูทั้งหมด</Button>}
-                  bodyStyle={{ padding: 0 }}
+                  styles={{ body:{ marginLeft: 12, marginRight: 12, padding: 0 } }}
                 >
                   {companiesCoop.slice(0, 5).length ? (
                     companiesCoop.slice(0, 5).map((c: any, i: number) => (
@@ -329,19 +348,19 @@ const AcademicDashboard = () => {
                 </Card>
               </Col>
 
-              <Col xs={24} md={12} xl={8}>
+              <Col xs={24} md={12} xl={8} lg={8}>
                 <Card
                   className="list-card"
                   title={
                     <Space>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1677ff, #1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
                         <TeamOutlined />
                       </div>
                       <span className="gradient-text">การสมัครงานล่าสุด</span>
                     </Space>
                   }
                   extra={<Button type="link" icon={<ArrowRightOutlined />} style={{ color: "#1677ff", fontWeight: 600 }} onClick={() => navigate("/lecturer/profile")}>ดูทั้งหมด</Button>}
-                  bodyStyle={{ padding: 0 }}
+                  styles={{ body:{ marginLeft: 12, marginRight: 12, padding: 0 } }}
                 >
                   {latest5UniqueAdvisees.length ? (
                     <Row>
@@ -364,40 +383,76 @@ const AcademicDashboard = () => {
                 </Card>
               </Col>
 
-              <Col xs={24} sm={24} lg={8}>
-                <div className="status-overview-card" style={{ animationDelay: ".14s", height: "100%" }}>
-                  <div style={{ marginBottom: 14 }}>
-                    <div className="gradient-text" style={{ fontSize: 16, fontWeight: 700 }}>สถานะใบสมัคร</div>
-                  </div>
-                  <div>
+              <Col xs={24} md={12} xl={8} lg={8}>
+                <Card
+                  className="list-card"
+                  title={
+                    <Space>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1677ff, #1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                        <CheckCircleOutlined />
+                      </div>
+                      <span className="gradient-text">สถานะใบสมัคร</span>
+                    </Space>
+                  }
+                  styles={{ body:{ marginLeft: 12, marginRight: 12, padding: 0 } }}
+                >
+                  <div style={{ padding: 16 }}>
                     <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator green"></span>ผ่าน</div>
-                      <div style={{ fontWeight: 800, color: "#22c55e" }}>{countByStatus(overview?.applications_by_status, "ผ่าน").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator blue"></span>กำลังพิจารณา</div>
-                      <div style={{ fontWeight: 800, color: "#3b82f6" }}>{countByStatus(overview?.applications_by_status, "กำลังพิจารณา").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator purple"></span>นัดสัมภาษณ์แล้ว</div>
-                      <div style={{ fontWeight: 800, color: "#6366f1" }}>{countByStatus(overview?.applications_by_status, "นัดสัมภาษณ์แล้ว").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator orange"></span>รอการนัดสัมภาษณ์</div>
-                      <div style={{ fontWeight: 800, color: "#f59e0b" }}>{countByStatus(overview?.applications_by_status, "รอการนัดสัมภาษณ์").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator red"></span>ไม่ผ่าน/ไม่ได้รับเลือก</div>
-                      <div style={{ fontWeight: 800, color: "#ef4444" }}>
-                        {(countByStatus(overview?.applications_by_status, "ไม่ผ่าน") + countByStatus(overview?.applications_by_status, "ไม่ได้รับเลือก")).toLocaleString()}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator green"></span>ผ่าน
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#22c55e" }}>
+                        {countByStatus(overview?.applications_by_status, "ผ่าน").toLocaleString()}
                       </div>
                     </div>
+
                     <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator blue"></span>กำลังพิจารณา
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#3b82f6" }}>
+                        {countByStatus(overview?.applications_by_status, "กำลังพิจารณา").toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator purple"></span>นัดสัมภาษณ์แล้ว
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#6366f1" }}>
+                        {countByStatus(overview?.applications_by_status, "นัดสัมภาษณ์แล้ว").toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator orange"></span>รอการนัดสัมภาษณ์
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#f59e0b" }}>
+                        {countByStatus(overview?.applications_by_status, "รอการนัดสัมภาษณ์").toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator red"></span>ไม่ผ่าน/ไม่ได้รับเลือก
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#ef4444" }}>
+                        {(
+                          countByStatus(overview?.applications_by_status, "ไม่ผ่าน") +
+                          countByStatus(overview?.applications_by_status, "ไม่ได้รับเลือก")
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item ">
                       <div style={{ fontWeight: 800, color: "#0f172a" }}>รวมทั้งหมด</div>
-                      <div style={{ fontWeight: 900, fontSize: 16, color: "#0f172a" }}>{sumCounts(overview?.applications_by_status).toLocaleString()}</div>
+                      <div style={{ fontWeight: 900, fontSize: 16, color: "#0f172a" }}>
+                        {sumCounts(overview?.applications_by_status).toLocaleString()}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Card>
               </Col>
             </Row>
 
@@ -467,7 +522,7 @@ const AcademicDashboard = () => {
                   dataSource={[...dailyTableData].sort((a, b) => (a.day < b.day ? -1 : 1))}
                   columns={dailyTableColumns}
                   pagination={{ pageSize: 10, showSizeChanger: true }}
-                  sticky
+                  sticky scroll={{ x: 'max-content' }}
                   locale={{ emptyText: <Empty description="ยังไม่มีข้อมูลช่วงนี้" /> }}
                 />
               </Card>
@@ -575,12 +630,19 @@ const customStyles = `
   .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px -6px rgba(22, 119, 255, 0.22); border-color: rgba(22, 119, 255, 0.18); }
   .kpi-content { display: flex; gap: 18px; align-items: flex-start; }
   .kpi-icon { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #1677ff, #1d4ed8); display: grid; place-items: center; color: white; font-size: 20px; }
+  .kpi-icon.pass { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+  .kpi-card.pass { border: 1px solid rgba(34, 197, 94, 0.15); box-shadow: 0 4px 20px -2px rgba(34, 197, 94, 0.12); }
+  .kpi-card.pass:hover { box-shadow: 0 12px 36px -6px rgba(34, 197, 94, 0.22); border-color: rgba(34, 197, 94, 0.25); }
+  .kpi-card.pass::before { background: linear-gradient(90deg, #22c55e, #16a34a, #15803d); }
 
   .status-overview-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(22, 119, 255, 0.12);
     border: 1px solid rgba(22, 119, 255, 0.10); position: relative; overflow: hidden; animation: slideUp .65s ease both; }
-  .status-overview-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, #22c55e, #16a34a); }
-  .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
-  .status-item:last-child { border-bottom: none; margin-top: 8px; padding-top: 16px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+  .status-overview-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px;  }
+  .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; } 
+  /* แถวสุดท้าย (รวมทั้งหมด) ให้เส้นหนาด้านบน */
+  .status-item:last-child { border-bottom: 0; margin-top: 8px; padding-top: 16px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+  /* ตัดเส้นล่างของแถวรองสุดท้าย เพื่อไม่ให้ซ้อนกับเส้นบนของแถวสุดท้าย */
+  .status-item:nth-last-child(2) { border-bottom: 0; }
   .status-indicator { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
   .status-indicator.green { background: #22c55e; } .status-indicator.blue { background: #3b82f6; } .status-indicator.purple { background: #6366f1; }
   .status-indicator.orange { background: #f59e0b; } .status-indicator.red { background: #ef4444; }

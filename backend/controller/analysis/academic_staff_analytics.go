@@ -51,27 +51,24 @@ func GetAcademicOverview(c *gin.Context) {
 	if !ok {
 		return
 	}
-
 	universityID := staff.UniversityID
 
-	// ===== 1) นับจำนวนนักศึกษาในมหาวิทยาลัยเดียวกัน =====
-	// group ตาม student_id ในตาราง education โดยยึดตามวันที่ล่าสุด MAX(created_at)
+	// ===== สร้าง subquery หา Education ล่าสุดของแต่ละนักศึกษา =====
 	latestEdu := db.Table("educations").
-		Select("student_id, MAX(created_at) as max_created_at").
+		Select("student_id, MAX(created_at) AS max_created_at").
 		Group("student_id")
 
-	//
+	// ===== 1) จำนวนนักศึกษาทั้งหมดในมหาวิทยาลัย (ไม่ซ้ำคน) =====
 	var studentsCount int64
-	db.Table("students as s").
+	db.Table("students AS s").
 		Joins("JOIN educations e ON e.student_id = s.id").
 		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
 		Where("e.university_id = ?", universityID).
 		Distinct("s.id").
 		Count(&studentsCount)
 
-	// ===== 2) นับ Applications ตามสถานะ =====
+	// ===== 2) นับ Applications ตามสถานะ (เป็นจำนวนใบสมัคร) =====
 	statuses := []string{"รอการนัดสัมภาษณ์", "กำลังพิจารณา", "ไม่ได้รับเลือก", "ผ่าน", "นัดสัมภาษณ์แล้ว", "ไม่ผ่าน"}
-
 	var appsByStatus []KV
 	for _, st := range statuses {
 		var cnt int64
@@ -83,6 +80,16 @@ func GetAcademicOverview(c *gin.Context) {
 			Count(&cnt)
 		appsByStatus = append(appsByStatus, KV{Key: st, Count: int(cnt)})
 	}
+
+	// ===== 2.1) นับ "จำนวนนักศึกษาที่ผ่าน" แบบไม่ซ้ำ (1 คนผ่านหลายโพสต์ ให้นับ = 1) =====
+	var passedUnique int64
+	db.Table("applications a").
+		Joins("JOIN students s ON s.id = a.student_id").
+		Joins("JOIN educations e ON e.student_id = s.id").
+		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
+		Where("e.university_id = ? AND a.status = ?", universityID, "ผ่าน").
+		Distinct("a.student_id").
+		Count(&passedUnique)
 
 	// ===== 3) นัดสัมภาษณ์ในอนาคต =====
 	var interviewsUpcoming int64
@@ -108,9 +115,11 @@ func GetAcademicOverview(c *gin.Context) {
 		Where("e.university_id = ?", universityID).
 		Select("c.id AS company_id, c.company_name, COUNT(*) AS count").
 		Group("c.id, c.company_name").
-		Order("count DESC").Limit(5).Scan(&topCompanies)
+		Order("count DESC").
+		Limit(5).
+		Scan(&topCompanies)
 
-	// ===== 5) นักศึกษาที่ยัง “ไม่เคยสมัคร” =====
+	// ===== 5) นักศึกษาที่ยังไม่เคยสมัคร =====
 	var neverApplied int64
 	db.Table("students s").
 		Joins("JOIN educations e ON e.student_id = s.id").
@@ -119,12 +128,13 @@ func GetAcademicOverview(c *gin.Context) {
 		Count(&neverApplied)
 
 	c.JSON(http.StatusOK, AcademicOverviewResponse{
-		UniversityID:         universityID,
-		Students:             int(studentsCount),
-		ApplicationsByStatus: appsByStatus,
-		TopCompanies:         topCompanies,
-		NeverApplied:         int(neverApplied),
-		InterviewsUpcoming:   int(interviewsUpcoming),
+		UniversityID:           universityID,
+		Students:               int(studentsCount),
+		ApplicationsByStatus:   appsByStatus,     // จำนวน "ใบสมัคร" ตามสถานะ
+		PassedStudentsDistinct: int(passedUnique),// ✅ จำนวน "นักศึกษาที่ผ่าน" ไม่ซ้ำคน
+		TopCompanies:           topCompanies,
+		NeverApplied:           int(neverApplied),
+		InterviewsUpcoming:     int(interviewsUpcoming),
 	})
 }
 

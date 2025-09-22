@@ -65,10 +65,10 @@ function styleTable(
 
     for (let c = startCol; c <= rightCol; c++) {
       // เริ่มด้วยเส้นดำทุกด้าน
-      let top: ExcelJS.Border["top"] | undefined    = { style: "thin", color: { argb: "FF000000" } };
-      let bottom: ExcelJS.Border["bottom"] | undefined = { style: "thin", color: { argb: "FF000000" } };
-      let left: ExcelJS.Border["left"] | undefined  = { style: "thin", color: { argb: "FF000000" } };
-      let right: ExcelJS.Border["right"] | undefined = { style: "thin", color: { argb: "FF000000" } };
+      let top: ExcelJS.Borders["top"] | undefined = { style: "thin", color: { argb: "FF000000" } };
+      let bottom: ExcelJS.Borders["bottom"] | undefined = { style: "thin", color: { argb: "FF000000" } };
+      let left: ExcelJS.Borders["left"] | undefined = { style: "thin", color: { argb: "FF000000" } };
+      let right: ExcelJS.Borders["right"] | undefined = { style: "thin", color: { argb: "FF000000" } };
 
       // ถ้าอยู่ในบล็อก merge แนวตั้ง → ไม่วาดเส้นคั่น "แนวนอน" ภายในบล็อก
       for (const b of verticalBlocks) {
@@ -446,8 +446,11 @@ const AcademicExport: React.FC<ExportProps> = ({
 
   // UI เหลือปุ่มเดียว
   return (
-    <Tooltip title="ส่งออก Excel (.xlsx) — กรอบสีดำ, ไม่คั่นแถวในบล็อก merge แนวนอน, AutoFit, แสดงวันที่สมัคร/อัปเดต">
-      <Button type="primary" icon={<ExportOutlined />} size="large" onClick={handleExportAll}>
+    <Tooltip
+      title={`ส่งออก Excel: สรุป/นักศึกษา/บริษัท/ใบสมัคร${dailyRows?.length ? "/แนวโน้มรายวัน" : ""}
+              รวม: นศ.${students.length} • บริษัท${companiesCoop.length} • ใบสมัคร${apps.length}${dailyRows?.length ? ` • วัน${dailyRows.length}` : ""}`}
+    >      
+      <Button className="action-button" type="primary" icon={<ExportOutlined />} size="large" onClick={handleExportAll}>
         ส่งออก Excel
       </Button>
     </Tooltip>

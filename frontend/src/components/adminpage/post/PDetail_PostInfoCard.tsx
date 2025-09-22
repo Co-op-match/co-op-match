@@ -63,13 +63,18 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
     return merged.length ? merged.join(", ") : "-";
   }, [post]);
 
-  const locationText = useMemo(
-    () =>
-      [post?.location_detail, post?.subdistrict, post?.district, post?.province]
-        .filter(Boolean)
-        .join(", ") || "-",
-    [post]
-  );
+  const locationText = useMemo(() => {
+    if (!post) return "-";
+
+    const parts = [
+      post.location_detail ? `${post.location_detail}` : null,
+      post.subdistrict ? `ต.${post.subdistrict}` : null,
+      post.district ? `อ.${post.district}` : null,
+      post.province ? `จ.${post.province}` : null,
+    ];
+
+    return parts.filter(Boolean).join(" ") || "-";
+  }, [post]);
 
   const approvalInfo = useMemo(() => {
     const approvedOrClosed =
@@ -198,7 +203,7 @@ const PostInfoCard: React.FC<PostInfoCardProps> = ({
           </Descriptions.Item>
 
           <Descriptions.Item label="วันที่สร้าง">
-            {formatThaiDateTime(post?.CreatedAt)}
+            {formatThaiDateTime(post?.created_at)}
           </Descriptions.Item>
 
           {/* ผู้อนุมัติ/เวลาอนุมัติ */}

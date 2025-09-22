@@ -76,11 +76,12 @@ type AcademicOverviewResponse struct {
 	UniversityID uint `json:"university_id"`
 	Students     int  `json:"students"`
 
-	ApplicationsByStatus []KV         `json:"applications_by_status"`
-	InterviewsUpcoming   int          `json:"interviews_upcoming"`
-	ReviewsTotal         int          `json:"reviews_total"`
-	TopCompanies         []TopCompany `json:"top_companies"`
-	NeverApplied         int          `json:"never_applied"`
+	ApplicationsByStatus   []KV         `json:"applications_by_status"`
+	InterviewsUpcoming     int          `json:"interviews_upcoming"`
+	ReviewsTotal           int          `json:"reviews_total"`
+	TopCompanies           []TopCompany `json:"top_companies"`
+	NeverApplied           int          `json:"never_applied"`
+	PassedStudentsDistinct int          `json:"passed_students_distinct"`
 }
 
 type AcademicStudentItem struct {
