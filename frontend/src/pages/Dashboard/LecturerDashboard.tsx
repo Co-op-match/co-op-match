@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Card, Row, Col, Statistic, Table, Button, message, Spin, Typography, Tag, Space,
+  Card, Row, Col, Statistic, Table, Button, message, Typography, Tag, Space,
   Badge, Modal, Dropdown, ConfigProvider, Empty, Tooltip, Segmented, Drawer, Select, DatePicker, Layout,
 } from "antd";
+import { CoopMatchLoader } from '../../components/loaders';
 import {
   UsergroupAddOutlined, FileTextOutlined, ReloadOutlined, ExportOutlined, FileExcelOutlined,
   ShopOutlined, TeamOutlined, ArrowRightOutlined, DashboardOutlined,
@@ -233,7 +234,10 @@ const AcademicDashboard = () => {
             </div>
           </div>
 
-          <Spin spinning={loading}>
+          {loading ? (
+            <CoopMatchLoader overlay text="กำลังโหลดข้อมูล..." />
+          ) : null}
+          <div style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.3s' }}>
             {/* KPI Cards */}
             <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
               <Col xs={24} sm={12} lg={8}>
@@ -444,7 +448,7 @@ const AcademicDashboard = () => {
                 )}
               </div>
             </Card>
-          </Spin>
+          </div>
 
           {/* Applications Drawer */}
           <Drawer
@@ -501,7 +505,9 @@ const AcademicDashboard = () => {
               <Button key="close" className="secondary-button" onClick={() => setStudentApplicationsModal(false)}>ปิด</Button>,
             ]}
           >
-            <Spin spinning={loadingStudentApps}>
+            {loadingStudentApps ? (
+              <CoopMatchLoader text="กำลังโหลดข้อมูลใบสมัคร..." />
+            ) : (
               <Table
                 size="middle"
                 scroll={{ x: true, y: 420 }}
@@ -517,7 +523,7 @@ const AcademicDashboard = () => {
                   { title: "วันที่สมัคร", key: "date", width: 140, render: (_: any, r: any) => fmtDate(r.date || r.submit_at) },
                 ]}
               />
-            </Spin>
+            )}
           </Modal>
         </div>
       </Layout>

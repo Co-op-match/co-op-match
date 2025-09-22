@@ -18,7 +18,7 @@ import ContactForm from "./From/ContactForm";
 import type { AcademicStaffInterface } from "@/interfaces/AcademicStaff";
 
 // ✅ เพิ่ม Loader
-import CoopMatchLoader from "../../../Component/loading";
+import { CoopMatchLoader } from "../../../../components/loaders";
 
 interface EditProfileModalProps {
   open: boolean;

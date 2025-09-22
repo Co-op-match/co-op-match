@@ -39,7 +39,7 @@ import EditProfileCompanyModal from "./Edit/Popup";
 import { fileURL } from "@/config/env";
 
 // ✅ เพิ่ม Loader
-import CoopMatchLoader from '../../Component/loading';
+import { CoopMatchLoader } from '../../../components/loaders';
 
 const { Content } = Layout;
 const { Text } = Typography;

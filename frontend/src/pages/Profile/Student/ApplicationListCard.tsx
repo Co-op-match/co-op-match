@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Card } from "antd";
+import { Table, Tag, Card, Tooltip } from "antd";
 import { GetApplicationsByUserID } from "../../../services/https";
 import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 import "./ApplicationListCard.css";
+
+// Helper function to get current user role ID
+const getStoredRoleId = (): number => {
+  const raw = localStorage.getItem("roleId");
+  return raw ? Number(raw) : 0;
+};
 
 interface ApplicationItem {
   ID: number;
@@ -17,6 +23,18 @@ interface Props {
 const ApplicationListCard: React.FC<Props> = ({ userId }) => {
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentUserRoleId, setCurrentUserRoleId] = useState<number>(getStoredRoleId());
+
+  // Listen for roleId changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "roleId") {
+        setCurrentUserRoleId(getStoredRoleId());
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   useEffect(() => {
     if (!userId || isNaN(userId)) return;
@@ -80,14 +98,29 @@ const columns = [
   {
     title: "ตำแหน่งงาน",
     dataIndex: ["IntershipPost", "post_name"],
-    render: (_: any, record: ApplicationItem) => (
-      <a
-        href={`/student/post-student/${record.IntershipPost?.ID}`}
-        rel="noopener noreferrer"
-      >
-        {record.IntershipPost?.post_name}
-      </a>
-    ),
+    render: (_: any, record: ApplicationItem) => {
+      const isStudent = currentUserRoleId === 3;
+      const postName = record.IntershipPost?.post_name || "ไม่ระบุตำแหน่ง";
+      
+      if (isStudent) {
+        return (
+          <a
+            href={`/student/post-student/${record.IntershipPost?.ID}`}
+            rel="noopener noreferrer"
+          >
+            {postName}
+          </a>
+        );
+      } else {
+        return (
+          <Tooltip title="เฉพาะนักศึกษาเท่านั้นที่สามารถดูรายละเอียดตำแหน่งงานได้">
+            <span style={{ color: '#999', cursor: 'not-allowed' }}>
+              {postName}
+            </span>
+          </Tooltip>
+        );
+      }
+    },
   },
   {
     title: "สถานะ",

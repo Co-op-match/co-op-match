@@ -4,6 +4,7 @@ import { UserOutlined, TeamOutlined, ReadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { GetRole } from '../../../services/https';
 import type { RoleInterface } from '../../../interfaces/auth/Roles';
+import { CoopMatchLoader } from '../../../components/loaders';
 const { Title, Text } = Typography;
 
 const roleDetailsMap: Record<string, {
@@ -41,7 +42,9 @@ function RoleSelectionPage(){
   const [messageApi, contextHolder] = message.useMessage();
   const [roles, setRoles] = useState<RoleInterface[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>('');
+  const [loading, setLoading] = useState(true);
   const onGetRole = async () => {
+    setLoading(true);
     let res = await GetRole();
     if (res.status == 200) {
       setRoles(res.data);
@@ -54,6 +57,7 @@ function RoleSelectionPage(){
         navigate("/sign-up");
       }, 2000);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -66,6 +70,10 @@ function RoleSelectionPage(){
     setSelectedRole(roleName);
     navigate(`${detail.signupPath}?role=${roleName}`);
   };
+
+  if (loading) {
+    return <CoopMatchLoader overlay text="กำลังโหลดข้อมูลบทบาท..." />;
+  }
 
   return (
     <>

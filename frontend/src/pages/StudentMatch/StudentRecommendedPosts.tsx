@@ -1,8 +1,9 @@
 import  { useEffect, useState } from 'react';
 import { 
-  Card, Col, Row, Typography, Tag, Spin, Empty, Progress, Button, Modal, List,
+  Card, Col, Row, Typography, Tag, Empty, Progress, Button, Modal, List,
   Statistic, Badge, Tooltip, Slider, Space, Alert, Divider, Layout, message
 } from 'antd';
+import { CoopMatchLoader } from '../../components/loaders';
 import { 
   TrophyOutlined, BulbOutlined, EnvironmentOutlined, BookOutlined, SettingOutlined,
   InfoCircleOutlined, HeartOutlined, StarOutlined,
@@ -257,7 +258,7 @@ function StudentRecommendedPosts() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: 50 }}>
-            <Spin size="large" />
+            <CoopMatchLoader size="lg" />
             <div style={{ marginTop: 16 }}>กำลังวิเคราะห์งานที่เหมาะสมกับคุณ...</div>
           </div>
         ) : Array.isArray(recommendedPosts) && recommendedPosts.length === 0 ? (

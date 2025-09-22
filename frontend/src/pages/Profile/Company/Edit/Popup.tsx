@@ -16,7 +16,7 @@ import type { CompanyInterface } from "../../../../interfaces/Company";
 import ContactForm from "./from/ContactForm";
 
 // ✅ เพิ่ม Loader
-import CoopMatchLoader from '../../../Component/loading';
+import { CoopMatchLoader } from '../../../../components/loaders';
 
 interface EditProfileModalProps {
   open: boolean;

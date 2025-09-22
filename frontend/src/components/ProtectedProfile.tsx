@@ -1,7 +1,7 @@
 import { useContext, type JSX, useLayoutEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "./UserContext";
-import { Spin } from "antd";
+import { CoopMatchLoader } from "./loaders";
 
 type Props = { children: JSX.Element };
 
@@ -56,7 +56,7 @@ const ProtectProfile = ({ children }: Props) => {
   }, [loading, user, shouldBlock, defaultPath, navigate]);
 
   // โหลดอยู่แสดงสปินเนอร์เต็มจอ
-  if (loading) return <Spin tip="กำลังโหลด..." fullscreen />;
+  if (loading) return <CoopMatchLoader overlay text="กำลังโหลด..." />;
 
   // กันแว้บ: ถ้าต้องบล็อกไม่ต้องเรนเดอร์ children ระหว่างที่กำลัง navigate
   if (shouldBlock) return null;

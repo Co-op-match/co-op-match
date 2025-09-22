@@ -20,7 +20,7 @@ import CoopMatchHeaderDefault from '../../../Component/CoopMatchHeaderDefault';
 import { UserContext } from '../../../../components/UserContext';
 
 // ✅ เพิ่ม Loader
-import CoopMatchLoader from '../../../Component/loading';
+import { CoopMatchLoader } from '../../../../components/loaders';
 
 const { Content } = Layout;
 

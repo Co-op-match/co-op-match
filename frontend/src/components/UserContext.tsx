@@ -6,7 +6,7 @@ import { authEvents } from "../services/authEvents";
 
 // ✅ เพิ่ม Loader (ปรับ path ให้ตรงโปรเจกต์)
 // ตัวอย่าง: ถ้าอยู่ที่ src/components/UserContext.tsx และ Loader อยู่ที่ src/pages/Component/CoopMatchLoader/CoopMatchLoader.tsx
-import CoopMatchLoader from "../pages/Component/loading";
+import { CoopMatchLoader } from "./loaders";
 
 type UserContextType = {
   user: UserInterface | null;

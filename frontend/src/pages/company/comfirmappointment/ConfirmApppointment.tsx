@@ -31,6 +31,7 @@ import {
 } from "../../../services/https/Application/index";
 import { SendEmailinterview } from "../../../services/https";
 import CompanyHeader from "../../Component/CompanyHeader";
+import { CoopMatchLoader } from '../../../components/loaders';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -213,6 +214,20 @@ const InterviewDashboard: React.FC = () => {
       message.error("กรุณาเลือกสถานะ");
     }
   };
+
+  if (loading) {
+    return (
+      <Layout style={{ minHeight: "100vh", background: "#f0f8ff" }}>
+        <CompanyHeader />
+        <CoopMatchLoader 
+          size="lg" 
+          overlay={true}
+          showText={true}
+          text="กำลังโหลดข้อมูลการนัดสัมภาษณ์..."
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f8ff" }}>

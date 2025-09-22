@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Layout, Typography } from 'antd';
 import CompanyHeader from '../../Component/CompanyHeader';
+import { CoopMatchLoader } from '../../../components/loaders';
 import { GetApplicationsByPostId, UpdateApplicationStatus } from '../../../services/https/Application/index';
 import { useParams, useNavigate } from 'react-router-dom';
 import { saveChatToken } from '@/utils/chatToken';
@@ -28,6 +29,7 @@ const Dashboard = () => {
     const [applications, setApplications] = useState<ApplicationInterface[]>([]);
     const [approvalStats, setApprovalStats] = useState({ approved: 0, pending: 0, rejected: 0 });
     const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [selectedApplication, setSelectedApplication] = useState<ApplicationInterface | null>(null);
     const [newStatus, setNewStatus] = useState<ApplicationInterface['status'] | null>(null);
     const [note, setNote] = useState('');
@@ -66,6 +68,7 @@ const Dashboard = () => {
 
     const fetchApplications = async () => {
         if (!postId) return;
+        setLoading(true);
         const res = await GetApplicationsByPostId(Number(postId));
         const realApplications = res?.data?.data || [];
         console.log('app',realApplications)
@@ -89,6 +92,7 @@ const Dashboard = () => {
             student_user_id: app.student_user_id ?? app.student?.user_id ?? app.UserID ?? null, 
         }));
         setApplications(mappedApps);
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -176,6 +180,10 @@ const Dashboard = () => {
 
 
     const fileBaseURL = 'https://api.coop-match.online'; // ✅ ปรับตาม backend จริงของคุณ
+
+    if (loading) {
+        return <CoopMatchLoader overlay text="กำลังโหลดข้อมูลใบสมัคร..." />;
+    }
 
     return (
         <Layout style={{ minHeight: '100vh', background: '#f0f8ff' }}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Table, Space, Tag, Input, Row, Col, Typography, Layout, Tabs, Empty, message } from "antd";
+import { CoopMatchLoader } from "../../../components/loaders";
 import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
@@ -387,6 +388,10 @@ const ManagePostsPage = () => {
       },
     },
   ];
+
+  if (loading) {
+    return <CoopMatchLoader overlay text="กำลังโหลดข้อมูลโพสต์..." />;
+  }
 
   return (
     <Layout>

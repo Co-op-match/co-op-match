@@ -3,6 +3,7 @@ import { Button, Form, Input, message, Typography } from 'antd';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import type { UsersInterface } from '../../../interfaces/auth/IUser';
 import { CreateUser } from '../../../services/https';
+import { CoopMatchLoader } from '../../../components/loaders';
 const { Title, Text } = Typography;
 
 interface LocationState {
@@ -208,6 +209,7 @@ function RegisterPage(){
   return (
     <>
       {contextHolder}
+      {loading && <CoopMatchLoader overlay text="กำลังสร้างบัญชีผู้ใช้..." />}
       <div className="login-page">
         <div className="signin-container">
           <div className="signin-left"></div>

@@ -16,6 +16,7 @@ import {
   Space,
   Divider,
 } from 'antd';
+import { CoopMatchLoader } from '../../../components/loaders';
 import {
   PlusOutlined,
   LogoutOutlined,
@@ -79,6 +80,7 @@ const CompanyDashboard: React.FC = () => {
   const [posts, setPosts] = useState<InternshipPostInterface[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(true);
 
   const [jobTypes, setJobTypes] = useState<any[]>([]);
   const [stipends, setStipends] = useState<any[]>([]);
@@ -335,6 +337,7 @@ const CompanyDashboard: React.FC = () => {
       return;
     }
     const fetchData = async () => {
+      setLoading(true);
       try {
         const userId = Number(localStorage.getItem('id'));
         if (!userId) return;
@@ -363,6 +366,8 @@ const CompanyDashboard: React.FC = () => {
         setPosts(postsWithApplicantCount);
       } catch {
         setPosts([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -481,6 +486,20 @@ const CompanyDashboard: React.FC = () => {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <Layout style={{ minHeight: '100vh', background: '#f8fafb' }}>
+        <CompanyHeader />
+        <CoopMatchLoader 
+          size="lg" 
+          overlay={true}
+          showText={true}
+          text="กำลังโหลดข้อมูลโพสต์..."
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f8fafb' }}>

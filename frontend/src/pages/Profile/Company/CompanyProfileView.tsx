@@ -30,7 +30,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CompanyReviews from "./StudentReviews";
 import CompanyJobList from "./CompanyJobList";
 import { saveChatToken } from "../../../utils/chatToken";
-import CoopMatchLoader from "../../Component/loading";
+import { CoopMatchLoader } from "../../../components/loaders";
 import CoopMatchHeader from "@/pages/Component/Coop_MatchHeader";
 import AcademicStaffHeader from "@/pages/Component/AcademicStaffHeader";
 import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";

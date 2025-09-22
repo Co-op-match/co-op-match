@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Layout, Row, Col, Typography, message, Modal, Collapse } from 'antd';
 import { UserOutlined, TeamOutlined, CheckCircleOutlined, FileTextOutlined, SearchOutlined, TrophyOutlined, ReadOutlined} from '@ant-design/icons';
+import { CoopMatchLoader } from '../../components/loaders';
 import { useNavigate } from 'react-router-dom';
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;
@@ -25,6 +26,7 @@ function StudentDashboard() {
   const [appointments, setAppointments] = useState<InterviewAppointmentInterface[]>([]);
   const [newsItems, setNewsItems] = useState<Article[]>([]);
   const [careerItems, setCareerItems] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   // 🆕 Modal state
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -56,6 +58,7 @@ function StudentDashboard() {
   const handleProfileClick = () => { navigate('/student/profile'); };
 
   const fetchInitialData = async () => {
+    setLoading(true);
     const isOk = (r: PromiseSettledResult<AxiosResponse<any>>): r is PromiseFulfilledResult<AxiosResponse<any>> =>
       r.status === "fulfilled" && r.value?.status === 200;
 
@@ -84,6 +87,7 @@ function StudentDashboard() {
     if (!isOk(newsRes)) fails.push("ข่าว");
     if (!isOk(careerRes)) fails.push("บทความ");
     if (fails.length) messageApi.error(`โหลดข้อมูลบางส่วนไม่สำเร็จ: ${fails.join(", ")}`);
+    setLoading(false);
   };
 
   useEffect(() => { fetchInitialData(); }, []);
@@ -113,6 +117,20 @@ function StudentDashboard() {
     { icon: <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />, title: 'จับคู่แม่นยำ', description: 'ระบบจับคู่อัจฉริยะวิเคราะห์โปรไฟล์และความต้องการของคุณเพื่อแนะนำที่ฝึกงานที่เหมาะสม' },
     { icon: <TeamOutlined style={{ fontSize: 32, color: '#faad14' }} />, title: 'เครือข่ายกว้าง', description: `เชื่อมต่อกับบริษัทมากกว่า ${company.length.toLocaleString()} แห่งทั่วประเทศ ครอบคลุมทุกประเภทธุรกิจ`},
   ];
+
+  if (loading) {
+    return (
+      <Layout style={{ minHeight: '100vh' }}>
+        <CoopMatchHeaderDefault />
+        <CoopMatchLoader 
+          size="lg" 
+          overlay={true}
+          showText={true}
+          text="กำลังโหลดข้อมูล Dashboard..."
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

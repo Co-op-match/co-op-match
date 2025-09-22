@@ -4,7 +4,6 @@ import {
   Row,
   Col,
   Typography,
-  Spin,
   Space,
   Tag,
   Layout,
@@ -19,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import type { IntershipPostInterface } from "../../interfaces/IntershipPost";
 const { Title, Text, Paragraph } = Typography;
 import dayjs from 'dayjs';
+import { CoopMatchLoader } from '../../components/loaders';
 import 'dayjs/locale/th';
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
 
@@ -160,7 +160,7 @@ function LikedPosts(){
               boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
               border: '1px solid #f3f4f6'
             }}>
-              <Spin size="large" />
+              <CoopMatchLoader size="lg" />
               <div style={{ marginTop: '20px' }}>
                 <Text style={{ color: '#6b7280', fontSize: '15px' }}>
                   กำลังโหลดโพสต์ที่คุณสนใจ...

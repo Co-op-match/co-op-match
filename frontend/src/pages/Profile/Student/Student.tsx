@@ -18,7 +18,7 @@ import ApplicationListCard from "./ApplicationListCard";
 import { fileURL } from "@/config/env";
 
 // ✅ เพิ่ม Loader และ Skeleton
-import CoopMatchLoader from '../../Component/loading';
+import { CoopMatchLoader } from '../../../components/loaders';
 import ProfileSkeleton from './ProfileSkeleton';
 import { UserContext } from "@/components/UserContext";
 

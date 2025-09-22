@@ -6,6 +6,7 @@
   flex-direction: column;
   padding: 32px 24px;
   min-height: 100vh;
+  min-width: 100vw;
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 1) 0%, 
     rgba(240, 248, 255, 1) 25%,

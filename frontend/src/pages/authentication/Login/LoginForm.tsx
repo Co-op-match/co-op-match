@@ -7,6 +7,7 @@ import "./login.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../../../components/UserContext";
 import { fetchVerifyStatus, routeAfterAuth } from "./routeAfterAuth";
+import { CoopMatchLoader } from "../../../components/loaders";
 
 const { Title, Text, Link } = Typography;
 
@@ -106,6 +107,7 @@ function LoginForm() {
   return (
     <>
       {contextHolder}
+      {loading && <CoopMatchLoader overlay text="กำลังเข้าสู่ระบบ..." />}
       <div className="login-page">
         <div className="signin-container">
           {/* Left Image Section */}

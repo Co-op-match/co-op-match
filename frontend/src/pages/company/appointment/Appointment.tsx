@@ -26,6 +26,7 @@ import {
   EditOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
+import { CoopMatchLoader } from '../../../components/loaders';
 import dayjs from "dayjs";
 import {
   GetApplicationsByCompanyID,
@@ -242,6 +243,20 @@ const InterviewDashboard: React.FC = () => {
       message.error("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
   };
+
+  if (loading) {
+    return (
+      <Layout style={{ minHeight: "100vh", background: "#f0f8ff" }}>
+        <CompanyHeader />
+        <CoopMatchLoader 
+          size="lg" 
+          overlay={true}
+          showText={true}
+          text="กำลังโหลดข้อมูลใบสมัคร..."
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f0f8ff" }}>

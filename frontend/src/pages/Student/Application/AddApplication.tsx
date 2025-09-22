@@ -16,6 +16,7 @@ import {
   Alert,
   Result,
 } from 'antd';
+import { CoopMatchLoader } from '../../../components/loaders';
 import {
   UploadOutlined,
   ArrowLeftOutlined,
@@ -45,7 +46,7 @@ const AddApplication: React.FC = () => {
   const [student, setStudent] = useState<StudentInterface | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -85,6 +86,8 @@ const AddApplication: React.FC = () => {
         }
       } catch (error) {
         message.error('ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -486,6 +489,10 @@ const AddApplication: React.FC = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return <CoopMatchLoader overlay text="กำลังโหลดข้อมูลการสมัครงาน..." />;
+  }
 
   return (
     <div style={styles.container}>

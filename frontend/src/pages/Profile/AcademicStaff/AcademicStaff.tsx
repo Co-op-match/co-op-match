@@ -38,7 +38,7 @@ import CompanyHeader from "../../Component/AcademicStaffHeader";
 import type { AcademicStaffInterface } from "../../../interfaces/AcademicStaff";
 import "./AcademicStaffProfile.css";
 import { fileURL } from "@/config/env";
-import CoopMatchLoader from "../../Component/loading";
+import { CoopMatchLoader } from "../../../components/loaders";
 import EditProfileCompanyModal from "../AcademicStaff/Edit/Popup";
 import { useNavigate } from "react-router-dom";
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Typography, Button, Row, Col, Tag, Badge } from 'antd';
+import { CoopMatchLoader } from '../../../components/loaders';
 import {
   EnvironmentOutlined,
   ArrowLeftOutlined,
@@ -87,12 +88,7 @@ const PostDetails = () => {
   }, [id]);
 
   if (loading) {
-    return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.loadingSpinner}></div>
-        <Text style={{ marginTop: 16, color: '#87ceeb' }}>กำลังโหลด...</Text>
-      </div>
-    );
+    return <CoopMatchLoader overlay text="กำลังโหลด..." />;
   }
 
   if (!post) return <div style={styles.loadingContainer}>ไม่พบข้อมูล</div>;

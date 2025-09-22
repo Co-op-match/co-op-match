@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
 import CoopMatchHeader from "../../Component/Coop_MatchHeader";
-import CoopMatchLoader from "../../Component/loading";
+import { CoopMatchLoader } from "../../../components/loaders";
 
 import { GetStudentByUserId } from "../../../services/https";
 import type { StudentInterface } from "../../../interfaces/Student";

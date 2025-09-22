@@ -2,6 +2,7 @@ import { Form, Input, Button, message, Typography, Card, Steps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ResetPassword, SendResetPasswordEmail } from "../../../services/https";
+import { CoopMatchLoader } from "../../../components/loaders";
 import "../Login/login.css";
 
 const { Title } = Typography;
@@ -107,6 +108,7 @@ function ResetPasswordPage() {
   return (
     <>
       {contextHolder}
+      {loading && <CoopMatchLoader overlay text="กำลังประมวลผล..." />}
       <div
         className="login-page"
         style={{

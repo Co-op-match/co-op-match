@@ -20,7 +20,7 @@ import {
 } from "../../../../services/https";
 
 // ✅ เพิ่ม Loader
-import CoopMatchLoader from "../../../Component/loading";
+import { CoopMatchLoader } from "../../../../components/loaders";
 
 interface EditProfileModalProps {
   open: boolean;

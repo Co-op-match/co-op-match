@@ -35,7 +35,7 @@ import AdminVerify from "./pages/Admin/verify/verify";
 import AdvancedChatInterface from "./chat/ChatInterface";
 import AdminArticlesPage from "./pages/Admin/AdminArticlesPage";
 import AdminUser from "./pages/Admin/user/main";
-import CoopMatchLoading from "./pages/Component/loading";
+import { CoopMatchLoader } from "./components/loaders";
 import AddAcademicStaffForm from "./pages/Profile/AcademicStaff/AddacadamicStaff/AddAcadamicStaffForm";
 import AcademicStaffProfile from "./pages/Profile/AcademicStaff/AcademicStaff";
 import CoopMatchLanding from "./pages/Mainpage/MainPage";
@@ -50,7 +50,7 @@ function App() {
           <Route element={<Outlet />}>
             <Route path="/" element={<CoopMatchLanding />} />
             <Route path="/sign-in" element={<LoginForm />} />
-            <Route path="/a" element={<CoopMatchLoading />} />
+            <Route path="/a" element={<CoopMatchLoader />} />
             <Route path="/sign-up" element={<RegisterPage />} />
             <Route path="/role-select" element={<RoleSelectionPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />

@@ -15,6 +15,7 @@ import {
   Tooltip,
   Modal,
   Spin,
+  Skeleton,
 } from 'antd';
 import {
   SearchOutlined,
@@ -29,6 +30,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import CoopMatchHeaderDefault from '../Component/Coop_MatchHeader';
 import { TbUserFilled } from 'react-icons/tb';
+import { CoopMatchLoader } from '../../components/loaders';
 
 import type { BenefitInterface } from '../../interfaces/Benefit';
 import type { JobTypeInterface } from '../../interfaces/JobType';
@@ -519,6 +521,17 @@ function SearchJobs() {
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {contextHolder}
       <CoopMatchHeaderDefault />
+      
+      {/* Full Page Loader */}
+      {(loading.posts || loading.filters) && (
+        <CoopMatchLoader 
+          size="lg" 
+          overlay={true}
+          showText={true}
+          text="กำลังโหลดข้อมูล..."
+        />
+      )}
+      
       <Layout>
         <Sider width={300} style={{ background: '#fff', padding: '24px' }}>
           {/* Filters */}
@@ -639,12 +652,38 @@ function SearchJobs() {
 
           <Row gutter={[16, 16]}>
             {loading.posts ? (
-              <Col span={24} style={{ textAlign: 'center', padding: '48px 0' }}>
-                <Spin size="large" />
-                <div style={{ marginTop: 16 }}>
-                  <Text>กำลังโหลดข้อมูลโพสต์...</Text>
-                </div>
-              </Col>
+              <>
+                {/* Skeleton Loading Cards */}
+                {[...Array(6)].map((_, index) => (
+                  <Col xs={24} sm={12} lg={8} key={index}>
+                    <Card
+                      style={{
+                        height: '400px',
+                        borderRadius: '16px',
+                        border: 'none',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                      }}
+                    >
+                      <Skeleton.Image 
+                        style={{ 
+                          width: '100%', 
+                          height: '140px',
+                          marginBottom: '16px'
+                        }} 
+                        active 
+                      />
+                      <Skeleton
+                        active
+                        title={{ width: '80%' }}
+                        paragraph={{ 
+                          rows: 4, 
+                          width: ['100%', '90%', '85%', '70%'] 
+                        }}
+                      />
+                    </Card>
+                  </Col>
+                ))}
+              </>
             ) : filteredPosts.length > 0 ? (
               filteredPosts.map((job) => (
                 <Col xs={24} sm={12} lg={8} key={job.ID}>
