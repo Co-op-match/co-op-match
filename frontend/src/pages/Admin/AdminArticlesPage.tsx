@@ -20,7 +20,6 @@ import {
   Divider,
   Statistic,
 } from "antd";
-import { CoopMatchLoader } from "../../components/loaders";
 import {
   PlusOutlined,
   EditOutlined,
