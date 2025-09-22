@@ -179,21 +179,25 @@ func createSeedData(db *gorm.DB) {
 		db.Unscoped().FirstOrCreate(&u, entity.User{Email: u.Email})
 	}
 
-	// Seed Profile Images
+	// Seed Profile Images - แยกตาม Role และสีสันที่หลากหลาย
 	profileImages := []entity.ProfileImage{
-		{ImageURL: "/uploads/admin-profile.png", UserID: 1},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 2},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 6},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 10},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 11},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 12},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 13},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 4},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 14},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 15},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 16},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 17},
-		{ImageURL: "/uploads/admin-profile.png", UserID: 18},
+		// Admin Users (UserID: 1, 5)
+		{ImageURL: "/uploads/admin-default.svg", UserID: 1},
+		{ImageURL: "/uploads/admin-default.svg", UserID: 5},
+
+		// Student Users (UserID: 3, 10-13) - ใช้รูปนักศึกษาหลากสี
+		{ImageURL: "/uploads/student-1.svg", UserID: 3},
+		{ImageURL: "/uploads/student-2.svg", UserID: 10},
+		{ImageURL: "/uploads/student-3.svg", UserID: 11},
+		{ImageURL: "/uploads/student-4.svg", UserID: 12},
+		{ImageURL: "/uploads/student-5.svg", UserID: 13},
+
+		// Academic Staff Users (UserID: 4, 14-17) - ใช้รูปอาจารย์หลากสี
+		{ImageURL: "/uploads/academic-1.svg", UserID: 4},
+		{ImageURL: "/uploads/academic-2.svg", UserID: 14},
+		{ImageURL: "/uploads/academic-3.svg", UserID: 15},
+		{ImageURL: "/uploads/academic-4.svg", UserID: 16},
+		{ImageURL: "/uploads/academic-5.svg", UserID: 17},
 	}
 	for _, pi := range profileImages {
 		db.FirstOrCreate(&pi, entity.ProfileImage{UserID: pi.UserID})
