@@ -113,17 +113,23 @@ const CompanyProfileview: React.FC = () => {
     let lastErr: any = null;
     for (let i = 0; i < maxTries; i++) {
       try {
+        console.log(`🔄 Attempting to create chat session for room ${roomId} (attempt ${i + 1}/${maxTries})`);
         return await createChatSession(roomId);
       } catch (e: any) {
         lastErr = e;
         const code = e?.response?.status;
-        if ([400, 404, 409].includes(Number(code))) {
+        console.log(`❌ Chat session creation failed (attempt ${i + 1}): ${code} - ${e?.response?.data?.error || e.message}`);
+        
+        // Retry สำหรับ 400, 403, 404, 409 (เพิ่ม 403 เพื่อจัดการ timing issue)
+        if ([400, 403, 404, 409].includes(Number(code))) {
+          console.log(`⏳ Waiting ${delayMs}ms before retry...`);
           await wait(delayMs);
           continue;
         }
         throw e;
       }
     }
+    console.error(`❌ All ${maxTries} attempts failed for room ${roomId}`);
     throw lastErr;
   }
 
@@ -210,7 +216,10 @@ const CompanyProfileview: React.FC = () => {
         return;
       }
 
-      const { token } = await mintSessionWithRetry(roomId, 6, 180);
+      // รอให้การสร้างห้องเสร็จสิ้นก่อนสร้าง session
+      console.log("🏠 Room created/found with ID:", roomId, "- waiting before creating session...");
+      await wait(100); // รอ 100ms ให้การสร้างห้องเสร็จสิ้น
+      const { token } = await mintSessionWithRetry(roomId, 6, 250); // เพิ่ม delay เป็น 250ms
       saveChatToken(token);
       navigate(`/chat/session/${token}`, { replace: true });
     } catch (e) {

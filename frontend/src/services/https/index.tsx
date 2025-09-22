@@ -1116,23 +1116,58 @@ export function createWsByToken(chatToken: string): WebSocket {
 
 // ========== Messages (ต้องส่ง Authorization: Bearer <chatToken>) ==========
 export async function getMessagesByToken(chatToken: string, roomId: number) {
-  const res = await axios.get(`${apiUrl}/chat/messages/${roomId}`, {
-    withCredentials: true,
-    headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+  console.log("📤 getMessagesByToken called with:", {
+    roomId,
+    tokenPreview: chatToken?.substring(0, 30) + "...",
+    tokenLength: chatToken?.length
   });
-  return res.data;
+  
+  try {
+    const res = await axios.get(`${apiUrl}/chat/messages/${roomId}`, {
+      withCredentials: true,
+      headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+    });
+    console.log("✅ getMessagesByToken success:", res.data?.length || 0, "messages");
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ getMessagesByToken failed:", {
+      status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      data: error?.response?.data,
+      roomId,
+      tokenPreview: chatToken?.substring(0, 30) + "..."
+    });
+    throw error;
+  }
 }
 
 export async function markReadByToken(chatToken: string, roomId: number) {
-  const res = await axios.patch(
-    `${apiUrl}/chat/messages/${roomId}/read`,
-    null,
-    {
-      withCredentials: true,
-      headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
-    }
-  );
-  return res.data;
+  console.log("📤 markReadByToken called with:", {
+    roomId,
+    tokenPreview: chatToken?.substring(0, 30) + "..."
+  });
+  
+  try {
+    const res = await axios.patch(
+      `${apiUrl}/chat/messages/${roomId}/read`,
+      null,
+      {
+        withCredentials: true,
+        headers: { ...jsonHeaders, Authorization: `Bearer ${chatToken}` },
+      }
+    );
+    console.log("✅ markReadByToken success");
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ markReadByToken failed:", {
+      status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      data: error?.response?.data,
+      roomId,
+      tokenPreview: chatToken?.substring(0, 30) + "..."
+    });
+    throw error;
+  }
 }
 
 // ========== Rooms list (ใช้ JWT auth) ==========

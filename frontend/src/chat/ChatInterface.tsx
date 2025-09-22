@@ -435,13 +435,30 @@ const AdvancedChatInterface: React.FC = () => {
     const load = async () => {
       if (!chatToken) return;
       const rid = readRidFromToken(chatToken);
-      if (!rid || rid <= 0) { setMessages([]); return; }
+      console.log("🔍 Loading messages for room:", rid, "with token:", chatToken?.substring(0, 30) + "...");
+      
+      if (!rid || rid <= 0) { 
+        console.log("⚠️ Invalid room ID, clearing messages");
+        setMessages([]); 
+        return; 
+      }
 
-      const data = await getMessagesByToken(chatToken, rid);
-      setMessages(Array.isArray(data) ? data.map((m:any)=>toUiMessage(m, meId)) : []);
-      await markReadByToken(chatToken, rid).catch(()=>{});
-      updateContacts(prev => prev.map(c => c.id === rid ? { ...c, unread: 0 } : c));
-      requestAnimationFrame(() => scrollToBottom());
+      try {
+        console.log("📤 Calling getMessagesByToken for room:", rid);
+        const data = await getMessagesByToken(chatToken, rid);
+        console.log("✅ Messages loaded successfully:", data?.length || 0, "messages");
+        setMessages(Array.isArray(data) ? data.map((m:any)=>toUiMessage(m, meId)) : []);
+        
+        console.log("📤 Marking messages as read for room:", rid);
+        await markReadByToken(chatToken, rid).catch((error) => {
+          console.error("❌ Failed to mark as read:", error);
+        });
+        
+        updateContacts(prev => prev.map(c => c.id === rid ? { ...c, unread: 0 } : c));
+        requestAnimationFrame(() => scrollToBottom());
+      } catch (error) {
+        console.error("❌ Failed to load messages:", error);
+      }
     };
     load();
   }, [chatToken, meId, scrollToBottom]);

@@ -119,16 +119,32 @@ func CreateChatSession(c *gin.Context) {
 	fmt.Printf("📝 CreateChatSession request - room: %d, user: %d\n", req.RoomID, userID)
 
 	// ตรวจสิทธิ์ในห้อง (ยกเว้น lobby = 0)
-	memberCheck := isMember(userID, req.RoomID)
-	fmt.Printf("👥 isMember check - userID: %d, roomID: %d, result: %v\n", userID, req.RoomID, memberCheck)
+	if req.RoomID == 0 {
+		// Lobby room - อนุญาตทุกคน
+		fmt.Printf("✅ Lobby access granted: User %d\n", userID)
+	} else {
+		// ตรวจสอบว่าห้องมีอยู่หรือไม่
+		var existingRoom entity.ChatRoom
+		err := config.DB().First(&existingRoom, req.RoomID).Error
 
-	if !memberCheck {
-		fmt.Printf("❌ Access denied: User %d is not a member of room %d\n", userID, req.RoomID)
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not a member"})
-		return
+		if err != nil {
+			fmt.Printf("⚠️  Room %d not found, will need to be created first\n", req.RoomID)
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error":   "room_not_found",
+				"message": "Chat room does not exist. Please create the room first.",
+			})
+			return
+		}
+
+		// ห้องมีอยู่แล้ว ตรวจสิทธิ์
+		if existingRoom.User1ID != userID && existingRoom.User2ID != userID {
+			fmt.Printf("❌ Access denied: User %d is not a member of room %d\n", userID, req.RoomID)
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "not a member"})
+			return
+		}
+
+		fmt.Printf("✅ Access granted: User %d is member of room %d\n", userID, req.RoomID)
 	}
-
-	fmt.Printf("✅ Access granted: User %d creating chat session for room %d\n", userID, req.RoomID)
 
 	chatTok := services.ChatToken{Secret: "chat-secret", TTL: 2 * time.Hour}
 	tok, err := chatTok.Mint(userID, req.RoomID)
@@ -355,15 +371,20 @@ func writeMessages(client *hub.Client) {
 
 // สร้างห้องแชทระหว่าง user1 กับ user2
 func CreateChatRoom(c *gin.Context) {
+	fmt.Println("🏠 CreateChatRoom called")
+
 	var input struct {
 		User1ID uint `json:"user1_id"`
 		User2ID uint `json:"user2_id"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
+		fmt.Printf("❌ Invalid input: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
+
+	fmt.Printf("📝 Creating/finding room for users: %d ↔ %d\n", input.User1ID, input.User2ID)
 
 	var existingRoom entity.ChatRoom
 	err := config.DB().Where(
@@ -373,6 +394,7 @@ func CreateChatRoom(c *gin.Context) {
 
 	if err == nil {
 		// ห้องมีอยู่แล้ว
+		fmt.Printf("✅ Room already exists with ID: %d\n", existingRoom.ID)
 		c.JSON(http.StatusConflict, gin.H{
 			"error":   "Chat room already exists",
 			"room_id": existingRoom.ID,
@@ -394,10 +416,12 @@ func CreateChatRoom(c *gin.Context) {
 	}
 
 	if err := config.DB().Create(&newRoom).Error; err != nil {
+		fmt.Printf("❌ Failed to create room: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot create chat room"})
 		return
 	}
 
+	fmt.Printf("✅ New room created successfully with ID: %d\n", newRoom.ID)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Chat room created",
 		"room_id": newRoom.ID,
