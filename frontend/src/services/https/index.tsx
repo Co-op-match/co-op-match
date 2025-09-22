@@ -18,7 +18,7 @@ import type { InputAcademicStaffInterface } from "@/interfaces/InputAcademicStaf
 import { API_BASE } from "@/config/env";
 import type { CreateAdminPayload } from "@/interfaces/Admin";
 
-const apiUrl = "https://api.coop-match.online";
+const apiUrl = API_BASE;
 const Authorization = localStorage.getItem("token");
 const Bearer = localStorage.getItem("token_type");
 axios.defaults.withCredentials = true;
@@ -1109,7 +1109,7 @@ export async function createChatSession(roomId: number): Promise<{ token: string
 // ========== WebSocket ==========
 export function createWsByToken(chatToken: string): WebSocket {
   // รองรับ http→ws, https→wss
-  const wsBase = apiUrl.replace(/^http/i, (m) => (m.toLowerCase() === 'https' ? 'wss' : 'ws'));
+  const wsBase = apiUrl.replace(/^http/i, (m: string) => (m.toLowerCase() === 'https' ? 'wss' : 'ws'));
   const url = `${wsBase}/chat/ws?token=${encodeURIComponent(chatToken)}`;
   return new WebSocket(url);
 }

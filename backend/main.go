@@ -190,20 +190,19 @@ func main() {
 	}
 
 	// chat APIs ที่ต้องล็อกอิน
-		chatGroup := protected.Group("/chat")
-		{
-			chatGroup.POST("/session", controller.CreateChatSession)
+	chatGroup := protected.Group("/chat")
+	{
+		chatGroup.POST("/session", controller.CreateChatSession)
 
-			// 🔄 สร้างห้องแชท
-			chatGroup.POST("/room", controller.CreateChatRoom)
+		// 🔄 สร้างห้องแชท
+		chatGroup.POST("/room", controller.CreateChatRoom)
 
-			// 📋 ดึงห้องแชททั้งหมดของ user
-			chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
+		// 📋 ดึงห้องแชททั้งหมดของ user
+		chatGroup.GET("/rooms/:user_id", controller.GetChatRoomsByUserID)
 
-			// 🔌 WebSocket เชื่อมต่อ
-			// chatGroup.GET("/ws", controller.ChatWebSocket)
-		}
-
+		// 🔌 WebSocket เชื่อมต่อ
+		// chatGroup.GET("/ws", controller.ChatWebSocket)
+	}
 
 	// notification (ส่วนที่เป็น action)
 	notificationGroup := protected.Group("/notification")
@@ -298,7 +297,7 @@ func main() {
 	{
 		analysisAdminGroup.GET("/trend", analysis.GetTrendForAdmin)
 	}
-	
+
 	// articles (ต้องล็อกอิน)
 	articles := protected.Group("/articles")
 	{
@@ -343,7 +342,13 @@ func logSMTPEnv() {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "https://app.coop-match.online")
+		// ใช้ environment variable หรือ default เป็น localhost
+		corsOrigin := os.Getenv("CORS_ORIGIN")
+		if corsOrigin == "" {
+			corsOrigin = "http://localhost:5173"
+		}
+
+		c.Writer.Header().Set("Access-Control-Allow-Origin", corsOrigin)
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
