@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import {
-  LineChart as RLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
+  Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Legend,
   Area,
   ComposedChart,
