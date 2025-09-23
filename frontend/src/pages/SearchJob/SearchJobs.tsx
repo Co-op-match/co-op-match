@@ -171,20 +171,27 @@ function SearchJobs() {
     }
   };
 
-  // แยกการโหลด posts ออกมา - ให้ทำงานอิสระ
-  const fetchPosts = async () => {
-    try {
-      const postRes = await GetIntershipPost();
-      if (postRes.status === 200) {
-        setPosts(postRes.data);
-      }
-    } catch (err) {
-      console.error('Error fetching posts:', err);
-      messageApi.open({ type: 'error', content: 'ไม่สามารถโหลดข้อมูลโพสต์ได้' });
-    } finally {
-      setLoading(prev => ({ ...prev, posts: false }));
+  // เดิม: const fetchPosts = async () => {
+// แก้ fetchPosts ให้ไม่ต้องรับ sid แล้วไปดู user_id เอง
+const fetchPosts = async () => {
+  try {
+    const raw = localStorage.getItem('id');
+    const userId = raw ? Number(raw) : undefined;
+
+    const postRes = await GetIntershipPost(
+      Number.isFinite(userId as number) ? (userId as number) : undefined
+    );
+
+    if (postRes?.status === 200) {
+      setPosts(postRes.data);
     }
-  };
+  } catch (err) {
+    console.error('Error fetching posts:', err);
+    messageApi.open({ type: 'error', content: 'ไม่สามารถโหลดข้อมูลโพสต์ได้' });
+  } finally {
+    setLoading(prev => ({ ...prev, posts: false }));
+  }
+};
 
   // แยกการโหลดข้อมูล filters ออกมา
   const fetchFiltersData = async () => {
@@ -346,6 +353,16 @@ function SearchJobs() {
     }
   };
 
+  useEffect(() => {
+    fetchFiltersData();   // โหลดตัวกรอง
+    fetchPosts();         // โหลดโพสต์โดยกรองจาก user_id
+    checkStudentProfile(); // ยังใช้สำหรับปุ่ม Like/Unlike ได้เหมือนเดิม
+  }, []);
+  
+  useEffect(() => {
+    filterPosts();
+  }, [filterPosts]);
+
   const JobCard: React.FC<{
     job: IntershipPostInterface;
     likedPosts: number[];
@@ -503,17 +520,6 @@ function SearchJobs() {
     </div>
   );
 
-  // โหลดข้อมูลแยกกัน - ไม่ต้องรอกัน
-  useEffect(() => {
-    // โหลดทั้งหมดพร้อมกัน แต่แยก state
-    fetchPosts();
-    fetchFiltersData();
-    checkStudentProfile();
-  }, []);
-
-  useEffect(() => {
-    filterPosts();
-  }, [filterPosts]);
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
