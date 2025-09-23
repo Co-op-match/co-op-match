@@ -574,12 +574,6 @@ const tableCardStyle = {
 
 const tableStyle = { backgroundColor: 'transparent' };
 
-const positionCellStyle = {
-  fontSize: '16px',
-  fontWeight: 600,
-  color: '#0066cc',
-} as const;
-
 const companyCellStyle = { fontSize: '15px', fontWeight: 500, color: '#3399ff' };
 
 const dateCellStyle = { fontSize: '14px', color: '#666' };
