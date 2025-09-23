@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import type { LatestPendingApplicantInterface } from "@/interfaces/Analysis";
 import { getLatestPendingApplicants } from "@/services/https";
 import { fileURL } from "@/config/env";
+const { Text, Title } = Typography;
 
 dayjs.extend(relativeTime);
 dayjs.locale("th");
@@ -21,7 +22,6 @@ interface Props {
   companyId?: number;
   loadingGlobal?: boolean;
   onViewApplication?: (postId: number) => void;
-  maxHeight?: number | string;                    // ✅ เพิ่ม
 }
 
 /* ---------- helpers ---------- */
@@ -44,7 +44,6 @@ const LatestPendingApplicants: React.FC<Props> = ({
   companyId,
   loadingGlobal,
   onViewApplication,
-  maxHeight = "48vh",                               // ✅ ค่ามาตรฐาน
 }) => {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<LatestPendingApplicantInterface[]>([]);
@@ -222,6 +221,7 @@ const LatestPendingApplicants: React.FC<Props> = ({
 
   return (
     <Card
+      className="chart-card"
       size="small"
       style={{ borderRadius: 16, border: "1px solid #e8f4fd", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", height: "100%" }}
       styles={{
@@ -230,26 +230,16 @@ const LatestPendingApplicants: React.FC<Props> = ({
       }}
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #1890ff 0%, #69c0ff 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontSize: 16,
-            }}
-          >
-            <UserSwitchOutlined />
+          <div className="icon-circle">
+            <UserSwitchOutlined className="inner-icon" />
           </div>
           <div>
-            <Typography.Text style={{ margin: 0, color: "#1f2937", fontWeight: 600 }}>
+            <Title level={4} className="section-title" style={{ marginBottom: "0px" }}>
               ผู้สมัครที่รอการคัดเลือก
-            </Typography.Text>
-            <div style={{ fontSize: 12, color: "#8c8c8c", marginTop: 2 }}>รายการผู้สมัครที่ต้องดำเนินการ</div>
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13, fontWeight: "lighter" }}>
+              รายการผู้สมัครที่ต้องดำเนินการ
+            </Text>
           </div>
         </div>
       }
@@ -267,10 +257,8 @@ const LatestPendingApplicants: React.FC<Props> = ({
         </Space>
       }
     >
-      {/* ✅ พื้นที่เลื่อนในการ์ด */}
       <div
         style={{
-          maxHeight,               // เช่น "48vh" หรือ 420
           overflowY: "auto",
           paddingRight: 6,         // กันชน scrollbar
           scrollBehavior: "smooth",

@@ -9,20 +9,20 @@ import (
 )
 
 type upliftSide struct {
-	Total     int64    `json:"total"`
-	Pass      int64    `json:"pass"`
-	Fail      int64    `json:"fail"`
-	PassRate  *float64 `json:"pass_rate"` // อนุญาตให้เป็น nil
-	FailRate  *float64 `json:"fail_rate"` // อนุญาตให้เป็น nil
-	Sufficient bool    `json:"sufficient"`
+	Total      int64    `json:"total"`
+	Pass       int64    `json:"pass"`
+	Fail       int64    `json:"fail"`
+	PassRate   *float64 `json:"pass_rate"` // อนุญาตให้เป็น nil
+	FailRate   *float64 `json:"fail_rate"` // อนุญาตให้เป็น nil
+	Sufficient bool     `json:"sufficient"`
 }
 
 type upliftResp struct {
-	Recommended     upliftSide  `json:"recommended"`
-	NonRecommended  upliftSide  `json:"non_recommended"`
-	UpliftPassRate  *float64    `json:"uplift_pass_rate"` // nil ถ้าข้อมูลไม่พอ
-	MinSample       int64       `json:"min_sample"`
-	Note            string      `json:"note"`
+	Recommended    upliftSide `json:"recommended"`
+	NonRecommended upliftSide `json:"non_recommended"`
+	UpliftPassRate *float64   `json:"uplift_pass_rate"` // nil ถ้าข้อมูลไม่พอ
+	MinSample      int64      `json:"min_sample"`
+	Note           string     `json:"note"`
 }
 
 // GET /analysis/uplift
@@ -31,12 +31,13 @@ func GetUpliftPassFail(c *gin.Context) {
 
 	const MIN_SAMPLE int64 = 5
 
-	// ------- Recommended --------
-	// Applications ที่ intership_post_id อยู่ใน Top-10 JobMatch ของ "นักศึกษาคนเดียวกัน"
-	// ไม่กรองวัน
-	var recTotal, recPass int64
+	// -------- Recommended (อยู่ใน Top-10 ของนักศึกษาคนเดียวกัน) --------
+	// นับเฉพาะผลที่ "ตัดสินแล้ว": pass = 'ผ่าน', fail = 'ไม่ผ่าน'
+	var recPass, recFail int64
 	db.Raw(`
-		SELECT COUNT(*)
+		SELECT
+			COALESCE(SUM(CASE WHEN a.status = 'ผ่าน' THEN 1 ELSE 0 END), 0)      AS pass_cnt,
+			COALESCE(SUM(CASE WHEN a.status = 'ไม่ผ่าน' THEN 1 ELSE 0 END), 0)  AS fail_cnt
 		FROM applications a
 		WHERE EXISTS (
 			SELECT 1
@@ -45,30 +46,19 @@ func GetUpliftPassFail(c *gin.Context) {
 			  AND jm.internship_post_id = a.intership_post_id
 			  AND jm.ranking <= 10
 		)
-	`).Scan(&recTotal)
+	`).Row().Scan(&recPass, &recFail)
 
-	db.Raw(`
-		SELECT COUNT(*)
-		FROM applications a
-		WHERE a.status = 'ผ่าน'
-		  AND EXISTS (
-		    SELECT 1
-		    FROM job_matches jm
-		    WHERE jm.student_id = a.student_id
-		      AND jm.internship_post_id = a.intership_post_id
-		      AND jm.ranking <= 10
-		  )
-	`).Scan(&recPass)
-
-	recFail := recTotal - recPass
-	recPassRate, recFailRate := rateOrNil(recPass, recTotal), rateOrNil(recFail, recTotal)
+	recTotal := recPass + recFail
+	recPassRate := rateOrNil(recPass, recTotal)
+	recFailRate := rateOrNil(recFail, recTotal)
 	recSufficient := recTotal >= MIN_SAMPLE
 
-	// ------- Non-Recommended --------
-	// Applications ที่ "ไม่" อยู่ใน Top-10 JobMatch ของนักศึกษาคนเดียวกัน
-	var nonTotal, nonPass int64
+	// -------- Non-Recommended (ไม่อยู่ใน Top-10) --------
+	var nonPass, nonFail int64
 	db.Raw(`
-		SELECT COUNT(*)
+		SELECT
+			COALESCE(SUM(CASE WHEN a.status = 'ผ่าน' THEN 1 ELSE 0 END), 0)      AS pass_cnt,
+			COALESCE(SUM(CASE WHEN a.status = 'ไม่ผ่าน' THEN 1 ELSE 0 END), 0)  AS fail_cnt
 		FROM applications a
 		WHERE NOT EXISTS (
 			SELECT 1
@@ -77,31 +67,18 @@ func GetUpliftPassFail(c *gin.Context) {
 			  AND jm.internship_post_id = a.intership_post_id
 			  AND jm.ranking <= 10
 		)
-	`).Scan(&nonTotal)
+	`).Row().Scan(&nonPass, &nonFail)
 
-	db.Raw(`
-		SELECT COUNT(*)
-		FROM applications a
-		WHERE a.status = 'ผ่าน'
-		  AND NOT EXISTS (
-		    SELECT 1
-		    FROM job_matches jm
-		    WHERE jm.student_id = a.student_id
-		      AND jm.internship_post_id = a.intership_post_id
-		      AND jm.ranking <= 10
-		  )
-	`).Scan(&nonPass)
-
-	nonFail := nonTotal - nonPass
-	nonPassRate, nonFailRate := rateOrNil(nonPass, nonTotal), rateOrNil(nonFail, nonTotal)
+	nonTotal := nonPass + nonFail
+	nonPassRate := rateOrNil(nonPass, nonTotal)
+	nonFailRate := rateOrNil(nonFail, nonTotal)
 	nonSufficient := nonTotal >= MIN_SAMPLE
 
-	// ------- Uplift logic --------
+	// -------- Uplift ของอัตราผ่าน --------
 	var uplift *float64
 	note := ""
 	if recSufficient && nonSufficient && recPassRate != nil && nonPassRate != nil {
-		v := *recPassRate - *nonPassRate
-		// clamp (-1..+1) กัน case แปลก ๆ
+		v := *recPassRate - *nonPassRate // ต่างของ pass_rate (ช่วง -1..+1)
 		if v < -1 {
 			v = -1
 		}
@@ -116,9 +93,9 @@ func GetUpliftPassFail(c *gin.Context) {
 
 	resp := upliftResp{
 		Recommended: upliftSide{
-			Total:      recTotal,
-			Pass:       recPass,
-			Fail:       recFail,
+			Total:      recTotal,   // pass + fail (เฉพาะที่ตัดสินแล้ว)
+			Pass:       recPass,    // status = 'ผ่าน'
+			Fail:       recFail,    // status = 'ไม่ผ่าน'
 			PassRate:   recPassRate,
 			FailRate:   recFailRate,
 			Sufficient: recSufficient,

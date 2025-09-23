@@ -210,6 +210,14 @@ const CertificationReviewPage: React.FC = () => {
     }
   };
 
+  const shouldIgnoreRowClick = (e: React.MouseEvent) => {
+    const el = e.target as HTMLElement;
+    // กันคลิกจากปุ่ม ลิงก์ อินพุต ดรอปดาวน์ ฯลฯ
+    return !!el.closest(
+      'button, a, .ant-btn, .ant-select, .ant-dropdown, .ant-input, .ant-checkbox, .ant-switch, .ant-radio'
+    );
+  };
+
   // ===== table columns =====
   const columns: ColumnsType<VerifyInterface> = [
     {
@@ -285,7 +293,10 @@ const CertificationReviewPage: React.FC = () => {
             type="primary"
             size="middle"
             icon={<EyeOutlined />}
-            onClick={() => handleViewDetail(record)}
+            onClick={(e) => {
+              e.stopPropagation();       // กันไปทริกเกอร์ onRow
+              handleViewDetail(record);
+            }}
             disabled={record.StatusVerify?.status_verify === "ยังไม่ได้ส่งคำขอ"}
             className="action-button"
           />
@@ -374,6 +385,19 @@ const CertificationReviewPage: React.FC = () => {
                 rowKey="ID"
                 loading={loading}
                 dataSource={sortedVerifications}
+                onRow={(record) => ({
+                  onClick: (e) => {
+                    if (shouldIgnoreRowClick(e)) return; // ข้ามถ้าคลิกปุ่ม/อินพุต
+                    // ไม่ให้เปิดสำหรับ "ยังไม่ได้ส่งคำขอ"
+                    const status = record.StatusVerify?.status_verify || "รอรับรอง";
+                    if (status === "ยังไม่ได้ส่งคำขอ") return;
+                    handleViewDetail(record);
+                  },
+                })}
+                rowClassName={(record) => {
+                  const status = record.StatusVerify?.status_verify || "รอรับรอง";
+                  return status === "ยังไม่ได้ส่งคำขอ" ? "row-disabled" : "row-clickable";
+                }}
                 pagination={{
                   ...pagination,
                   showSizeChanger: true,
@@ -643,4 +667,14 @@ const customStyle = `
     }
   }
 
+  /* แถวคลิกได้ */
+  .row-clickable td {
+    cursor: pointer;
+  }
+
+  /* แถวปิดการคลิก */
+  .row-disabled td {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 `;

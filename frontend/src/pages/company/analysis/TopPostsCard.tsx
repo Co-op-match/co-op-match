@@ -43,41 +43,23 @@ const TopPostsCard: React.FC<Props> = ({
       className="chart-card"
       bordered={bordered}
       styles={{
-        header: { 
-          background: 'linear-gradient(135deg, rgba(255, 77, 79, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
-          borderBottom: '1px solid rgba(255, 77, 79, 0.15)',
-          borderRadius: '12px 12px 0 0'
-        },
-        body: { padding: '20px' }
+        body: { padding: "12px 16px" }, // body บาง ๆ
+        header: { borderBottom: "1px solid #f0f0f0", padding: "12px 16px" },
       }}
+      title={
+        <Space size={8}>
+          <div className="icon-circle">
+            <FireFilled className="inner-icon" />
+          </div>
+          <div>
+            <Title level={4} className="section-title" style={{ marginBottom: "0px" }}>โพสต์งานยอดนิยม</Title>
+            <Text type="secondary" style={{ fontSize: 13, fontWeight: "lighter" }}>
+              อันดับโพสต์ที่ได้รับความสนใจมากที่สุด
+            </Text>
+          </div>
+        </Space>
+      }
     >
-      {/* Enhanced Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-          <Space align="center">
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(255, 77, 79, 0.3)'
-            }}>
-              <FireFilled style={{ color: 'white', fontSize: 18 }} />
-            </div>
-            <div>
-              <Title level={4} style={{ margin: 0, color: '#262626' }}>โพสต์งานยอดนิยม</Title>
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                อันดับโพสต์ที่ได้รับความสนใจมากที่สุด
-              </Text>
-            </div>
-          </Space>
-         
-        </div>
-      </div>
-
       {loading ? (
         <div style={{ padding: '8px 0' }}>
           {[...Array(3)].map((_, i) => (

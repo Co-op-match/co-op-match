@@ -1,15 +1,19 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Card, Row, Col, Statistic, Table, Button, message, Spin, Typography, Tag, Space,
-  Badge, Modal, Dropdown, ConfigProvider, Empty, Tooltip, Segmented, Drawer, Select, DatePicker, Layout,
+  Badge, Modal, ConfigProvider, Empty, Tooltip, Segmented, Drawer, Select, DatePicker, Layout,
 } from "antd";
 import {
-  UsergroupAddOutlined, FileTextOutlined, ReloadOutlined, ExportOutlined, FileExcelOutlined,
+  UsergroupAddOutlined, FileTextOutlined, ReloadOutlined, ExportOutlined,
   ShopOutlined, TeamOutlined, ArrowRightOutlined, DashboardOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 import {
-  LineChart as RLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
+  Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Legend,
+  Area,
+  ComposedChart,
 } from "recharts";
 import dayjs, { Dayjs } from "dayjs";
 import { TrendingUpIcon } from "lucide-react";
@@ -19,10 +23,21 @@ import {
 } from "@/services/https";
 import { useNavigate } from "react-router-dom";
 import AcademicStaffHeader from "../Component/AcademicStaffHeader";
+import AcademicExport from "../AcademicStaff/Export";
 
 const { Text, Title } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+
+interface DailyRow {
+  day: string;
+  total: number;
+  pass: number;
+  review: number;
+  interviewed: number;
+  waiting: number;
+  fail_combined: number;
+}
 
 /* ============== Helpers & constants ============== */
 type AnyRow = Record<string, unknown>;
@@ -150,31 +165,6 @@ const AcademicDashboard = () => {
     }));
   }, [apps]);
 
-  const exportMenuItems = [
-    {
-      key: "students", icon: <FileExcelOutlined />, label: "ส่งออกรายชื่อนักศึกษา (CSV)",
-      onClick: () => exportToCSV(
-        students?.map((s: any) => ({
-          ชื่อ: s.first_name, นามสกุล: s.last_name, อายุ: s.age, เพศ: s.gender,
-          สาขา: s.program_name, คณะ: s.faculty_name, มหาวิทยาลัย: s.university_name, จำนวนใบสมัคร: s.applications_total,
-        })) ?? [], "รายชื่อนักศึกษา"
-      ),
-    },
-    {
-      key: "companies", icon: <FileExcelOutlined />, label: "ส่งออกบริษัทร่วม Co-op (CSV)",
-      onClick: () => exportToCSV(
-        companiesCoop?.map((c: any) => ({
-          บริษัท: c.company_name, จำนวนนักศึกษาที่สมัคร: c.applicants_count,
-          ล่าสุดเมื่อ: c.last_apply_at ? new Date(c.last_apply_at).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "",
-        })) ?? [], "บริษัทร่วม Co-op"
-      ),
-    },
-    {
-      key: "series", icon: <ExportOutlined />, label: "ส่งออกกราฟรายวัน (CSV)",
-      onClick: () => exportToCSV(dailyChartData as AnyRow[], `แนวโน้มรายวัน_${dayjs().format("YYYYMMDD")}`),
-    },
-  ];
-
   const applicationsColumns = [
     { title: "ชื่อนักศึกษา", dataIndex: "student_full_name", key: "student_full_name", ellipsis: true, render: (t: string) => <Tooltip title={t}>{t}</Tooltip> },
     { title: "บริษัท", dataIndex: "company_name", key: "company_name", ellipsis: true, render: (t: string) => <Tooltip title={t}>{t}</Tooltip> },
@@ -184,6 +174,36 @@ const AcademicDashboard = () => {
   ];
 
   const statuses = ["รอการนัดสัมภาษณ์", "กำลังพิจารณา", "นัดสัมภาษณ์แล้ว", "ผ่าน", "ไม่ผ่าน", "ไม่ได้รับเลือก"];
+
+  const asText = (s: string) => `\t${s}`; // ทำให้ Excel มองเป็นข้อความ
+
+  // ===== สร้างข้อมูลสำหรับ "ตารางแนวโน้มรายวัน" =====
+  const dailyTableData = useMemo(() => {
+    return (Array.isArray(dailyTrend) ? dailyTrend : []).map((p: any) => ({
+      day: asText(dayjs(p.date).format("YYYY-MM-DD")), // หรือ "DD/MM/YYYY"
+      total: Number(p.total || 0),
+      pass: Number(p.pass || 0),
+      review: Number(p.review || 0),
+      interviewed: Number(p.interviewed || 0),
+      waiting: Number(p.waiting_schedule ?? p.waiting ?? 0),
+      fail_combined: Number(p.fail || 0),
+    }));
+  }, [dailyTrend]);
+
+  const dailyTableColumns: ColumnsType<DailyRow> = [
+    { title: "วันที่", dataIndex: "day", key: "day", width: 140 },
+    { title: "รวม", dataIndex: "total", key: "total", align: "right", width: 90 },
+    { title: "ผ่าน", dataIndex: "pass", key: "pass", align: "right", width: 90,
+      render: (v: number) => <div  style={{ borderRadius: 8 }}>{v}</div> },
+    { title: "กำลังพิจารณา", dataIndex: "review", key: "review", align: "right", width: 120,
+      render: (v: number) => <div  style={{ borderRadius: 8 }}>{v}</div> },
+    { title: "นัดสัมภาษณ์แล้ว", dataIndex: "interviewed", key: "interviewed", align: "right", width: 120,
+      render: (v: number) => <div  style={{ borderRadius: 8 }}>{v}</div> },
+    { title: "รอการนัดสัมภาษณ์", dataIndex: "waiting", key: "waiting", align: "right", width: 140,
+      render: (v: number) => <div  style={{ borderRadius: 8 }}>{v}</div> },
+    { title: "ไม่ผ่าน/ไม่ได้รับเลือก", dataIndex: "fail_combined", key: "fail_combined", align: "right", width: 180,
+      render: (v: number) => <div  style={{ borderRadius: 8 }}>{v}</div> },
+  ];
 
   return (
     <ConfigProvider
@@ -216,7 +236,7 @@ const AcademicDashboard = () => {
 
           {/* Header */}
           <div className="dashboard-header">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
               <div>
                 <Title level={1} className="dashboard-title">
                   <DashboardOutlined style={{ marginRight: 12, color: "#1677ff" }} />
@@ -224,10 +244,12 @@ const AcademicDashboard = () => {
                 </Title>
                 <div className="dashboard-subtitle">ภาพรวมการสมัคร บริษัทที่ร่วมโครงการ Co-op และข้อมูลนักศึกษาทั้งหมด</div>
               </div>
-              <Space size={16} wrap>
-                <Dropdown menu={{ items: exportMenuItems }} trigger={["click"]}>
-                  <Button className="secondary-button" size="large" icon={<ExportOutlined />}>ส่งออกข้อมูล</Button>
-                </Dropdown>
+              <Space size={8} wrap>
+                <AcademicExport
+                  students={students}
+                  companiesCoop={companiesCoop}
+                  apps={apps}
+                />                
                 <Button className="action-button" size="large" icon={<ReloadOutlined />} onClick={fetchAll} loading={loading}>รีเฟรชข้อมูล</Button>
               </Space>
             </div>
@@ -236,7 +258,8 @@ const AcademicDashboard = () => {
           <Spin spinning={loading}>
             {/* KPI Cards */}
             <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-              <Col xs={24} sm={12} lg={8}>
+              {/* จำนวนนักศึกษา */}
+              <Col xs={24} sm={8} lg={8}>
                 <div className="kpi-card" style={{ animationDelay: ".02s" }}>
                   <div className="kpi-content">
                     <div className="kpi-icon"><UsergroupAddOutlined /></div>
@@ -251,7 +274,8 @@ const AcademicDashboard = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={12} lg={8}>
+              {/* ใบสมัครทั้งหมด */}
+              <Col xs={24} sm={8} lg={8}>
                 <div className="kpi-card" style={{ animationDelay: ".08s" }}>
                   <div className="kpi-content">
                     <div className="kpi-icon"><FileTextOutlined /></div>
@@ -265,23 +289,39 @@ const AcademicDashboard = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* นักศึกษาที่ผ่าน (ไม่ซ้ำคน) */}
+              <Col xs={24} sm={8} lg={8}>
+                <div className="kpi-card pass" style={{ animationDelay: ".14s" }}>
+                  <div className="kpi-content">
+                    <div className="kpi-icon pass"><CheckCircleOutlined/></div>
+                    <div style={{ flex: 1 }}>
+                      <Statistic
+                        title={<span style={{ color: "#475569", fontSize: 14, fontWeight: 600 }}>นักศึกษาที่ผ่าน</span>}
+                        value={overview?.passed_students_distinct || 0}
+                        valueStyle={{ color: "#16a34a", fontSize: 28, fontWeight: 800 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Col>
             </Row>
 
             {/* Lists Section */}
             <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-              <Col xs={24} md={12} xl={8}>
+              <Col xs={24} md={12} xl={8} lg={8}>
                 <Card
                   className="list-card"
                   title={
                     <Space>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1677ff, #1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
                         <ShopOutlined />
                       </div>
                       <span className="gradient-text">บริษัทที่คนสมัครเยอะสุด</span>
                     </Space>
                   }
                   extra={<Button type="link" icon={<ArrowRightOutlined />} style={{ color: "#1677ff", fontWeight: 600 }} onClick={() => navigate("/lecturer/profile")}>ดูทั้งหมด</Button>}
-                  bodyStyle={{ padding: 0 }}
+                  styles={{ body:{ marginLeft: 12, marginRight: 12, padding: 0 } }}
                 >
                   {companiesCoop.slice(0, 5).length ? (
                     companiesCoop.slice(0, 5).map((c: any, i: number) => (
@@ -310,19 +350,19 @@ const AcademicDashboard = () => {
                 </Card>
               </Col>
 
-              <Col xs={24} md={12} xl={8}>
+              <Col xs={24} md={12} xl={8} lg={8}>
                 <Card
                   className="list-card"
                   title={
                     <Space>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1677ff, #1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
                         <TeamOutlined />
                       </div>
                       <span className="gradient-text">การสมัครงานล่าสุด</span>
                     </Space>
                   }
                   extra={<Button type="link" icon={<ArrowRightOutlined />} style={{ color: "#1677ff", fontWeight: 600 }} onClick={() => navigate("/lecturer/profile")}>ดูทั้งหมด</Button>}
-                  bodyStyle={{ padding: 0 }}
+                  styles={{ body:{ marginLeft: 12, marginRight: 12, padding: 0 } }}
                 >
                   {latest5UniqueAdvisees.length ? (
                     <Row>
@@ -330,7 +370,7 @@ const AcademicDashboard = () => {
                         <div key={`${r.student_id}-${r.updated_at}`} className="list-item">
                           <div className="list-item-header">
                             <div style={{ fontWeight: 600, color: "#0f172a" }}>{r.name}</div>
-                            <Tag color={getStatusColor(r.status)} style={{ margin: 0, borderRadius: 8, fontWeight: 600 }}>{r.status}</Tag>
+                            <Tag color={getStatusColor(r.status)} style={{ margin: 0, borderRadius: 8, fontWeight: 600, width: 120, display: "flex", justifyContent: "center" }}>{r.status}</Tag>
                           </div>
                           <div className="list-item-meta">
                             <Text type="secondary">{r.company_name}</Text><span>•</span>
@@ -345,40 +385,76 @@ const AcademicDashboard = () => {
                 </Card>
               </Col>
 
-              <Col xs={24} sm={24} lg={8}>
-                <div className="status-overview-card" style={{ animationDelay: ".14s" }}>
-                  <div style={{ marginBottom: 14 }}>
-                    <div className="gradient-text" style={{ fontSize: 16, fontWeight: 700 }}>สถานะใบสมัคร</div>
-                  </div>
-                  <div>
+              <Col xs={24} md={12} xl={8} lg={8}>
+                <Card
+                  className="list-card"
+                  title={
+                    <Space>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1677ff, #1d4ed8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                        <CheckCircleOutlined />
+                      </div>
+                      <span className="gradient-text">สถานะใบสมัคร</span>
+                    </Space>
+                  }
+                  styles={{ body:{ marginLeft: 12, marginRight: 12, padding: 0 } }}
+                >
+                  <div style={{ padding: 16 }}>
                     <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator green"></span>ผ่าน</div>
-                      <div style={{ fontWeight: 800, color: "#22c55e" }}>{countByStatus(overview?.applications_by_status, "ผ่าน").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator blue"></span>กำลังพิจารณา</div>
-                      <div style={{ fontWeight: 800, color: "#3b82f6" }}>{countByStatus(overview?.applications_by_status, "กำลังพิจารณา").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator purple"></span>นัดสัมภาษณ์แล้ว</div>
-                      <div style={{ fontWeight: 800, color: "#6366f1" }}>{countByStatus(overview?.applications_by_status, "นัดสัมภาษณ์แล้ว").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator orange"></span>รอการนัดสัมภาษณ์</div>
-                      <div style={{ fontWeight: 800, color: "#f59e0b" }}>{countByStatus(overview?.applications_by_status, "รอการนัดสัมภาษณ์").toLocaleString()}</div>
-                    </div>
-                    <div className="status-item">
-                      <div style={{ display: "flex", alignItems: "center" }}><span className="status-indicator red"></span>ไม่ผ่าน/ไม่ได้รับเลือก</div>
-                      <div style={{ fontWeight: 800, color: "#ef4444" }}>
-                        {(countByStatus(overview?.applications_by_status, "ไม่ผ่าน") + countByStatus(overview?.applications_by_status, "ไม่ได้รับเลือก")).toLocaleString()}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator green"></span>ผ่าน
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#22c55e" }}>
+                        {countByStatus(overview?.applications_by_status, "ผ่าน").toLocaleString()}
                       </div>
                     </div>
+
                     <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator blue"></span>กำลังพิจารณา
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#3b82f6" }}>
+                        {countByStatus(overview?.applications_by_status, "กำลังพิจารณา").toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator purple"></span>นัดสัมภาษณ์แล้ว
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#6366f1" }}>
+                        {countByStatus(overview?.applications_by_status, "นัดสัมภาษณ์แล้ว").toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator orange"></span>รอการนัดสัมภาษณ์
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#f59e0b" }}>
+                        {countByStatus(overview?.applications_by_status, "รอการนัดสัมภาษณ์").toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item">
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span className="status-indicator red"></span>ไม่ผ่าน/ไม่ได้รับเลือก
+                      </div>
+                      <div style={{ fontWeight: 800, color: "#ef4444" }}>
+                        {(
+                          countByStatus(overview?.applications_by_status, "ไม่ผ่าน") +
+                          countByStatus(overview?.applications_by_status, "ไม่ได้รับเลือก")
+                        ).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="status-item ">
                       <div style={{ fontWeight: 800, color: "#0f172a" }}>รวมทั้งหมด</div>
-                      <div style={{ fontWeight: 900, fontSize: 16, color: "#0f172a" }}>{sumCounts(overview?.applications_by_status).toLocaleString()}</div>
+                      <div style={{ fontWeight: 900, fontSize: 16, color: "#0f172a" }}>
+                        {sumCounts(overview?.applications_by_status).toLocaleString()}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Card>
               </Col>
             </Row>
 
@@ -411,38 +487,46 @@ const AcademicDashboard = () => {
               }
               bodyStyle={{ padding: 0 }}
             >
-              <div style={{ background: "#fafbfc", borderRadius: 12, padding: "20px 24px", margin: "0 16px 12px 16px", border: "1px solid #f0f0f0" }} />
-              <div className="chart-container">
-                {!dailyChartData?.length ? (
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                    <Empty description="ยังไม่มีข้อมูลช่วงนี้" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RLineChart data={dailyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <defs>
-                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1677ff" stopOpacity={0.32} />
-                          <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="name" stroke="#475569" fontSize={12} fontWeight={600} />
-                      <YAxis allowDecimals={false} stroke="#475569" fontSize={12} fontWeight={600} />
-                      <RTooltip contentStyle={{ backgroundColor: "rgba(255,255,255,0.95)", border: "1px solid #e2e8f0", borderRadius: 12 }} />
-                      <Legend />
-                      <Line type="monotone" dataKey="total" name="รวม (รายวัน)" stroke="#1677ff" strokeWidth={3} strokeDasharray="6 6" fill="url(#colorTotal)"
-                            dot={{ fill: "#1677ff", strokeWidth: 2, stroke: "#ffffff", r: 5 }}
-                            activeDot={{ r: 7, fill: "#1677ff", stroke: "#ffffff", strokeWidth: 3 }} />
-                      <Line type="monotone" dataKey="ผ่าน" name="ผ่าน" stroke={STATUS_STROKES["ผ่าน"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="กำลังพิจารณา" name="กำลังพิจารณา" stroke={STATUS_STROKES["กำลังพิจารณา"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="นัดสัมภาษณ์แล้ว" name="นัดสัมภาษณ์แล้ว" stroke={STATUS_STROKES["นัดสัมภาษณ์แล้ว"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="รอการนัดสัมภาษณ์" name="รอการนัดสัมภาษณ์" stroke={STATUS_STROKES["รอการนัดสัมภาษณ์"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey={FAIL_LABEL} name={FAIL_LABEL} stroke="#dc2626" strokeWidth={2} dot={false} />
-                    </RLineChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
+            <div className="chart-container">
+              {!dailyChartData?.length ? (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                  <Empty description="ยังไม่มีข้อมูลช่วงนี้" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={dailyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#1677ff" stopOpacity={0.32} />
+                        <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" stroke="#475569" fontSize={12} fontWeight={600} />
+                    <YAxis allowDecimals={false} stroke="#475569" fontSize={12} fontWeight={600} />
+                    <RTooltip contentStyle={{ backgroundColor: "rgba(255,255,255,0.95)", border: "1px solid #e2e8f0", borderRadius: 12 }} />
+                    <Legend />
+                    <Area type="monotone" dataKey="total" name="รวม (รายวัน)" stroke="#1d4ed8" strokeWidth={2} fill="url(#colorTotal)" activeDot={{ r: 6, stroke: "#ffffff", strokeWidth: 2 }}/>
+                    <Line type="monotone" dataKey="ผ่าน" name="ผ่าน" stroke={STATUS_STROKES["ผ่าน"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="กำลังพิจารณา" name="กำลังพิจารณา" stroke={STATUS_STROKES["กำลังพิจารณา"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="นัดสัมภาษณ์แล้ว" name="นัดสัมภาษณ์แล้ว" stroke={STATUS_STROKES["นัดสัมภาษณ์แล้ว"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="รอการนัดสัมภาษณ์" name="รอการนัดสัมภาษณ์" stroke={STATUS_STROKES["รอการนัดสัมภาษณ์"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey={FAIL_LABEL} name={FAIL_LABEL} stroke="#dc2626" strokeWidth={2} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+              <Card style={{ marginTop: 16, marginInline: 64 }} bodyStyle={{ padding: 0 }}>
+                <Table
+                  size="middle"
+                  dataSource={[...dailyTableData].sort((a, b) => (a.day < b.day ? -1 : 1))}
+                  columns={dailyTableColumns}
+                  pagination={{ pageSize: 10, showSizeChanger: true }}
+                  sticky scroll={{ x: 'max-content' }}
+                  locale={{ emptyText: <Empty description="ยังไม่มีข้อมูลช่วงนี้" /> }}
+                />
+              </Card>
             </Card>
           </Spin>
 
@@ -547,12 +631,19 @@ const customStyles = `
   .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px -6px rgba(22, 119, 255, 0.22); border-color: rgba(22, 119, 255, 0.18); }
   .kpi-content { display: flex; gap: 18px; align-items: flex-start; }
   .kpi-icon { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #1677ff, #1d4ed8); display: grid; place-items: center; color: white; font-size: 20px; }
+  .kpi-icon.pass { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+  .kpi-card.pass { border: 1px solid rgba(34, 197, 94, 0.15); box-shadow: 0 4px 20px -2px rgba(34, 197, 94, 0.12); }
+  .kpi-card.pass:hover { box-shadow: 0 12px 36px -6px rgba(34, 197, 94, 0.22); border-color: rgba(34, 197, 94, 0.25); }
+  .kpi-card.pass::before { background: linear-gradient(90deg, #22c55e, #16a34a, #15803d); }
 
   .status-overview-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(22, 119, 255, 0.12);
     border: 1px solid rgba(22, 119, 255, 0.10); position: relative; overflow: hidden; animation: slideUp .65s ease both; }
-  .status-overview-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, #22c55e, #16a34a); }
-  .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
-  .status-item:last-child { border-bottom: none; margin-top: 8px; padding-top: 16px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+  .status-overview-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px;  }
+  .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; } 
+  /* แถวสุดท้าย (รวมทั้งหมด) ให้เส้นหนาด้านบน */
+  .status-item:last-child { border-bottom: 0; margin-top: 8px; padding-top: 16px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+  /* ตัดเส้นล่างของแถวรองสุดท้าย เพื่อไม่ให้ซ้อนกับเส้นบนของแถวสุดท้าย */
+  .status-item:nth-last-child(2) { border-bottom: 0; }
   .status-indicator { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
   .status-indicator.green { background: #22c55e; } .status-indicator.blue { background: #3b82f6; } .status-indicator.purple { background: #6366f1; }
   .status-indicator.orange { background: #f59e0b; } .status-indicator.red { background: #ef4444; }
@@ -560,7 +651,7 @@ const customStyles = `
   .list-card { background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%); border-radius: 20px; border: 1px solid rgba(22, 119, 255, 0.10);
     box-shadow: 0 4px 20px -2px rgba(22, 119, 255, 0.12); transition: transform .2s ease, box-shadow .2s ease; height: 100%; }
   .list-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -6px rgba(22, 119, 255, 0.18); }
-  .list-item { padding: 16px; border-bottom: 1px solid #e2e8f0; cursor: default; transition: background .2s ease; }
+  .list-item { padding: 16px; border-bottom: 1px solid #e2e8f0; cursor: default; transition: background .2s ease; width: 100%; }
   .list-item:hover { background: linear-gradient(135deg, #f8fbff 0%, #f1f5f9 100%); }
   .list-item:last-child { border-bottom: none; }
   .list-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }

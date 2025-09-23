@@ -1,6 +1,10 @@
 import {
   Card, Descriptions, Table, Tag, Avatar, Badge, Row, Col, Button, Modal, Input, Select, Switch,
   Space, Divider, Layout, Typography, Form, DatePicker, Empty, Upload, message,
+  type UploadFile,
+  type UploadProps,
+  type GetProp,
+  Image,
 } from "antd";
 import { UserOutlined, EditOutlined, EyeOutlined, SafetyOutlined, GlobalOutlined, BarChartOutlined, PlusOutlined } from "@ant-design/icons";
 import {
@@ -21,9 +25,20 @@ import "dayjs/locale/th";
 import type { ColumnFilterItem } from "antd/es/table/interface";
 import AdminSectionHeader from "../AdminSectionHeader";
 import { User_StatCard } from "../StatCard";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 dayjs.locale("th");
 
 const { Title, Text } = Typography;
+
+type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
+
+const getBase64 = (file: FileType): Promise<string> => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result as string);
+  reader.onerror = (error) => reject(error);
+});
 
 /* ----------------------- Small UI Blocks ----------------------- */
 const SectionCard: React.FC<{ icon?: React.ReactNode; title: React.ReactNode; children?: React.ReactNode; delay?: number; }> =
@@ -147,7 +162,11 @@ const AdminUserDetailsPage: React.FC = () => {
     }
   }, [selectedUser, refreshData, messageApi]);
 
-  const handleCancelCreateAdmin = () => { setAddAdminOpen(false); addForm.resetFields(); };
+  const handleCancelCreateAdmin = () => { 
+    setAddAdminOpen(false); 
+    addForm.resetFields(); 
+    setFileList([]);
+  };
 
   const handleCreateAdmin = useCallback(async () => {
     try {
@@ -171,23 +190,67 @@ const AdminUserDetailsPage: React.FC = () => {
         }
       }
 
-      await refreshData(); setAddAdminOpen(false); addForm.resetFields();
+      await refreshData(); setAddAdminOpen(false); addForm.resetFields(); setFileList([]);
     } catch (err) {
       console.error(err); messageApi.error("สร้างแอดมินไม่สำเร็จ");
     } finally { setSubmittingAdd(false); }
   }, [addForm, roles, refreshData, messageApi]);
 
+  // ใช้หา login ล่าสุดของแต่ละผู้ใช้จาก loginLogs (มีอยู่แล้ว)
+  const lastLoginByUserId = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const log of loginLogs) {
+      const uid = (log as any).UserID ?? log.User?.ID;
+      if (!uid) continue;
+      const cur = m.get(uid);
+      if (!cur || dayjs(log.login_at).isAfter(dayjs(cur))) {
+        m.set(uid, log.login_at || "");
+      }
+    }
+    return m;
+  }, [loginLogs]);
+
+  const shouldIgnoreRowClick = (e: React.MouseEvent) => {
+    const el = e.target as HTMLElement;
+    return !!el.closest(
+      'button, a, .ant-btn, .ant-select, .ant-dropdown, .ant-input, .ant-checkbox, .ant-switch, .ant-radio'
+    );
+  };
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+
+  const handlePreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj as FileType);
+    }
+
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+  };
+
+  const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) =>
+    setFileList(newFileList);
+
   /* ----------------------- Columns ----------------------- */
   const userColumns: ColumnsType<UserInterface> = [
     {
-      title: "อีเมล", dataIndex: "Email", key: "Email", ellipsis: true,
+      title: "อีเมล",
+      dataIndex: "Email",
+      key: "Email",
+      ellipsis: true,
       render: (Email: string, record) => {
         const isCompany = record.Role?.RoleName === "Company";
         const raw = isCompany ? record.Company?.[0]?.logo : record.ProfileImage?.[0]?.image_url;
         const imgSrc = raw ? fileURL(raw) : undefined;
         return (
           <Space>
-            <Avatar src={imgSrc} icon={!imgSrc ? <UserOutlined /> : undefined} />
+            <Avatar
+              src={imgSrc}
+              icon={!imgSrc ? <UserOutlined /> : undefined}
+              style={{ cursor: imgSrc ? "pointer" : "default" }}
+            />
             <Text style={{
               background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontWeight: 600,
@@ -197,8 +260,11 @@ const AdminUserDetailsPage: React.FC = () => {
       },
     },
     {
-      title: "บทบาท", dataIndex: ["Role", "RoleNameTH"], key: "Role",
-      filters: roleFilters, filteredValue: roleFilterKeys ?? undefined,
+      title: "บทบาท",
+      dataIndex: ["Role", "RoleNameTH"],
+      key: "Role",
+      filters: roleFilters,
+      filteredValue: roleFilterKeys ?? undefined,
       onFilter: (value, record) => String(record.Role?.RoleNameTH) === String(value),
       render: (RoleNameTH: string, record) => {
         const gradient =
@@ -206,33 +272,108 @@ const AdminUserDetailsPage: React.FC = () => {
           : record.Role?.RoleNameTH === "นักเรียน" ? "linear-gradient(135deg, #22c55e 0%, #4ade80 100%)"
           : record.Role?.RoleNameTH === "บริษัท" ? "linear-gradient(135deg, #f97316 0%, #fb923c 100%)"
           : "linear-gradient(135deg, #a855f7 0%, #c084fc 100%)";
-        return <Tag style={{ background: gradient, color: "white", border: "none", borderRadius: 8, fontWeight: 600, padding: "4px 12px", width: "72px", textAlign: "center" }}>{RoleNameTH}</Tag>;
+        return (
+          <Tag style={{ background: gradient, color: "white", border: "none", borderRadius: 8, fontWeight: 600, padding: "4px 12px", width: 72, textAlign: "center" }}>
+            {RoleNameTH}
+          </Tag>
+        );
       },
     },
     {
-      title: "สถานะ", key: "status", width: 160,
+      title: "สถานะ",
+      key: "status",
+      width: 160,
       render: (_, record) => (
-        <Badge status={record.is_active ? "success" : "error"} text={
-          <span style={{ fontWeight: 500, color: record.is_active ? "#22c55e" : "#ef4444" }}>
+        <Badge
+          status={record.is_active ? "success" : "error"}
+          text={<span style={{ fontWeight: 500, color: record.is_active ? "#22c55e" : "#ef4444" }}>
             {record.is_active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-          </span>
-        } />
+          </span>}
+        />
       ),
     },
     {
-      title: "วันที่สร้าง", dataIndex: "CreatedAt", key: "CreatedAt", width: 180,
-      render: (date: string | Date) => <Text style={{ fontWeight: 500, color: "#64748b" }}>{new Date(date).toLocaleDateString("th-TH")}</Text>,
+      title: "วันที่สร้าง",
+      dataIndex: "CreatedAt",
+      key: "CreatedAt",
+      width: 180,
+      sorter: (a, b) => dayjs(a.CreatedAt).valueOf() - dayjs(b.CreatedAt).valueOf(),
+      defaultSortOrder: "descend",
+      render: (date: string | Date) => (
+        <Text style={{ fontWeight: 500, color: "#64748b" }}>
+          {dayjs(date).format("DD/MM/YYYY")}
+        </Text>
+      ),
     },
     {
-      title: "การจัดการ", key: "actions", fixed: "right", width: 150,
+      title: "เข้าใช้งานล่าสุด",
+      key: "last_seen",
+      width: 220,
+      defaultSortOrder: "descend",
+      render: (_, record) => {
+        if (record.is_logged_in) {
+          return <Tag color="green" style={{ borderRadius: 8, fontWeight: 600 }}>ออนไลน์อยู่</Tag>;
+        }
+        const last = record.ID ? lastLoginByUserId.get(record.ID) : undefined;
+        if (last) {
+          return (
+            <Space direction="vertical" size={0}>
+              <Text style={{ fontWeight: 500, color: "#64748b" }} title={dayjs(last).format("DD/MM/YYYY HH:mm:ss")}>
+                {dayjs(last).fromNow()}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#94a3b8" }}>
+                {dayjs(last).format("DD/MM/YYYY HH:mm")}
+              </Text>
+            </Space>
+          );
+        }
+        return <div style={{ color: "#64748b" }}>-</div>;
+      },
+    },
+    {
+      title: "การจัดการ",
+      key: "actions",
+      fixed: "right",
+      width: 150,
       render: (_, record) => (
         <Space>
-          <Button type="primary" icon={<EyeOutlined />} size="small"
-            style={{ background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)", border: "none", borderRadius: 8, fontWeight: 600 }}
-            onClick={() => { setSelectedUser(record); setIsModalVisible(true); }}>ดู</Button>
-          <Button icon={<EditOutlined />} size="small"
-            style={{ background: "linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)", borderColor: "rgb(30, 58, 138)", color: "rgb(30, 58, 138)", borderRadius: 8, fontWeight: 600 }}
-            onClick={() => { setSelectedUser(record); setEditModalVisible(true); }}>แก้ไข</Button>
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            size="small"
+            style={{
+              background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
+              border: "none",
+              borderRadius: 8,
+              fontWeight: 600,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedUser(record);
+              setIsModalVisible(true);
+            }}
+          >
+            ดู
+          </Button>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            size="small"
+            style={{
+              background: "linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)",
+              borderColor: "rgb(30, 58, 138)",
+              color: "rgb(30, 58, 138)",
+              borderRadius: 8,
+              fontWeight: 600,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedUser(record);
+              setEditModalVisible(true);
+            }}
+          >
+            แก้ไข
+          </Button>
         </Space>
       ),
     },
@@ -262,7 +403,7 @@ const AdminUserDetailsPage: React.FC = () => {
           <div style={{ margin: 32, marginTop: 8 }}>
             <AdminSectionHeader
               icon={<SafetyOutlined style={{ fontSize: 32, color: "white" }} />}
-              title="จัดการข้อมูลผู้ใช้ระบบ"
+              title="จัดการผู้ใช้ระบบ"
               subtitle="ระบบการจัดการผู้ใช้งานแบบครบถ้วน พร้อมการวิเคราะห์และรายงาน"
               actions={
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddAdminOpen(true)} size="large"
@@ -280,9 +421,7 @@ const AdminUserDetailsPage: React.FC = () => {
               total={users.length}
               online={users.filter((u) => u.is_logged_in).length}
               offline={users.filter((u) => !u.is_logged_in).length}
-              loginsToday={users.filter((u) =>
-                dayjs(u.UpdatedAt).isSame(dayjs(), "day")
-              ).length}
+              loginsToday={users.filter((u) => dayjs(u.UpdatedAt).isSame(dayjs(), "day")).length}
               showTotalCard
             />
 
@@ -359,7 +498,14 @@ const AdminUserDetailsPage: React.FC = () => {
                     ),
                   }}
                   style={{ backgroundColor: "transparent", borderRadius: 16 }}
-                  rowClassName={() => "animate-fadeInUp"}
+                  rowClassName={() => "animate-fadeInUp row-clickable"}
+                  onRow={(record) => ({
+                    onClick: (e) => {
+                      if (shouldIgnoreRowClick(e)) return; // กันคลิกจากปุ่ม/อินพุต
+                      setSelectedUser(record);
+                      setIsModalVisible(true);
+                    },
+                  })}
                 />
               </Card>
             </div>
@@ -404,7 +550,7 @@ const AdminUserDetailsPage: React.FC = () => {
                     </Descriptions.Item>
                     <Descriptions.Item label="สถานะออนไลน์">
                       <Badge status={selectedUser.is_logged_in ? "processing" : "default"} text={
-                        <span style={{ fontWeight: 600, color: selectedUser.is_logged_in ? "#3b82f6" : "#64748b" }}>
+                        <span style={{ fontWeight: 600, color: selectedUser.is_logged_in ? "rgb(59, 130, 246)" : "#64748b" }}>
                           {selectedUser.is_logged_in ? "ออนไลน์" : "ออฟไลน์"}
                         </span>
                       } />
@@ -531,26 +677,54 @@ const AdminUserDetailsPage: React.FC = () => {
                     fontWeight: 700, background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontSize: 16,
                   }}>รูปโปรไฟล์</span>}
-                  name="image" valuePropName="fileList" getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                  name="image"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                   rules={[{ required: true, message: "กรุณาอัปโหลดรูปโปรไฟล์" }]}
                 >
-                  <Upload listType="picture-circle" beforeUpload={() => false} maxCount={1} accept="image/*">
-                    <div style={{
-                      background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
-                      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontWeight: 600,
-                    }}>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Upload</div>
-                    </div>
+                  <Upload
+                    className="upload-fit-none"
+                    action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
+                    listType="picture-circle"
+                    fileList={fileList}
+                    onPreview={handlePreview}
+                    onChange={handleChange}
+                    beforeUpload={() => false}
+                    maxCount={1}
+                    accept="image/*"
+                  >
+                    {fileList.length >= 1 ? null : 
+                      <div style={{
+                        background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
+                        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontWeight: 600,
+                      }}>
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>Upload</div>
+                      </div>
+                    }
                   </Upload>
                 </Form.Item>
+                
+                {previewImage && (
+                  <Image
+                    wrapperStyle={{ display: 'none' }}
+                    preview={{
+                      visible: previewOpen,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterOpenChange: (visible) => !visible && setPreviewImage(''),
+                    }}
+                    src={previewImage}
+                  />
+                )}
 
                 <Form.Item
                   label={<span style={{
                     fontWeight: 700, background: "linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(59, 130, 246) 100%)",
                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontSize: 16,
                   }}>อีเมล</span>}
-                  name="email" validateFirst validateTrigger={["onBlur", "onSubmit"]}
+                  name="email" 
+                  validateFirst 
+                  validateTrigger={["onChange", "onBlur", "onSubmit"]}
                   rules={[{ required: true, message: "กรุณากรอกอีเมล" }, { type: "email", message: "รูปแบบอีเมลไม่ถูกต้อง" }, { validator: validateEmailUnique }]}
                 >
                   <Input placeholder="admin@gmail.com" size="large" style={{ borderRadius: 12, fontSize: 16 }} />
@@ -638,4 +812,14 @@ const styles = `
   .animate-shimmer { animation: shimmer 2s infinite linear; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); background-size: 200% 100%; }
   .gradient-border { position: relative; background: white; border-radius: 16px; overflow: hidden; }
   .glassmorphism { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+
+  .row-clickable td { cursor: pointer; }
+
+  .upload-fit-none .ant-upload-list-picture-circle .ant-upload-list-item-thumbnail img,
+  .upload-fit-none .ant-upload-list-picture-card .ant-upload-list-item-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: none !important;
+    object-position: center center;     /* ครอปจากกึ่งกลาง */
+  }
 `;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Row, Col, Statistic, Typography } from "antd";
+import { Card, Row, Col, Statistic, Typography, Space } from "antd";
 import { RiseOutlined, FallOutlined, TrophyOutlined, UserOutlined, StarOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, DashboardOutlined } from "@ant-design/icons";
 import type { OverviewInterface } from "../../../interfaces/Analysis";
 
@@ -31,12 +31,24 @@ const Overview: React.FC<Props> = ({
   const avgReview = overview?.avgReviewScore ?? 0;
 
   return (
-    <Card className="gradient-card" loading={loading}>
-      <Title level={4} className="section-title" style={{ marginBottom: 16 }}>
-        <DashboardOutlined className="section-title__icon" />{" "}
-        ภาพรวมผลการดำเนินงาน
-      </Title>
-
+    <Card className="chart-card" 
+      loading={loading}
+      styles={{
+        body: { padding: "12px 16px" }, // body บาง ๆ
+        header: { borderBottom: "1px solid #f0f0f0", padding: "12px 16px" },
+      }}
+      title={
+        <Space size={8}>
+          <div className="icon-circle">
+            <DashboardOutlined className="inner-icon" />
+          </div>
+          <Title level={4} className="section-title" style={{ marginBottom: "0px" }}>
+            ภาพรวมผลการดำเนินงาน
+          </Title>
+        </Space>
+      }
+      bodyStyle={{ padding: "12px 16px 16px 16px" }}
+    >
       <Row gutter={[16, 16]}>
         {/* KPI 4 ใบแถวบน */}
         <Col xs={12} sm={12} md={6}>
@@ -110,7 +122,7 @@ const Overview: React.FC<Props> = ({
             </Col>
 
             <Col xs={24} sm={8}>
-              <Card size="small" className="kpi-card">
+              <Card size="small" className="kpi-card" style={{ borderColor: "#8c8c8c25" }}>
                 <Statistic
                   title="ปิดรับสมัคร"
                   value={postStatusCounts.closed}

@@ -10,6 +10,7 @@ import (
 	"co-op-match.com/co-op-match/entity"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // helper: ดึง AcademicStaff จาก user_id
@@ -50,27 +51,24 @@ func GetAcademicOverview(c *gin.Context) {
 	if !ok {
 		return
 	}
-
 	universityID := staff.UniversityID
 
-	// ===== 1) นับจำนวนนักศึกษาในมหาวิทยาลัยเดียวกัน =====
-	// group ตาม student_id ในตาราง education โดยยึดตามวันที่ล่าสุด MAX(created_at)
+	// ===== สร้าง subquery หา Education ล่าสุดของแต่ละนักศึกษา =====
 	latestEdu := db.Table("educations").
-		Select("student_id, MAX(created_at) as max_created_at").
+		Select("student_id, MAX(created_at) AS max_created_at").
 		Group("student_id")
 
-	//
+	// ===== 1) จำนวนนักศึกษาทั้งหมดในมหาวิทยาลัย (ไม่ซ้ำคน) =====
 	var studentsCount int64
-	db.Table("students as s").
+	db.Table("students AS s").
 		Joins("JOIN educations e ON e.student_id = s.id").
 		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
 		Where("e.university_id = ?", universityID).
 		Distinct("s.id").
 		Count(&studentsCount)
 
-	// ===== 2) นับ Applications ตามสถานะ =====
+	// ===== 2) นับ Applications ตามสถานะ (เป็นจำนวนใบสมัคร) =====
 	statuses := []string{"รอการนัดสัมภาษณ์", "กำลังพิจารณา", "ไม่ได้รับเลือก", "ผ่าน", "นัดสัมภาษณ์แล้ว", "ไม่ผ่าน"}
-
 	var appsByStatus []KV
 	for _, st := range statuses {
 		var cnt int64
@@ -82,6 +80,16 @@ func GetAcademicOverview(c *gin.Context) {
 			Count(&cnt)
 		appsByStatus = append(appsByStatus, KV{Key: st, Count: int(cnt)})
 	}
+
+	// ===== 2.1) นับ "จำนวนนักศึกษาที่ผ่าน" แบบไม่ซ้ำ (1 คนผ่านหลายโพสต์ ให้นับ = 1) =====
+	var passedUnique int64
+	db.Table("applications a").
+		Joins("JOIN students s ON s.id = a.student_id").
+		Joins("JOIN educations e ON e.student_id = s.id").
+		Joins("JOIN (?) le ON le.student_id = e.student_id AND le.max_created_at = e.created_at", latestEdu).
+		Where("e.university_id = ? AND a.status = ?", universityID, "ผ่าน").
+		Distinct("a.student_id").
+		Count(&passedUnique)
 
 	// ===== 3) นัดสัมภาษณ์ในอนาคต =====
 	var interviewsUpcoming int64
@@ -107,9 +115,11 @@ func GetAcademicOverview(c *gin.Context) {
 		Where("e.university_id = ?", universityID).
 		Select("c.id AS company_id, c.company_name, COUNT(*) AS count").
 		Group("c.id, c.company_name").
-		Order("count DESC").Limit(5).Scan(&topCompanies)
+		Order("count DESC").
+		Limit(5).
+		Scan(&topCompanies)
 
-	// ===== 5) นักศึกษาที่ยัง “ไม่เคยสมัคร” =====
+	// ===== 5) นักศึกษาที่ยังไม่เคยสมัคร =====
 	var neverApplied int64
 	db.Table("students s").
 		Joins("JOIN educations e ON e.student_id = s.id").
@@ -118,12 +128,13 @@ func GetAcademicOverview(c *gin.Context) {
 		Count(&neverApplied)
 
 	c.JSON(http.StatusOK, AcademicOverviewResponse{
-		UniversityID:         universityID,
-		Students:             int(studentsCount),
-		ApplicationsByStatus: appsByStatus,
-		TopCompanies:         topCompanies,
-		NeverApplied:         int(neverApplied),
-		InterviewsUpcoming:   int(interviewsUpcoming),
+		UniversityID:           universityID,
+		Students:               int(studentsCount),
+		ApplicationsByStatus:   appsByStatus,     // จำนวน "ใบสมัคร" ตามสถานะ
+		PassedStudentsDistinct: int(passedUnique),// ✅ จำนวน "นักศึกษาที่ผ่าน" ไม่ซ้ำคน
+		TopCompanies:           topCompanies,
+		NeverApplied:           int(neverApplied),
+		InterviewsUpcoming:     int(interviewsUpcoming),
 	})
 }
 
@@ -168,7 +179,7 @@ func GetAcademicTrend(c *gin.Context) {
 
 	// --- ทำให้ start/end เป็น 00:00 ของวันนั้นเสมอ ---
 	start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	end   = time.Date(end.Year(),   end.Month(),   end.Day(),   0, 0, 0, 0, end.Location())
+	end = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
 
 	// 3) โครงสร้างผลลัพธ์
 	type TrendPoint struct {
@@ -182,11 +193,11 @@ func GetAcademicTrend(c *gin.Context) {
 	}
 
 	// 4) เงื่อนไขนับสถานะ
-	passCond        := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
-	reviewCond      := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
+	passCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'ผ่าน' THEN 1 ELSE 0 END`
+	reviewCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'กำลังพิจารณา' THEN 1 ELSE 0 END`
 	interviewedCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'นัดสัมภาษณ์แล้ว' THEN 1 ELSE 0 END`
-	waitingCond     := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
-	failCond        := `
+	waitingCond := `CASE WHEN REPLACE(TRIM(a.status),' ','') = 'รอการนัดสัมภาษณ์' THEN 1 ELSE 0 END`
+	failCond := `
 		CASE
 		  WHEN REPLACE(TRIM(a.status),' ','') = 'ไม่ผ่าน'
 		    OR INSTR(REPLACE(TRIM(a.status),' ',''),'ไม่ผ่าน') > 0
@@ -207,6 +218,7 @@ func GetAcademicTrend(c *gin.Context) {
 	}
 	var rows []row
 
+	// เลือก Education ล่าสุดของแต่ละ student เพื่ออ้างอิง university ให้ถูกต้อง
 	latestEdu := db.Table("educations").
 		Select("student_id, MAX(created_at) as max_created_at").
 		Group("student_id")
@@ -254,11 +266,50 @@ func GetAcademicTrend(c *gin.Context) {
 			})
 		} else {
 			points = append(points, TrendPoint{
-				Date: day, Total: 0, Pass: 0, Review: 0, Interviewed: 0, Waiting: 0, Fail: 0,
+				Date:        day,
+				Total:       0,
+				Pass:        0,
+				Review:      0,
+				Interviewed: 0,
+				Waiting:     0,
+				Fail:        0,
 			})
 		}
 	}
 
+	// 6) บันทึก/อัปเดตลง HistoryApplicationStatus (upsert แบบ bulk)
+	loc := start.Location()
+	records := make([]entity.HistoryApplicationStatus, 0, len(points))
+	for _, p := range points {
+		dt, _ := time.ParseInLocation("2006-01-02", p.Date, loc)
+		records = append(records, entity.HistoryApplicationStatus{
+			Date:         dt,
+			UniversityID: universityID,
+			Total:        p.Total,
+			Pass:         p.Pass,
+			Review:       p.Review,
+			Interviewed:  p.Interviewed,
+			Waiting:      p.Waiting,
+			Fail:         p.Fail,
+		})
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		return tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "date"},
+				{Name: "university_id"},
+			},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"total", "pass", "review", "interviewed", "waiting", "fail", "updated_at",
+			}),
+		}).Create(&records).Error
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "save history failed: " + err.Error()})
+		return
+	}
+
+	// 7) ส่งผลลัพธ์ trend กลับตามเดิม
 	c.JSON(http.StatusOK, points)
 }
 
@@ -298,10 +349,12 @@ func ListAcademicStudents(c *gin.Context) {
 			s.last_name,
 			s.age,
 			us.email,
-			COALESCE(genders.name_th, '') AS gender,
-			COALESCE(p.name_th, '')      AS program_name,
-			COALESCE(f.name_th, '')      AS faculty_name,
-			COALESCE(u.name_th, '')      AS university_name,
+			s.phone_number,
+			COALESCE(e.grade, '') 			AS grade,
+			COALESCE(genders.name_th, '')	AS gender,
+			COALESCE(p.name_th, '')      	AS program_name,
+			COALESCE(f.name_th, '')      	AS faculty_name,
+			COALESCE(u.name_th, '')      	AS university_name,
 			(
 			SELECT COUNT(*)
 			FROM applications a
@@ -330,6 +383,8 @@ func ListAcademicStudents(c *gin.Context) {
 		FirstName         string
 		LastName          string
 		Age               uint
+		PhoneNumber       string
+		Grade             float64
 		Gender            string
 		Email             string
 		ProgramName       string
@@ -350,6 +405,8 @@ func ListAcademicStudents(c *gin.Context) {
 			FirstName:         r.FirstName,
 			LastName:          r.LastName,
 			Age:               r.Age,
+			PhoneNumber:       r.PhoneNumber,
+			Grade:             r.Grade,
 			Gender:            r.Gender,
 			Email:             r.Email,
 			ProgramName:       r.ProgramName,

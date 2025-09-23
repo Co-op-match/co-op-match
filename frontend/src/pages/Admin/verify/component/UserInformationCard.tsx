@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Card, Typography, Avatar, Descriptions, Tag } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import type { VerifyInterface } from "../../../../interfaces/Verify";
+import { fileURL } from "@/config/env";
 
 const { Title, Text } = Typography;
 
@@ -20,7 +21,7 @@ interface Props {
 
 const UserInformationCard: React.FC<Props> = ({ record, getUserInfo }) => {
   const userInfo = useMemo(() => getUserInfo(record.User), [record.User, getUserInfo]);
-  const profileImage = record?.User?.ProfileImage?.[0]?.image_url ?? undefined;
+  const profileImage = fileURL(record?.User?.ProfileImage?.[0]?.image_url) ?? undefined;
 
   const createdAtText = useMemo(() => {
     const d = record?.CreatedAt ? new Date(record.CreatedAt as any) : null;
