@@ -12,6 +12,8 @@ import type { ColumnsType } from "antd/es/table";
 import {
   LineChart as RLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, Legend,
+  Area,
+  ComposedChart,
 } from "recharts";
 import dayjs, { Dayjs } from "dayjs";
 import { TrendingUpIcon } from "lucide-react";
@@ -485,37 +487,36 @@ const AcademicDashboard = () => {
               }
               bodyStyle={{ padding: 0 }}
             >
-              <div className="chart-container">
-                {!dailyChartData?.length ? (
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                    <Empty description="ยังไม่มีข้อมูลช่วงนี้" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RLineChart data={dailyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <defs>
-                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1677ff" stopOpacity={0.32} />
-                          <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="name" stroke="#475569" fontSize={12} fontWeight={600} />
-                      <YAxis allowDecimals={false} stroke="#475569" fontSize={12} fontWeight={600} />
-                      <RTooltip contentStyle={{ backgroundColor: "rgba(255,255,255,0.95)", border: "1px solid #e2e8f0", borderRadius: 12 }} />
-                      <Legend />
-                      <Line type="monotone" dataKey="total" name="รวม (รายวัน)" stroke="#1677ff" strokeWidth={3} strokeDasharray="6 6" fill="url(#colorTotal)"
-                            dot={{ fill: "#1677ff", strokeWidth: 2, stroke: "#ffffff", r: 5 }}
-                            activeDot={{ r: 7, fill: "#1677ff", stroke: "#ffffff", strokeWidth: 3 }} />
-                      <Line type="monotone" dataKey="ผ่าน" name="ผ่าน" stroke={STATUS_STROKES["ผ่าน"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="กำลังพิจารณา" name="กำลังพิจารณา" stroke={STATUS_STROKES["กำลังพิจารณา"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="นัดสัมภาษณ์แล้ว" name="นัดสัมภาษณ์แล้ว" stroke={STATUS_STROKES["นัดสัมภาษณ์แล้ว"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="รอการนัดสัมภาษณ์" name="รอการนัดสัมภาษณ์" stroke={STATUS_STROKES["รอการนัดสัมภาษณ์"]} strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey={FAIL_LABEL} name={FAIL_LABEL} stroke="#dc2626" strokeWidth={2} dot={false} />
-                    </RLineChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
+            <div className="chart-container">
+              {!dailyChartData?.length ? (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                  <Empty description="ยังไม่มีข้อมูลช่วงนี้" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={dailyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#1677ff" stopOpacity={0.32} />
+                        <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" stroke="#475569" fontSize={12} fontWeight={600} />
+                    <YAxis allowDecimals={false} stroke="#475569" fontSize={12} fontWeight={600} />
+                    <RTooltip contentStyle={{ backgroundColor: "rgba(255,255,255,0.95)", border: "1px solid #e2e8f0", borderRadius: 12 }} />
+                    <Legend />
+                    <Area type="monotone" dataKey="total" name="รวม (รายวัน)" stroke="#1d4ed8" strokeWidth={2} fill="url(#colorTotal)" activeDot={{ r: 6, stroke: "#ffffff", strokeWidth: 2 }}/>
+                    <Line type="monotone" dataKey="ผ่าน" name="ผ่าน" stroke={STATUS_STROKES["ผ่าน"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="กำลังพิจารณา" name="กำลังพิจารณา" stroke={STATUS_STROKES["กำลังพิจารณา"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="นัดสัมภาษณ์แล้ว" name="นัดสัมภาษณ์แล้ว" stroke={STATUS_STROKES["นัดสัมภาษณ์แล้ว"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="รอการนัดสัมภาษณ์" name="รอการนัดสัมภาษณ์" stroke={STATUS_STROKES["รอการนัดสัมภาษณ์"]} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey={FAIL_LABEL} name={FAIL_LABEL} stroke="#dc2626" strokeWidth={2} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
               <Card style={{ marginTop: 16, marginInline: 64 }} bodyStyle={{ padding: 0 }}>
                 <Table
                   size="middle"
