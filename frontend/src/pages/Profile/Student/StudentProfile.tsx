@@ -264,8 +264,7 @@ const StudentProfilePublic: React.FC = () => {
           return;
         }
       }
-      if (!roomId) {
-        message.error("ไม่พบห้องแชท");
+      if (!roomId) { // silent if no room
         setCreatingSession(false);
         return;
       }

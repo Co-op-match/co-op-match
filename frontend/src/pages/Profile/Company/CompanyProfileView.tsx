@@ -209,8 +209,7 @@ const CompanyProfileview: React.FC = () => {
         }
       }
 
-      if (!roomId) {
-        message.error("ไม่พบห้องแชท");
+      if (!roomId) { // silent fail (no warning)
         setCreatingSession(false);
         return;
       }

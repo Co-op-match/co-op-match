@@ -1133,7 +1133,7 @@ func createSeedData(db *gorm.DB) {
 	// Seed InterviewAppointment data
 	interviewAppointments := []entity.InterviewAppointment{
 		{
-			AppointmentDate: time.Date(2024, 3, 15, 10, 0, 0, 0, time.Local),
+			AppointmentDate: time.Now().AddDate(0, 0, 3),
 			Mode:            "online",
 			Details:         "สัมภาษณ์ออนไลน์ผ่าน Microsoft Teams สำหรับตำแหน่ง Software Developer ระยะเวลา 45 นาที กรุณาเตรียมตัวอย่างโปรเจ็กต์และพร้อมตอบคำถามเกี่ยวกับประสบการณ์ทางเทคนิค",
 			CompanyID:       1, // TechCorp
@@ -1141,7 +1141,7 @@ func createSeedData(db *gorm.DB) {
 			Status:          "รอดำเนินการ",
 		},
 		{
-			AppointmentDate: time.Date(2024, 3, 20, 14, 0, 0, 0, time.Local),
+			AppointmentDate: time.Now().AddDate(0, 0, 5),
 			Mode:            "onsite",
 			Details:         "สัมภาษณ์ที่สำนักงาน ชั้น 15 อาคาร ABC ตำแหน่ง Data Scientist ใช้เวลาประมาณ 60 นาที พร้อมทำแบบทดสอบ Technical Test เกี่ยวกับ Python และ Machine Learning",
 			CompanyID:       2, // DataFlow Analytics
@@ -1149,7 +1149,7 @@ func createSeedData(db *gorm.DB) {
 			Status:          "ผ่าน",
 		},
 		{
-			AppointmentDate: time.Date(2024, 3, 25, 11, 30, 0, 0, time.Local),
+			AppointmentDate: time.Now().AddDate(0, 0, 7),
 			Mode:            "hybrid",
 			Details:         "สัmภาษณ์แบบผสม เริ่มออนไลน์ 30 นาทีแรก จากนั้นเข้าพบที่สำนักงาน สำหรับตำแหน่ง UX/UI Designer นำผลงาน Portfolio มาโชว์และเตรียมตัวอย่างการแก้ปัญหา Design Challenge",
 			CompanyID:       3, // CreativeStudio
@@ -1157,7 +1157,7 @@ func createSeedData(db *gorm.DB) {
 			Status:          "รอดำเนินการ",
 		},
 		{
-			AppointmentDate: time.Date(2024, 3, 18, 9, 0, 0, 0, time.Local),
+			AppointmentDate: time.Now().AddDate(0, 0, 10),
 			Mode:            "online",
 			Details:         "สัมภาษณ์ออนไลน์ตำแหน่ง Frontend Developer ผ่าน Zoom ระยะเวลา 50 นาที รวมถึงการ Live Coding และการอธิบายเกี่ยวกับ React และ JavaScript frameworks",
 			CompanyID:       1, // TechCorp
@@ -1165,20 +1165,12 @@ func createSeedData(db *gorm.DB) {
 			Status:          "ไม่ผ่าน",
 		},
 		{
-			AppointmentDate: time.Date(2024, 3, 22, 13, 30, 0, 0, time.Local),
+			AppointmentDate: time.Now().AddDate(0, 0, 14),
 			Mode:            "onsite",
 			Details:         "สัมภาษณ์ที่สำนักงานสำหรับตำแหน่ง Full-Stack Developer ใช้เวลา 90 นาที แบ่งเป็น 3 ส่วน: สัมภาษณ์ทั่วไป Technical Interview และ System Design รวมถึงการทำ Coding Challenge",
 			CompanyID:       4, // GlobalTech Solutions
 			StudentID:       5, // สุริยา
 			Status:          "ผ่าน",
-		},
-		{
-			AppointmentDate: time.Date(2024, 3, 28, 15, 0, 0, 0, time.Local),
-			Mode:            "online",
-			Details:         "สัมภาษณ์รอบ 2 สำหรับตำแหน่ง Senior Developer เน้นการพูดคุยเกี่ยวกับประสบการณ์การทำงานเป็นทีม การใช้ Agile methodology และแนวทางการแก้ปัญหาที่ซับซ้อน",
-			CompanyID:       5, // InnovateNow
-			StudentID:       1, // เจษฎาภรณ์
-			Status:          "รอดำเนินการ",
 		},
 	}
 	for i, apt := range interviewAppointments {

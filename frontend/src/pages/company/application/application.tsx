@@ -132,10 +132,9 @@ const Dashboard = () => {
       // กรณีห้องมีอยู่แล้ว backend อาจตอบ 409
       roomId = err?.response?.data?.room_id ?? null;
     }
-    if (!roomId) {
-      alert('ไม่พบห้องแชท');
-      return;
-    }
+        if (!roomId) {
+            return; // silent if no room
+        }
 
     // 2) ขอ token แล้วนำทาง
     const { token } = await createChatSession(roomId);
