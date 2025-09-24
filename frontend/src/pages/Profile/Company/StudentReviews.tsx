@@ -17,6 +17,7 @@ import {
 } from "../../../services/https";
 import { Avatar, message, Rate } from "antd";
 import dayjs from "dayjs";
+import { fileURL } from '@/config/env';
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/th";
 
@@ -376,11 +377,7 @@ const CompanyReviews: React.FC<CompanyReviewsProps> = ({
                   <div>
                     <div className="reviewer-name">
                       <Avatar
-                        src={
-                          review.image_url
-                            ? `https://api.coop-match.online${review.image_url}`
-                            : undefined
-                        }
+                        src={review.image_url ? fileURL(review.image_url) : undefined}
                         size={35}
                         icon={!review.image_url ? <FaUserCircle /> : undefined}
                       />

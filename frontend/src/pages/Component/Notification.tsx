@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/th';
 import './Header.css';
+import { API_BASE as CFG_API_BASE } from '@/config/env';
 
 dayjs.extend(relativeTime);
 dayjs.locale('th');
@@ -26,8 +27,8 @@ const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
 // ====== ปรับตามสภาพแวดล้อมของคุณ ======
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.coop-match.online';
-const WS_URL   = import.meta.env.VITE_WS_URL  || 'wss://api.coop-match.online/ws/notifications';
+const API_BASE = CFG_API_BASE;
+const WS_URL   = import.meta.env.VITE_WS_URL  || `${API_BASE.replace(/^http/,'ws')}/ws/notifications`;
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -423,7 +424,7 @@ ws.onmessage = (ev) => {
       <div
         style={{
           cursor: 'pointer',
-          padding: 8,
+          padding: 4,
           borderRadius: 6,
           transition: 'all 0.2s ease',
           display: 'flex',

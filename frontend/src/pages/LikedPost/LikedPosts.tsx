@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fileURL } from "@/config/env";
 import {
   Card,
   Row,
@@ -249,13 +250,7 @@ function LikedPosts(){
                           {/* Logo */}
                           <div>
                             <img
-                              src={
-                                job.Company?.logo?.startsWith('http')
-                                  ? job.Company.logo
-                                  : job.Company?.logo
-                                    ? `https://api.coop-match.online${job.Company.logo}`
-                                    : undefined
-                              }
+                                src={job.Company?.logo ? fileURL(job.Company.logo) : undefined}
                               alt={job.Company?.company_name || 'โลโก้บริษัท'}
                               style={{
                                 height: '80px',

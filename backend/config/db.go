@@ -83,6 +83,7 @@ func SetupDatabase() {
 		&entity.ReviewLike{},
 		&entity.LoginLog{},
 		&entity.ReviewAnalysis{},
+		&entity.HistoryApplicationStatus{},
 	)
 
 	createSeedData(db)
@@ -393,6 +394,10 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       1,
 			StipendID:       2,
 			JobTypeID:       1,
+			LocationDetail:  "อาคารพัฒนา ชั้น 5",
+			Subdistrict:     "ปทุมวัน",
+			District:        "ปทุมวัน",
+			Province:        "กรุงเทพมหานคร",
 		},
 		{
 			PostName:        "Data Science Intern",
@@ -407,6 +412,10 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       2,
 			StipendID:       3,
 			JobTypeID:       4,
+			LocationDetail:  "Data Lab ชั้น 7",
+			Subdistrict:     "คลองเตย",
+			District:        "คลองเตย",
+			Province:        "กรุงเทพมหานคร",
 		},
 		{
 			PostName:        "AI/ML Intern",
@@ -421,6 +430,10 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       3,
 			StipendID:       2,
 			JobTypeID:       4,
+			LocationDetail:  "AI Research Center ชั้น 9",
+			Subdistrict:     "ห้วยขวาง",
+			District:        "ห้วยขวาง",
+			Province:        "กรุงเทพมหานคร",
 		},
 		{
 			PostName:        "Frontend Developer Intern",
@@ -435,6 +448,10 @@ func createSeedData(db *gorm.DB) {
 			WorkDayID:       1,
 			StipendID:       2,
 			JobTypeID:       1,
+			LocationDetail:  "Frontend Lab ชั้น 3",
+			Subdistrict:     "บางซื่อ",
+			District:        "บางซื่อ",
+			Province:        "กรุงเทพมหานคร",
 		},
 		{
 			PostName:        "Frontend Developer Intern",
@@ -567,24 +584,27 @@ func createSeedData(db *gorm.DB) {
 	for i := range intershipPosts {
 		db.Create(&intershipPosts[i])
 
-		// เลือก benefit ตาม post index
-		var benefitIDs []uint
-		switch i {
-		case 0:
-			benefitIDs = []uint{1} // Software Dev Intern
-		case 1:
-			benefitIDs = []uint{3} // Data Science Intern
-		case 2:
-			benefitIDs = []uint{2} // AI/ML Intern
-		case 3:
-			benefitIDs = []uint{1, 4} // Frontend Intern
-		default:
-			benefitIDs = []uint{}
+		// กระจาย benefit ให้ครบทุกโพสต์ (loop pattern)
+		// 1: ค่าเดินทาง, 2: อาหาร, 3: ค่าล่วงเวลา, 4: ที่พัก
+		benefitPattern := [][]uint{
+			{1, 2},       // 0 Software Dev
+			{2, 3},       // 1 Data Science
+			{1, 3},       // 2 AI/ML
+			{1, 4},       // 3 Frontend (eng)
+			{1, 4},       // 4 Frontend (thai)
+			{1, 2, 3},    // 5 Backend
+			{2, 4},       // 6 Data Analyst
+			{1, 2, 4},    // 7 UX/UI
+			{1, 3, 4},    // 8 QA Tester
+			{2, 3, 4},    // 9 DevOps
+			{1, 2, 3, 4}, // 10 System Analyst (all)
 		}
-
-		// ค้นหา benefit จริงจาก DB แล้วเชื่อมกับโพสต์
-		var bs []entity.Benefit
+		var benefitIDs []uint
+		if i < len(benefitPattern) {
+			benefitIDs = benefitPattern[i]
+		}
 		if len(benefitIDs) > 0 {
+			var bs []entity.Benefit
 			db.Where("id IN ?", benefitIDs).Find(&bs)
 			db.Model(&intershipPosts[i]).Association("Benefits").Replace(bs)
 		}
@@ -592,10 +612,17 @@ func createSeedData(db *gorm.DB) {
 
 	// ---------- (เลิกคอมเมน) Map post → skills ----------
 	skillMap := map[int][]uint{
-		0: {1, 2}, // Software Dev → Python, Java
-		1: {1, 5}, // Data Science → Python, Data Analysis
-		2: {1, 5}, // AI/ML → Python, Data Analysis
-		3: {3, 4}, // Frontend → JavaScript, SQL
+		0:  {11, 12, 30},     // Software Dev → Python, JavaScript, Git
+		1:  {11, 44, 45, 30}, // Data Science → Python, TensorFlow, PyTorch, Git
+		2:  {11, 42, 43, 30}, // AI/ML → Python, ML, Deep Learning, Git
+		3:  {12, 46, 47, 30}, // Frontend (eng) → JavaScript, React, Redux, Git
+		4:  {12, 46, 17, 30}, // Frontend (thai) → JavaScript, React, HTML, Git
+		5:  {11, 14, 15, 30}, // Backend → Python, Go, SQL, Git
+		6:  {11, 15, 22, 30}, // Data Analyst → Python, SQL, Excel, Git
+		7:  {48, 49, 50, 30}, // UX/UI → UI Design, UX Research, Figma, Git
+		8:  {51, 52, 30},     // QA Tester → Manual Testing, Automation Testing, Git
+		9:  {53, 54, 30},     // DevOps → Docker, CI/CD, Git
+		10: {55, 56, 30, 11}, // System Analyst → System Analysis, Documentation, Git, Python
 	}
 	for postIdx, skillIDs := range skillMap {
 		if postIdx < len(intershipPosts) {

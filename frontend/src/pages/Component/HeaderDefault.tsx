@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { fileURL } from '@/config/env';
 import { Avatar, Layout, Menu, Button, Drawer, Grid } from 'antd';
 import {
   UserOutlined,
@@ -113,7 +114,7 @@ const CoopMatchHeaderDefault: React.FC = () => {
             <div className="header-default-mobile-controls">
               <Avatar
                 src={user?.ProfileImage?.[0]?.image_url
-                  ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
+                  ? fileURL(user.ProfileImage[0].image_url)
                   : undefined}
                 icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
                 className="header-default-avatar-mobile"
@@ -164,7 +165,7 @@ const CoopMatchHeaderDefault: React.FC = () => {
             />
             <Avatar
               src={user?.ProfileImage?.[0]?.image_url
-                ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
+                ? fileURL(user.ProfileImage[0].image_url)
                 : undefined}
               icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
               className="header-default-avatar-desktop"

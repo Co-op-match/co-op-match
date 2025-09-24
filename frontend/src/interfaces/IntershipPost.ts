@@ -42,6 +42,6 @@ export interface IntershipPostInterface {
   district: string;
   province: string;
 
-  CreatedAt: string;
-  
+  CreatedAt?: string;
+  created_at?: string;
 }

@@ -57,17 +57,16 @@ const CompanyInfoCard: React.FC<Props> = ({ post }) => {
 
   const fullAddress =
     [
-      address?.house_number,
-      address?.village,
-      address?.street,
-      address?.sub_street,
-      address?.SubDistrict?.name_th,
-      address?.District?.name_th,
-      address?.Province?.name_th,
-      zip,
+      address?.house_number ? `${address.house_number}` : "",
+      address?.village ? `หมู่ ${address.village}` : "",
+      address?.street ? `ถนน${address.street}` : "",
+      address?.sub_street ? `ซ.${address.sub_street}` : "",
+      address?.SubDistrict?.name_th ? `ต.${address.SubDistrict.name_th}` : "",
+      address?.District?.name_th ? `อ.${address.District.name_th}` : "",
+      address?.Province?.name_th ? `จ.${address.Province.name_th}` : "",
+      zip ? zip : "",
     ]
-      .map((v) => (v == null ? "" : String(v)))
-      .filter((v) => v && v !== "[object Object]")
+      .filter(Boolean)
       .join(" ") || "ไม่ระบุ";
 
   const websiteUrl = normalizeWebsite(contact?.website);

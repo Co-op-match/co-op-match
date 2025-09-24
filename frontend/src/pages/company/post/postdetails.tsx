@@ -18,8 +18,8 @@ import type { BenefitInterface } from '../../../interface/IBenefit';
 
 const { Title, Text, Paragraph } = Typography;
 
-/* ---------------- helper: สร้าง URL รูปจาก backend:8000 ---------------- */
-const getApiBase = () => 'https://api.coop-match.online';
+/* ---------------- helper: สร้าง URL รูปจาก backend (env หรือ localhost) ---------------- */
+const getApiBase = () => (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8080';
 
 const toFileURL = (p?: string | null) => {
   if (!p) return '';

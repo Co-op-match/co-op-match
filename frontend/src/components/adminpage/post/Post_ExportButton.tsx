@@ -60,12 +60,12 @@ const ExportPostsButton: React.FC<ExportProps> = ({ posts }) => {
       ชื่อตำแหน่ง: post.post_name ?? "-",
       บริษัท: post.Company?.company_name ?? "-",
       ประเภทงาน: post.JobType?.job_type ?? "-",
-      จำนวนรับสมัคร: Number.isFinite(Number(post.quantity)) ? Number(post.quantity) : "-",
       เกรดขั้นต่ำ: fmtGpa(post.min_gpa),
       สถานที่: fmtPlace(post),
+      จำนวนรับสมัคร: Number.isFinite(Number(post.quantity)) ? Number(post.quantity) : "-",
       ผู้สมัคร: post.Applications?.length ?? 0,
       สถานะ: post.StatusPost?.status_post_th ?? "-",
-      วันที่สร้าง: fmtTHDate(post.CreatedAt),
+      วันที่สร้าง: fmtTHDate(post.created_at),
     }));
 
     const { ws, name } = sheetFrom(rows.length ? rows : [{}], "โพสต์ฝึกงาน");

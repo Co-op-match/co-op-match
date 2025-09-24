@@ -34,6 +34,7 @@ import { CoopMatchLoader } from "../../../components/loaders";
 import CoopMatchHeader from "@/pages/Component/Coop_MatchHeader";
 import AcademicStaffHeader from "@/pages/Component/AcademicStaffHeader";
 import CoopMatchHeaderDefault from "@/pages/Component/CoopMatchHeaderDefault";
+import { API_BASE } from "@/config/env";
 
 const { Content } = Layout;
 
@@ -42,8 +43,6 @@ const getStoredRoleId = (): number => {
   return raw ? Number(raw) : 0;
 };
 
-// ✅ ควรตั้งใน .env เช่น VITE_API_BASE_URL
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.coop-match.online";
 
 const RoleHeader: React.FC = () => {
   const [roleId, setRoleId] = useState<number>(getStoredRoleId());

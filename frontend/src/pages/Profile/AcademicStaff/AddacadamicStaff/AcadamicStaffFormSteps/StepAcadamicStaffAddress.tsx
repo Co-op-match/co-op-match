@@ -305,6 +305,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               { validator: validateProvince },
             ]}
             normalize={(v) => v}
+            validateTrigger={['onBlur']}
           >
             <Select
               labelInValue
@@ -320,7 +321,6 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               allowClear
               onChange={() => {
                 form.setFieldsValue({ district: undefined, subdistrict_id: undefined, post_code: undefined });
-                form.validateFields(['district', 'subdistrict_id', 'post_code']).catch(() => {});
               }}
               onClear={() => {
                 form.setFieldsValue({ province: undefined, district: undefined, subdistrict_id: undefined, post_code: undefined });
@@ -339,6 +339,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               { validator: validateDistrict },
             ]}
             normalize={(v) => v}
+            validateTrigger={['onBlur']}
           >
             <Select
               labelInValue
@@ -353,7 +354,6 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               allowClear
               onChange={() => {
                 form.setFieldsValue({ subdistrict_id: undefined, post_code: undefined });
-                form.validateFields(['subdistrict_id', 'post_code']).catch(() => {});
               }}
               onClear={() => {
                 form.setFieldsValue({ district: undefined, subdistrict_id: undefined, post_code: undefined });
@@ -372,6 +372,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               { validator: validateSubdistrict },
             ]}
             normalize={(v) => v}
+            validateTrigger={['onBlur']}
           >
             <Select
               labelInValue
@@ -400,6 +401,7 @@ const StepAddress: React.FC<StepAcadamicStaffAddressProps> = ({ form }) => {
               { validator: validatePostCode },
             ]}
             normalize={(v) => v}
+            validateTrigger={['onBlur']}
           >
             <Select
               labelInValue

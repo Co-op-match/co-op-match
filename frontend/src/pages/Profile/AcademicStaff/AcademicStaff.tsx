@@ -637,11 +637,13 @@ const AcademicStaffProfile: React.FC = () => {
                                   const cls =
                                     ci.status === "ผ่าน"
                                       ? "tag-chip--green"
-                                      : ci.status === "เสร็จสิ้น"
-                                      ? "tag-chip--blue"
-                                      : ci.status === "รอเริ่ม"
+                                      : ci.status === "ไม่ผ่าน"
+                                      ? "tag-chip--red"
+                                      : ci.status === "นัดสัมภาษณ์แล้ว"
                                       ? "tag-chip--amber"
-                                      : "tag-chip--gold";
+                                      : ci.status === "กำลังดำเนินการ"
+                                      ? "tag-chip--blue"
+                                      : "tag-chip--gray";
                                   return <Tag className={`tag-chip ${cls} ellipsis-1`}>{ci.status}</Tag>;
                                 },
                               },

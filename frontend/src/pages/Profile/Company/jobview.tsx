@@ -1,5 +1,6 @@
 // ✅ JobCard.tsx
 import React, { useMemo } from 'react';
+import { fileURL } from '@/config/env';
 import { Card, Button, Space, Tag, Typography, Tooltip } from 'antd';
 import {
   CalendarOutlined,
@@ -56,13 +57,7 @@ const JobCard: React.FC<{ job: IntershipPostInterface }> = ({ job }) => {
             }}
           >
             <img
-              src={
-                job.Company?.logo?.startsWith('http')
-                  ? job.Company.logo
-                  : job.Company?.logo
-                  ? `https://api.coop-match.online${job.Company.logo}`
-                  : undefined
-              }
+              src={job.Company?.logo ? fileURL(job.Company.logo) : undefined}
               style={{ height: '100px', objectFit: 'contain' }}
             />
           </div>

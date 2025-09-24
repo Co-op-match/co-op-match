@@ -578,12 +578,6 @@ async function GetBenefit() {
     .then((res) => res)
     .catch((e) => e.response);
 }
-async function GetIntershipPost() {
-  return await axios
-    .get(`${apiUrl}/intership-posts`, requestOptions)
-    .then((res) => res)
-    .catch((e) => e.response);
-}
 //=======================================Student============================================
 async function GetStudentById(data: UsersInterface) {
   const id = data.ID; 
@@ -1187,7 +1181,12 @@ export async function GetChatRoomsByUserId(userId: number) {
   const res = await axios.get(`${apiUrl}/chat/rooms/${userId}`, options);
   return res.data;
 }
-
+async function GetIntershipPost(userId?: number) {
+  const url = userId
+    ? `${apiUrl}/intership-posts?user_id=${userId}`
+    : `${apiUrl}/intership-posts`; // เผื่อกรณีไม่มี user (จะได้เห็นทั้งหมด)
+  return axios.get(url, requestOptions).then(res => res).catch(e => e.response);
+}
 
 export {
   SignIn,

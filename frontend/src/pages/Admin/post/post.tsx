@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Table, Space, Tag, Input, Row, Col, Typography, Layout, Tabs, Empty, message } from "antd";
-import { CoopMatchLoader } from "../../../components/loaders";
-import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, LinkOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
+import { FileTextOutlined, TeamOutlined, ClockCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseOutlined, SearchOutlined, UserOutlined, StarOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { GetAllInternshipPostsInAdmin } from "../../../services/https/index";
 import { GetStatusPosts } from "../../../services/https/post";
@@ -11,7 +10,7 @@ import type { IntershipPostInterface } from "../../../interfaces/IntershipPost";
 import AdminHeader from "../../Component/AdminCoopMatchHeaderDefault";
 import { getStatusStyle } from "../../../components/adminpage/statusStyle";
 import ExportPostsButton from "../../../components/adminpage/post/Post_ExportButton";
-import "./post.css";
+import "./Post.css";
 import "../main.css";
 import AdminSectionHeader from "../AdminSectionHeader";
 import { Post_StatCard } from "../StatCard";
@@ -208,7 +207,6 @@ const ManagePostsPage = () => {
             padding: "12px 0",
             cursor: "pointer",
           }}
-          onClick={() => navigate(`/admin/manage-post/${record.ID}`)}
         >
           {/* ชื่อโพสต์ + ไอคอน */}
           <div
@@ -223,7 +221,6 @@ const ManagePostsPage = () => {
             }}
           >
             <span>{text}</span>
-            <LinkOutlined style={{ fontSize: "14px" }} />
           </div>
 
           {/* บริษัท */}
@@ -338,8 +335,8 @@ const ManagePostsPage = () => {
     },
     {
       title: "วันที่สร้าง",
-      dataIndex: "CreatedAt",
-      key: "CreatedAt",
+      dataIndex: "created_at",
+      key: "created_at",
       width: 120,
       align: "center",
       render: (date: any) => (
@@ -388,10 +385,6 @@ const ManagePostsPage = () => {
       },
     },
   ];
-
-  if (loading) {
-    return <CoopMatchLoader overlay text="กำลังโหลดข้อมูลโพสต์..." />;
-  }
 
   return (
     <Layout>
@@ -452,6 +445,26 @@ const ManagePostsPage = () => {
               rowKey="ID"
               loading={loading}
               className="enhanced-table"
+              onRow={(record) => ({
+                onClick: (e) => {
+                  // กันกรณีคลิกโดนปุ่ม/ลิงก์ภายในเซลล์
+                  const target = e.target as HTMLElement;
+                  const interactive = target.closest(
+                    'a,button,[role="button"],.ant-btn,.ant-switch,.ant-checkbox-input,.ant-radio-input,.ant-select,.ant-input'
+                  );
+                  if (interactive) return;
+
+                  navigate(`/admin/manage-post/${record.ID}`);
+                },
+                onKeyDown: (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/admin/manage-post/${record.ID}`);
+                  }
+                },
+                tabIndex: 0,   // โฟกัสด้วยคีย์บอร์ดได้
+                role: "navigation",
+              })}
               pagination={{
                 ...pagination,
                 showSizeChanger: true,
@@ -469,11 +482,10 @@ const ManagePostsPage = () => {
                 overflow: "hidden",
               }}
               rowClassName={(record, index) => {
-                const status = record.StatusPost?.status_post;
-                let baseClass = index % 2 === 0 ? "even-row" : "odd-row";
-                if (status === "Pending Approval")
-                  baseClass += " pending-highlight";
-                return baseClass;
+                const s = record.StatusPost?.status_post;
+                let cls = index % 2 === 0 ? "even-row" : "odd-row";
+                if (s === "Pending Approval") cls += " pending-highlight";
+                return cls + " clickable-row";
               }}
               locale={{
                 emptyText: (
@@ -706,4 +718,7 @@ const enhancedStyles = `
   /* Animation delays for sequential loading */
   .adminpost-header-box { animation-delay: 0s; }
   .enhanced-main-card { animation-delay: 0.2s; }
+
+  .enhanced-table .ant-table-tbody > tr.clickable-row { cursor: pointer; }
+  .enhanced-table .ant-table-tbody > tr.clickable-row:active > td { transform: scale(0.999); }
 `;

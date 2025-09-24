@@ -76,20 +76,23 @@ type AcademicOverviewResponse struct {
 	UniversityID uint `json:"university_id"`
 	Students     int  `json:"students"`
 
-	ApplicationsByStatus []KV         `json:"applications_by_status"`
-	InterviewsUpcoming   int          `json:"interviews_upcoming"`
-	ReviewsTotal         int          `json:"reviews_total"`
-	TopCompanies         []TopCompany `json:"top_companies"`
-	NeverApplied         int          `json:"never_applied"`
+	ApplicationsByStatus   []KV         `json:"applications_by_status"`
+	InterviewsUpcoming     int          `json:"interviews_upcoming"`
+	ReviewsTotal           int          `json:"reviews_total"`
+	TopCompanies           []TopCompany `json:"top_companies"`
+	NeverApplied           int          `json:"never_applied"`
+	PassedStudentsDistinct int          `json:"passed_students_distinct"`
 }
 
 type AcademicStudentItem struct {
-	ID        uint   `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Gender    string `json:"gender"`
-	Age       uint   `json:"age"`
-	Email     string `json:"email"`
+	ID          uint    `json:"id"`
+	FirstName   string  `json:"first_name"`
+	LastName    string  `json:"last_name"`
+	Gender      string  `json:"gender"`
+	Age         uint    `json:"age"`
+	Grade       float64 `json:"grade"`
+	Email       string  `json:"email"`
+	PhoneNumber string  `json:"phone_number"`
 
 	ProgramName    string `json:"program_name"`
 	FacultyName    string `json:"faculty_name"`

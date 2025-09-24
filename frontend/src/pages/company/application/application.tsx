@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { API_BASE } from '@/config/env';
 import { Layout, Typography } from 'antd';
 import CompanyHeader from '../../Component/CompanyHeader';
 import { CoopMatchLoader } from '../../../components/loaders';
@@ -179,7 +180,7 @@ const Dashboard = () => {
 
 
 
-    const fileBaseURL = 'https://api.coop-match.online'; // ✅ ปรับตาม backend จริงของคุณ
+    const fileBaseURL = API_BASE; // ใช้ base URL จาก env
 
     if (loading) {
         return <CoopMatchLoader overlay text="กำลังโหลดข้อมูลใบสมัคร..." />;

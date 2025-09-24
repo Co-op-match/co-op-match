@@ -10,8 +10,9 @@ import dayjs from 'dayjs';
 import ReviewModalContainer from '../Review/Review';
 
 // ----------------- helper สำหรับประกอบลิงก์ไฟล์อย่างปลอดภัย -----------------
+// ใช้ฐาน API จากตัวแปรแวดล้อม ถ้าไม่ตั้งให้ fallback เป็น local dev
 const getApiBase = () => {
-  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'https://api.coop-match.online';
+  const base = (import.meta as any)?.env?.VITE_API_BASE_URL || 'http://localhost:8080';
   return String(base).replace(/\/$/, '');
 };
 const toFileURL = (p?: string | null) => {

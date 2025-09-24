@@ -1,29 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Layout, Menu, Button, Drawer, Grid } from 'antd';
-import {
-  UserOutlined,
-  BellOutlined,
-  SettingOutlined,
-  HomeOutlined,
-  LogoutOutlined,
-} from '@ant-design/icons';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { fileURL } from '@/config/env';
+import { Avatar, Layout, Dropdown, Menu } from 'antd';
+import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import Logo from "../../assets/Co-op match-Photoroom.png";
 import { GetUserById } from '../../services/https';
 import type { UserInterface } from '../../interfaces/User';
-import HamburgerIcon from './HamburgerIcon';
 import "./Header.css";
 
 const { Header } = Layout;
 
-const { useBreakpoint } = Grid;
 
 const CoopMatchHeaderDefault: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [user, setUser] = useState<UserInterface | null>(null);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const screens = useBreakpoint();
+  // simplified header: no responsive menu logic needed
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -46,132 +37,47 @@ const CoopMatchHeaderDefault: React.FC = () => {
   }, []);
 
 
-  // แปลง path เป็น key เช่น /student/profile → "profile"
-  const currentPage = (() => {
-    if (location.pathname.includes('dashboard')) return 'dashboard';
-    if (location.pathname.includes('notifications')) return 'notifications';
-    if (location.pathname.includes('settings')) return 'settings';
-    return 'dashboard'; // fallback
-  })();
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    switch (key) {
-      case 'dashboard':
-        navigate('/student/dashboard');
-        break;
-      case 'notifications':
-        navigate('/student/notifications');
-        break;
-      case 'settings':
-        navigate('/student/settings');
-        break;
-    }
-  };
+  // Logo no longer clickable per request
 
-  const handleLogoClick = () => {
-    navigate("/student/dashboard");
-  };
+  const handleLogout = () => { localStorage.clear(); navigate('/'); };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
-    setDrawerVisible(false);
-  };
-
-  const toggleDrawer = () => {
-    setDrawerVisible(!drawerVisible);
-  };
-
-  const handleDrawerMenuClick = ({ key }: { key: string }) => {
-    handleMenuClick({ key });
-    setDrawerVisible(false);
-  };
-
-  const isMobile = !screens.md;
-
-  const menuItems = [
-    { key: 'dashboard', icon: <HomeOutlined />, label: 'หน้าหลัก' },
-    { key: 'notifications', icon: <BellOutlined />, label: 'การแจ้งเตือน' },
-    { key: 'settings', icon: <SettingOutlined />, label: 'ตั้งค่า' },
-  ];
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
 
   return (
     <>
       <Header className="coop-match-default-header">
         <div 
           className="coop-match-default-logo-container"
-          onClick={handleLogoClick}
           style={{
-            marginLeft: isMobile ? 4 : screens.xl ? 12 : 8,
-            marginRight: isMobile ? 8 : screens.xl ? 20 : 16,
+            marginLeft: isMobile ? 4 : 12,
+            marginRight: isMobile ? 8 : 20,
+            cursor: 'default'
           }}
         >
           <img src={Logo} alt="Logo" className="coop-match-default-logo" />
         </div>
 
-        {isMobile ? (
-          <>
-            <div className="coop-match-default-mobile-controls">
-              <Avatar
-                src={user?.ProfileImage?.[0]?.image_url
-                  ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
-                  : undefined}
-                icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-                className="coop-match-default-avatar-mobile"
-              />
-              <Button
-                type="text"
-                icon={<HamburgerIcon size={20} />}
-                onClick={toggleDrawer}
-                className="coop-match-default-menu-button"
-              />
-            </div>
-
-            <Drawer
-              title="เมนู"
-              placement="right"
-              onClose={() => setDrawerVisible(false)}
-              open={drawerVisible}
-              className="coop-match-default-drawer"
-            >
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+          <Dropdown
+            overlay={
               <Menu
-                mode="vertical"
-                selectedKeys={[currentPage]}
-                items={menuItems}
-                onClick={handleDrawerMenuClick}
-                className="coop-match-default-drawer-menu"
+                items={[{ key: 'logout', icon: <LogoutOutlined />, label: 'ออกจากระบบ', danger: true }]}
+                onClick={({ key }) => key === 'logout' && handleLogout()}
               />
-              <div className="coop-match-default-drawer-footer">
-                <Button
-                  type="text"
-                  icon={<LogoutOutlined />}
-                  onClick={handleLogout}
-                  block
-                  className="coop-match-default-logout-button"
-                >
-                  ออกจากระบบ
-                </Button>
-              </div>
-            </Drawer>
-          </>
-        ) : (
-          <div className="coop-match-default-desktop-menu">
-            <Menu
-              mode="horizontal"
-              selectedKeys={[currentPage]}
-              items={menuItems}
-              onClick={handleMenuClick}
-              className="coop-match-default-menu"
-            />
+            }
+            placement="bottomRight"
+            trigger={['click']}
+          >
             <Avatar
-              src={user?.ProfileImage?.[0]?.image_url
-                ? `https://api.coop-match.online${user.ProfileImage[0].image_url}`
-                : undefined}
+              src={user?.ProfileImage?.[0]?.image_url ? fileURL(user.ProfileImage[0].image_url) : undefined}
               icon={!user?.ProfileImage?.[0]?.image_url ? <UserOutlined /> : undefined}
-              className="coop-match-default-avatar-desktop"
+              style={{ cursor: 'pointer' }}
+              className="coop-match-default-avatar-only"
+              size={isMobile ? 32 : 36}
             />
-          </div>
-        )}
+          </Dropdown>
+        </div>
       </Header>
     </>
   );
