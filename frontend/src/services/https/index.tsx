@@ -578,6 +578,15 @@ async function GetBenefit() {
     .then((res) => res)
     .catch((e) => e.response);
 }
+/*
+async function GetIntershipPost() {
+  return await axios
+    .get(`${apiUrl}/intership-posts`, requestOptions)
+    .then((res) => res)
+    .catch((e) => e.response);
+}
+*/
+
 //=======================================Student============================================
 async function GetStudentById(data: UsersInterface) {
   const id = data.ID; 

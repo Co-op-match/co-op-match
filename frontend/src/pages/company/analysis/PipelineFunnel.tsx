@@ -1,8 +1,9 @@
 import React from "react";
-import { Card, Space } from "antd";
+import { Card, Space, Typography } from "antd";
 import { FunnelPlotOutlined } from "@ant-design/icons";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, LabelList, Cell } from "recharts";
 import type { PipelineBucketInterface } from "../../../interfaces/Analysis";
+const { Title } = Typography;
 
 type Props = {
   loading?: boolean;
@@ -58,30 +59,18 @@ const PipelineHorizontalBar: React.FC<Props> = ({
     <Card
       loading={loading}
       className="chart-card"
-      style={{
-        height: "100%",
-        borderRadius: 12,
-        border: "1px solid #e6f7ff",
-        boxShadow: "0 2px 8px rgba(24,144,255,.08)",
-        background: "linear-gradient(180deg, #ffffff 0%, #f8fcff 100%)",
+      styles={{
+        body: { padding: "12px 16px" }, // body บาง ๆ
+        header: { borderBottom: "1px solid #f0f0f0", padding: "12px 16px" },
       }}
       title={
         <Space size={8}>
-          <div
-            style={{
-              background: "linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)",
-              borderRadius: 6,
-              padding: "4px 6px",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(24,144,255,.25)",
-              fontSize: 12,
-            }}
-          >
-            <FunnelPlotOutlined />
+          <div className="icon-circle">
+            <FunnelPlotOutlined className="inner-icon" />
           </div>
-          <span style={{ fontWeight: 600, fontSize: 14, color: "#1890ff" }}>
+          <Title level={4} className="section-title" style={{ marginBottom: "0px" }}>
             สถานะการสมัครงาน
-          </span>
+          </Title>
         </Space>
       }
       bodyStyle={{ padding: "12px 16px 16px 16px" }}
